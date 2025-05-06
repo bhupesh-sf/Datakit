@@ -1,7 +1,10 @@
-name = "datakit"
-compatibility_date = "2025-05-06"
-
-main = "./node_modules/wrangler/templates/pages-template.ts"
-
 [site]
 bucket = "./dist"
+entry-point = "."
+
+[build]
+command = "npm run build"
+upload.format = "directory"
+
+[build.environment]
+NODE_VERSION = "20"
