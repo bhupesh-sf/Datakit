@@ -133,3 +133,23 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     // Return results
   }
 }));
+
+
+## TODO
+
+0.1> XSLX
+0> ICONS
+1> Recent files
+2> query panel and all the buttons, etc in it
+3> visual
+
+TS issues
+
+
+
+Real Solution: Client-Side Conversion
+For the most reliable experience, consider implementing a client-side conversion approach:
+
+Use SheetJS (xlsx.js) to parse Excel files in the browser
+Convert parsed data to CSV format
+Import the resulting CSV instead of the original Excel file

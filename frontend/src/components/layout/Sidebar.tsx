@@ -86,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
               <div className="w-full bg-gray-800 rounded-full h-1.5">
                 <div
                   className="bg-primary h-1.5 rounded-full transition-all duration-300"
-                  style={{ width: `${loadingProgress}%` }}
+                  style={{ width: `${duckDBProgress * 100}%` }}
                 ></div>
               </div>
             )}

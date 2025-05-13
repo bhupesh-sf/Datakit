@@ -110,7 +110,7 @@ const Home = () => {
    */
   const getStatusText = () => {
     if (!data) {
-      return 'Upload a CSV or JSON file to get started. Large files are automatically processed efficiently.';
+      return 'Upload a CSV or JSON file to get started.';
     }
     
     const baseText = `${stats?.rows.toLocaleString()} rows × ${stats?.columns.toLocaleString()} columns | ${
