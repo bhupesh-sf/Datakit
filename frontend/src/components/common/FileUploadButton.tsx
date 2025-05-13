@@ -7,7 +7,6 @@ import csv from '@/assets/csv.png';
 import json from '@/assets/json.png';
 import xlsx from '@/assets/xlsx.png';
 
-
 interface FileUploadButtonProps {
   onFileSelect: (file: File) => void;
   isLoading?: boolean;
@@ -30,13 +29,11 @@ export const FileUploadButton = ({
     csv,
     json,
     xlsx
-    // xls: "/icons/xls-icon.png",   
   };
 
   const handleButtonClick = async () => {
     if (supportLargeFiles && 'showOpenFilePicker' in window) {
       try {
-        // Configure the file picker with xlsx support
         const pickerOpts = {
           types: [
             {
@@ -55,9 +52,7 @@ export const FileUploadButton = ({
 
         const [fileHandle] = await window.showOpenFilePicker(pickerOpts);
         const file = await fileHandle.getFile();
-        
         (file as any)._handle = fileHandle;
-        
         onFileSelect(file);
       } catch (err) {
         if (!(err instanceof Error) || err.name !== 'AbortError') {
@@ -82,8 +77,22 @@ export const FileUploadButton = ({
     setIsDragging(true);
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    
+    // Only set isDragging to false if not dragging over any children
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    if (
+      x < rect.left ||
+      x >= rect.right ||
+      y < rect.top ||
+      y >= rect.bottom
+    ) {
+      setIsDragging(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -109,50 +118,62 @@ export const FileUploadButton = ({
       onDrop={handleDrop}
     >
       {isDragging ? (
-        <div className="border-2 border-dashed border-primary rounded-lg p-6 flex flex-col items-center justify-center transition-colors bg-primary/10">
-          <FileIcon className="h-10 w-10 text-primary mb-2" />
+        <div className="border-2 border-dashed border-primary py-5 px-4 flex flex-col items-center justify-center transition-colors bg-primary/10 shadow-lg shadow-primary/5">
+          <div className="flex items-center justify-center space-x-4 mb-3">
+            <img src={fileIcons.csv} alt="CSV" className="h-7 w-7" />
+            <img src={fileIcons.json} alt="JSON" className="h-7 w-7" />
+            <img src={fileIcons.xlsx} alt="XLSX" className="h-7 w-7" />
+          </div>
           <p className="text-primary font-medium">Drop your file here</p>
+          <p className="text-xs text-primary/70 mt-1">CSV, JSON, or Excel</p>
         </div>
       ) : (
-        <>
+        <div className="overflow-hidden shadow-sm group hover:shadow-md transition-shadow">
           <Button
             type="button"
             variant="outline"
-            className={`w-full bg-transparent border-primary text-foreground hover:bg-primary/10 hover:text-primary transition-colors ${className}`}
+            className={`w-full bg-white/5 border border-white/20 hover:border-primary/80 hover:bg-black/30 transition-all p-0 h-auto ${className}`}
             onClick={handleButtonClick}
             disabled={isLoading}
           >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-t-transparent mr-2" />
-                <span>Processing...</span>
-              </>
-            ) : (
-              <div className="flex items-center justify-center w-full h-full">
-                {/* File type icons using actual images */}
-                <div className="flex items-center space-x-4">
-                  <div className="flex flex-col items-center">
-                    <img src={fileIcons.csv} alt="CSV" width="24" height="24" />
-                    <div className="h-1 w-1 rounded-full bg-primary mt-1"></div>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <img src={fileIcons.json} alt="JSON" width="18" height="18" />
-                    <div className="h-1 w-1 rounded-full bg-green-400 mt-1"></div>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <img src={fileIcons.xlsx} alt="XLSX" width="24" height="24" />
-                    <div className="h-1 w-1 rounded-full bg-blue-400 mt-1"></div>
-                  </div>
+            <div className="flex flex-col items-center w-full py-5 px-4">
+              {isLoading ? (
+                <div className="flex flex-col items-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mb-2" />
+                  <span className="text-sm">Processing...</span>
                 </div>
-              </div>
-            )}
+              ) : (
+                <>
+                  <div className="flex items-center justify-center space-x-5 mb-3 group">
+                    <div className="flex flex-col items-center transform group-hover:-translate-y-1 transition-transform">
+                      <img src={fileIcons.csv} alt="CSV" className="h-10 w-10" />
+                      <div className="h-1 w-1 rounded-full bg-primary mt-1"></div>
+                      <span className="text-[10px] mt-1 text-primary/80">CSV</span>
+                    </div>
+                    <div className="flex flex-col items-center transform group-hover:-translate-y-1 transition-transform">
+                      <img src={fileIcons.json} alt="JSON" className="h-9 w-9" />
+                      <div className="h-1 w-1 rounded-full bg-green-400 mt-1"></div>
+                      <span className="text-[10px] mt-1 text-green-400/80">JSON</span>
+                    </div>
+                    <div className="flex flex-col items-center transform group-hover:-translate-y-1 transition-transform">
+                      <img src={fileIcons.xlsx} alt="XLSX" className="h-10 w-10" />
+                      <div className="h-1 w-1 rounded-full bg-blue-400 mt-1"></div>
+                      <span className="text-[10px] mt-1 text-blue-400/80">EXCEL</span>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-white/80 mb-1">Click to upload or drag files here</p>
+                    <p className="text-[10px] text-white/50">
+                      {supportLargeFiles && 'showOpenFilePicker' in window ? 
+                        'Supports files up to 5GB' : 
+                        'Supports files up to 2GB'}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
           </Button>
-          <div className="mt-1 text-xs text-center text-white text-opacity-60">
-            {supportLargeFiles && 'showOpenFilePicker' in window ? 
-              'Supports files up to 5GB' : 
-              'Supports files up to 2GB'}
-          </div>
-        </>
+        </div>
       )}
       <input
         ref={fileInputRef}
