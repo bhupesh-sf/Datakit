@@ -127,15 +127,15 @@ export const useGridEditing = (
 /**
  * Custom hook for welcome animation
  *
- * @param emptyGrid The empty grid to use as a base for animation
- * @param setGridData Function to update grid data
- * @param isDataMode Whether the component is in data display mode
+ * @param emptyGrid - The empty grid to use as a base for animation
+ * @param setGridData - Function to update grid data
+ * @param hasData - Whether we have data to display (true prevents animation)
  * @returns Object containing animation state and configuration
  */
 export const useWelcomeAnimation = (
   emptyGrid: GridData,
   setGridData: React.Dispatch<React.SetStateAction<GridData>>,
-  isDataMode: boolean
+  hasData: boolean
 ): WelcomeAnimationHookResult => {
   // Animation configuration
   const animationMessage: string[] = [
@@ -161,29 +161,40 @@ export const useWelcomeAnimation = (
   const [animationActive, setAnimationActive] = useState<boolean>(false);
   const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Start or stop animation based on data mode
+  // Track if this is the first render
+  const isFirstRender = useRef(true);
+
+  // Start or stop animation based on data state
   useEffect(() => {
-    if (isDataMode) {
-      // Stop animation if data is loaded
+    // If we have data, always disable animation regardless of previous state
+    if (hasData) {
       if (animationTimerRef.current) {
         clearInterval(animationTimerRef.current);
         animationTimerRef.current = null;
       }
       setAnimationActive(false);
       setActiveWordIndex(-1);
-    } else if (!animationActive) {
-      // Start animation if no data and not already animating
+      return;
+    }
+
+    // If we don't have data and animation is not running, start it
+    // But only if this isn't the first render or we've explicitly marked it inactive
+    if (!hasData && (!animationActive || !isFirstRender.current)) {
       setAnimationActive(true);
       startAnimation();
     }
 
+    // Mark first render complete
+    isFirstRender.current = false;
+
     return () => {
+      // Cleanup on unmount
       if (animationTimerRef.current) {
         clearInterval(animationTimerRef.current);
         animationTimerRef.current = null;
       }
     };
-  }, [isDataMode, animationActive]);
+  }, [hasData, animationActive]);
 
   // Function to start the animation
   const startAnimation = useCallback((): void => {
@@ -198,6 +209,9 @@ export const useWelcomeAnimation = (
 
     // Short delay before starting
     setTimeout(() => {
+      // Only start if we still should show animation
+      if (hasData) return;
+
       // Start with a fresh grid
       const initialGrid: GridData = JSON.parse(JSON.stringify(emptyGrid));
       setGridData(initialGrid);
@@ -217,12 +231,12 @@ export const useWelcomeAnimation = (
         });
       }, 500); // Slightly faster timing for smoother flow
     }, 100); // Shorter initial delay
-  }, [emptyGrid, setGridData, animationMessage.length]);
+  }, [emptyGrid, setGridData, animationMessage.length, hasData]);
 
   // Effect to update grid with animation words
   useEffect(() => {
-    // Skip if in data mode or no active word
-    if (isDataMode || activeWordIndex < 0) return;
+    // Skip if we have data or no active word
+    if (hasData || activeWordIndex < 0) return;
 
     // Create a deep copy of the grid to avoid reference issues
     const newGrid: GridData = JSON.parse(JSON.stringify(emptyGrid));
@@ -236,7 +250,7 @@ export const useWelcomeAnimation = (
     }
 
     setGridData(newGrid);
-  }, [activeWordIndex, isDataMode]);
+  }, [activeWordIndex, hasData]);
 
   return {
     activeWordIndex,

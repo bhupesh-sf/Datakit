@@ -1,7 +1,7 @@
 /* Import fonts */
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap");
 
 /* Import Tailwind - v4 style */
 @import "tailwindcss";
@@ -12,42 +12,42 @@
 /* Set theme variables for shadcn/ui and custom styling */
 @theme {
   /* Define font families */
-  --font-sans: 'Manrope', ui-sans-serif, system-ui;
-  --font-heading: 'Space Grotesk', ui-sans-serif, system-ui;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: "Manrope", ui-sans-serif, system-ui;
+  --font-heading: "Space Grotesk", ui-sans-serif, system-ui;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* Define colors with HSL values for shadcn/ui compatibility */
   --radius: 0.625rem;
-  
+
   /* Your core theme colors */
   --background: hsl(240 10% 3.9%);
   --foreground: hsl(0 0% 100%);
   --dark-nav: hsl(218 27% 10%);
-  
+
   --primary: hsl(175 100% 36%);
   --primary-foreground: hsl(0 0% 100%);
-  
+
   --secondary: hsl(271 75% 53%);
   --secondary-foreground: hsl(0 0% 100%);
-  
+
   --tertiary: hsl(167 53% 49%);
 
   /* Required shadcn/ui variables */
   --card: hsl(222 18% 12%);
   --card-foreground: hsl(0 0% 100%);
-  
+
   --popover: hsl(222 18% 12%);
   --popover-foreground: hsl(0 0% 100%);
-  
+
   --muted: hsl(0 0% 100% / 0.7);
   --muted-foreground: hsl(0 0% 100% / 0.5);
-  
+
   --accent: hsl(271 75% 53%);
   --accent-foreground: hsl(0 0% 100%);
-  
+
   --destructive: hsl(0 84% 60%);
   --destructive-foreground: hsl(0 0% 100%);
-  
+
   --border: hsl(0 0% 100% / 0.1);
   --input: hsl(0 0% 100% / 0.15);
   --ring: hsl(175 100% 36%);
@@ -55,7 +55,8 @@
 
 /* Set base styles for the entire application */
 @layer base {
-  html, body {
+  html,
+  body {
     background-color: var(--background);
     color: var(--foreground);
     height: 100%;
@@ -67,14 +68,20 @@
     height: 100%;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-heading);
   }
 
-  code, pre {
+  code,
+  pre {
     font-family: var(--font-mono);
   }
-  
+
   * {
     border-color: var(--border);
     outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
@@ -83,6 +90,42 @@
 
 /* Spreadsheet-like grid styling */
 @layer components {
+  /* _______ TABS _______ */
+
+  .tab-navigation {
+    position: relative;
+    display: flex;
+    gap: 1px;
+  }
+
+  .tab-button {
+    position: relative;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: var(--foreground);
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    border-top-left-radius: 0.375rem;
+    border-top-right-radius: 0.375rem;
+  }
+
+  .tab-button:hover {
+    opacity: 0.9;
+  }
+
+  .tab-button.active {
+    opacity: 1;
+    font-weight: 500;
+  }
+
+  .tab-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* _______ TABS _______ */
+
   .csv-grid-container {
     height: 100%;
     width: 100%;
@@ -156,18 +199,18 @@
     border: 2px solid var(--primary);
     z-index: 20;
   }
-  
+
   /* Number, date, and boolean cell styling for data types */
   .csv-grid-cell-number {
     color: var(--tertiary);
     font-family: var(--font-mono);
     text-align: right;
   }
-  
+
   .csv-grid-cell-date {
     color: color-mix(in srgb, var(--secondary) 80%, var(--foreground) 20%);
   }
-  
+
   .csv-grid-cell-boolean {
     color: var(--primary);
     text-align: center;

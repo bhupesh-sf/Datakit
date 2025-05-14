@@ -142,6 +142,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 1> Recent files
 2> query panel and all the buttons, etc in it
 3> visual
+4> llm
 
 TS issues
 
@@ -153,3 +154,52 @@ For the most reliable experience, consider implementing a client-side conversion
 Use SheetJS (xlsx.js) to parse Excel files in the browser
 Convert parsed data to CSV format
 Import the resulting CSV instead of the original Excel file
+
+Implementation Phases
+Phase 1: Tab Interface & Navigation System
+Objective: Replace the current panel approach with a full-width tabbed interface featuring unique styling.
+Key Components:
+
+Create a TabNavigation component with custom-styled tabs that slide/fade content
+Implement state management for active tab selection
+Refactor Home.tsx to use the tab-based layout instead of the panel approach
+Create placeholders for Query and Visualization tabs
+
+Design Approach:
+
+Use a horizontal navigation bar with animated indicators
+Implement subtle transitions between tab content
+Ensure responsive behavior across different screen sizes
+
+Phase 2: Query Tab Enhancement
+Objective: Transform the current query panel into a full-featured query tab with improved SQL editing capabilities.
+Key Components:
+
+Enhance CodeEditor with more advanced syntax highlighting and autocomplete
+Create a more spacious query execution environment
+Add query history functionality
+Implement improved query result visualization
+Add schema browser for easier table/column reference
+
+Design Approach:
+
+Split the query area into editor and results sections
+Add collapsible schema browser on the side
+Implement keyboard shortcuts for common operations
+
+Phase 3: Visualization System
+Objective: Create a visualization tab that leverages DuckDB query results to generate interactive charts.
+Key Components:
+
+Develop a chart configuration interface
+Create a library of basic chart types (line, bar, scatter, pie)
+Implement color customization tools
+Build an integration layer between DuckDB query results and chart data
+Add chart export/sharing capabilities
+
+Design Approach:
+
+Create a wizard-like interface for chart creation
+Allow direct SQL input or visual query builder
+Implement a chart gallery for quick selection
+Enable drag-and-drop customization of chart elements

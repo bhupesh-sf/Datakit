@@ -1,137 +1,83 @@
-import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
+import TabNavigation, { Tab } from "@/components/navigation/TabNavigation";
+import DataPreviewTab from "@/components/tabs/DataPreviewTab";
+import QueryTab from "@/components/tabs/QueryTab";
+import VisualizationTab from "@/components/tabs/VisualizationTab";
 
-import CSVGrid from "@/components/data-grid/CSVGrid";
-import JSONGrid from "@/components/data-grid/JSONGrid";
-import { QueryButton } from "@/components/common/query/QueryButton";
-import { QueryPanel } from "@/components/common/query/QueryPanel";
+import { Table, BarChart, Database } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { ColumnType } from "@/types/csv";
-import { DataSourceType, DataParseResult, JsonSchema } from "@/types/json";
+import { useAppStore } from "@/store/appStore";
 import { DataLoadWithDuckDBResult } from "@/components/layout/Sidebar";
-
-/**
- * Statistics about the loaded dataset
- */
-interface DataStats {
-  /** Total number of rows in the dataset */
-  rows: number;
-  /** Total number of columns in the dataset */
-  columns: number;
-  /** Whether the data is loaded into DuckDB for querying */
-  inDuckDB?: boolean;
-  /** Name of the DuckDB table (if loaded) */
-  tableName?: string;
-}
+import { DataSourceType } from "@/types/json";
 
 /**
  * Main application home page component
- * Manages the display of data grids and query interfaces
  */
 const Home = () => {
-  // State for grid data display
-  const [data, setData] = useState<string[][]>();
-  const [columnTypes, setColumnTypes] = useState<ColumnType[]>([]);
-  const [fileName, setFileName] = useState<string>("");
-  const [sourceType, setSourceType] = useState<DataSourceType>(
-    DataSourceType.CSV
-  );
-  const [rawData, setRawData] = useState<any>(null);
-  const [jsonSchema, setJsonSchema] = useState<JsonSchema | null>(null);
-  const [stats, setStats] = useState<DataStats | null>(null);
+  const {
+    fileName,
+    sourceType,
+    jsonSchema,
+    rowCount,
+    columnCount,
+    inDuckDB,
+    tableName,
+    activeTab,
+    jsonViewMode,
+    setActiveTab,
+    setJsonViewMode,
+    loadData
+  } = useAppStore();
 
-  // UI state
-  const [showQueryPanel, setShowQueryPanel] = useState(false);
-  const [jsonViewMode, setJsonViewMode] = useState<"table" | "tree">("table");
+  // Define available tabs
+  const tabs: Tab[] = [
+    { id: "preview", label: "Data Preview", icon: <Table size={16} /> },
+    { id: "query", label: "Query", icon: <Database size={16} /> },
+    { id: "visualization", label: "Visualize", icon: <BarChart size={16} /> },
+  ];
 
   /**
    * Handle data load from sidebar
    * @param result - Parsed data result including DuckDB information
    */
   const handleDataLoad = (result: DataLoadWithDuckDBResult) => {
-    setData(result.data);
-    setColumnTypes(result.columnTypes);
-    setFileName(result.fileName);
-    setSourceType(result.sourceType || DataSourceType.CSV);
-
-    // Handle JSON-specific data
-    if (result.sourceType === DataSourceType.JSON) {
-      setRawData(result.rawData || null);
-      setJsonSchema("schema" in result ? result.schema : null);
-
-      // If the JSON is nested, default to tree view
-      if ("schema" in result && result.schema && result.schema.isNested) {
-        setJsonViewMode("tree");
-      }
-    } else {
-      // Reset JSON-specific data when loading CSV
-      setRawData(null);
-      setJsonSchema(null);
-    }
-
-    // Set stats including DuckDB information
-    setStats({
-      rows: result.rowCount,
-      columns: result.columnCount,
-      inDuckDB: result.loadedToDuckDB,
-      tableName: result.tableName,
-    });
-
-    // If data was loaded into DuckDB, default to showing query panel
-    if (result.loadedToDuckDB) {
-      setShowQueryPanel(true);
-    }
-  };
-
-  /**
-   * Toggle the query panel visibility
-   */
-  const toggleQueryPanel = () => {
-    setShowQueryPanel(!showQueryPanel);
-  };
-
-  /**
-   * Handle DuckDB operations from the grid
-   * @param operation - Type of DuckDB operation to perform
-   * @param params - Optional parameters for the operation
-   */
-  const handleDuckDBOperation = (
-    operation: "query" | "export",
-    params?: any
-  ) => {
-    switch (operation) {
-      case "query":
-        setShowQueryPanel(true);
-        break;
-      case "export":
-        // Handle export operation
-        console.log("Export operation requested", params);
-        break;
-    }
+    // Use store action to load data
+    loadData(result);
+    
+    // Switch to preview tab when new data is loaded
+    setActiveTab("preview");
   };
 
   /**
    * Get status text for the current dataset
    */
   const getStatusText = () => {
-    if (!data) {
+    if (!fileName) {
       return "Upload a CSV, XSLX or JSON file to get started.";
     }
 
-    const baseText = `${stats?.rows.toLocaleString()} rows × ${stats?.columns.toLocaleString()} columns | ${
+    const baseText = `${rowCount.toLocaleString()} rows × ${columnCount.toLocaleString()} columns | ${
       sourceType === DataSourceType.JSON ? "JSON data" : "CSV data"
     }`;
 
-    const duckDBText = stats?.inDuckDB
-      ? ` | Loaded in DuckDB (table: ${stats.tableName})`
+    const duckDBText = inDuckDB
+      ? ` | Loaded in DuckDB (table: ${tableName})`
       : "";
 
     const interactionText =
-      sourceType === DataSourceType.CSV || jsonViewMode === "table"
-        ? " | Use SQL queries for analysis."
-        : " | Explore the JSON structure.";
+      sourceType === DataSourceType.JSON && jsonViewMode === "tree"
+        ? " | Explore the JSON structure."
+        : " | Use SQL queries for analysis.";
 
     return baseText + duckDBText + interactionText;
+  };
+
+  // Animation variants for tab content
+  const tabContentVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -20 }
   };
 
   return (
@@ -173,48 +119,34 @@ const Home = () => {
                 </button>
               </div>
             )}
-
-            {/* Query Panel Button */}
-
-            <QueryButton onClick={toggleQueryPanel} isActive={showQueryPanel} />
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden flex relative">
-          {/* Main grid with conditional padding when panel is open */}
-          <div
-            className={`flex-1 overflow-hidden ${showQueryPanel ? "mr-4" : ""}`}
-          >
-            {sourceType === DataSourceType.JSON ? (
-              <JSONGrid
-                data={data}
-                columnTypes={columnTypes}
-                rawData={rawData}
-                schema={jsonSchema || undefined}
-                viewMode={jsonViewMode}
-              />
-            ) : (
-              <CSVGrid
-                data={data}
-                columnTypes={columnTypes}
-                onDuckDBOperation={handleDuckDBOperation}
-              />
-            )}
-          </div>
+        {/* Tab navigation */}
+        <TabNavigation 
+          tabs={tabs} 
+          activeTab={activeTab} 
+          onChange={setActiveTab} 
+          className="mb-4" 
+        />
 
-          {/* Query panel - always render but control visibility with classes */}
-          <div className="absolute right-0 top-0 h-full overflow-hidden">
-            <QueryPanel
-              data={data || []}
-              headers={data?.[0] || []}
-              fileName={fileName}
-              sourceType={sourceType}
-              rawData={rawData}
-              tableName={stats?.tableName}
-              onClose={() => setShowQueryPanel(false)}
-              isVisible={showQueryPanel}
-            />
-          </div>
+        {/* Tab content with animations */}
+        <div className="flex-1 overflow-hidden relative">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              variants={tabContentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0"
+            >
+              {activeTab === "preview" && <DataPreviewTab />}
+              {activeTab === "query" && <QueryTab />}
+              {activeTab === "visualization" && <VisualizationTab />}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </MainLayout>
