@@ -34,7 +34,6 @@ export const ThemeColorPicker = ({ defaultColor = '#00B8A9' }: ThemeColorPickerP
         className="flex items-center gap-2 text-xs text-white text-opacity-70 hover:text-opacity-100 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {/* <Paintbrush size={14} /> */}
         <span>Theme Color</span>
         <div 
           className="w-3 h-3 rounded-full border border-white border-opacity-30" 
