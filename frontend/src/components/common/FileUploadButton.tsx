@@ -1,9 +1,11 @@
 import * as React from "react";
 import { useState, useRef } from "react";
 import { Upload, File as FileIcon } from "lucide-react";
-
-import { CSVIcon } from "@/components/icons/CSVIcon";
 import { Button } from "@/components/ui/Button";
+
+import csv from '@/assets/csv.png';
+import json from '@/assets/json.png';
+import xlsx from '@/assets/xlsx.png';
 
 interface FileUploadButtonProps {
   onFileSelect: (file: File) => void;
@@ -16,25 +18,31 @@ interface FileUploadButtonProps {
 export const FileUploadButton = ({
   onFileSelect,
   isLoading = false,
-  accept = ".csv,.json",
+  accept = ".csv,.json,.xlsx,.xls",
   className = "",
   supportLargeFiles = true,
 }: FileUploadButtonProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  const fileIcons = {
+    csv,
+    json,
+    xlsx
+  };
+
   const handleButtonClick = async () => {
-    // Try to use File System Access API for better large file handling if supported
     if (supportLargeFiles && 'showOpenFilePicker' in window) {
       try {
-        // Configure the file picker
         const pickerOpts = {
           types: [
             {
               description: 'Data Files',
               accept: {
                 'text/csv': ['.csv'],
-                'application/json': ['.json']
+                'application/json': ['.json'],
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+                'application/vnd.ms-excel': ['.xls']
               }
             }
           ],
@@ -42,24 +50,17 @@ export const FileUploadButton = ({
           multiple: false
         };
 
-        // Show the file picker
         const [fileHandle] = await window.showOpenFilePicker(pickerOpts);
         const file = await fileHandle.getFile();
-        
-        // Store the file handle in a data attribute for potential future access
         (file as any)._handle = fileHandle;
-        
         onFileSelect(file);
       } catch (err) {
-        // User cancelled or API failed, fall back to regular file input
-        // Don't show error for AbortError (user cancelled dialog)
         if (!(err instanceof Error) || err.name !== 'AbortError') {
           console.warn('File System Access API failed, falling back to regular input:', err);
           fileInputRef.current?.click();
         }
       }
     } else {
-      // Fall back to regular file input for browsers without File System Access API
       fileInputRef.current?.click();
     }
   };
@@ -71,29 +72,40 @@ export const FileUploadButton = ({
     }
   };
 
-  // Handle drag and drop
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    
+    // Only set isDragging to false if not dragging over any children
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    if (
+      x < rect.left ||
+      x >= rect.right ||
+      y < rect.top ||
+      y >= rect.bottom
+    ) {
+      setIsDragging(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
     
-    // Get the dropped file
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      // Check if the file type is accepted
       const fileExt = file.name.split('.').pop()?.toLowerCase();
-      if (fileExt === 'csv' || fileExt === 'json') {
+      if (fileExt === 'csv' || fileExt === 'json' || fileExt === 'xlsx' || fileExt === 'xls') {
         onFileSelect(file);
       } else {
-        alert('Please upload a CSV or JSON file');
+        alert('Please upload a CSV, JSON, or Excel file');
       }
     }
   };
@@ -105,39 +117,63 @@ export const FileUploadButton = ({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* Render different UI based on drag state and loading */}
       {isDragging ? (
-        <div className="border-2 border-dashed border-primary rounded-lg p-6 flex flex-col items-center justify-center transition-colors bg-primary/10">
-          <FileIcon className="h-10 w-10 text-primary mb-2" />
+        <div className="border-2 border-dashed border-primary py-5 px-4 flex flex-col items-center justify-center transition-colors bg-primary/10 shadow-lg shadow-primary/5">
+          <div className="flex items-center justify-center space-x-4 mb-3">
+            <img src={fileIcons.csv} alt="CSV" className="h-7 w-7" />
+            <img src={fileIcons.json} alt="JSON" className="h-7 w-7" />
+            <img src={fileIcons.xlsx} alt="XLSX" className="h-7 w-7" />
+          </div>
           <p className="text-primary font-medium">Drop your file here</p>
+          <p className="text-xs text-primary/70 mt-1">CSV, JSON, or Excel</p>
         </div>
       ) : (
-        <>
+        <div className="overflow-hidden shadow-sm group hover:shadow-md transition-shadow">
           <Button
             type="button"
             variant="outline"
-            className={`w-full bg-transparent border-primary text-foreground hover:bg-primary/10 hover:text-primary transition-colors ${className}`}
+            className={`w-full bg-white/5 border border-white/20 hover:border-primary/80 hover:bg-black/30 transition-all p-0 h-auto ${className}`}
             onClick={handleButtonClick}
             disabled={isLoading}
           >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-t-transparent mr-2" />
-                <span>Processing...</span>
-              </>
-            ) : (
-              <>
-                <CSVIcon size={16} className="mr-2" />
-                <span>Upload CSV, JSON</span>
-              </>
-            )}
+            <div className="flex flex-col items-center w-full py-5 px-4">
+              {isLoading ? (
+                <div className="flex flex-col items-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mb-2" />
+                  <span className="text-sm">Processing...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-center space-x-5 mb-3 group">
+                    <div className="flex flex-col items-center transform group-hover:-translate-y-1 transition-transform">
+                      <img src={fileIcons.csv} alt="CSV" className="h-10 w-10" />
+                      <div className="h-1 w-1 rounded-full bg-primary mt-1"></div>
+                      <span className="text-[10px] mt-1 text-primary/80">CSV</span>
+                    </div>
+                    <div className="flex flex-col items-center transform group-hover:-translate-y-1 transition-transform">
+                      <img src={fileIcons.json} alt="JSON" className="h-9 w-9" />
+                      <div className="h-1 w-1 rounded-full bg-green-400 mt-1"></div>
+                      <span className="text-[10px] mt-1 text-green-400/80">JSON</span>
+                    </div>
+                    <div className="flex flex-col items-center transform group-hover:-translate-y-1 transition-transform">
+                      <img src={fileIcons.xlsx} alt="XLSX" className="h-10 w-10" />
+                      <div className="h-1 w-1 rounded-full bg-blue-400 mt-1"></div>
+                      <span className="text-[10px] mt-1 text-blue-400/80">EXCEL</span>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-white/80 mb-1">Click to upload or drag files here</p>
+                    <p className="text-[10px] text-white/50">
+                      {supportLargeFiles && 'showOpenFilePicker' in window ? 
+                        'Supports files up to 5GB' : 
+                        'Supports files up to 2GB'}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
           </Button>
-          <div className="mt-1 text-xs text-center text-white text-opacity-60">
-            {supportLargeFiles && 'showOpenFilePicker' in window ? 
-              'Supports files up to 5GB' : 
-              'Supports files up to 2GB'}
-          </div>
-        </>
+        </div>
       )}
       <input
         ref={fileInputRef}

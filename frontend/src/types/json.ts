@@ -1,9 +1,10 @@
-import { ColumnType, CSVParseResult } from './csv';
+import { ColumnType, CSVParseResult } from "./csv";
 
 export enum DataSourceType {
-  CSV = 'CSV',
-  JSON = 'JSON',
-  Parquet = 'Parquet'
+  CSV = "CSV",
+  JSON = "JSON",
+  Parquet = "Parquet",
+  XLSX = "xlsx",
 }
 
 export interface JsonSchema {
@@ -11,7 +12,7 @@ export interface JsonSchema {
   isNested: boolean;
 }
 
-export interface DataParseResult extends Omit<CSVParseResult, 'stats'> {
+export interface DataParseResult extends Omit<CSVParseResult, "stats"> {
   sourceType: DataSourceType;
   rawData?: any;
   schema?: JsonSchema;

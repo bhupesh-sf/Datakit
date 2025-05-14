@@ -1,42 +1,37 @@
-import { useState, useEffect, useMemo } from 'react';
-import { ChevronRight, ChevronDown, Database, FileJson } from 'lucide-react';
-import { ColumnType } from '@/types/csv';
+import { useState, useMemo } from 'react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 
-import { DataSourceType, JsonField } from '@/types/json';
+import { useAppStore } from '@/store/appStore';
+
+import { DataSourceType } from '@/types/json';
 
 import CSVGrid from './CSVGrid';
 
-interface JSONGridProps {
-  data?: string[][];
-  columnTypes?: ColumnType[];
-  rawData?: any;
-  viewMode?: 'table' | 'tree';
-  schema?: {
-    fields: JsonField[];
-    isNested: boolean;
-    arrayDepth: number;
-  };
-}
+/**
+ * Type for a node path in the JSON tree
+ */
+type NodePath = string;
 
-const JSONGrid = ({ 
-  data, 
-  columnTypes = [], 
-  rawData, 
-  viewMode = 'table',
-  schema
-}: JSONGridProps) => {
-  // State for view toggle
-  const [currentView, setCurrentView] = useState<'table' | 'tree'>(viewMode);
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+/**
+ * JSONGrid component that provides both tabular and tree views for JSON data
+ */
+const JSONGrid: React.FC = () => {
+  // Get data from store
+  const { 
+    rawData, 
+    jsonSchema,
+    jsonViewMode,
+  } = useAppStore();
   
-  // Update view when prop changes
-  useEffect(() => {
-    setCurrentView(viewMode);
-  }, [viewMode]);
+  // State for expanded nodes in the tree view
+  const [expandedNodes, setExpandedNodes] = useState<Set<NodePath>>(new Set());
   
-  // Determine if JSON is deeply nested
+  /**
+   * Determine if JSON data has nested structure
+   * First checks schema, then falls back to inspecting raw data
+   */
   const isNested = useMemo(() => {
-    if (schema) return schema.isNested;
+    if (jsonSchema) return jsonSchema.isNested;
     
     // Otherwise try to detect from rawData
     if (!rawData) return false;
@@ -61,10 +56,13 @@ const JSONGrid = ({
     }
     
     return false;
-  }, [rawData, schema]);
+  }, [rawData, jsonSchema]);
   
-  // Toggle node expansion in tree view
-  const toggleNode = (path: string) => {
+  /**
+   * Toggle expansion state of a tree node
+   * @param path - Dot-notation path to the node (e.g. "results.0.name")
+   */
+  const toggleNode = (path: NodePath) => {
     setExpandedNodes(prev => {
       const next = new Set(prev);
       if (next.has(path)) {
@@ -76,7 +74,10 @@ const JSONGrid = ({
     });
   };
   
-  // Format value for display in tree view
+  /**
+   * Format value for display in tree view
+   * @param value - Value to format
+   */
   const formatValue = (value: any): string => {
     if (value === null || value === undefined) return 'null';
     if (typeof value === 'string') return `"${value}"`;
@@ -89,8 +90,14 @@ const JSONGrid = ({
     return String(value);
   };
   
-  // Render tree node recursively
-  const renderTreeNode = (key: string, value: any, path: string = '', depth: number = 0) => {
+  /**
+   * Recursively render a node in the JSON tree view
+   * @param key - Property key or array index
+   * @param value - Node value
+   * @param path - Current path to this node
+   * @param depth - Nesting depth for indentation
+   */
+  const renderTreeNode = (key: string, value: any, path: NodePath = '', depth: number = 0) => {
     const isObject = value !== null && typeof value === 'object';
     const isExpanded = expandedNodes.has(path);
     const fullPath = path ? `${path}.${key}` : key;
@@ -137,7 +144,9 @@ const JSONGrid = ({
     );
   };
   
-  // Render tree view for JSON
+  /**
+   * Render tree view for JSON data
+   */
   const renderTree = () => {
     if (!rawData) return null;
     
@@ -164,8 +173,8 @@ const JSONGrid = ({
     <div className="json-grid-container h-full">
       {/* Grid or Tree Content */}
       <div className="view-content h-full overflow-auto">
-        {(currentView === 'table' || !isNested) ? (
-          <CSVGrid data={data} columnTypes={columnTypes} />
+        {(jsonViewMode === 'table' || !isNested) ? (
+          <CSVGrid />
         ) : (
           renderTree()
         )}

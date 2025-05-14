@@ -133,3 +133,196 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     // Return results
   }
 }));
+
+
+## TODO
+
+0.1> XSLX
+0> ICONS
+1> Recent files
+2> query panel and all the buttons, etc in it
+3> visual
+4> llm
+
+TS issues
+
+
+
+Real Solution: Client-Side Conversion
+For the most reliable experience, consider implementing a client-side conversion approach:
+
+Use SheetJS (xlsx.js) to parse Excel files in the browser
+Convert parsed data to CSV format
+Import the resulting CSV instead of the original Excel file
+
+
+
+___
+
+Phase 2: Query Tab Enhancement - Design and Implementation Plan
+For Phase 2, we'll transform the current query panel into a full-featured, professional-grade SQL workspace. Let's explore the vision and approach before diving into implementation.
+Vision for the Enhanced Query Tab
+The enhanced Query Tab will provide a modern, IDE-like experience for querying data with SQL, featuring:
+
+Split Layout: A flexible, resizable split between editor and results
+Robust SQL Editor: Syntax highlighting, autocompletion, and formatting
+Schema Browser: Collapsible panel showing table structure
+Query History: Save and reuse previous queries
+Keyboard Shortcuts: Power-user productivity shortcuts
+Result Visualization: Tabular and chart visualization options
+
+Design Concept
+Visually, the Query Tab will follow a three-panel layout:
++----------------------------------------------------------------+
+|                           HEADER                               |
++----------------+-----------------------+------------------------|
+|                |                       |                        |
+|                |                       |                        |
+|  SCHEMA        |    SQL EDITOR         |   SAVED QUERIES       |
+|  BROWSER       |                       |                        |
+|                |                       |                        |
+|                |                       |                        |
+|                |                       |                        |
+|                +-----------------------+                        |
+|                |                       |                        |
+|                |                       |                        |
+|                |    RESULTS            |                        |
+|                |                       |                        |
+|                |                       |                        |
++----------------+-----------------------+------------------------+
+The layout will be responsive with:
+
+Collapsible side panels
+Resizable split between editor and results
+Full-screen option for editor or results
+
+Key Components in Detail
+1. Enhanced SQL Editor
+We'll significantly improve the CodeEditor component with:
+
+Monaco Editor Integration: Visual Studio Code's editor for advanced IDE features
+SQL-Specific Features:
+
+Syntax highlighting with better color contrast and keyword recognition
+Autocompletion for SQL keywords, table names, and columns
+Error detection and linting
+Code folding for large queries
+
+
+Toolbar: Formatting, copy, save, and run buttons
+Keyboard Shortcuts:
+
+Ctrl+Enter / Cmd+Enter: Execute query
+Ctrl+S / Cmd+S: Save query
+Ctrl+F / Cmd+F: Find in query
+Ctrl+. / Cmd+.: Format query
+
+
+
+2. Schema Browser
+A collapsible panel showing:
+
+Tables: List of available tables with expand/collapse
+Columns: For each table, show columns with data types
+Metadata: Additional info like row counts, indexes
+Quick Actions:
+
+Insert table name
+Generate SELECT statement
+Show sample data
+
+
+
+3. Query History & Saved Queries
+A panel to:
+
+Track History: Automatically save executed queries
+Save Favorites: Let users save and name queries
+Organize: Group queries by tags or folders
+Share: Export queries for sharing
+
+4. Results Panel
+Enhanced visualization of query results:
+
+Tabular View: Advanced data grid with sorting and filtering
+Pagination: For large result sets
+Export Options: CSV, JSON, Excel
+Statistics: Execution time, row count, data size
+
+Technical Implementation Approach
+1. Component Architecture
+We'll create several new components:
+
+QueryWorkspace: Main container component
+SchemaBrowser: Left panel showing schema
+EnhancedSQLEditor: Improved editor (potentially using Monaco)
+QueryHistory: Right panel for saved queries
+QueryResults: Enhanced results visualization
+StatusBar: Shows execution status and statistics
+
+2. State Management
+Extend our Zustand store with:
+
+Schema state: Table and column information
+Query history: Previous queries
+Saved queries: User-saved queries with names
+Editor state: Current query, selected text
+Results state: Current results, selected cells
+
+3. API Integration
+Enhance interaction with DuckDB:
+
+Load schema information automatically
+Provide execution statistics
+Support for query cancellation
+Improved error handling
+
+Implementation Phases
+Let's break down the implementation into smaller parts:
+
+Basic Layout: Create the split layout with placeholders
+Schema Browser: Implement the collapsible schema panel
+Enhanced Editor: Integrate Monaco or enhance our custom editor
+Query History: Add query history functionality
+Results Enhancement: Improve results visualization
+Polish & Refinement: Add keyboard shortcuts and final polish
+
+Key Technical Decisions
+Before implementation, we need to decide on:
+
+Editor Technology: Monaco vs custom editor enhancement
+Layout Library: React-Split vs CSS Grid/Flexbox for resizable panels
+Storage Approach: How to persist saved queries (localStorage, IndexedDB)
+Feature Prioritization: Which features to implement first
+
+Next Steps
+Based on this design, would you like to:
+
+Move forward with a specific part of this implementation?
+Adjust or refine any aspects of the design?
+Focus on a particular technical aspect first?
+
+I recommend we start with the basic layout and schema browser implementation, as they'll provide the foundation for the enhanced query experience.RetryClaude does not have the ability to run the code it generates yet.Claude can make mistakes. Please double-check responses.
+___
+
+
+
+Phase 3: Visualization System
+Objective: Create a visualization tab that leverages DuckDB query results to generate interactive charts.
+Key Components:
+
+Develop a chart configuration interface
+Create a library of basic chart types (line, bar, scatter, pie)
+Implement color customization tools
+Build an integration layer between DuckDB query results and chart data
+Add chart export/sharing capabilities
+
+Design Approach:
+
+Create a wizard-like interface for chart creation
+Allow direct SQL input or visual query builder
+Implement a chart gallery for quick selection
+Enable drag-and-drop customization of chart elements
+
+
+

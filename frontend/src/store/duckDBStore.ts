@@ -52,7 +52,9 @@ interface DuckDBState {
   ) => Promise<{ name: string; type: string }[] | null>;
   resetError: () => void;
   cleanupDB: () => Promise<void>;
-  importFileDirectly: (file: File) => Promise<{tableName: string; rowCount: number}>;
+  importFileDirectly: (
+    file: File
+  ) => Promise<{ tableName: string; rowCount: number }>;
 }
 
 // Create the store
@@ -583,9 +585,140 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       set({
         isLoading: true,
         error: null,
-        processingStatus: "Importing file directly into DuckDB...",
-        processingProgress: 0.1, // Show initial progress
+        processingStatus: "Preparing to import file...",
+        processingProgress: 0.1,
       });
+
+      // Get file extension and size
+      const fileExt = file.name.split(".").pop()?.toLowerCase();
+      const fileSize = file.size / (1024 * 1024); // Size in MB
+      console.log(
+        `[DuckDBStore] Importing file: ${file.name} (${fileSize.toFixed(2)} MB)`
+      );
+
+      // For Excel files larger than 2MB, use SheetJS conversion
+      if (fileExt === "xlsx" || fileExt === "xls") {
+        try {
+          set({
+            processingStatus: "Converting Excel file to CSV format...",
+            processingProgress: 0.15,
+          });
+
+          // Dynamically import SheetJS to avoid loading it unless needed
+          const XLSX = await import("xlsx");
+
+          // Read the Excel file
+          const arrayBuffer = await file.arrayBuffer();
+          const data = new Uint8Array(arrayBuffer);
+
+          set({ processingProgress: 0.3 });
+          console.log(`[DuckDBStore] Parsing Excel file with SheetJS`);
+
+          // Parse the workbook
+          const workbook = XLSX.read(data, { type: "array" });
+
+          // Get the first sheet
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+
+          set({
+            processingStatus: `Converting Excel sheet "${firstSheetName}" to CSV...`,
+            processingProgress: 0.5,
+          });
+
+          // Convert to CSV
+          const csvData = XLSX.utils.sheet_to_csv(worksheet);
+
+          // Create a CSV File object
+          const baseName = file.name.replace(/\.[^/.]+$/, "");
+          const csvFileName = `${baseName}_converted.csv`;
+          const csvBlob = new Blob([csvData], { type: "text/csv" });
+          const csvFile = new File([csvBlob], csvFileName, {
+            type: "text/csv",
+          });
+
+          set({
+            processingStatus: "Importing converted CSV data...",
+            processingProgress: 0.6,
+          });
+
+          // Now proceed with normal CSV import for the converted file
+          // Generate a safe table name from the original file name
+          const rawTableName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
+          const escapedTableName = `"${rawTableName}"`;
+
+          // Drop existing table if any
+          const dropQuery = `DROP TABLE IF EXISTS ${escapedTableName}`;
+          await get().connection!.query(dropQuery);
+
+          // Create a temporary connection for this operation
+          const conn = await get().db!.connect();
+
+          try {
+            // Register the CSV file with DuckDB
+            const registeredFileName = `import_${Date.now()}.csv`;
+
+            await get().db!.registerFileHandle(
+              registeredFileName,
+              csvFile,
+              duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
+              false
+            );
+
+            set({ processingProgress: 0.7 });
+
+            // Import the CSV
+            const createTableQuery = `
+              CREATE TABLE ${escapedTableName} AS 
+              SELECT * FROM read_csv_auto('${registeredFileName}', header=true, auto_detect=true)
+            `;
+
+            console.log(`[DuckDBStore] Importing converted CSV data`);
+            await conn.query(createTableQuery);
+
+            // Close the temporary connection
+            await conn.close();
+
+            // Verify the import
+            const countQuery = `SELECT COUNT(*) as count FROM ${escapedTableName}`;
+            const countResult = await get().connection!.query(countQuery);
+            const count = countResult.toArray()[0].count;
+
+            console.log(
+              `[DuckDBStore] Successfully imported ${count} rows from Excel via CSV conversion`
+            );
+
+            // Register the table in our store
+            const newTables = new Map(get().registeredTables);
+            newTables.set(rawTableName, escapedTableName);
+
+            set({
+              registeredTables: newTables,
+              isLoading: false,
+              processingStatus: `Import complete (converted from Excel to CSV)`,
+              processingProgress: 1.0,
+            });
+
+            return {
+              tableName: rawTableName,
+              rowCount: count,
+              originalFormat: fileExt,
+              convertedToCsv: true,
+            };
+          } catch (err) {
+            // Make sure to close the connection on error
+            await conn.close();
+            throw err;
+          }
+        } catch (convErr) {
+          console.error(`[DuckDBStore] Excel conversion failed:`, convErr);
+          throw new Error(
+            `Excel conversion failed: ${
+              convErr instanceof Error ? convErr.message : String(convErr)
+            }`
+          );
+        }
+      }
 
       // Generate a safe table name from the file name
       const rawTableName = file.name
@@ -607,10 +740,8 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
       try {
         // Register the file with DuckDB
-        // This creates a virtual filesystem entry that DuckDB can use
-        const fileName = `import_${Date.now()}.csv`;
+        const fileName = `import_${Date.now()}.${fileExt}`;
 
-        // Use the registerFileHandle method - this is the recommended way
         await get().db!.registerFileHandle(
           fileName,
           file,
@@ -621,46 +752,70 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         set({ processingProgress: 0.4 });
         console.log(`[DuckDBStore] File registered with DuckDB as ${fileName}`);
 
-        // Now use DuckDB's CSV reader to create a table from this file
-        const createTableQuery = `
-        CREATE TABLE ${escapedTableName} AS 
-        SELECT * FROM read_csv_auto('${fileName}', header=true, auto_detect=true)
-      `;
+        if (fileExt === "csv") {
+          const createTableQuery = `
+            CREATE TABLE ${escapedTableName} AS 
+            SELECT * FROM read_csv_auto('${fileName}', header=true, auto_detect=true)
+          `;
 
-        console.log(
-          `[DuckDBStore] Creating table from file: ${createTableQuery}`
-        );
-        await conn.query(createTableQuery);
+          set({ processingStatus: "Importing CSV file..." });
+          console.log(`[DuckDBStore] Creating table from CSV file`);
+          await conn.query(createTableQuery);
+        } else if (fileExt === "json") {
+          set({ processingStatus: "Importing JSON file..." });
+          const createTableQuery = `
+            CREATE TABLE ${escapedTableName} AS 
+            SELECT * FROM read_json_auto('${fileName}')
+          `;
+          console.log(`[DuckDBStore] Creating table from JSON file`);
+          await conn.query(createTableQuery);
+        } else {
+          throw new Error(`Unsupported file type: ${fileExt}`);
+        }
+
         set({ processingProgress: 0.9 });
 
         // Close the temporary connection
         await conn.close();
 
         // Verify the import
-        const countQuery = `SELECT COUNT(*) as count FROM ${escapedTableName}`;
-        const countResult = await get().connection!.query(countQuery);
-        const count = countResult.toArray()[0].count;
-        console.log(
-          `[DuckDBStore] Successfully imported table with ${count} rows`
-        );
+        try {
+          const countQuery = `SELECT COUNT(*) as count FROM ${escapedTableName}`;
+          console.log(
+            `[DuckDBStore] Verifying import with query: ${countQuery}`
+          );
+          const countResult = await get().connection!.query(countQuery);
+          const count = countResult.toArray()[0].count;
+          console.log(
+            `[DuckDBStore] Successfully imported table with ${count} rows`
+          );
 
-        // Register the table in our store
-        const newTables = new Map(get().registeredTables);
-        newTables.set(rawTableName, escapedTableName);
-        set({
-          registeredTables: newTables,
-          isLoading: false,
-          processingStatus: "Import complete",
-          processingProgress: 1.0,
-        });
+          // Register the table in our store
+          const newTables = new Map(get().registeredTables);
+          newTables.set(rawTableName, escapedTableName);
 
-        return {
-          tableName: rawTableName,
-          rowCount: count,
-        };
+          set({
+            registeredTables: newTables,
+            isLoading: false,
+            processingStatus: "Import complete",
+            processingProgress: 1.0,
+          });
+
+          return {
+            tableName: rawTableName,
+            rowCount: count,
+          };
+        } catch (countErr) {
+          console.error(`[DuckDBStore] Error verifying import:`, countErr);
+          throw new Error(
+            "Error verifying import. The table may be empty or corrupted."
+          );
+        }
       } catch (err) {
         // Make sure to close the connection on error
-        await conn.close();
+        if (conn) {
+          await conn.close();
+        }
         throw err;
       }
     } catch (err) {
@@ -674,15 +829,18 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       if (err instanceof Error) {
         const errMsg = err.message.toLowerCase();
 
-        if (errMsg.includes("auto_detect")) {
+        if (errMsg.includes("memory") || errMsg.includes("out of bounds")) {
           errorMessage =
-            "Import failed: Could not auto-detect the file format. Please try a different file.";
-        } else if (errMsg.includes("permission") || errMsg.includes("access")) {
+            "Import failed: The file is too large for browser memory limits. Try a smaller file or convert Excel to CSV format.";
+        } else if (
+          errMsg.includes("function") ||
+          errMsg.includes("signature")
+        ) {
           errorMessage =
-            "Import failed: Permission denied when accessing the file.";
-        } else if (errMsg.includes("memory")) {
+            "Import failed: This operation is not supported in the browser version of DuckDB. Try a different approach or convert to CSV.";
+        } else if (errMsg.includes("xlsx") || errMsg.includes("excel")) {
           errorMessage =
-            "Import failed: Not enough memory to process this file. Try a smaller file.";
+            "Excel import failed: Excel files are challenging to process in browsers. For best results, convert to CSV format.";
         }
       }
 

@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+
+import { useAppStore } from "@/store/appStore";
 
 import {
   useEmptyGrid,
@@ -7,37 +9,39 @@ import {
   GridData,
 } from "./hooks";
 
-import { ColumnType } from "../../types/csv";
-
-/**
- * Props for the CSVGrid component
- */
-interface CSVGridProps {
-  /** Two-dimensional array of string data to display */
-  data?: string[][];
-  /** Array of column types to format the data */
-  columnTypes?: ColumnType[];
-  /** Callback when DuckDB operations are needed (e.g., for large datasets) */
-  onDuckDBOperation?: (operation: 'query' | 'export', params?: any) => void;
-}
+import { ColumnType } from "@/types/csv";
 
 /**
  * CSVGrid component displays tabular data in an editable grid format
- * with cell editing, formatting, and animations
+ * with cell editing, formatting, and animations.
  */
-const CSVGrid: React.FC<CSVGridProps> = ({ 
-  data, 
-  columnTypes = [],
-  onDuckDBOperation 
-}) => {
+const CSVGrid: React.FC = () => {
+  const { 
+    data: storeData, 
+    columnTypes, 
+    setActiveTab 
+  } = useAppStore();
+  
+  // Track if this component has been mounted
+  const isMounted = useRef(false);
+  
   // Get empty grid
   const emptyGrid = useEmptyGrid();
 
-  // Setup state
-  const [gridData, setGridData] = useState<GridData>(emptyGrid);
-  const [isDataMode, setIsDataMode] = useState<boolean>(false);
-  const [totalRows, setTotalRows] = useState<number>(0);
-  const [displayedRows, setDisplayedRows] = useState<number>(0);
+  // Setup local state - initialize with data from store if available
+  const [gridData, setGridData] = useState<GridData>(() => {
+    if (storeData && storeData.length > 0) {
+      return storeData.map((row, index) => {
+        if (index === 0) return [" ", ...row];
+        return [index.toString(), ...row];
+      });
+    }
+    return emptyGrid;
+  });
+  
+  const [isDataMode, setIsDataMode] = useState<boolean>(!!storeData && storeData.length > 0);
+  const [totalRows, setTotalRows] = useState<number>(storeData ? Math.max(0, storeData.length - 1) : 0);
+  const [displayedRows, setDisplayedRows] = useState<number>(storeData ? Math.max(0, storeData.length - 1) : 0);
 
   // Cell editing functionality
   const {
@@ -49,17 +53,25 @@ const CSVGrid: React.FC<CSVGridProps> = ({
     handleKeyDown,
   } = useGridEditing(gridData, setGridData);
 
-  // Animation functionality
+  // Determine if we should show animation - only when no data is present
+  const hasDataToDisplay = !!storeData && storeData.length > 0;
+  
+  // Animation functionality - pass hasDataToDisplay as third parameter
+  // This tells the hook to never show animation when we have data
   const { activeWordIndex, animationMessage, animationActive } =
-    useWelcomeAnimation(emptyGrid, setGridData, isDataMode);
+    useWelcomeAnimation(emptyGrid, setGridData, hasDataToDisplay);
 
   /**
-   * Handle data import from props
+   * Handle data import from global store
+   * This effect processes data from the global store and updates local grid state
    */
   useEffect(() => {
-    if (data && data.length > 0) {
+    // Set mounted flag
+    isMounted.current = true;
+    
+    if (storeData && storeData.length > 0) {
       // Format data with row numbers
-      const withRowNumbers: GridData = data.map((row, index) => {
+      const withRowNumbers: GridData = storeData.map((row, index) => {
         if (index === 0) {
           return [" ", ...row]; // Header row
         }
@@ -69,18 +81,28 @@ const CSVGrid: React.FC<CSVGridProps> = ({
       // Update state
       setGridData(withRowNumbers);
       setIsDataMode(true);
-      setTotalRows(data.length - 1); // Subtract header row
-      setDisplayedRows(data.length - 1);
+      setTotalRows(storeData.length - 1); // Subtract header row
+      setDisplayedRows(storeData.length - 1);
     } else {
-      setIsDataMode(false);
-      setGridData(emptyGrid);
-      setTotalRows(0);
-      setDisplayedRows(0);
+      // Only reset to empty if we're mounted (not initial render)
+      // and only if animation is not active
+      if (isMounted.current && !animationActive) {
+        setIsDataMode(false);
+        setGridData(emptyGrid);
+        setTotalRows(0);
+        setDisplayedRows(0);
+      }
     }
-  }, [data, emptyGrid]);
+    
+    // Cleanup function to run on unmount
+    return () => {
+      isMounted.current = false;
+    };
+  }, [storeData, emptyGrid, animationActive]);
 
   /**
    * Determine cell class based on state and content
+   * 
    * @param rowIndex - Row index in the grid
    * @param colIndex - Column index in the grid
    * @returns CSS class string for the cell
@@ -150,6 +172,7 @@ const CSVGrid: React.FC<CSVGridProps> = ({
 
   /**
    * Format cell value based on type
+   * 
    * @param value - Original cell value
    * @param rowIndex - Row index in the grid
    * @param colIndex - Column index in the grid
@@ -212,12 +235,11 @@ const CSVGrid: React.FC<CSVGridProps> = ({
    */
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    if (onDuckDBOperation && isDataMode) {
-      // Could open a context menu here for DuckDB operations
-      // For now, just trigger a query operation
-      onDuckDBOperation('query');
+    if (isDataMode) {
+      // Switch to query tab when right-clicking with data
+      setActiveTab("query");
     }
-  }, [onDuckDBOperation, isDataMode]);
+  }, [isDataMode, setActiveTab]);
 
   /**
    * Render row count indicator
@@ -236,9 +258,9 @@ const CSVGrid: React.FC<CSVGridProps> = ({
             `Displaying ${displayedRows.toLocaleString()} of ${totalRows.toLocaleString()} rows`
           )}
         </div>
-        {!showingAll && onDuckDBOperation && (
+        {!showingAll && (
           <button
-            onClick={() => onDuckDBOperation('query')}
+            onClick={() => setActiveTab('query')}
             className="text-xs text-primary hover:text-primary-hover"
           >
             Query full dataset in DuckDB →
@@ -247,6 +269,20 @@ const CSVGrid: React.FC<CSVGridProps> = ({
       </div>
     );
   };
+
+  // Force re-render with store data when component becomes visible again
+  useEffect(() => {
+    if (storeData && storeData.length > 0) {
+      const withRowNumbers: GridData = storeData.map((row, index) => {
+        if (index === 0) {
+          return [" ", ...row]; // Header row
+        }
+        return [index.toString(), ...row]; // Data rows
+      });
+      setGridData(withRowNumbers);
+      setIsDataMode(true);
+    }
+  }, []);
 
   return (
     <div 
