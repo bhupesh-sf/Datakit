@@ -130,22 +130,6 @@ const QueryResults: React.FC<QueryResultsProps> = ({
     document.body.removeChild(link);
   };
   
-  // Copy results to clipboard
-  const copyToClipboard = () => {
-    if (!results || !columns) return;
-    
-    const table = [
-      columns.join('\t'),
-      ...results.map(row => 
-        columns.map(col => formatValue(row[col])).join('\t')
-      )
-    ].join('\n');
-    
-    navigator.clipboard.writeText(table);
-    setCopiedToClipboard(true);
-    setTimeout(() => setCopiedToClipboard(false), 2000);
-  };
-  
   // Format value for display
   const formatValue = (value: any): string => {
     if (value === null || value === undefined) return 'NULL';
@@ -272,23 +256,7 @@ const QueryResults: React.FC<QueryResultsProps> = ({
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs"
-            onClick={copyToClipboard}
-          >
-            {copiedToClipboard ? (
-              <>
-                <Check size={12} className="mr-1 text-primary" />
-                <span>Copied!</span>
-              </>
-            ) : (
-              <>
-                <span>Copy</span>
-              </>
-            )}
-          </Button>
+         
           
           <Button
             variant="ghost"

@@ -1,22 +1,12 @@
 import { create } from "zustand";
 import * as duckdb from "@duckdb/duckdb-wasm";
+
 import { cleanup, initializeDuckDB } from "@/lib/duckdb/init";
 import { isDevelopment } from "@/lib/duckdb/config";
+import { executePaginatedQuery } from "@/lib/duckdb/query";
 
+import { PaginatedQueryResult } from "@/lib/duckdb/types";
 import { ColumnType } from "@/types/csv";
-import { DataSourceType } from "@/types/json";
-
-// Types for the store
-
-interface PaginatedQueryResult {
-  data: any[];
-  columns: string[];
-  totalRows: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  queryTime: number;
-}
 
 interface DuckDBState {
   // DB state
@@ -70,7 +60,6 @@ interface DuckDBState {
   ) => Promise<PaginatedQueryResult | null>;
 }
 
-// Create the store
 export const useDuckDBStore = create<DuckDBState>((set, get) => ({
   // Initial state
   db: null,
@@ -411,7 +400,6 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     }
   },
 
-  // Execute a SQL query
   executeQuery: async (sql) => {
     const { connection, isInitialized, registeredTables } = get();
 
@@ -476,12 +464,10 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     }
   },
 
-  // Get available tables
   getAvailableTables: () => {
     return Array.from(get().registeredTables.keys());
   },
 
-  // Get table schema
   getTableSchema: async (tableName) => {
     const { connection, isInitialized, registeredTables } = get();
 
@@ -507,10 +493,9 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     }
   },
 
-  // Reset error state
   resetError: () => set({ error: null }),
 
-  // Cleanup function for DB
+
   cleanupDB: async () => {
     const { db, connection } = get();
 
@@ -816,9 +801,16 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     }
   },
 
+  /**
+   * Execute a SQL query with pagination
+   *
+   * @param sql - SQL query to execute
+   * @param page - Current page number (1-based)
+   * @param pageSize - Number of rows per page
+   * @returns Promise resolving to paginated query result
+   */
   executePaginatedQuery: async (sql, page, pageSize) => {
     const { connection, isInitialized, registeredTables } = get();
-    const startTime = performance.now();
 
     if (!connection || !isInitialized) {
       await get().initialize();
@@ -829,190 +821,24 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     }
 
     try {
-      console.log(
-        `[DuckDBStore] Executing paginated query (page: ${page}, size: ${pageSize})`
-      );
       set({ isLoading: true, error: null });
 
-      // Process the SQL query to add table name quotes if needed
-      let processedSQL = sql;
-      const knownTableNames = Array.from(registeredTables.keys());
-      for (const tableName of knownTableNames) {
-        const tableNameRegex = new RegExp(
-          `\\b${tableName}\\b(?=(?:[^"]*"[^"]*")*[^"]*$)`,
-          "g"
-        );
-        const escapedName = registeredTables.get(tableName) || `"${tableName}"`;
-        processedSQL = processedSQL.replace(tableNameRegex, escapedName);
-      }
-
-      // Clean SQL for analysis (remove comments and normalize whitespace)
-      const cleanSQL = processedSQL
-        .replace(/--.*$/gm, "") // Remove single-line comments
-        .replace(/\/\*[\s\S]*?\*\//g, "") // Remove multi-line comments
-        .trim();
-
-      // Determine if this is a SELECT query (case insensitive)
-      const isSelectQuery = /^\s*SELECT\b/i.test(cleanSQL);
-
-      if (!isSelectQuery) {
-        console.warn(
-          `[DuckDBStore] Non-SELECT query detected, pagination may not work as expected: ${cleanSQL.substring(
-            0,
-            50
-          )}...`
-        );
-      }
-
-      // 1. First, get the total count without pagination
-      let countQuery;
-      let totalRows = 0;
-      let totalPages = 0;
-
-      if (isSelectQuery) {
-        // For standard SELECT queries, we wrap them in a COUNT
-        // Use CAST to handle BigInt conversion issues
-        countQuery = `SELECT CAST(COUNT(*) AS INTEGER) as total_rows FROM (${processedSQL}) as count_query`;
-
-        console.log(`[DuckDBStore] Executing count query: ${countQuery}`);
-
-        try {
-          const countResult = await connection.query(countQuery);
-          const countArray = countResult.toArray();
-
-          // Safely extract the count, handling various numeric types
-          if (countArray && countArray.length > 0) {
-            const countValue = countArray[0].total_rows;
-
-            // Handle BigInt or Number conversions
-            if (typeof countValue === "bigint") {
-              totalRows = Number(countValue);
-              console.log(
-                `[DuckDBStore] Converted BigInt count (${countValue}) to Number (${totalRows})`
-              );
-            } else {
-              totalRows = countValue || 0;
-            }
-
-            totalPages = Math.ceil(totalRows / pageSize);
-            console.log(
-              `[DuckDBStore] Total rows: ${totalRows}, Total pages: ${totalPages}`
-            );
-          } else {
-            console.warn(
-              `[DuckDBStore] Count query returned no results, setting totalRows to 0`
-            );
-            totalRows = 0;
-            totalPages = 0;
-          }
-        } catch (countErr) {
-          console.error(`[DuckDBStore] Error executing count query:`, countErr);
-          console.log(
-            `[DuckDBStore] Falling back to direct query without count`
-          );
-          // If count fails, we'll try to proceed with the main query
-          totalRows = 0;
-          totalPages = 1;
-        }
-      } else {
-        // For non-SELECT queries, we don't paginate
-        console.log(`[DuckDBStore] Non-SELECT query, skipping pagination`);
-        totalRows = 0;
-        totalPages = 1;
-      }
-
-      // 2. Now execute the actual query with pagination
-      let paginatedSQL = processedSQL;
-
-      // Only add LIMIT and OFFSET if it's a SELECT query without existing LIMIT
-      if (isSelectQuery && !cleanSQL.toUpperCase().includes("LIMIT")) {
-        const offset = (page - 1) * pageSize;
-        paginatedSQL = `${processedSQL} LIMIT ${pageSize} OFFSET ${offset}`;
-        console.log(
-          `[DuckDBStore] Applying pagination: LIMIT ${pageSize} OFFSET ${offset}`
-        );
-      }
-
-      console.log(`[DuckDBStore] Executing paginated SQL: ${paginatedSQL}`);
-      const result = await connection.query(paginatedSQL);
-
-      const endTime = performance.now();
-      const queryTime = endTime - startTime;
-
-      // Safely convert to array, handling any BigInt conversions
-      let resultData = [];
-      try {
-        // Get raw data
-        const rawData = result.toArray();
-
-        // Process data to handle BigInt values
-        resultData = rawData.map((row) => {
-          const processedRow = {};
-
-          // For each property in the row
-          for (const key in row) {
-            if (Object.prototype.hasOwnProperty.call(row, key)) {
-              const value = row[key];
-
-              // Convert BigInt to Number if it's within safe integer range
-              if (typeof value === "bigint") {
-                if (
-                  value <= Number.MAX_SAFE_INTEGER &&
-                  value >= Number.MIN_SAFE_INTEGER
-                ) {
-                  processedRow[key] = Number(value);
-                } else {
-                  // For larger values, convert to string to avoid precision loss
-                  processedRow[key] = value.toString();
-                }
-              } else {
-                processedRow[key] = value;
-              }
-            }
-          }
-
-          return processedRow;
-        });
-      } catch (conversionErr) {
-        console.error(
-          `[DuckDBStore] Error converting result data:`,
-          conversionErr
-        );
-        // Fallback to empty result set
-        resultData = [];
-      }
-
-      const columns = result.schema.fields.map((f) => f.name);
-
-      // If we didn't get a count (non-SELECT query), use result size
-      if (totalRows === 0 && resultData.length > 0) {
-        if (isSelectQuery) {
-          // For SELECT queries without count, we know there's at least this many rows
-          totalRows = (page - 1) * pageSize + resultData.length;
-          // If we got less than pageSize, we might be on the last page
-          const isLastPage = resultData.length < pageSize;
-          totalPages = isLastPage ? page : page + 1; // At least current page + 1 more
-        } else {
-          totalRows = resultData.length;
-          totalPages = 1;
-        }
-      }
+      // Use the refactored function from our utilities
+      const result = await executePaginatedQuery(
+        {
+          sql,
+          page,
+          pageSize,
+          applyPagination: true,
+          countTotalRows: true,
+        },
+        connection,
+        registeredTables
+      );
 
       set({ isLoading: false });
 
-      console.log(
-        `[DuckDBStore] Query executed successfully. Returned ${resultData.length} rows out of ${totalRows} total`
-      );
-
-      return {
-        data: resultData,
-        columns,
-        totalRows,
-        page,
-        pageSize,
-        totalPages,
-        queryTime,
-      };
+      return result;
     } catch (err) {
       console.error(`[DuckDBStore] Paginated query execution error:`, err);
       set({
