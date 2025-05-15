@@ -54,7 +54,7 @@ const Home = () => {
    */
   const getStatusText = () => {
     if (!fileName) {
-      return "Upload a CSV, XSLX or JSON file to get started.";
+      return "Bring a CSV, XSLX or JSON file to get started.";
     }
 
     const baseText = `${rowCount.toLocaleString()} rows × ${columnCount.toLocaleString()} columns | ${
