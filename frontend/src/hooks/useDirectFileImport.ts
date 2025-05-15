@@ -59,7 +59,7 @@ export function useDirectFileImport() {
           } else {
             // Regular file processing
             setLoadingStatus(
-              `Importing ${fileExt?.toUpperCase()} file directly to DuckDB...`
+              `Importing ${fileExt?.toUpperCase()} file to DuckDB...`
             );
           }
 

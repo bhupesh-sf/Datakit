@@ -253,7 +253,7 @@ const CSVGrid: React.FC = () => {
       <div className="flex justify-between items-center p-2 bg-darkNav border-b border-white border-opacity-10">
         <div className="text-sm text-white text-opacity-70">
           {showingAll ? (
-            `Displaying all ${totalRows.toLocaleString()} rows`
+            `Displaying ${totalRows.toLocaleString()} rows`
           ) : (
             `Displaying ${displayedRows.toLocaleString()} of ${totalRows.toLocaleString()} rows`
           )}

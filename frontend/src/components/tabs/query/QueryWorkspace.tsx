@@ -13,9 +13,9 @@ import {
   Maximize,
   Minimize,
   Save,
-  Info,
   Book,
   Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -31,7 +31,7 @@ const QueryWorkspace: React.FC = () => {
     saveQuery: saveQueryToStore,
   } = useAppStore();
 
-  const { executeQuery, isLoading } = useDuckDBStore();
+  const { executePaginatedQuery, isLoading } = useDuckDBStore();
 
   // State for query editor
   const [query, setQuery] = useState<string>(`-- Write your SQL query here
@@ -47,6 +47,14 @@ LIMIT 10;`);
   const [error, setError] = useState<string | null>(null);
   const [executionTime, setExecutionTime] = useState<number | null>(null);
   const [affectedRows, setAffectedRows] = useState<number | null>(null);
+  
+  // Pagination state
+  const [rowsPerPage, setRowsPerPage] = useState<number>(100);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalRows, setTotalRows] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [isChangingPage, setIsChangingPage] = useState<boolean>(false);
+  const [showLargeDataWarning, setShowLargeDataWarning] = useState<boolean>(false);
 
   // UI state
   const [showSchemaBrowser, setShowSchemaBrowser] = useState<boolean>(
@@ -65,22 +73,24 @@ LIMIT 10;`);
   const [saveDialogOpen, setSaveDialogOpen] = useState<boolean>(false);
   const [queryName, setQueryName] = useState<string>("");
 
+  useEffect(() => {
+    // Set default values if not set
+    if (!localStorage.getItem("datakit-show-schema-browser")) {
+      localStorage.setItem("datakit-show-schema-browser", "true");
+    }
 
+    if (!localStorage.getItem("datakit-show-query-history")) {
+      localStorage.setItem("datakit-show-query-history", "true");
+    }
 
-useEffect(() => {
-  // Set default values if not set
-  if (!localStorage.getItem("datakit-show-schema-browser")) {
-    localStorage.setItem("datakit-show-schema-browser", "true");
-  }
-  
-  if (!localStorage.getItem("datakit-show-query-history")) {
-    localStorage.setItem("datakit-show-query-history", "true");
-  }
-  
-  // Update state from localStorage
-  setShowSchemaBrowser(localStorage.getItem("datakit-show-schema-browser") !== "false");
-  setShowQueryHistory(localStorage.getItem("datakit-show-query-history") !== "false");
-}, []);
+    // Update state from localStorage
+    setShowSchemaBrowser(
+      localStorage.getItem("datakit-show-schema-browser") !== "false"
+    );
+    setShowQueryHistory(
+      localStorage.getItem("datakit-show-query-history") !== "false"
+    );
+  }, []);
 
   // Element refs for resizing
   const containerRef = useRef<HTMLDivElement>(null);
@@ -97,43 +107,134 @@ useEffect(() => {
     storageKey: "datakit-query-editor-height",
   });
 
+  // Check if query will return a large dataset 
+  const isLargeDataQuery = (sql: string): boolean => {
+    const normalizedSql = sql.trim().toLowerCase();
+    const hasNoLimit = !normalizedSql.includes('limit');
+    const hasSelectAll = normalizedSql.includes('select *');
+    
+    return hasSelectAll && hasNoLimit;
+  };
+
+  // Add a limit clause to query if missing
+  const addLimitToQuery = (sql: string, limit: number = 1000): string => {
+    const normalizedSql = sql.trim();
+    if (!normalizedSql.toLowerCase().includes('limit')) {
+      return `${normalizedSql} LIMIT ${limit}`;
+    }
+    return sql;
+  };
+
   // Execute the current query
   const handleExecuteQuery = async () => {
     if (!query.trim()) return;
 
     try {
+      // Reset state
       setError(null);
       setResults(null);
       setColumns(null);
       setExecutionTime(null);
       setAffectedRows(null);
+      setCurrentPage(1);
+      setIsChangingPage(false);
+      
+      // Show warning for potentially large result set queries
+      setShowLargeDataWarning(isLargeDataQuery(query));
 
-      const startTime = performance.now();
-      const result = await executeQuery(query);
-      const endTime = performance.now();
+      // Execute query with pagination
+      console.log(`[QueryWorkspace] Executing paginated query (page: 1, size: ${rowsPerPage})`);
+      const paginatedResult = await executePaginatedQuery(query, 1, rowsPerPage);
 
-      setExecutionTime(endTime - startTime);
-
-      if (result) {
-        const resultArray = result.toArray();
-        setResults(resultArray);
-        setColumns(result.schema.fields.map((f) => f.name));
-        setAffectedRows(resultArray.length);
+      if (paginatedResult) {
+        console.log(`[QueryWorkspace] Query returned ${paginatedResult.totalRows} total rows`);
+        console.log(`[QueryWorkspace] Current page has ${paginatedResult.data.length} rows`);
+        
+        // Set pagination metadata first
+        setTotalRows(paginatedResult.totalRows);
+        setTotalPages(paginatedResult.totalPages);
+        
+        // Set the page data
+        setResults(paginatedResult.data);
+        setColumns(paginatedResult.columns);
+        setExecutionTime(paginatedResult.queryTime);
+        setAffectedRows(paginatedResult.totalRows);
 
         // Add to recent queries
         addRecentQuery(query);
       } else {
+        // Reset all state on error or empty result
         setResults([]);
         setColumns([]);
         setAffectedRows(0);
+        setTotalRows(0);
+        setTotalPages(0);
       }
     } catch (err) {
+      console.error("[QueryWorkspace] Query execution error:", err);
       setError(
         err instanceof Error ? err.message : "Unknown error executing query"
       );
       setResults(null);
       setColumns(null);
       setAffectedRows(null);
+      setTotalRows(0);
+      setTotalPages(0);
+    }
+  };
+
+  // Handle page change - fetch new page of data
+  const handlePageChange = async (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
+
+    try {
+      setError(null);
+      setIsChangingPage(true);
+
+      console.log(`[QueryWorkspace] Changing to page ${newPage}`);
+      const paginatedResult = await executePaginatedQuery(query, newPage, rowsPerPage);
+
+      if (paginatedResult) {
+        console.log(`[QueryWorkspace] Page ${newPage} has ${paginatedResult.data.length} rows`);
+        
+        // Update just the current page data
+        setResults(paginatedResult.data);
+        setCurrentPage(newPage);
+      }
+    } catch (err) {
+      console.error("[QueryWorkspace] Page change error:", err);
+      setError(err instanceof Error ? err.message : "Error fetching page data");
+    } finally {
+      setIsChangingPage(false);
+    }
+  };
+
+  // Handle rows per page change
+  const handleRowsPerPageChange = async (newRowsPerPage: number) => {
+    try {
+      setError(null);
+      setIsChangingPage(true);
+
+      console.log(`[QueryWorkspace] Changing rows per page to ${newRowsPerPage}`);
+      const paginatedResult = await executePaginatedQuery(query, 1, newRowsPerPage);
+
+      if (paginatedResult) {
+        console.log(`[QueryWorkspace] First page now has ${paginatedResult.data.length} rows`);
+        
+        // Update data and pagination state
+        setResults(paginatedResult.data);
+        setColumns(paginatedResult.columns);
+        setRowsPerPage(newRowsPerPage);
+        setTotalPages(paginatedResult.totalPages);
+        setCurrentPage(1);
+      }
+    } catch (err) {
+      console.error("[QueryWorkspace] Rows per page change error:", err);
+      setError(
+        err instanceof Error ? err.message : "Error changing results per page"
+      );
+    } finally {
+      setIsChangingPage(false);
     }
   };
 
@@ -143,17 +244,16 @@ useEffect(() => {
     setShowSchemaBrowser(newValue);
     localStorage.setItem("datakit-show-schema-browser", String(newValue));
   };
-  
 
   const toggleQueryHistory = () => {
     const newValue = !showQueryHistory;
     setShowQueryHistory(newValue);
     localStorage.setItem("datakit-show-query-history", String(newValue));
-    
+
     // Force a re-render by updating a state value
     setTimeout(() => {
       // This forces React to recalculate the layout
-      window.dispatchEvent(new Event('resize'));
+      window.dispatchEvent(new Event("resize"));
     }, 10);
   };
 
@@ -180,6 +280,12 @@ useEffect(() => {
   };
 
   const toggleTemplates = () => setShowTemplates(!showTemplates);
+
+  // Add a limit to query to optimize it
+  const handleOptimizeQuery = () => {
+    setQuery(addLimitToQuery(query));
+    setShowLargeDataWarning(false);
+  };
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -307,7 +413,7 @@ useEffect(() => {
                   variant="primary"
                   size="sm"
                   onClick={handleExecuteQuery}
-                  disabled={isLoading}
+                  disabled={isLoading || isChangingPage}
                   className="h-8"
                 >
                   <Play size={14} className="mr-1" />
@@ -432,13 +538,50 @@ useEffect(() => {
               </div>
             </div>
 
+            {/* Large dataset warning */}
+            {showLargeDataWarning && totalRows > 10000 && (
+              <div className="bg-primary/10 border border-primary/30 rounded p-3 m-3 text-white text-sm">
+                <div className="flex items-start">
+                  <AlertTriangle size={18} className="text-primary mt-0.5 mr-2 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium mb-1">Large Result Set ({totalRows.toLocaleString()} rows)</h4>
+                    <p className="text-xs text-white/80 mb-2">
+                      This query is returning a large dataset which may affect performance.
+                      Consider adding filters or LIMIT clause to reduce the result size.
+                    </p>
+                    
+                    <div className="flex justify-end space-x-2 mt-2">
+                      <button 
+                        className="text-xs px-3 py-1 rounded bg-primary text-white"
+                        onClick={handleOptimizeQuery}
+                      >
+                        Add LIMIT Clause
+                      </button>
+                      <button 
+                        className="text-xs px-3 py-1 rounded bg-white/10 hover:bg-white/20"
+                        onClick={() => setShowLargeDataWarning(false)}
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Query results component */}
             <div className="flex-1 overflow-auto">
               <QueryResults
                 results={results}
                 columns={columns}
-                isLoading={isLoading}
+                isLoading={isLoading || isChangingPage}
                 error={error}
+                totalRows={totalRows}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                rowsPerPage={rowsPerPage}
+                onPageChange={handlePageChange}
+                onRowsPerPageChange={handleRowsPerPageChange}
               />
             </div>
           </div>

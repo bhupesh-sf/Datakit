@@ -53,8 +53,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       {/* Introduction text */}
       <div className="px-5 py-4">
         <p className="text-sm text-white text-opacity-70">
-          Datakit leverages WebAssembly to process large datasets
-          directly in your browser, without uploading your data to any server.
+          Datakit leverages WebAssembly to process large datasets directly in
+          your browser, without uploading your data to any server.
         </p>
       </div>
 
@@ -62,7 +62,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       <div className="px-5 pt-2 pb-5">
         <FileUploadButton
           onFileSelect={(file) => {
-            return onDataLoad ? processFile(file, onDataLoad) : processFile(file);
+            return onDataLoad
+              ? processFile(file, onDataLoad)
+              : processFile(file);
           }}
           isLoading={isProcessing}
           className="w-full"
@@ -112,22 +114,27 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
           <ul className="space-y-1">
             {recentFiles.slice(0, 5).map((file) => {
               // Determine file type styling
-              const fileExt = file.name.split('.').pop()?.toLowerCase();
-              const typeClasses = {
-                csv: "text-primary",
-                json: "text-secondary",
-                xlsx: "text-tertiary",
-                xls: "text-tertiary"
-              }[fileExt || ""] || "text-white text-opacity-70";
-              
+              const fileExt = file.name.split(".").pop()?.toLowerCase();
+              const typeClasses =
+                {
+                  csv: "text-primary",
+                  json: "text-secondary",
+                  xlsx: "text-tertiary",
+                  xls: "text-tertiary",
+                }[fileExt || ""] || "text-white text-opacity-70";
+
               return (
                 <li key={file.name + file.lastAccessed}>
                   <button
-                    onClick={() => handleRecentFileSelect(file, onDataLoad)}
+                    // TODO: We got to make this recent files work
+                    // onClick={() => handleRecentFileSelect(file, onDataLoad)}
                     disabled={isProcessing}
                     className="w-full text-left flex items-center p-2 rounded text-xs text-white text-opacity-80 hover:bg-background hover:bg-opacity-30 transition-custom"
                   >
-                    <FileText size={14} className={`${typeClasses} mr-2 flex-shrink-0`} />
+                    <FileText
+                      size={14}
+                      className={`${typeClasses} mr-2 flex-shrink-0`}
+                    />
                     <span className="truncate">{file.name}</span>
                   </button>
                 </li>
@@ -145,9 +152,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       <div className="border-t border-white border-opacity-10">
         <div className="p-4 flex items-center justify-between">
           <ThemeColorPicker />
-          
+
           <div className="h-6 w-px bg-white bg-opacity-10 mx-3"></div>
-          
+
           <div className="flex items-center text-xs text-white text-opacity-60">
             <span>DuckDB:</span>
             {duckDBError ? (
@@ -161,7 +168,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
             )}
           </div>
         </div>
-        
+
         <div className="px-4 py-3 text-center border-t border-white border-opacity-5">
           <p className="text-xs text-white text-opacity-50">
             Powered by WebAssembly and DuckDB
