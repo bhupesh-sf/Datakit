@@ -171,7 +171,7 @@ export function useFileAccess() {
           return file;
         } else {
           throw new Error(
-            "File is no longer accessible. Please upload it again."
+            "File is no longer accessible. Please brign it again."
           );
         }
       } catch (err) {

@@ -152,7 +152,7 @@ export const useWelcomeAnimation = (
     { row: 8, col: 4 }, // "Datakit"
     { row: 8, col: 5 }, // "is"
     { row: 8, col: 6 }, // "here,"
-    { row: 8, col: 7 }, // "upload"
+    { row: 8, col: 7 }, // "select"
     { row: 8, col: 8 }, // "a"
     { row: 8, col: 9 }, // "file."
   ];

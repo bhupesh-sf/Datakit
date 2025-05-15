@@ -129,7 +129,7 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
       <div className="p-2 flex-1 overflow-auto">
         {tables.length === 0 ? (
           <div className="p-4 text-center text-white/50 text-xs">
-            No tables available. Upload a file to create a table.
+            No tables available. Select a file to create a table.
           </div>
         ) : (
           <div className="space-y-1">
