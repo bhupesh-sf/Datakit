@@ -1,11 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAppStore } from "@/store/appStore";
-import { useDuckDBStore } from "@/store/duckDBStore";
+
 import SchemaBrowser from "./SchemaBrowser";
 import MonacoEditor from "./MonacoEditor";
 import QueryHistory from "./QueryHistory";
 import QueryResults from "./QueryResults";
+
 import { useResizable } from "@/hooks/useResizable";
+
+import { useQueryExecution } from "@/hooks/query/useQueryExecution";
+import { useQueryHistory } from "@/hooks/query/useQueryHistory";
+import { useQueryOptimization } from "@/hooks/query/useQueryOptimization";
+
 import {
   Play,
   ChevronLeft,
@@ -16,6 +22,7 @@ import {
   Book,
   Clock,
   AlertTriangle,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -25,13 +32,7 @@ import QueryTemplates from "./QueryTemplates";
  * Main container for the enhanced query tab with resizable panels
  */
 const QueryWorkspace: React.FC = () => {
-  const {
-    tableName,
-    addRecentQuery,
-    saveQuery: saveQueryToStore,
-  } = useAppStore();
-
-  const { executePaginatedQuery, isLoading } = useDuckDBStore();
+  const { tableName } = useAppStore();
 
   // State for query editor
   const [query, setQuery] = useState<string>(`-- Write your SQL query here
@@ -39,31 +40,48 @@ SELECT *
 FROM "${tableName || "table"}"
 LIMIT 10;`);
 
-  const [showTemplates, setShowTemplates] = useState<boolean>(false);
-
-  // Query results state
-  const [results, setResults] = useState<any[] | null>(null);
-  const [columns, setColumns] = useState<string[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [executionTime, setExecutionTime] = useState<number | null>(null);
-  const [affectedRows, setAffectedRows] = useState<number | null>(null);
+  // Custom hooks for query functionality
+  const {
+    results,
+    columns,
+    error,
+    executionTime,
+    totalRows,
+    currentPage,
+    totalPages,
+    rowsPerPage,
+    isLoading,
+    isChangingPage,
+    showLargeDataWarning,
+    executeQuery,
+    changePage,
+    changeRowsPerPage,
+    optimizeQuery: applyLimitOptimization,
+    dismissWarning
+  } = useQueryExecution(query, setQuery);
   
-  // Pagination state
-  const [rowsPerPage, setRowsPerPage] = useState<number>(100);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalRows, setTotalRows] = useState<number>(0);
-  const [totalPages, setTotalPages] = useState<number>(0);
-  const [isChangingPage, setIsChangingPage] = useState<boolean>(false);
-  const [showLargeDataWarning, setShowLargeDataWarning] = useState<boolean>(false);
+  const {
+    selectQuery,
+    saveQuery,
+    isLoadingQueries
+  } = useQueryHistory((selectedQuery) => setQuery(selectedQuery));
+  
+  const {
+    suggestions,
+    hasWarnings,
+    analyzeQuery,
+    optimizeQuery
+  } = useQueryOptimization();
 
   // UI state
+  const [showTemplates, setShowTemplates] = useState<boolean>(false);
+  const [showOptimizationTips, setShowOptimizationTips] = useState<boolean>(false);
   const [showSchemaBrowser, setShowSchemaBrowser] = useState<boolean>(
     localStorage.getItem("datakit-show-schema-browser") !== "false"
   );
   const [showQueryHistory, setShowQueryHistory] = useState<boolean>(
     localStorage.getItem("datakit-show-query-history") !== "false"
   );
-
   const [fullScreenMode, setFullScreenMode] = useState<
     "none" | "editor" | "results"
   >("none");
@@ -72,6 +90,11 @@ LIMIT 10;`);
   );
   const [saveDialogOpen, setSaveDialogOpen] = useState<boolean>(false);
   const [queryName, setQueryName] = useState<string>("");
+
+  // Run query analysis whenever the query changes
+  useEffect(() => {
+    analyzeQuery(query);
+  }, [query, analyzeQuery]);
 
   useEffect(() => {
     // Set default values if not set
@@ -106,137 +129,6 @@ LIMIT 10;`);
     maxSize: 800,
     storageKey: "datakit-query-editor-height",
   });
-
-  // Check if query will return a large dataset 
-  const isLargeDataQuery = (sql: string): boolean => {
-    const normalizedSql = sql.trim().toLowerCase();
-    const hasNoLimit = !normalizedSql.includes('limit');
-    const hasSelectAll = normalizedSql.includes('select *');
-    
-    return hasSelectAll && hasNoLimit;
-  };
-
-  // Add a limit clause to query if missing
-  const addLimitToQuery = (sql: string, limit: number = 1000): string => {
-    const normalizedSql = sql.trim();
-    if (!normalizedSql.toLowerCase().includes('limit')) {
-      return `${normalizedSql} LIMIT ${limit}`;
-    }
-    return sql;
-  };
-
-  // Execute the current query
-  const handleExecuteQuery = async () => {
-    if (!query.trim()) return;
-
-    try {
-      // Reset state
-      setError(null);
-      setResults(null);
-      setColumns(null);
-      setExecutionTime(null);
-      setAffectedRows(null);
-      setCurrentPage(1);
-      setIsChangingPage(false);
-      
-      // Show warning for potentially large result set queries
-      setShowLargeDataWarning(isLargeDataQuery(query));
-
-      // Execute query with pagination
-      console.log(`[QueryWorkspace] Executing paginated query (page: 1, size: ${rowsPerPage})`);
-      const paginatedResult = await executePaginatedQuery(query, 1, rowsPerPage);
-
-      if (paginatedResult) {
-        console.log(`[QueryWorkspace] Query returned ${paginatedResult.totalRows} total rows`);
-        console.log(`[QueryWorkspace] Current page has ${paginatedResult.data.length} rows`);
-        
-        // Set pagination metadata first
-        setTotalRows(paginatedResult.totalRows);
-        setTotalPages(paginatedResult.totalPages);
-        
-        // Set the page data
-        setResults(paginatedResult.data);
-        setColumns(paginatedResult.columns);
-        setExecutionTime(paginatedResult.queryTime);
-        setAffectedRows(paginatedResult.totalRows);
-
-        // Add to recent queries
-        addRecentQuery(query);
-      } else {
-        // Reset all state on error or empty result
-        setResults([]);
-        setColumns([]);
-        setAffectedRows(0);
-        setTotalRows(0);
-        setTotalPages(0);
-      }
-    } catch (err) {
-      console.error("[QueryWorkspace] Query execution error:", err);
-      setError(
-        err instanceof Error ? err.message : "Unknown error executing query"
-      );
-      setResults(null);
-      setColumns(null);
-      setAffectedRows(null);
-      setTotalRows(0);
-      setTotalPages(0);
-    }
-  };
-
-  // Handle page change - fetch new page of data
-  const handlePageChange = async (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
-
-    try {
-      setError(null);
-      setIsChangingPage(true);
-
-      console.log(`[QueryWorkspace] Changing to page ${newPage}`);
-      const paginatedResult = await executePaginatedQuery(query, newPage, rowsPerPage);
-
-      if (paginatedResult) {
-        console.log(`[QueryWorkspace] Page ${newPage} has ${paginatedResult.data.length} rows`);
-        
-        // Update just the current page data
-        setResults(paginatedResult.data);
-        setCurrentPage(newPage);
-      }
-    } catch (err) {
-      console.error("[QueryWorkspace] Page change error:", err);
-      setError(err instanceof Error ? err.message : "Error fetching page data");
-    } finally {
-      setIsChangingPage(false);
-    }
-  };
-
-  // Handle rows per page change
-  const handleRowsPerPageChange = async (newRowsPerPage: number) => {
-    try {
-      setError(null);
-      setIsChangingPage(true);
-
-      console.log(`[QueryWorkspace] Changing rows per page to ${newRowsPerPage}`);
-      const paginatedResult = await executePaginatedQuery(query, 1, newRowsPerPage);
-
-      if (paginatedResult) {
-        console.log(`[QueryWorkspace] First page now has ${paginatedResult.data.length} rows`);
-        
-        // Update data and pagination state
-        setResults(paginatedResult.data);
-        setColumns(paginatedResult.columns);
-        setRowsPerPage(newRowsPerPage);
-        setTotalPages(paginatedResult.totalPages);
-        setCurrentPage(1);
-      }
-    } catch (err) {
-      console.error("[QueryWorkspace] Rows per page change error:", err);
-      setError(
-        err instanceof Error ? err.message : "Error changing results per page"
-      );
-    } finally {
-      setIsChangingPage(false);
-    }
-  };
 
   // Toggle side panels
   const toggleSchemaBrowser = () => {
@@ -273,18 +165,21 @@ LIMIT 10;`);
     if (!queryName.trim()) {
       setSaveDialogOpen(true);
     } else {
-      saveQueryToStore(query, queryName);
+      saveQuery(query, queryName);
       setSaveDialogOpen(false);
       setQueryName("");
     }
   };
 
+  // Toggle UI panels
   const toggleTemplates = () => setShowTemplates(!showTemplates);
+  const toggleOptimizationTips = () => setShowOptimizationTips(!showOptimizationTips);
 
-  // Add a limit to query to optimize it
+  // Apply query optimizations
   const handleOptimizeQuery = () => {
-    setQuery(addLimitToQuery(query));
-    setShowLargeDataWarning(false);
+    const optimizedQuery = optimizeQuery(query);
+    setQuery(optimizedQuery);
+    setShowOptimizationTips(false);
   };
 
   // Handle keyboard shortcuts
@@ -293,7 +188,7 @@ LIMIT 10;`);
       // Ctrl/Cmd + Enter to execute query
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
-        handleExecuteQuery();
+        executeQuery();
       }
 
       // Ctrl/Cmd + S to save query
@@ -311,7 +206,7 @@ LIMIT 10;`);
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [query, fullScreenMode, queryName]);
+  }, [query, fullScreenMode, queryName, executeQuery]);
 
   // Calculate dynamic classes based on UI state
   const getContainerClasses = () => {
@@ -357,7 +252,7 @@ LIMIT 10;`);
         {fullScreenMode !== "results" && (
           <div
             ref={editorRef}
-            className="flex flex-col"
+            className="flex flex-col relative"
             style={{ height: `${queryInputHeight}px` }}
           >
             {/* Editor toolbar */}
@@ -387,6 +282,17 @@ LIMIT 10;`);
                 <div className="text-xs text-white/50">
                   Press Ctrl+Enter to execute
                 </div>
+                
+                {hasWarnings && (
+                  <button
+                    className="flex items-center text-xs px-2 py-0.5 bg-warning/20 text-warning rounded"
+                    onClick={toggleOptimizationTips}
+                    title="Query optimization suggestions available"
+                  >
+                    <Zap size={12} className="mr-1" />
+                    <span>Optimize</span>
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center space-x-2">
@@ -412,7 +318,7 @@ LIMIT 10;`);
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={handleExecuteQuery}
+                  onClick={executeQuery}
                   disabled={isLoading || isChangingPage}
                   className="h-8"
                 >
@@ -445,10 +351,11 @@ LIMIT 10;`);
               <MonacoEditor
                 value={query}
                 onChange={setQuery}
-                onExecute={handleExecuteQuery}
+                onExecute={executeQuery}
               />
             </div>
 
+            {/* Query Templates Panel */}
             {showTemplates && (
               <div className="absolute top-12 right-0 w-80 bg-background border border-white/10 rounded-md shadow-lg z-10">
                 <QueryTemplates
@@ -457,6 +364,59 @@ LIMIT 10;`);
                     setShowTemplates(false);
                   }}
                 />
+              </div>
+            )}
+            
+            {/* Optimization Tips Panel */}
+            {showOptimizationTips && suggestions.length > 0 && (
+              <div className="absolute top-12 right-0 w-80 bg-background border border-white/10 rounded-md shadow-lg z-10 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium flex items-center">
+                    <Zap size={14} className="mr-1 text-warning" />
+                    Query Optimization Tips
+                  </h3>
+                  <button 
+                    className="text-white/50 hover:text-white"
+                    onClick={() => setShowOptimizationTips(false)}
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div className="space-y-2 mb-2">
+                  {suggestions.map(suggestion => (
+                    <div 
+                      key={suggestion.id}
+                      className={`p-2 text-xs rounded ${
+                        suggestion.severity === 'warning' ? 'bg-warning/10 border border-warning/30' :
+                        suggestion.severity === 'critical' ? 'bg-destructive/10 border border-destructive/30' :
+                        'bg-white/5 border border-white/10'
+                      }`}
+                    >
+                      <div className="mb-1">{suggestion.message}</div>
+                      {suggestion.fix && (
+                        <button
+                          className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded"
+                          onClick={() => {
+                            setQuery(suggestion.fix!());
+                            setShowOptimizationTips(false);
+                          }}
+                        >
+                          Apply Fix
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="flex justify-end">
+                  <button
+                    className="text-xs px-3 py-1 rounded bg-primary text-white"
+                    onClick={handleOptimizeQuery}
+                  >
+                    Optimize Query
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -491,9 +451,9 @@ LIMIT 10;`);
                   </div>
                 )}
 
-                {affectedRows !== null && (
+                {totalRows > 0 && (
                   <div className="text-xs text-white/60">
-                    {affectedRows.toLocaleString()} rows
+                    {totalRows.toLocaleString()} rows
                   </div>
                 )}
               </div>
@@ -553,13 +513,13 @@ LIMIT 10;`);
                     <div className="flex justify-end space-x-2 mt-2">
                       <button 
                         className="text-xs px-3 py-1 rounded bg-primary text-white"
-                        onClick={handleOptimizeQuery}
+                        onClick={applyLimitOptimization}
                       >
                         Add LIMIT Clause
                       </button>
                       <button 
                         className="text-xs px-3 py-1 rounded bg-white/10 hover:bg-white/20"
-                        onClick={() => setShowLargeDataWarning(false)}
+                        onClick={dismissWarning}
                       >
                         Dismiss
                       </button>
@@ -574,14 +534,14 @@ LIMIT 10;`);
               <QueryResults
                 results={results}
                 columns={columns}
-                isLoading={isLoading || isChangingPage}
+                isLoading={isLoading || isChangingPage || isLoadingQueries}
                 error={error}
                 totalRows={totalRows}
                 currentPage={currentPage}
                 totalPages={totalPages}
                 rowsPerPage={rowsPerPage}
-                onPageChange={handlePageChange}
-                onRowsPerPageChange={handleRowsPerPageChange}
+                onPageChange={changePage}
+                onRowsPerPageChange={changeRowsPerPage}
               />
             </div>
           </div>
@@ -591,9 +551,7 @@ LIMIT 10;`);
       {/* Query History */}
       {showQueryHistory && fullScreenMode === "none" && (
         <div className="h-full border-l border-white/10 bg-darkNav overflow-hidden">
-          <QueryHistory
-            onSelectQuery={(selectedQuery) => setQuery(selectedQuery)}
-          />
+          <QueryHistory onSelectQuery={selectQuery} />
         </div>
       )}
 
@@ -624,7 +582,7 @@ LIMIT 10;`);
                 variant="primary"
                 onClick={() => {
                   if (queryName.trim()) {
-                    saveQueryToStore(query, queryName);
+                    saveQuery(query, queryName);
                     setSaveDialogOpen(false);
                     setQueryName("");
                   }
