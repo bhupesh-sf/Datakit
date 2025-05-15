@@ -1,54 +1,221 @@
-# React + TypeScript + Vite
+# DataKit Project Overview
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 1. Introduction
 
-Currently, two official plugins are available:
+DataKit is a modern web-based data analysis tool that leverages WebAssembly and DuckDB to process large datasets (up to 4-5GB) directly in the browser without requiring server-side processing. It provides a powerful, client-side SQL engine with visualization capabilities, enabling users to work with CSV and JSON files efficiently.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 2. Architecture Overview
 
-## Expanding the ESLint configuration
+### 2.1 Core Technologies
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend Framework**: React with TypeScript
+- **Data Processing**: DuckDB-wasm (WebAssembly-based SQL engine)
+- **Data Parsing**: Custom streaming parsers + PapaParse
+- **File Handling**: File System Access API + standard File API
+- **State Management**: Zustand
+- **UI Components**: Custom components with Tailwind CSS
+- **Visualization**: D3.js integration
+- **Code Editing**: Monaco Editor with SQL support
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### 2.2 Architectural Patterns
+
+- **Singleton Pattern**: Global DuckDB instance via Zustand store
+- **Custom Hooks**: Encapsulated functionality in React hooks
+- **Component Composition**: Modular UI components
+- **Streaming Data Processing**: Chunked parsing for large files
+- **Virtualized Rendering**: Efficient display of large result sets
+- **Server-Side Pagination**: Paginated query execution for large datasets
+
+## 3. Core Components
+
+### 3.1 Data Processing
+
+#### 3.1.1 DuckDB Integration (`duckDBStore.ts`)
+- Centralized DuckDB instance management
+- Table creation and management
+- SQL query execution with pagination
+- Direct file import capabilities
+- BigInt handling for large datasets
+
+#### 3.1.2 File Processing
+- `useStreamingCSVParser.ts`: Efficient CSV parsing with chunking
+- `useStreamingJSONParser.ts`: JSON parsing with streaming support
+- `useDataParser.ts`: Unified interface for different file formats
+
+#### 3.1.3 File System Integration
+- `useFileAccess.ts`: File system access and recent files management
+- `streamReader.ts`: Efficient stream processing utilities
+- `useDirectFileImport.ts`: Direct file import to DuckDB
+
+### 3.2 User Interface
+
+#### 3.2.1 Layout Components
+- `MainLayout.tsx`: Application layout structure
+- `Sidebar.tsx`: Navigation and file management
+- `QueryWorkspace.tsx`: Flexible, resizable query workspace with panels
+
+#### 3.2.2 Data Visualization
+- `CSVGrid.tsx`: Grid display for tabular data
+- `JSONGrid.tsx`: Specialized display for JSON data
+- `QueryResults.tsx`: Virtualized results view with pagination
+
+#### 3.2.3 Query Interface
+- `MonacoEditor.tsx`: SQL editor with syntax highlighting and autocomplete
+- `QueryHistory.tsx`: History of executed queries
+- `SchemaBrowser.tsx`: Database schema exploration
+- `QueryTemplates.tsx`: Pre-defined SQL query templates
+
+#### 3.2.4 File Handling
+- `FileUploadButton.tsx`: File selection and upload
+- `DownloadButton.tsx`: Results export
+
+### 3.3 Custom Hooks
+
+#### 3.3.1 Query Management Hooks
+- `useQueryExecution.ts`: Execute queries with pagination and error handling
+- `useQueryHistory.ts`: Manage query history and favorites
+- `useQueryOptimization.ts`: Analyze and optimize SQL queries
+
+#### 3.3.2 UI Hooks
+- `useResizable.ts`: Resize panels and track dimensions
+- `usePanels.ts`: Manage collapsible side panels
+- `usePerformanceMonitor.ts`: Track rendering performance with large datasets
+
+## 4. Data Flow
+
+### 4.1 File Import Process
+
+1. **File Selection**: User selects a file via `FileUploadButton`
+2. **Direct Import**: For CSV files, direct import to DuckDB via `registerFileHandle`
+3. **Table Creation**: DuckDB creates a table from the imported file
+4. **Data Sampling**: Sample of data (1000 rows) loaded for UI display
+5. **Schema Detection**: Column types detected from table schema
+6. **UI Update**: Data grid and query panel updated with file info
+
+### 4.2 Query Execution Flow
+
+1. **Query Input**: User writes SQL in the Monaco Editor
+2. **Query Analysis**: Query is analyzed for optimizations and warnings
+3. **Server-Side Pagination**: Query executed with LIMIT/OFFSET for pagination
+4. **Result Handling**: Only current page of results loaded into memory
+5. **Virtualized Rendering**: Results displayed efficiently using react-window
+6. **Export Option**: Results can be downloaded as CSV
+
+## 5. Key Features
+
+### 5.1 Large File Processing
+
+- **Streaming Parsers**: Process files larger than browser memory
+- **Chunked Processing**: Parse and load files in manageable chunks
+- **Progress Tracking**: Show detailed progress during operations
+- **Direct DuckDB Import**: Efficiently import CSV files directly to DuckDB
+
+### 5.2 SQL Capabilities
+
+- **Full SQL Support**: Leverage DuckDB's rich SQL dialect
+- **Complex Queries**: Join, aggregate, filter and transform data
+- **Fast Execution**: Efficient query processing via WebAssembly
+- **SQL Templates**: Pre-defined queries for common operations
+- **Schema Browser**: Explore tables and columns for easier query writing
+
+### 5.3 User Experience
+
+- **Recent Files**: Track and quickly reopen recent files
+- **File Previews**: View data samples before full processing
+- **Progress Indicators**: Detailed status during operations
+- **Error Handling**: Clear error messages with recovery options
+- **Query History**: Save and reuse previous queries
+- **Query Optimization**: Suggestions for better query performance
+- **Resizable Layout**: Customize workspace with resizable panels
+- **Fullscreen Mode**: Focus on editor or results as needed
+
+### 5.4 Performance Optimizations
+
+- **Server-Side Pagination**: Only load current page of data
+- **Virtualized Rendering**: Efficient display of large tables
+- **BigInt Handling**: Special handling for large numeric values
+- **Lazy Loading**: Components and functionality loaded on-demand
+- **Memory Management**: Careful handling of large datasets
+
+## 6. Technical Implementation Details
+
+### 6.1 DuckDB Integration
+
+```typescript
+// Paginated query execution
+executePaginatedQuery: async (sql, page, pageSize) => {
+  // Get total row count
+  const countQuery = `SELECT COUNT(*) as total_rows FROM (${sql}) as count_query`;
+  const countResult = await connection.query(countQuery);
+  const totalRows = Number(countResult.toArray()[0].total_rows);
+  
+  // Execute paginated query
+  const offset = (page - 1) * pageSize;
+  const paginatedSQL = `${sql} LIMIT ${pageSize} OFFSET ${offset}`;
+  const result = await connection.query(paginatedSQL);
+  
+  // Process results handling BigInt conversion
+  const data = processDuckDBResult(result.toArray());
+  
+  return {
+    data,
+    columns: result.schema.fields.map(f => f.name),
+    totalRows,
+    page,
+    pageSize,
+    totalPages: Math.ceil(totalRows / pageSize)
+  };
+}
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 6.2 Virtualized Results View
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```tsx
+// Efficient rendering of large result sets
+<AutoSizer>
+  {({ height, width }) => (
+    <List
+      height={height}
+      width={width}
+      itemCount={results.length}
+      itemSize={28}
+      overscanCount={10}
+    >
+      {RowRenderer}
+    </List>
+  )}
+</AutoSizer>
 ```
+
+### 6.3 Custom Hooks for UI Management
+
+```typescript
+// Panel management hook
+const {
+  showLeftPanel,
+  showRightPanel,
+  toggleLeftPanel,
+  toggleRightPanel
+} = usePanels({
+  leftStorageKey: "datakit-show-schema-browser",
+  rightStorageKey: "datakit-show-query-history"
+});
+
+// Query optimization hook
+const {
+  suggestions,
+  hasWarnings,
+  analyzeQuery,
+  optimizeQuery
+} = useQueryOptimization();
+```
+
+## 7. Future Enhancements
+
+- **Advanced Visualizations**: More chart types and customization options
+- **Exportable Reports**: Generate reports from query results
+- **Data Transformation**: Visual data transformation capabilities
+- **Custom Functions**: User-defined functions in SQL
+- **Collaborative Features**: Shared queries and results
+- **Persistent Storage**: Save queries and results between sessions
+- **Dashboard Creation**: Build custom dashboards from queries
