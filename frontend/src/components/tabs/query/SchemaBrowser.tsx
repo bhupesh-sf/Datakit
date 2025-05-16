@@ -19,7 +19,7 @@ interface TableSchema {
  * Schema browser component to display database tables and columns
  */
 const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
-  const { getAvailableTables, executeQuery } = useDuckDBStore();
+  const { getAvailableTables, registeredTables, executeQuery } = useDuckDBStore();
   
   const [tables, setTables] = useState<string[]>([]);
   const [schemas, setSchemas] = useState<Record<string, TableSchema>>({});
@@ -67,7 +67,7 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
     };
     
     fetchTables();
-  }, [getAvailableTables, executeQuery]);
+  }, [getAvailableTables, registeredTables, executeQuery]);
   
   // Toggle table expansion
   const toggleTable = (tableName: string) => {
