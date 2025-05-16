@@ -5,6 +5,8 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 
 import { Button } from '@/components/ui/Button';
 
+import { ensureSafeJSON } from '@/lib/duckdb/utils';
+
 interface QueryResultsProps {
   results: any[] | null;
   columns: string[] | null;
@@ -131,10 +133,26 @@ const QueryResults: React.FC<QueryResultsProps> = ({
   };
   
   // Format value for display
-  const formatValue = (value: any): string => {
-    if (value === null || value === undefined) return 'NULL';
-    if (typeof value === 'object') return JSON.stringify(value);
-    return String(value);
+  const formatValue = (value: any) => {
+    // First ensure the value is safe for JSON
+    const safeValue = ensureSafeJSON(value);
+    
+    // Then proceed with your normal formatting logic
+    if (safeValue === null || safeValue === undefined) {
+      return <span className="text-gray-400">null</span>;
+    }
+    
+    // Handle objects and arrays
+    if (typeof safeValue === "object") {
+      try {
+        return <span>{JSON.stringify(safeValue)}</span>;
+      } catch (e) {
+        return <span className="text-red-500">Error formatting value</span>;
+      }
+    }
+    
+    // Return the safe value
+    return <span>{String(safeValue)}</span>;
   };
   
   // Determine display style based on value type

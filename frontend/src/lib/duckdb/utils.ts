@@ -106,6 +106,39 @@ export function generateColumnDefinitions({ headers, columnTypes }: TableCreatio
     .join(", ");
 }
 
+
+
+
+/**
+ * Ensure all BigInt values are converted to safe JSON-compatible values
+ * Can be applied to any structure (object, array, primitive)
+ * 
+ * @param value - Any value that might contain BigInt
+ * @returns Same structure with BigInt values converted to Number or String
+ */
+export function ensureSafeJSON(value: any): any {
+  if (typeof value === "bigint") {
+    // Convert to number if within safe integer range, otherwise string
+    if (value <= Number.MAX_SAFE_INTEGER && value >= Number.MIN_SAFE_INTEGER) {
+      return Number(value);
+    } else {
+      return value.toString();
+    }
+  } else if (Array.isArray(value)) {
+    return value.map(ensureSafeJSON);
+  } else if (value !== null && typeof value === "object") {
+    const result: Record<string, any> = {};
+    for (const key in value) {
+      if (Object.prototype.hasOwnProperty.call(value, key)) {
+        result[key] = ensureSafeJSON(value[key]);
+      }
+    }
+    return result;
+  }
+  return value;
+}
+
+
 /**
  * Safely processes DuckDB result data, handling BigInt conversions
  * 
