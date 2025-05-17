@@ -3,7 +3,7 @@ import { ColumnType, CSVParseResult } from "./csv";
 export enum DataSourceType {
   CSV = "CSV",
   JSON = "JSON",
-  Parquet = "Parquet",
+  PARQUET = "Parquet",
   XLSX = "xlsx",
 }
 

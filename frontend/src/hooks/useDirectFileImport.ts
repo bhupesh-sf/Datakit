@@ -56,6 +56,9 @@ export function useDirectFileImport() {
               `Converting Excel file to CSV for more reliable processing...`
             );
             isExcelConversion = true;
+          } else if (fileExt === "parquet") {
+            // For Parquet files
+            setLoadingStatus(`Importing Parquet file to DuckDB...`);
           } else {
             // Regular file processing
             setLoadingStatus(
@@ -158,7 +161,9 @@ export function useDirectFileImport() {
           if (fileExt === "json") {
             sourceType = DataSourceType.JSON;
           } else if (fileExt === "xlsx" || fileExt === "xls") {
-            sourceType = DataSourceType.XLSX; // Make sure this is defined in your enum
+            sourceType = DataSourceType.XLSX;
+          } else if (fileExt === "parquet") {
+            sourceType = DataSourceType.PARQUET;
           }
 
           // Create a result object for the UI

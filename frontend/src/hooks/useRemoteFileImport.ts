@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import Papa from 'papaparse';
 import { useDuckDBStore } from '@/store/duckDBStore';
 import { StreamReader } from '@/lib/streamReader';
-import useStreamingCSVParser from '@/hooks/useStreamingCSVParser';
+import useStreamingCSVParser from '@/hooks/stream/useStreamingCSVParser';
 import { ColumnType } from '@/types/csv';
 import { DataSourceType } from '@/types/json';
 

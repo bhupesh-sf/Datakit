@@ -495,7 +495,6 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
   resetError: () => set({ error: null }),
 
-
   cleanupDB: async () => {
     const { db, connection } = get();
 
@@ -715,6 +714,14 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
             SELECT * FROM read_json_auto('${fileName}')
           `;
           console.log(`[DuckDBStore] Creating table from JSON file`);
+          await conn.query(createTableQuery);
+        } else if (fileExt === "parquet") {
+          set({ processingStatus: "Importing Parquet file..." });
+          const createTableQuery = `
+            CREATE TABLE ${escapedTableName} AS 
+            SELECT * FROM read_parquet('${fileName}')
+          `;
+          console.log(`[DuckDBStore] Creating table from Parquet file`);
           await conn.query(createTableQuery);
         } else {
           throw new Error(`Unsupported file type: ${fileExt}`);

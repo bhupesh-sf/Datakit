@@ -186,6 +186,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
                   json: "text-secondary",
                   xlsx: "text-tertiary",
                   xls: "text-tertiary",
+                  parquet: "text-violet-400",
                 }[fileExt || ""] || "text-white text-opacity-70";
 
               return (
