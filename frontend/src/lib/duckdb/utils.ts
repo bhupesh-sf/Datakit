@@ -36,10 +36,11 @@ export function isSelectQuery(sql: string): boolean {
  */
 export function addPaginationToQuery(sql: string, limit: number, offset: number): string {
   const cleanedSQL = cleanSqlQuery(sql);
+  const noSemicolon = cleanedSQL.replace(';', '');
   
   // Only add LIMIT if not already present
-  if (!cleanedSQL.toUpperCase().includes("LIMIT")) {
-    return `${sql} LIMIT ${limit} OFFSET ${offset}`;
+  if (!noSemicolon.toUpperCase().includes("LIMIT")) {
+    return `${noSemicolon} LIMIT ${limit} OFFSET ${offset}`;
   }
   
   return sql;
@@ -52,7 +53,8 @@ export function addPaginationToQuery(sql: string, limit: number, offset: number)
  * @returns A new query that counts the total rows
  */
 export function createCountQuery(sql: string): string {
-  return `SELECT CAST(COUNT(*) AS INTEGER) as total_rows FROM (${sql}) as count_query`;
+  const noSemicolon = sql.replace(';', '');
+  return `SELECT CAST(COUNT(*) AS INTEGER) as total_rows FROM (${noSemicolon}) as count_query`;
 }
 
 /**

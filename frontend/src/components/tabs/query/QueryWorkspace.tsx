@@ -4,6 +4,9 @@ import SchemaBrowser from "./SchemaBrowser";
 import MonacoEditor from "./MonacoEditor";
 import QueryHistory from "./QueryHistory";
 import QueryResults from "./QueryResults";
+
+import QueryAssistant from "./assistant/QueryAssistant";
+
 import { useResizable } from "@/hooks/useResizable";
 import { useQueryExecution } from "@/hooks/query/useQueryExecution";
 import { useQueryHistory } from "@/hooks/query/useQueryHistory";
@@ -16,14 +19,13 @@ import {
   Maximize,
   Minimize,
   Save,
-  Book,
   Clock,
   AlertTriangle,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
-import QueryTemplates from "./QueryTemplates";
+import { useSchemaInfo } from "@/hooks/query/useSchemaInfo";
 
 // Constants for panel dimensions
 const PANEL_WIDTH = 260;
@@ -68,6 +70,8 @@ LIMIT 10;`);
   const { suggestions, hasWarnings, analyzeQuery, optimizeQuery } =
     useQueryOptimization();
 
+  const { tableSchema } = useSchemaInfo();
+
   // UI state
   const [showSchemaBrowser, setShowSchemaBrowser] = useState(() => {
     return localStorage.getItem("datakit-show-schema-browser") !== "false";
@@ -77,7 +81,6 @@ LIMIT 10;`);
     return localStorage.getItem("datakit-show-query-history") !== "false";
   });
 
-  const [showTemplates, setShowTemplates] = useState<boolean>(false);
   const [showOptimizationTips, setShowOptimizationTips] =
     useState<boolean>(false);
   const [fullScreenMode, setFullScreenMode] = useState<
@@ -181,7 +184,6 @@ LIMIT 10;`);
   };
 
   // Toggle UI panels
-  const toggleTemplates = () => setShowTemplates(!showTemplates);
   const toggleOptimizationTips = () =>
     setShowOptimizationTips(!showOptimizationTips);
 
@@ -369,7 +371,7 @@ LIMIT 10;`);
 
               {hasWarnings && (
                 <button
-                  className="flex items-center text-xs px-2 py-0.5 bg-warning/20 text-warning rounded"
+                  className="flex items-center text-xs px-2 py-0.5 bg-warning/20 text-warning rounded cursor-pointer"
                   onClick={toggleOptimizationTips}
                   title="Query optimization suggestions available"
                 >
@@ -380,15 +382,12 @@ LIMIT 10;`);
             </div>
 
             <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleTemplates}
-                className="h-8"
-              >
-                <Book size={14} className="mr-1" />
-                <span>Templates</span>
-              </Button>
+              <QueryAssistant
+                onQueryGenerated={(sql) => setQuery(sql)}
+                tableSchema={tableSchema}
+              />
+
+            
               <Button
                 variant="ghost"
                 size="sm"
@@ -431,17 +430,7 @@ LIMIT 10;`);
             />
           </div>
 
-          {/* Query Templates Panel */}
-          {showTemplates && (
-            <div className="absolute top-12 right-0 w-80 bg-background border border-white/10 rounded-md shadow-lg z-10">
-              <QueryTemplates
-                onSelectTemplate={(templateQuery) => {
-                  setQuery(templateQuery);
-                  setShowTemplates(false);
-                }}
-              />
-            </div>
-          )}
+          
 
           {/* Optimization Tips Panel */}
           {showOptimizationTips && suggestions.length > 0 && (
