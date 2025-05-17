@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useState, useRef } from "react";
-import { Upload, File as FileIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 import csv from '@/assets/csv.png';
@@ -28,9 +27,9 @@ export const FileUploadButton = ({
 
   const fileTypes = [
     { type: 'csv', icon: csv, color: 'primary', label: 'CSV' },
-    { type: 'json', icon: json, color: 'green-400', label: 'JSON' },
+    { type: 'json', icon: json, color: 'amber-100', label: 'JSON' },
     { type: 'excel', icon: xlsx, color: 'blue-400', label: 'EXCEL' },
-    { type: 'parquet', icon: parquet, color: 'blue-100', label: 'PARQUET' }
+    { type: 'parquet', icon: parquet, color: 'primary', label: 'PARQUET' }
   ];
 
   const handleButtonClick = async () => {
@@ -154,8 +153,8 @@ export const FileUploadButton = ({
                     {fileTypes.map((type, index) => (
                       <div key={index} className="flex flex-col items-center group-hover:transform group-hover:-translate-y-1 transition-all duration-200">
                         <img src={type.icon} alt={type.label} className="h-8 w-8" />
-                        <div className={`h-1 w-1 rounded-full bg-${type.color} mt-1`}></div>
-                        <span className={`text-[10px] mt-1 text-${type.color}/80`}>{type.label}</span>
+                        <div className={`h-1 w-1 rounded-full bg-${type.color} mt-1`} />
+                        <span className={`text-[10px] mt-1`}>{type.label}</span>
                       </div>
                     ))}
                   </div>
