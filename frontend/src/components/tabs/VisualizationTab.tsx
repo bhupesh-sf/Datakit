@@ -58,19 +58,6 @@ const VisualizationTab: React.FC = () => {
   }
   
   return (
-<<<<<<< HEAD
-    <div className="h-full flex flex-col items-center justify-center text-white/70">
-      <div className="p-6 border border-white/10 rounded-lg bg-darkNav/50 max-w-md text-center">
-        <h3 className="text-lg font-heading font-medium mb-2">Coming Soon</h3>
-        <p className="mb-4">
-          Data visualization features will be available soon.
-        </p>
-        {tableName && (
-          <p className="text-sm">
-            You'll be able to create charts and graphs from your <span className="text-primary">{tableName}</span> data.
-          </p>
-        )}
-=======
     <div className="h-full flex flex-col">
       {/* Header with tabs */}
       <div className="bg-darkNav p-4 border-b border-white/10">
@@ -135,7 +122,6 @@ const VisualizationTab: React.FC = () => {
             <ChartControls />
           </div>
         </div>
->>>>>>> c44b1ca (first iteration on chart creation)
       </div>
       
       {/* Modals */}
@@ -167,7 +153,7 @@ const ChartTypeButton: React.FC<ChartTypeButtonProps> = ({ type, icon, label }) 
   
   return (
     <button
-      className={`flex flex-col items-center p-2 rounded ${
+      className={`flex flex-col items-center p-2 rounded cursor-pointer ${
         isActive 
           ? 'bg-primary/20 text-primary' 
           : 'text-white/70 hover:bg-white/5 hover:text-white/90'

@@ -44,14 +44,15 @@ const ChartControls: React.FC = () => {
           <Copy size={16} className="mr-1" />
           Copy/Export
         </Button>
-        
-        <Button 
+
+       {/* TODO: For next iterations  */}
+        {/* <Button 
           variant="primary" 
           onClick={() => toggleSaveModal(true)}
         >
           <Save size={16} className="mr-1" />
           Save Chart
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

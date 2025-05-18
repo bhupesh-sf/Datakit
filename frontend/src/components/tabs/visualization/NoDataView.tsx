@@ -23,7 +23,7 @@ const NoDataView: React.FC<NoDataViewProps> = ({ tableName }) => {
           {tableName ? (
             <>Run a query on the <span className="text-primary">{tableName}</span> table to visualize your data.</>
           ) : (
-            <>Upload a data file and run a query first to create visualizations.</>
+            <>Upload a data file to create visualizations.</>
           )}
         </p>
         <Button onClick={() => setActiveTab('query')}>

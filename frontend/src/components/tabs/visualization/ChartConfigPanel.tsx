@@ -31,8 +31,6 @@ const ChartConfigPanel: React.FC = () => {
     );
   }
   
-// src/components/tabs/visualization/ChartConfigPanel.tsx (continued)
- // Get fields from the current chart data
  const availableFields = currentChart.data && currentChart.data.length > 0
    ? Object.keys(currentChart.data[0])
    : [];
