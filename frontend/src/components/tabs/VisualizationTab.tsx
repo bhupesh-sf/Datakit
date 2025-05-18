@@ -6,10 +6,12 @@ import {
   ScatterChart,
   TrendingUp,
   InfoIcon,
+  ArrowRight,
 } from "lucide-react";
 
 import { useAppStore } from "@/store/appStore";
 import { useChartsStore, ChartType } from "@/store/chartsStore";
+import { Button } from '@/components/ui/Button';
 
 import ChartCanvas from "./visualization/ChartCanvas";
 import ChartControls from "./visualization/ChartControls";
@@ -17,13 +19,12 @@ import ChartConfigPanel from "./visualization/ChartConfigPanel";
 import ChartGallery from "./visualization/ChartGallery";
 import SaveChartModal from "./visualization/SaveChartModal";
 import ExportModal from "./visualization/ExportModal";
-import NoDataView from "./visualization/NoDataView";
 
 /**
  * Main visualization tab component that orchestrates the chart creation and visualization process
  */
 const VisualizationTab: React.FC = () => {
-  const { data: queryData, tableName } = useAppStore();
+  const { data: queryData, tableName, setActiveTab } = useAppStore();
   const {
     currentChart,
     createNewChart,
@@ -61,123 +62,139 @@ const VisualizationTab: React.FC = () => {
     }
   }, [queryData, currentChart, createNewChart]);
 
-  // If no data is available, show a message
-  if (!queryData || queryData.length <= 1) {
-    return <NoDataView tableName={tableName} />;
-  }
+  // Check if we have visualization data
+  const hasData = queryData && queryData.length > 1;
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header with tabs */}
-      <div className="bg-darkNav py-2 px-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-heading font-semibold mb-4">
-            Data Visualization
-          </h2>
+    <div className="h-full flex flex-col relative">
+      {/* Main content - always render but blur when no data */}
+      <div className={hasData ? "" : "blur-sm pointer-events-none"}>
+        {/* Header with tabs */}
+        <div className="bg-darkNav py-2 px-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-heading font-semibold mb-4">
+              Data Visualization
+            </h2>
 
-          {currentChart && currentChart.data && (
-            <div className="mx-2 mt-1 mb-1 p-3 bg-blue-500/10 border border-blue-500/30 rounded-md flex items-center text-sm">
-              <InfoIcon size={16} className="mr-2 text-blue-400" />
-              <div className="mr-auto">
-                <span className="font-medium">{currentChart.data.length}</span>{" "}
-                data points are shown in this visualization
-              </div>
-             
-            </div>
-          )}
-        </div>
-
-        <div className="flex border-b border-white/10">
-          <button
-            className={`px-4 py-2 text-sm ${
-              selectedTab === "config"
-                ? "text-primary border-b-2 border-primary -mb-px"
-                : "text-white/70 hover:text-white/90"
-            }`}
-            onClick={() => setSelectedTab("config")}
-          >
-            Chart Configuration
-          </button>
-          {/* <button
-            className={`px-4 py-2 text-sm ${
-              selectedTab === 'gallery' 
-                ? 'text-primary border-b-2 border-primary -mb-px' 
-                : 'text-white/70 hover:text-white/90'
-            }`}
-            onClick={() => setSelectedTab('gallery')}
-          >
-            Chart Gallery
-          </button> */}
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left panel: Chart configuration or gallery */}
-        <div className="w-80 border-r border-white/10 bg-darkNav/50 overflow-y-auto">
-          {selectedTab === "config" ? <ChartConfigPanel /> : <ChartGallery />}
-        </div>
-
-        {/* Right panel: Chart preview */}
-        <div className="flex-1 flex flex-col">
-          {/* Chart type selection - Updated with better guidance */}
-          <div className="px-4 py-2 border-b border-white/10 bg-darkNav/30 flex items-center">
-            <div className="flex justify-between items-center mb-2 mr-4">
-              <h3 className="text-sm font-medium flex items-center">
-                <BarChart4 size={16} className="mr-2 text-primary" />
-                Choose Chart Type
-              </h3>
-              {/* {currentChart && (
-                <div className="text-xs text-white/70">
-                  Select the most appropriate chart for your data visualization
+            {currentChart && currentChart.data && (
+              <div className="mx-2 mt-1 mb-1 p-3 bg-blue-500/10 border border-blue-500/30 rounded-md flex items-center text-sm">
+                <InfoIcon size={16} className="mr-2 text-blue-400" />
+                <div className="mr-auto">
+                  <span className="font-medium">{currentChart.data.length}</span>{" "}
+                  data points are shown in this visualization
                 </div>
-              )} */}
-            </div>
-            <div className="flex space-x-3">
-              <ChartTypeButton
-                type="bar"
-                icon={<BarChart4 size={18} />}
-                label="Bar"
-                description="Best for comparing categories"
-              />
-              <ChartTypeButton
-                type="line"
-                icon={<LineChart size={18} />}
-                label="Line"
-                description="Best for trends over time"
-              />
-              <ChartTypeButton
-                type="area"
-                icon={<TrendingUp size={18} />}
-                label="Area"
-                description="Best for part-to-whole over time"
-              />
-              <ChartTypeButton
-                type="pie"
-                icon={<PieChart size={18} />}
-                label="Pie"
-                description="Best for proportions of a whole"
-              />
-              <ChartTypeButton
-                type="scatter"
-                icon={<ScatterChart size={18} />}
-                label="Scatter"
-                description="Best for correlations between variables"
-              />
-            </div>
+              </div>
+            )}
           </div>
 
-          {/* Chart canvas */}
-          <div className="flex-1 overflow-hidden p-6 bg-background">
-            <ChartCanvas />
+          <div className="flex border-b border-white/10">
+            <button
+              className={`px-4 py-2 text-sm ${
+                selectedTab === "config"
+                  ? "text-primary border-b-2 border-primary -mb-px"
+                  : "text-white/70 hover:text-white/90"
+              }`}
+              onClick={() => setSelectedTab("config")}
+            >
+              Chart Configuration
+            </button>
+            {/* <button
+              className={`px-4 py-2 text-sm ${
+                selectedTab === 'gallery' 
+                  ? 'text-primary border-b-2 border-primary -mb-px' 
+                  : 'text-white/70 hover:text-white/90'
+              }`}
+              onClick={() => setSelectedTab('gallery')}
+            >
+              Chart Gallery
+            </button> */}
+          </div>
+        </div>
+
+        {/* Main content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left panel: Chart configuration or gallery */}
+          <div className="w-80 border-r border-white/10 bg-darkNav/50 overflow-y-auto">
+            {selectedTab === "config" ? <ChartConfigPanel /> : <ChartGallery />}
           </div>
 
-          {/* Chart controls */}
-          <div className="p-3 border-t border-white/10 bg-darkNav/30">
-            <ChartControls />
+          {/* Right panel: Chart preview */}
+          <div className="flex-1 flex flex-col">
+            {/* Chart type selection - Updated with better guidance */}
+            <div className="px-4 py-2 border-b border-white/10 bg-darkNav/30 flex items-center">
+              <div className="flex justify-between items-center mb-2 mr-4">
+                <h3 className="text-sm font-medium flex items-center">
+                  <BarChart4 size={16} className="mr-2 text-primary" />
+                  Choose Chart Type
+                </h3>
+              </div>
+              <div className="flex space-x-3">
+                <ChartTypeButton
+                  type="bar"
+                  icon={<BarChart4 size={18} />}
+                  label="Bar"
+                  description="Best for comparing categories"
+                />
+                <ChartTypeButton
+                  type="line"
+                  icon={<LineChart size={18} />}
+                  label="Line"
+                  description="Best for trends over time"
+                />
+                <ChartTypeButton
+                  type="area"
+                  icon={<TrendingUp size={18} />}
+                  label="Area"
+                  description="Best for part-to-whole over time"
+                />
+                <ChartTypeButton
+                  type="pie"
+                  icon={<PieChart size={18} />}
+                  label="Pie"
+                  description="Best for proportions of a whole"
+                />
+                <ChartTypeButton
+                  type="scatter"
+                  icon={<ScatterChart size={18} />}
+                  label="Scatter"
+                  description="Best for correlations between variables"
+                />
+              </div>
+            </div>
+
+            {/* Chart canvas */}
+            <div className="flex-1 overflow-hidden p-6 bg-background">
+              <ChartCanvas />
+            </div>
+
+            {/* Chart controls */}
+            <div className="p-3 border-t border-white/10 bg-darkNav/30">
+              <ChartControls />
+            </div>
           </div>
         </div>
       </div>
+
+      {/* No Data Modal - show on top when no data */}
+      {!hasData && (
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <div className="text-center max-w-md p-8 bg-black rounded-lg border border-white/20 shadow-xl">
+            <BarChart4 size={64} className="mx-auto mb-4 text-primary/70" />
+            <h2 className="text-xl font-heading font-semibold mb-2">No Data to Visualize</h2>
+            <p className="text-white/70 mb-6">
+              {tableName ? (
+                <>Run a query on the <span className="text-primary">{tableName}</span> table to visualize your data.</>
+              ) : (
+                <>Upload a data file to create visualizations.</>
+              )}
+            </p>
+            <Button onClick={() => setActiveTab('query')}>
+              Go to Query Tab
+              <ArrowRight size={16} className="ml-2" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       <SaveChartModal />

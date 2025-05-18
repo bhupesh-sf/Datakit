@@ -899,11 +899,10 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       console.log(`[DuckDBStore] Chart query: ${sql}`);
       const result = await connection.query(sql);
 
-      // Convert to array of objects
       return result.toArray().map((row) => ({
         dimension: row.dimension,
-        value: row.value,
-        count: row.count,
+        value: typeof row.value === "bigint" ? Number(row.value) : row.value,
+        count: typeof row.count === "bigint" ? Number(row.count) : row.count,
       }));
     } catch (err) {
       console.error(`[DuckDBStore] Chart query execution error:`, err);
