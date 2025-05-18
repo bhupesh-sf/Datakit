@@ -64,7 +64,7 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
       {/* Feedback Modal */}
       {showFeedbackModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-darkNav p-4 rounded-lg shadow-lg w-96 border border-white/10">
+          <div className="bg-black p-4 rounded-lg shadow-lg w-96 border border-white/10">
             <h3 className="text-lg font-medium mb-4">Share Your Feedback</h3>
             
             {feedbackSuccess ? (

@@ -857,4 +857,56 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       return null;
     }
   },
+
+  executeChartQuery: async (
+    tableName: string,
+    dimension: string,
+    measure: string,
+    aggregation: "sum" | "avg" | "min" | "max" | "count" = "sum",
+    limit: number = 100,
+    filters: { field: string; operator: string; value: string }[] = []
+  ) => {
+    const { connection, isInitialized } = get();
+
+    if (!connection || !isInitialized) {
+      throw new Error("DuckDB is not initialized");
+    }
+
+    try {
+      // Build WHERE clause if filters exist
+      let whereClause = "";
+      if (filters.length > 0) {
+        whereClause =
+          "WHERE " +
+          filters
+            .map((f) => `"${f.field}" ${f.operator} '${f.value}'`)
+            .join(" AND ");
+      }
+
+      // Create SQL for different chart types
+      const sql = `
+      SELECT 
+        "${dimension}" as dimension, 
+        ${aggregation}("${measure}") as value,
+        COUNT(*) as count
+      FROM "${tableName}"
+      ${whereClause}
+      GROUP BY "${dimension}"
+      ORDER BY value DESC
+      LIMIT ${limit}
+    `;
+
+      console.log(`[DuckDBStore] Chart query: ${sql}`);
+      const result = await connection.query(sql);
+
+      return result.toArray().map((row) => ({
+        dimension: row.dimension,
+        value: typeof row.value === "bigint" ? Number(row.value) : row.value,
+        count: typeof row.count === "bigint" ? Number(row.count) : row.count,
+      }));
+    } catch (err) {
+      console.error(`[DuckDBStore] Chart query execution error:`, err);
+      throw err;
+    }
+  },
 }));
