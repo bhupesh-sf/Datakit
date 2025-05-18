@@ -87,12 +87,11 @@ const DataTransforms: React.FC = () => {
   };
 
   return (
-    <div className="mt-4 border-t border-white/10 pt-4">
-      <h3 className="text-sm font-medium mb-3">Data Transformations</h3>
+    <div className="mt-2 pt-1">
 
       {/* Existing transforms list */}
       {currentTransforms.length > 0 && (
-        <div className="mb-4">
+        <div className="mb-2">
           <h4 className="text-xs font-medium mb-2 text-white/70">
             Applied Transforms:
           </h4>
