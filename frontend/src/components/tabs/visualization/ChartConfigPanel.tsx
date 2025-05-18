@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BarChart4, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 import { useChartsStore } from "@/store/chartsStore";
 
@@ -21,11 +21,7 @@ const ChartConfigPanel: React.FC = () => {
   if (!currentChart) {
     return (
       <div className="p-4 text-center h-full flex flex-col justify-center">
-        <BarChart4 size={44} className="mx-auto mb-3 text-white/40" />
         <h3 className="text-lg font-medium mb-2">No Chart Selected</h3>
-        <p className="text-sm text-white/60">
-          Execute a query first to visualize your data.
-        </p>
       </div>
     );
   }

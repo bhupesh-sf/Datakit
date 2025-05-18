@@ -1,7 +1,10 @@
 import React, { useRef } from 'react';
-import { useChartsStore } from '@/store/chartsStore';
-import { Download, Copy, Save, BarChart4 } from 'lucide-react';
+import { Copy} from 'lucide-react';
+
 import { Button } from '@/components/ui/Button';
+
+import { useChartsStore } from '@/store/chartsStore';
+
 
 /**
  * Component for chart controls like export, save, and download
@@ -20,8 +23,7 @@ const ChartControls: React.FC = () => {
     return (
       <div className="flex justify-center items-center p-3">
         <div className="text-sm text-white/50 flex items-center">
-          <BarChart4 size={16} className="mr-2" />
-          No chart selected
+          There's no chart selected or any file provided.
         </div>
       </div>
     );

@@ -66,135 +66,122 @@ const VisualizationTab: React.FC = () => {
   const hasData = queryData && queryData.length > 1;
 
   return (
-    <div className="h-full flex flex-col relative">
-      {/* Main content - always render but blur when no data */}
-      <div className={hasData ? "" : "blur-sm pointer-events-none"}>
-        {/* Header with tabs */}
-        <div className="bg-darkNav py-2 px-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-heading font-semibold mb-4">
-              Data Visualization
-            </h2>
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Top header area - fixed height */}
+      <div className="bg-darkNav py-2 px-4 flex-shrink-0">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-heading font-semibold">
+            Data Visualization
+          </h2>
 
-            {currentChart && currentChart.data && (
-              <div className="mx-2 mt-1 mb-1 p-3 bg-blue-500/10 border border-blue-500/30 rounded-md flex items-center text-sm">
-                <InfoIcon size={16} className="mr-2 text-blue-400" />
-                <div className="mr-auto">
-                  <span className="font-medium">{currentChart.data.length}</span>{" "}
-                  data points are shown in this visualization
-                </div>
+          {currentChart && currentChart.data && hasData && (
+            <div className="p-2 bg-blue-500/10 border border-blue-500/30 rounded-md flex items-center text-sm">
+              <InfoIcon size={14} className="mr-2 text-blue-400 flex-shrink-0" />
+              <div>
+                <span className="font-medium">{currentChart.data.length}</span>{" "}
+                data points shown
               </div>
-            )}
-          </div>
-
-          <div className="flex border-b border-white/10">
-            <button
-              className={`px-4 py-2 text-sm ${
-                selectedTab === "config"
-                  ? "text-primary border-b-2 border-primary -mb-px"
-                  : "text-white/70 hover:text-white/90"
-              }`}
-              onClick={() => setSelectedTab("config")}
-            >
-              Chart Configuration
-            </button>
-            {/* <button
-              className={`px-4 py-2 text-sm ${
-                selectedTab === 'gallery' 
-                  ? 'text-primary border-b-2 border-primary -mb-px' 
-                  : 'text-white/70 hover:text-white/90'
-              }`}
-              onClick={() => setSelectedTab('gallery')}
-            >
-              Chart Gallery
-            </button> */}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Main content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left panel: Chart configuration or gallery */}
-          <div className="w-80 border-r border-white/10 bg-darkNav/50 overflow-y-auto">
-            {selectedTab === "config" ? <ChartConfigPanel /> : <ChartGallery />}
-          </div>
-
-          {/* Right panel: Chart preview */}
-          <div className="flex-1 flex flex-col">
-            {/* Chart type selection - Updated with better guidance */}
-            <div className="px-4 py-2 border-b border-white/10 bg-darkNav/30 flex items-center">
-              <div className="flex justify-between items-center mb-2 mr-4">
-                <h3 className="text-sm font-medium flex items-center">
-                  <BarChart4 size={16} className="mr-2 text-primary" />
-                  Choose Chart Type
-                </h3>
-              </div>
-              <div className="flex space-x-3">
-                <ChartTypeButton
-                  type="bar"
-                  icon={<BarChart4 size={18} />}
-                  label="Bar"
-                  description="Best for comparing categories"
-                />
-                <ChartTypeButton
-                  type="line"
-                  icon={<LineChart size={18} />}
-                  label="Line"
-                  description="Best for trends over time"
-                />
-                <ChartTypeButton
-                  type="area"
-                  icon={<TrendingUp size={18} />}
-                  label="Area"
-                  description="Best for part-to-whole over time"
-                />
-                <ChartTypeButton
-                  type="pie"
-                  icon={<PieChart size={18} />}
-                  label="Pie"
-                  description="Best for proportions of a whole"
-                />
-                <ChartTypeButton
-                  type="scatter"
-                  icon={<ScatterChart size={18} />}
-                  label="Scatter"
-                  description="Best for correlations between variables"
-                />
-              </div>
-            </div>
-
-            {/* Chart canvas */}
-            <div className="flex-1 overflow-hidden p-6 bg-background">
-              <ChartCanvas />
-            </div>
-
-            {/* Chart controls */}
-            <div className="p-3 border-t border-white/10 bg-darkNav/30">
-              <ChartControls />
-            </div>
-          </div>
+        <div className="flex border-b border-white/10 mt-2">
+          <button
+            className={`px-4 py-1.5 text-sm ${
+              selectedTab === "config"
+                ? "text-primary border-b-2 border-primary -mb-px"
+                : "text-white/70 hover:text-white/90"
+            }`}
+            onClick={() => setSelectedTab("config")}
+          >
+            Chart Configuration
+          </button>
         </div>
       </div>
 
-      {/* No Data Modal - show on top when no data */}
-      {!hasData && (
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="text-center max-w-md p-8 bg-black rounded-lg border border-white/20 shadow-xl">
-            <BarChart4 size={64} className="mx-auto mb-4 text-primary/70" />
-            <h2 className="text-xl font-heading font-semibold mb-2">No Data to Visualize</h2>
-            <p className="text-white/70 mb-6">
-              {tableName ? (
-                <>Run a query on the <span className="text-primary">{tableName}</span> table to visualize your data.</>
-              ) : (
-                <>Upload a data file to create visualizations.</>
-              )}
-            </p>
-            <Button onClick={() => setActiveTab('query')}>
-              Go to Query Tab
-              <ArrowRight size={16} className="ml-2" />
-            </Button>
+      {/* Main content area - has proper overflow constraints */}
+      <div className="flex-1 flex min-h-0">
+        {/* Left panel: Chart configuration or gallery - with scrollable content */}
+        <div className="w-80 border-r border-white/10 bg-darkNav/50 overflow-y-auto flex-shrink-0">
+          {selectedTab === "config" ? <ChartConfigPanel /> : <ChartGallery />}
+        </div>
+
+        {/* Right panel: Chart preview - with flex column and proper constraints */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* Chart type selection - fixed height */}
+          <div className="px-4 py-2 border-b border-white/10 bg-darkNav/30 flex items-center flex-shrink-0">
+            <div className="flex items-center mr-4">
+              <h3 className="text-sm font-medium flex items-center whitespace-nowrap">
+                <BarChart4 size={16} className="mr-2 text-primary" />
+                Choose Chart Type
+              </h3>
+            </div>
+            <div className="flex space-x-2 overflow-x-auto py-1 scrollbar-hide">
+              <ChartTypeButton
+                type="bar"
+                icon={<BarChart4 size={18} />}
+                label="Bar"
+                description="Best for comparing categories"
+              />
+              <ChartTypeButton
+                type="line"
+                icon={<LineChart size={18} />}
+                label="Line"
+                description="Best for trends over time"
+              />
+              <ChartTypeButton
+                type="area"
+                icon={<TrendingUp size={18} />}
+                label="Area"
+                description="Best for part-to-whole over time"
+              />
+              <ChartTypeButton
+                type="pie"
+                icon={<PieChart size={18} />}
+                label="Pie"
+                description="Best for proportions of a whole"
+              />
+              <ChartTypeButton
+                type="scatter"
+                icon={<ScatterChart size={18} />}
+                label="Scatter"
+                description="Best for correlations between variables"
+              />
+            </div>
+          </div>
+
+          {/* Chart canvas - with flex-1 and min-height-0 */}
+          <div className="flex-1 p-4 bg-background overflow-hidden min-h-0">
+            {/* No data message or chart canvas */}
+            {!hasData ? (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center max-w-md p-8  rounded-lg  shadow-xl">
+                  <BarChart4 size={64} className="mx-auto mb-4 text-primary/70" />
+                  <h2 className="text-xl font-heading font-semibold mb-2">No Data to Visualize</h2>
+                  <p className="text-white/70 mb-6">
+                    {tableName ? (
+                      <>Run a query on the <span className="text-primary">{tableName}</span> table to visualize your data.</>
+                    ) : (
+                      <>Open a file to create visualizations.</>
+                    )}
+                  </p>
+                  <Button variant="outline" onClick={() => setActiveTab('query')}>
+                    Go to Query Tab
+                    <ArrowRight size={16} className="ml-2" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <ChartCanvas />
+            )}
+          </div>
+
+          {/* Chart controls - fixed height */}
+          <div className="p-3 border-t border-white/10 bg-darkNav/30 flex-shrink-0">
+            <ChartControls />
           </div>
         </div>
-      )}
+      </div>
 
       {/* Modals */}
       <SaveChartModal />
@@ -231,7 +218,7 @@ const ChartTypeButton: React.FC<ChartTypeButtonProps> = ({
 
   return (
     <button
-      className={`flex flex-col items-center p-2 rounded cursor-pointer transition-all ${
+      className={`flex flex-col items-center p-2 rounded cursor-pointer transition-all flex-shrink-0 ${
         isActive
           ? "bg-primary/20 text-primary border border-primary/30"
           : "text-white/70 hover:bg-white/5 hover:text-white/90 border border-transparent"
