@@ -4,12 +4,13 @@ import DataPreviewTab from "@/components/tabs/DataPreviewTab";
 import QueryTab from "@/components/tabs/QueryTab";
 import VisualizationTab from "@/components/tabs/VisualizationTab";
 import FeedbackButton from "@/components/common/FeedbackButton";
+import ProductHuntButton from "@/components/common/ProductHuntButton";
+import { DataLoadWithDuckDBResult } from "@/components/layout/Sidebar";
 
 import { Table, BarChart, Database } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useAppStore } from "@/store/appStore";
-import { DataLoadWithDuckDBResult } from "@/components/layout/Sidebar";
 import { DataSourceType } from "@/types/json";
 
 /**
@@ -28,7 +29,7 @@ const Home = () => {
     jsonViewMode,
     setActiveTab,
     setJsonViewMode,
-    loadData
+    loadData,
   } = useAppStore();
 
   // Define available tabs
@@ -45,7 +46,7 @@ const Home = () => {
   const handleDataLoad = (result: DataLoadWithDuckDBResult) => {
     // Use store action to load data
     loadData(result);
-    
+
     // Switch to preview tab when new data is loaded
     setActiveTab("preview");
   };
@@ -59,15 +60,14 @@ const Home = () => {
     }
 
     const baseText = `${rowCount.toLocaleString()} rows × ${columnCount.toLocaleString()} columns | ${
-      sourceType === DataSourceType.JSON 
-        ? "JSON data" 
-        : sourceType === DataSourceType.PARQUET 
-          ? "Parquet data" 
-          : sourceType === DataSourceType.XLSX 
-            ? "Excel data"
-            : "CSV data"
+      sourceType === DataSourceType.JSON
+        ? "JSON data"
+        : sourceType === DataSourceType.PARQUET
+        ? "Parquet data"
+        : sourceType === DataSourceType.XLSX
+        ? "Excel data"
+        : "CSV data"
     }`;
-    
 
     const duckDBText = inDuckDB
       ? ` | Loaded in DuckDB (table: ${tableName})`
@@ -82,15 +82,17 @@ const Home = () => {
   };
 
   // Prepare feedback context
-  const feedbackContext = fileName 
-    ? `Feedback provided while working with: ${fileName} (${sourceType === DataSourceType.JSON ? 'JSON' : 'CSV'}, ${rowCount} rows)`
+  const feedbackContext = fileName
+    ? `Feedback provided while working with: ${fileName} (${
+        sourceType === DataSourceType.JSON ? "JSON" : "CSV"
+      }, ${rowCount} rows)`
     : undefined;
 
   // Animation variants for tab content
   const tabContentVariants = {
     hidden: { opacity: 0, x: 20 },
     visible: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -20 }
+    exit: { opacity: 0, x: -20 },
   };
 
   return (
@@ -107,9 +109,12 @@ const Home = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* ProductHunt Button */}
+            <ProductHuntButton variant="primary" size="sm" text="Support us" />
+
             {/* Feedback Button using our reusable component */}
             <FeedbackButton context={feedbackContext} />
-            
+
             {/* JSON View Mode Toggle (only show for JSON data) */}
             {sourceType === DataSourceType.JSON && jsonSchema?.isNested && (
               <div className="border border-white border-opacity-20 rounded overflow-hidden">
@@ -139,11 +144,11 @@ const Home = () => {
         </div>
 
         {/* Tab navigation */}
-        <TabNavigation 
-          tabs={tabs} 
-          activeTab={activeTab} 
-          onChange={setActiveTab} 
-          className="mb-4" 
+        <TabNavigation
+          tabs={tabs}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          className="mb-4"
         />
 
         {/* Tab content with animations */}
