@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-
+import { createPortal } from "react-dom";
 import { useAppStore } from "@/store/appStore";
 
 import {
@@ -13,7 +13,7 @@ import { ColumnType } from "@/types/csv";
 
 /**
  * CSVGrid component displays tabular data in an editable grid format
- * with cell editing, formatting, and animations.
+ * with cell editing, formatting, tooltips, and animations.
  */
 const CSVGrid: React.FC = () => {
   const { 
@@ -42,6 +42,40 @@ const CSVGrid: React.FC = () => {
   const [isDataMode, setIsDataMode] = useState<boolean>(!!storeData && storeData.length > 0);
   const [totalRows, setTotalRows] = useState<number>(storeData ? Math.max(0, storeData.length - 1) : 0);
   const [displayedRows, setDisplayedRows] = useState<number>(storeData ? Math.max(0, storeData.length - 1) : 0);
+
+  // Tooltip state
+  const [tooltip, setTooltip] = useState<{
+    visible: boolean;
+    content: string;
+    position: { top: number; left: number };
+  }>({
+    visible: false,
+    content: "",
+    position: { top: 0, left: 0 },
+  });
+  
+  // Refs for tooltip functionality
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const cellRefs = useRef<Map<string, HTMLTableCellElement>>(new Map());
+  
+  // Create tooltip container if it doesn't exist
+  useEffect(() => {
+    if (!document.getElementById('csv-tooltip-container')) {
+      const tooltipContainer = document.createElement('div');
+      tooltipContainer.id = 'csv-tooltip-container';
+      tooltipContainer.style.position = 'fixed';
+      tooltipContainer.style.zIndex = '9999';
+      tooltipContainer.style.pointerEvents = 'none';
+      document.body.appendChild(tooltipContainer);
+    }
+    
+    return () => {
+      const container = document.getElementById('csv-tooltip-container');
+      if (container && document.querySelectorAll('[data-csv-grid]').length <= 1) {
+        document.body.removeChild(container);
+      }
+    };
+  }, []);
 
   // Cell editing functionality
   const {
@@ -101,6 +135,100 @@ const CSVGrid: React.FC = () => {
   }, [storeData, emptyGrid, animationActive]);
 
   /**
+   * Check if a cell is truncated
+   * 
+   * @param rowIndex - Row index in the grid
+   * @param colIndex - Column index in the grid
+   * @returns Boolean indicating if cell content is truncated
+   */
+  const isCellTruncated = useCallback((rowIndex: number, colIndex: number): boolean => {
+    const cellRef = cellRefs.current.get(`${rowIndex}-${colIndex}`);
+    if (cellRef) {
+      return cellRef.scrollWidth > cellRef.clientWidth;
+    }
+    return false;
+  }, []);
+
+  /**
+   * Handle showing tooltip on mouse enter
+   * 
+   * @param content - Cell content to show in tooltip
+   * @param rowIndex - Row index in the grid
+   * @param colIndex - Column index in the grid
+   */
+  const handleShowTooltip = useCallback((content: string, rowIndex: number, colIndex: number, e: React.MouseEvent) => {
+    // Only show tooltip if content is truncated
+    if (isCellTruncated(rowIndex, colIndex)) {
+      // Only need to format object values for tooltip
+      let tooltipContent = content;
+      if (typeof content === 'object' && content !== null) {
+        try {
+          tooltipContent = JSON.stringify(content, null, 2);
+        } catch (error) {
+          tooltipContent = String(content);
+        }
+      }
+
+      // Calculate position
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+      
+      // Set tooltip to appear above the mouse cursor
+      let top = mouseY - 10;
+      let left = mouseX + 10;
+      
+      setTooltip({
+        visible: true,
+        content: tooltipContent,
+        position: { top, left },
+      });
+    }
+  }, [isCellTruncated]);
+  
+  /**
+   * Adjust tooltip position as mouse moves
+   */
+  const handleTooltipMove = useCallback((e: React.MouseEvent) => {
+    if (tooltip.visible) {
+      // Get mouse position
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+      
+      // Set tooltip to appear above the mouse cursor
+      let top = mouseY - 10;
+      let left = mouseX + 10;
+      
+      // Adjust if tooltip would go outside viewport
+      if (tooltipRef.current) {
+        const tooltipWidth = tooltipRef.current.offsetWidth;
+        const tooltipHeight = tooltipRef.current.offsetHeight;
+        
+        // Check if tooltip would go off right edge
+        if (left + tooltipWidth > window.innerWidth - 20) {
+          left = mouseX - tooltipWidth - 10;
+        }
+        
+        // Check if tooltip would go off top
+        if (top - tooltipHeight < 10) {
+          top = mouseY + 20; // Position below cursor instead
+        }
+      }
+      
+      setTooltip(prev => ({
+        ...prev,
+        position: { top, left },
+      }));
+    }
+  }, [tooltip.visible]);
+  
+  /**
+   * Hide tooltip on mouse leave
+   */
+  const handleHideTooltip = useCallback(() => {
+    setTooltip(prev => ({ ...prev, visible: false }));
+  }, []);
+
+  /**
    * Determine cell class based on state and content
    * 
    * @param rowIndex - Row index in the grid
@@ -116,7 +244,7 @@ const CSVGrid: React.FC = () => {
       } else if (colIndex === 0) {
         baseClass = "csv-grid-row-number";
       } else {
-        baseClass = "csv-grid-cell";
+        baseClass = "csv-grid-cell"; // Your base class already includes truncation styles
 
         // Add column type styling for data mode
         if (
@@ -230,6 +358,30 @@ const CSVGrid: React.FC = () => {
   );
 
   /**
+   * Get the raw value without formatting for tooltips
+   */
+  const getRawCellValue = useCallback(
+    (rowIndex: number, colIndex: number): string => {
+      if (rowIndex < gridData.length && colIndex < gridData[rowIndex].length) {
+        return gridData[rowIndex][colIndex] || '';
+      }
+      return '';
+    },
+    [gridData]
+  );
+
+  /**
+   * Save the reference to a cell for truncation detection
+   */
+  const saveCellRef = useCallback((element: HTMLTableCellElement | null, rowIndex: number, colIndex: number) => {
+    if (element) {
+      cellRefs.current.set(`${rowIndex}-${colIndex}`, element);
+    } else {
+      cellRefs.current.delete(`${rowIndex}-${colIndex}`);
+    }
+  }, []);
+
+  /**
    * Handle context menu for DuckDB operations
    * @param e - Right-click event
    */
@@ -288,71 +440,113 @@ const CSVGrid: React.FC = () => {
     <div 
       className="csv-grid-container relative h-full"
       onContextMenu={handleContextMenu}
+      data-csv-grid="true"
     >
-      {/* Add smooth animation styling */}
+      {/* Add extra truncation CSS */}
       <style jsx global>{`
-        @keyframes wordEntry {
-          0% {
-            opacity: 0;
-            transform: translateY(8px) scale(0.95);
-          }
-          30% {
-            opacity: 1;
-            transform: translateY(0) scale(1.05);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
+        /* Enhance truncation for cells - these will work alongside your existing styles */
+        .csv-grid-cell {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
-
-        .animate-word-entry {
-          animation: wordEntry 0.6s ease-out forwards;
+        
+        .csv-grid-header {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        
+        /* tooltip styles */
+        .csv-tooltip {
+          background-color: color-mix(in srgb, var(--background) 90%, var(--primary) 10%);
+          border: 1px solid var(--primary);
+          border-radius: var(--radius);
+          padding: 0.5rem;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          font-size: 0.75rem;
+          max-width: 20rem;
+          max-height: 15rem;
+          overflow: auto;
+          z-index: 9999;
         }
       `}</style>
       
       {/* Row count indicator */}
       {renderRowCountIndicator()}
 
-      <table className="csv-grid-table">
-        <thead>
-          <tr>
-            {gridData[0].map((cell, colIndex) => (
-              <th key={colIndex} className="csv-grid-header">
-                {cell}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {gridData.slice(1).map((row, rowIndex) => (
-            <tr key={rowIndex}>
-              {row.map((cell, colIndex) => (
-                <td
-                  key={colIndex}
-                  className={getCellClass(rowIndex + 1, colIndex)}
-                  onClick={() => handleCellClick(rowIndex + 1, colIndex)}
+      <div className="overflow-auto h-full">
+        <table className="csv-grid-table">
+          <thead>
+            <tr>
+              {gridData[0].map((cell, colIndex) => (
+                <th 
+                  key={colIndex} 
+                  className="csv-grid-header"
+                  ref={(el) => saveCellRef(el, 0, colIndex)}
+                  onMouseEnter={(e) => handleShowTooltip(cell, 0, colIndex, e)}
+                  onMouseMove={handleTooltipMove}
+                  onMouseLeave={handleHideTooltip}
                 >
-                  {editCell?.row === rowIndex + 1 &&
-                  editCell.col === colIndex ? (
-                    <input
-                      type="text"
-                      value={editValue}
-                      onChange={handleCellEdit}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleKeyDown}
-                      autoFocus
-                      className="csv-grid-cell-input"
-                    />
-                  ) : (
-                    formatCellValue(cell, rowIndex + 1, colIndex)
-                  )}
-                </td>
+                  {cell}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {gridData.slice(1).map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {row.map((cell, colIndex) => (
+                  <td
+                    key={colIndex}
+                    ref={(el) => saveCellRef(el, rowIndex + 1, colIndex)}
+                    className={getCellClass(rowIndex + 1, colIndex)}
+                    onClick={() => handleCellClick(rowIndex + 1, colIndex)}
+                    onMouseEnter={(e) => handleShowTooltip(getRawCellValue(rowIndex + 1, colIndex), rowIndex + 1, colIndex, e)}
+                    onMouseMove={handleTooltipMove}
+                    onMouseLeave={handleHideTooltip}
+                  >
+                    {editCell?.row === rowIndex + 1 &&
+                    editCell.col === colIndex ? (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={handleCellEdit}
+                        onBlur={handleCellBlur}
+                        onKeyDown={handleKeyDown}
+                        autoFocus
+                        className="csv-grid-cell-input"
+                      />
+                    ) : (
+                      formatCellValue(cell, rowIndex + 1, colIndex)
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
+      {/* Tooltip Portal */}
+      {tooltip.visible && document.getElementById('csv-tooltip-container') && 
+        createPortal(
+          <div
+            ref={tooltipRef}
+            className="csv-tooltip"
+            style={{
+              position: 'fixed',
+              top: `${tooltip.position.top}px`,
+              left: `${tooltip.position.left}px`,
+              pointerEvents: 'none'
+            }}
+            role="tooltip"
+          >
+            {tooltip.content}
+          </div>,
+          document.getElementById('csv-tooltip-container')!
+        )
+      }
     </div>
   );
 };

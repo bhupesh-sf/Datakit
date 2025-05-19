@@ -220,7 +220,7 @@ export const useQueryExecution = (
    * Dismiss the large dataset warning
    */
   const dismissWarning = useCallback(() => {
-    setShowLargeDataWarning(!showLargeDataWarning);
+    setShowLargeDataWarning(false);
   }, []);
   
   // Update warning if result set is particularly large

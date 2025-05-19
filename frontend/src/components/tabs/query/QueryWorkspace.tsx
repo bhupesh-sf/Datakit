@@ -1,17 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useAppStore } from "@/store/appStore";
-import SchemaBrowser from "./SchemaBrowser";
-import MonacoEditor from "./MonacoEditor";
-import QueryHistory from "./QueryHistory";
-import QueryResults from "./QueryResults";
-
-import QueryAssistant from "./assistant/QueryAssistant";
-
-import { useResizable } from "@/hooks/useResizable";
-import { useQueryExecution } from "@/hooks/query/useQueryExecution";
-import { useQueryHistory } from "@/hooks/query/useQueryHistory";
-import { useQueryOptimization } from "@/hooks/query/useQueryOptimization";
-
 import {
   Play,
   ChevronLeft,
@@ -23,9 +10,24 @@ import {
   AlertTriangle,
   Zap,
 } from "lucide-react";
+
+import { useAppStore } from "@/store/appStore";
+
+import SchemaBrowser from "./SchemaBrowser";
+import MonacoEditor from "./MonacoEditor";
+import QueryHistory from "./QueryHistory";
+import QueryResults from "./query-results/QueryResults";
+
+import QueryAssistant from "./assistant/QueryAssistant";
+
 import { Button } from "@/components/ui/Button";
 
 import { useSchemaInfo } from "@/hooks/query/useSchemaInfo";
+import { useResizable } from "@/hooks/useResizable";
+import { useQueryExecution } from "@/hooks/query/useQueryExecution";
+import { useQueryHistory } from "@/hooks/query/useQueryHistory";
+import { useQueryOptimization } from "@/hooks/query/useQueryOptimization";
+
 
 // Constants for panel dimensions
 const PANEL_WIDTH = 260;

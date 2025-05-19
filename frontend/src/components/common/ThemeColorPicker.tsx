@@ -29,7 +29,7 @@ export const ThemeColorPicker = ({ defaultColor = '#00B8A9' }: ThemeColorPickerP
 
 
   return (
-    <div className="relative flex items-center">
+    <div className="bg-black relative flex items-center">
       <button 
         className="flex items-center gap-2 text-xs text-white text-opacity-70 hover:text-opacity-100 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
@@ -42,7 +42,7 @@ export const ThemeColorPicker = ({ defaultColor = '#00B8A9' }: ThemeColorPickerP
       </button>
       
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-2 p-2 bg-darkNav border border-white border-opacity-10 rounded-md shadow-lg">
+        <div className="absolute bottom-full left-0 mb-2 p-2 bg-black border border-white border-opacity-10 rounded-md shadow-lg">
           <div className="flex flex-col gap-2">
             <label className="text-xs text-white text-opacity-70">Pick a color:</label>
             <input 
