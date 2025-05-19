@@ -333,7 +333,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
               return (
                 <li key={file.name + file.lastAccessed}>
                   <button
-                    onClick={() => handleRecentFileSelect?.(file, onDataLoad)}
+                    // TODO:
+                    // onClick={() => handleRecentFileSelect?.(file, onDataLoad)}
                     disabled={isLoading}
                     className="w-full text-left flex items-center p-2 rounded text-xs text-white text-opacity-80 hover:bg-background hover:bg-opacity-30 transition-custom"
                   >
