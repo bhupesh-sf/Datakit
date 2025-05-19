@@ -117,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
 
   // File upload popup for collapsed mode
   const renderFileUploadPopup = () => (
-    <div className="absolute left-16 top-0 z-10 bg-darkNav rounded-lg shadow-lg border border-white/10 p-3 w-64 z-50">
+    <div className="absolute left-16 top-0 bg-darkNav rounded-lg shadow-lg border border-white/10 p-3 w-64">
       <div className="mb-3">
         <h3 className="text-sm font-medium text-white mb-1">Upload File</h3>
         <p className="text-xs text-white/70">

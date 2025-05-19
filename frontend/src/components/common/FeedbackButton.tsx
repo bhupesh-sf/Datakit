@@ -27,7 +27,7 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
   context,
   apiEndpoint,
   size = 'sm',
-  variant = 'ghost',
+  variant = 'primary',
   text = 'Share Feedback?',
   className = '',
 }) => {

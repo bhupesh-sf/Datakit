@@ -48,7 +48,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, onDataLoad }) => {
   return (
     <div className="flex h-full bg-background overflow-hidden">
       {/* Sidebar container with higher z-index */}
-      <div className="relative z-50">
+      <div className="relative">
         <Sidebar onDataLoad={onDataLoad} />
       </div>
 
