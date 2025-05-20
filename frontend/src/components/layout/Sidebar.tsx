@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { FileUploadButton } from "@/components/common/FileUploadButton";
 import { ThemeColorPicker } from "@/components/common/ThemeColorPicker";
-import { RemoteFileImport } from "@/components/common/RemoteFileImport";
 import useFileAccess from "@/hooks/useFileAccess";
 import { useDuckDBStore } from "@/store/duckDBStore";
 import useDirectFileImport from "@/hooks/useDirectFileImport";
@@ -21,10 +20,10 @@ import useRemoteFileImport, {
   RemoteSourceProvider,
 } from "@/hooks/useRemoteFileImport";
 import useGoogleSheetsImport from "@/hooks/useGoogleSheetsImport";
-import GoogleSheetsFeatureHighlight from "@/components/common/import-modal/GoogleSheetsFeatureHighlight";
 
 import { ColumnType } from "@/types/csv";
 import { DataSourceType } from "@/types/json";
+import GoogleSheetsImport from "../common/import-modal/GoogleSheetsImportModal";
 
 export interface DataLoadWithDuckDBResult {
   data: string[][];
@@ -85,7 +84,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
     importProgress: googleSheetsImportProgress,
     error: googleSheetsError,
   } = useGoogleSheetsImport();
-
 
   // Handle remote file import
   const handleURLSubmit = async (
@@ -280,14 +278,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
         />
 
         <div className="mt-2 mb-2 flex items-center">
-          <div className="w-8 text-center">
-            <span className="text-xs font-medium text-white/40">OR</span>
-          </div>
           <div className="flex-1">
-            <RemoteFileImport
-              onURLSubmit={handleURLSubmit}
-              isLoading={isProcessingRemoteFile || isImportingGoogleSheet}
-              disabled={false}
+            <GoogleSheetsImport
+              onImport={(result) =>
+                handleURLSubmit(result.remoteURL!, "google_sheets")
+              }
+              isLoading={isImportingGoogleSheet}
             />
           </div>
         </div>
