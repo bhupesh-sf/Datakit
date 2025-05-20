@@ -105,6 +105,18 @@ interface AppState {
   /** Delete a query */
   deleteQuery: (id: string) => void;
   loadQueriesFromStorage: () => void;
+
+  remoteURL?: string;
+  remoteProvider?: "web" | "s3" | "gcs" | "google_sheets";
+
+  // Google Sheets specific metadata
+  googleSheets?: {
+    sheetName: string;
+    docId: string | null;
+    sheetId: string | null;
+    format: "csv" | "xlsx" | "html" | null;
+    importedAt: number;
+  };
 }
 
 // Initial state
@@ -141,8 +153,8 @@ const MAX_RECENT_QUERIES = 50;
 // Load sidebar collapsed state from localStorage on initialization
 const getSavedSidebarState = () => {
   try {
-    const savedState = localStorage.getItem('sidebar-collapsed');
-    return savedState === 'true'; // Convert string to boolean
+    const savedState = localStorage.getItem("sidebar-collapsed");
+    return savedState === "true"; // Convert string to boolean
   } catch (e) {
     return false; // Default to expanded if there's an error
   }
@@ -165,13 +177,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   toggleSidebar: () => {
     const newState = !get().sidebarCollapsed;
     // Save to localStorage for persistence
-    localStorage.setItem('sidebar-collapsed', String(newState));
+    localStorage.setItem("sidebar-collapsed", String(newState));
     set({ sidebarCollapsed: newState });
   },
 
   setSidebarCollapsed: (collapsed) => {
     // Save to localStorage for persistence
-    localStorage.setItem('sidebar-collapsed', String(collapsed));
+    localStorage.setItem("sidebar-collapsed", String(collapsed));
     set({ sidebarCollapsed: collapsed });
   },
 
@@ -194,6 +206,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         result.sourceType === DataSourceType.JSON && result.schema?.isNested
           ? "tree"
           : "table",
+      // Remote source info if available
+      remoteURL: result.remoteURL,
+      remoteProvider: result.remoteProvider,
+      // Google Sheets metadata if available
+      googleSheets: result.googleSheets,
     });
 
     // Load saved queries and recent queries from IndexedDB
@@ -232,7 +249,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   // Reset state
-  resetState: () => set({ ...initialState, sidebarCollapsed: get().sidebarCollapsed }),
+  resetState: () =>
+    set({ ...initialState, sidebarCollapsed: get().sidebarCollapsed }),
 
   // Query history actions
   addRecentQuery: (query) => {

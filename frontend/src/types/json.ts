@@ -25,3 +25,19 @@ export interface DataParseResult extends Omit<CSVParseResult, "stats"> {
     isNested?: boolean;
   };
 }
+
+
+export interface RemoteSourceInfo {
+  url: string;
+  provider: string;
+  lastAccessed: number;
+}
+
+// Google Sheets specific info
+export interface GoogleSheetsInfo {
+  sheetId: string;
+  originalUrl: string;
+  exportUrl: string;
+  gid?: string;
+  lastAccessed: number;
+}

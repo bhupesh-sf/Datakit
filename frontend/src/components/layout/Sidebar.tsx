@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   FileText,
   ChevronLeft,
@@ -20,6 +20,8 @@ import usePopover from "@/hooks/usePopover";
 import useRemoteFileImport, {
   RemoteSourceProvider,
 } from "@/hooks/useRemoteFileImport";
+import useGoogleSheetsImport from "@/hooks/useGoogleSheetsImport";
+import GoogleSheetsFeatureHighlight from "@/components/common/import-modal/GoogleSheetsFeatureHighlight";
 
 import { ColumnType } from "@/types/csv";
 import { DataSourceType } from "@/types/json";
@@ -75,6 +77,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
     error: duckDBError,
   } = useDuckDBStore();
 
+  // Add the Google Sheets import hook
+  const {
+    importFromGoogleSheets,
+    isImporting: isImportingGoogleSheet,
+    importStatus: googleSheetsImportStatus,
+    importProgress: googleSheetsImportProgress,
+    error: googleSheetsError,
+  } = useGoogleSheetsImport();
+
+
   // Handle remote file import
   const handleURLSubmit = async (
     url: string,
@@ -83,15 +95,23 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
     if (!onDataLoad) return;
 
     try {
-      const result = await importFromURL(url, provider);
+      if (provider === "google_sheets") {
+        // Use our Google Sheets import hook
+        const result = await importFromGoogleSheets(url);
+        if (result) {
+          onDataLoad(result);
+        }
+      } else {
+        const result = await importFromURL(url, provider);
 
-      if (result) {
-        onDataLoad({
-          ...result,
-          isRemote: true,
-          remoteURL: url,
-          remoteProvider: provider,
-        });
+        if (result) {
+          onDataLoad({
+            ...result,
+            isRemote: true,
+            remoteURL: url,
+            remoteProvider: provider,
+          });
+        }
       }
     } catch (error) {
       console.error("Error importing remote file:", error);
@@ -265,9 +285,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
           </div>
           <div className="flex-1">
             <RemoteFileImport
-              disabled={true}
               onURLSubmit={handleURLSubmit}
-              isLoading={isLoading}
+              isLoading={isProcessingRemoteFile || isImportingGoogleSheet}
+              disabled={false}
             />
           </div>
         </div>
