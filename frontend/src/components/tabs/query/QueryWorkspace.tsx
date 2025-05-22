@@ -546,7 +546,7 @@ const QueryWorkspace: React.FC = () => {
           ref={resultsRef}
           className="flex-1 flex flex-col min-h-0 overflow-hidden"
         >
-          {ResultsToolbar}
+          {ResultsToolbar()}
 
           {/* Large Dataset Warning */}
           {showLargeDataWarning && totalRows > 10000 && (
