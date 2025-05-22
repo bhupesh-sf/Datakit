@@ -60,8 +60,6 @@ const getFileIcon = (sourceType: DataSourceType, remoteProvider?: string, isActi
   }
 };
 
-
-
 /**
  * Individual file tab component with enhanced UX
  */
@@ -180,7 +178,7 @@ const FileTabItem: React.FC<{
           e.stopPropagation();
           onTabClose(tab.id);
         }}
-        className="ml-2 p-1 rounded-full hover:bg-red-500/20 text-white/60 hover:text-red-400 flex-shrink-0 transition-colors"
+        className="ml-2 p-1 rounded-full text-white/60 hover:primary flex-shrink-0 transition-colors"
         title="Close file"
       >
         <X className="h-3 w-3" />

@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { useAppStore } from '@/store/appStore';
 import { 
   selectActiveFile,
@@ -12,15 +13,17 @@ import {
   selectRemoteProvider,
   selectGoogleSheets
 } from '@/store/selectors/appSelectors';
+
 import CSVGrid from '@/components/data-grid/CSVGrid';
 import JSONGrid from '@/components/data-grid/JSONGrid';
 import FileTabs from '@/components/data-grid/FileTabs';
 import EmptyDataState from '@/components/data-grid/EmptyDataState';
 import GoogleSheetsMetadata from '@/components/common/GoogleSheetsMetadata';
+
 import { DataSourceType } from '@/types/json';
 
 const DataPreviewTab: React.FC = () => {
-  // Use selectors for reactive data access
+
   const hasFiles = useAppStore(selectHasFiles);
   const activeFile = useAppStore(selectActiveFile);
   const fileTabs = useAppStore(selectFileTabs);
