@@ -6,20 +6,12 @@ import {
   del,
 } from "idb-keyval";
 
-import { ColumnType } from "@/types/csv";
-import { DataSourceType, JsonField } from "@/types/json";
 
-/**
- * Interface representing JSON schema information
- */
-interface JsonSchema {
-  /** Array of JSON field definitions */
-  fields?: JsonField[];
-  /** Indicates if JSON data has nested structure */
-  isNested: boolean;
-  /** Depth of arrays in JSON structure */
-  arrayDepth: number;
-}
+import { DataSourceType } from "@/types/json";
+import { 
+  DataFile, 
+  DataLoadWithDuckDBResult,
+} from "@/types/multiFile";
 
 /**
  * Interface for a saved or recent query
@@ -41,29 +33,11 @@ export interface SavedQuery {
  * Interface for application state managed by Zustand
  */
 interface AppState {
-  // Data state
-  /** Two-dimensional string array representing tabular data */
-  data: string[][] | undefined;
-  /** Array of column type definitions for formatting */
-  columnTypes: ColumnType[];
-  /** Name of the currently loaded file */
-  fileName: string;
-  /** Type of data source (CSV, JSON, etc.) */
-  sourceType: DataSourceType;
-  /** Raw data for JSON view (preserves object structure) */
-  rawData: any | null;
-  /** Schema information for JSON data */
-  jsonSchema: JsonSchema | null;
-
-  // Stats
-  /** Total number of rows in the dataset */
-  rowCount: number;
-  /** Total number of columns in the dataset */
-  columnCount: number;
-  /** Whether data is loaded into DuckDB for querying */
-  inDuckDB: boolean;
-  /** Name of the DuckDB table if loaded */
-  tableName: string | undefined;
+  // Multi-file state
+  /** Array of all imported files/datasets */
+  files: DataFile[];
+  /** ID of the currently active/viewed file */
+  activeFileId: string | null;
 
   // UI state
   /** Currently active tab ID */
@@ -79,9 +53,21 @@ interface AppState {
   /** Array of saved queries */
   savedQueries: SavedQuery[];
 
-  // Actions
-  /** Set the data grid content */
-  setData: (data: string[][] | undefined) => void;
+  // Multi-file actions
+  /** Add a new file to the collection */
+  addFile: (fileData: DataLoadWithDuckDBResult) => string;
+  /** Remove a file from the collection */
+  removeFile: (fileId: string) => void;
+  /** Set the active file */
+  setActiveFile: (fileId: string) => void;
+  /** Close all files */
+  closeAllFiles: () => void;
+  /** Close all files except the specified one */
+  closeOthersFiles: (keepFileId: string) => void;
+  /** Update a file's data */
+  updateFile: (fileId: string, updates: Partial<DataFile>) => void;
+
+  // UI actions
   /** Change the active tab */
   setActiveTab: (tab: string) => void;
   /** Change the JSON view mode */
@@ -91,9 +77,11 @@ interface AppState {
   /** Set sidebar collapsed state */
   setSidebarCollapsed: (collapsed: boolean) => void;
 
-  /** Load data from parsed result */
-  loadData: (result: any) => void;
-
+  // Legacy actions (for backward compatibility)
+  /** Set the data grid content (updates active file) */
+  setData: (data: string[][] | undefined) => void;
+  /** Load data from parsed result (legacy - delegates to addFile) */
+  loadData: (result: DataLoadWithDuckDBResult) => void;
   /** Reset state to initial values */
   resetState: () => void;
 
@@ -105,35 +93,13 @@ interface AppState {
   /** Delete a query */
   deleteQuery: (id: string) => void;
   loadQueriesFromStorage: () => void;
-
-  remoteURL?: string;
-  remoteProvider?: "web" | "s3" | "gcs" | "google_sheets";
-
-  // Google Sheets specific metadata
-  googleSheets?: {
-    sheetName: string;
-    docId: string | null;
-    sheetId: string | null;
-    format: "csv" | "xlsx" | "html" | null;
-    importedAt: number;
-  };
 }
 
 // Initial state
 const initialState = {
-  // Data state
-  data: undefined,
-  columnTypes: [],
-  fileName: "",
-  sourceType: DataSourceType.CSV,
-  rawData: null,
-  jsonSchema: null,
-
-  // Stats
-  rowCount: 0,
-  columnCount: 0,
-  inDuckDB: false,
-  tableName: undefined,
+  // Multi-file state
+  files: [],
+  activeFileId: null,
 
   // UI state
   activeTab: "preview",
@@ -149,6 +115,27 @@ const initialState = {
  * Maximum number of recent queries to keep
  */
 const MAX_RECENT_QUERIES = 50;
+
+/**
+ * Generate a unique file ID
+ */
+const generateFileId = (): string => {
+  return `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
+/**
+ * Generate a safe table name from file name
+ */
+const generateTableName = (fileName: string, fileId: string): string => {
+  const safeName = fileName
+    .replace(/\.[^/.]+$/, "") // Remove extension
+    .replace(/[^a-zA-Z0-9_]/g, "_") // Replace non-alphanumeric with underscore
+    .toLowerCase();
+  
+  // Add file ID suffix to ensure uniqueness
+  const shortId = fileId.split('_').pop() || 'unknown';
+  return `${safeName}_${shortId}`;
+};
 
 // Load sidebar collapsed state from localStorage on initialization
 const getSavedSidebarState = () => {
@@ -167,92 +154,144 @@ export const useAppStore = create<AppState>((set, get) => ({
   ...initialState,
   sidebarCollapsed: getSavedSidebarState(),
 
-  // Actions
-  setData: (data) => set({ data }),
+  // Multi-file actions
+  addFile: (fileData: DataLoadWithDuckDBResult): string => {
+    const fileId = generateFileId();
+    const tableName = fileData.tableName || generateTableName(fileData.fileName, fileId);
+    
+    const newFile: DataFile = {
+      id: fileId,
+      fileName: fileData.fileName,
+      data: fileData.data,
+      columnTypes: fileData.columnTypes,
+      sourceType: fileData.sourceType || DataSourceType.CSV,
+      rawData: fileData.rawData || null,
+      jsonSchema: fileData.schema || null,
+      rowCount: fileData.rowCount,
+      columnCount: fileData.columnCount,
+      loadedToDuckDB: fileData.loadedToDuckDB,
+      tableName: tableName,
+      isRemote: fileData.isRemote || false,
+      remoteURL: fileData.remoteURL,
+      remoteProvider: fileData.remoteProvider,
+      googleSheets: fileData.googleSheets,
+      importedAt: Date.now(),
+      lastAccessedAt: Date.now(),
+    };
 
+    set(state => ({
+      files: [...state.files, newFile],
+      activeFileId: fileId, // Auto-switch to new file
+    }));
+
+    // Load queries from storage when first file is added
+    if (get().files.length === 1) {
+      get().loadQueriesFromStorage();
+    }
+
+    return fileId;
+  },
+
+  removeFile: (fileId: string) => {
+    set(state => {
+      const newFiles = state.files.filter(f => f.id !== fileId);
+      let newActiveFileId = state.activeFileId;
+      
+      // If we're removing the active file, switch to another file
+      if (state.activeFileId === fileId) {
+        if (newFiles.length > 0) {
+          // Try to find the next file, or fallback to the first
+          const currentIndex = state.files.findIndex(f => f.id === fileId);
+          const nextFile = newFiles[Math.min(currentIndex, newFiles.length - 1)];
+          newActiveFileId = nextFile.id;
+        } else {
+          newActiveFileId = null;
+        }
+      }
+      
+      return {
+        files: newFiles,
+        activeFileId: newActiveFileId,
+      };
+    });
+  },
+
+  setActiveFile: (fileId: string) => {
+    set(state => {
+      // Update last accessed time
+      const updatedFiles = state.files.map(file => 
+        file.id === fileId 
+          ? { ...file, lastAccessedAt: Date.now() }
+          : file
+      );
+      
+      return {
+        files: updatedFiles,
+        activeFileId: fileId,
+      };
+    });
+  },
+
+  closeAllFiles: () => {
+    set({ files: [], activeFileId: null });
+  },
+
+  closeOthersFiles: (keepFileId: string) => {
+    set(state => ({
+      files: state.files.filter(f => f.id === keepFileId),
+      activeFileId: keepFileId,
+    }));
+  },
+
+  updateFile: (fileId: string, updates: Partial<DataFile>) => {
+    set(state => ({
+      files: state.files.map(file => 
+        file.id === fileId 
+          ? { ...file, ...updates, lastAccessedAt: Date.now() }
+          : file
+      ),
+    }));
+  },
+
+  // UI actions
   setActiveTab: (activeTab) => set({ activeTab }),
 
   setJsonViewMode: (jsonViewMode) => set({ jsonViewMode }),
 
   toggleSidebar: () => {
     const newState = !get().sidebarCollapsed;
-    // Save to localStorage for persistence
     localStorage.setItem("sidebar-collapsed", String(newState));
     set({ sidebarCollapsed: newState });
   },
 
   setSidebarCollapsed: (collapsed) => {
-    // Save to localStorage for persistence
     localStorage.setItem("sidebar-collapsed", String(collapsed));
     set({ sidebarCollapsed: collapsed });
   },
 
-  // Load data from result
-  loadData: (result) => {
-    // Update app state with data from result
-    set({
-      data: result.data,
-      columnTypes: result.columnTypes,
-      fileName: result.fileName,
-      sourceType: result.sourceType || DataSourceType.CSV,
-      rawData: result.rawData || null,
-      jsonSchema: result.schema || null,
-      rowCount: result.rowCount,
-      columnCount: result.columnCount,
-      inDuckDB: result.loadedToDuckDB,
-      tableName: result.tableName,
-      // Intelligently set view mode if needed
-      jsonViewMode:
-        result.sourceType === DataSourceType.JSON && result.schema?.isNested
-          ? "tree"
-          : "table",
-      // Remote source info if available
-      remoteURL: result.remoteURL,
-      remoteProvider: result.remoteProvider,
-      // Google Sheets metadata if available
-      googleSheets: result.googleSheets,
-    });
+  // Legacy actions
+  setData: (data) => {
+    // For backward compatibility, update active file if exists
+    const state = get();
+    const activeFile = state.files.find(f => f.id === state.activeFileId);
+    if (activeFile && data) {
+      get().updateFile(activeFile.id, { data });
+    }
+  },
 
-    // Load saved queries and recent queries from IndexedDB
-    keys()
-      .then((allKeys) => {
-        const savedKeys = allKeys.filter((k) =>
-          String(k).startsWith("saved-query:")
-        );
-        const recentKeys = allKeys.filter((k) =>
-          String(k).startsWith("recent-query:")
-        );
-
-        // Load saved queries
-        Promise.all(savedKeys.map((key) => getFromIndexDB(key)))
-          .then((savedQueries) => {
-            set({
-              savedQueries: savedQueries.sort(
-                (a, b) => b.timestamp - a.timestamp
-              ),
-            });
-          })
-          .catch(console.error);
-
-        // Load recent queries
-        Promise.all(recentKeys.map((key) => getFromIndexDB(key)))
-          .then((recentQueries) => {
-            set({
-              recentQueries: recentQueries.sort(
-                (a, b) => b.timestamp - a.timestamp
-              ),
-            });
-          })
-          .catch(console.error);
-      })
-      .catch(console.error);
+  // Load data from result (legacy - now delegates to addFile)
+  loadData: (result: DataLoadWithDuckDBResult) => {
+    get().addFile(result);
   },
 
   // Reset state
   resetState: () =>
-    set({ ...initialState, sidebarCollapsed: get().sidebarCollapsed }),
+    set({ 
+      ...initialState, 
+      sidebarCollapsed: get().sidebarCollapsed 
+    }),
 
-  // Query history actions
+  // Query history actions (unchanged)
   addRecentQuery: (query) => {
     if (!query.trim()) return;
 
@@ -265,10 +304,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       isFavorite: false,
     };
 
-    // Save to IndexedDB
     setToIndexDB(id, recentQuery).catch(console.error);
 
-    // Update state - add to beginning, limit to max entries
     set((state) => ({
       recentQueries: [
         recentQuery,
@@ -281,10 +318,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   loadQueriesFromStorage: async () => {
     try {
-      // Get all keys from IndexedDB
       const allKeys = await keys();
-
-      // Filter keys for saved and recent queries
       const savedKeys = allKeys.filter((k) =>
         String(k).startsWith("saved-query:")
       );
@@ -292,15 +326,12 @@ export const useAppStore = create<AppState>((set, get) => ({
         String(k).startsWith("recent-query:")
       );
 
-      // Load saved queries
       const savedQueryPromises = savedKeys.map((key) => getFromIndexDB(key));
       const savedQueries = await Promise.all(savedQueryPromises);
 
-      // Load recent queries
       const recentQueryPromises = recentKeys.map((key) => getFromIndexDB(key));
       const recentQueries = await Promise.all(recentQueryPromises);
 
-      // Update state with loaded queries
       set({
         savedQueries: savedQueries.sort((a, b) => b.timestamp - a.timestamp),
         recentQueries: recentQueries.sort((a, b) => b.timestamp - a.timestamp),
@@ -322,20 +353,16 @@ export const useAppStore = create<AppState>((set, get) => ({
       isFavorite: true,
     };
 
-    // Save to IndexedDB
     setToIndexDB(id, savedQuery).catch(console.error);
 
-    // Update state
     set((state) => ({
       savedQueries: [savedQuery, ...state.savedQueries],
     }));
   },
 
   deleteQuery: (id) => {
-    // Delete from IndexedDB
     del(id).catch(console.error);
 
-    // Update state
     if (id.startsWith("saved-query:")) {
       set((state) => ({
         savedQueries: state.savedQueries.filter((q) => q.id !== id),

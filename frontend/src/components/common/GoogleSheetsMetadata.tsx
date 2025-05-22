@@ -1,7 +1,8 @@
 import React from 'react';
-import { ExternalLink, Clock, FileSpreadsheet } from 'lucide-react';
-import GoogleSheetsIcon from '@/components/icons/GoogleSheetsIcon';
 import { formatDistanceToNow } from 'date-fns';
+import { ExternalLink, Clock } from 'lucide-react';
+
+import GoogleSheetsIcon from '@/components/icons/GoogleSheetsIcon';
 
 interface GoogleSheetsMetadataProps {
   metadata: {
@@ -26,63 +27,58 @@ const GoogleSheetsMetadata: React.FC<GoogleSheetsMetadataProps> = ({
   
   if (compact) {
     return (
-      <div className={`flex items-center text-xs text-white/60 ${className}`}>
-        <GoogleSheetsIcon className="h-3.5 w-3.5 mr-1.5 text-green-500" />
-        <span>
-          Google Sheets • {metadata.sheetName || 'Sheet1'} • Imported {timeAgo}
-        </span>
+      <div className={`flex items-center text-xs text-white/60 bg-green-500/10 rounded border border-green-500/20 px-3 py-2 ${className}`}>
+        <GoogleSheetsIcon className="h-3.5 w-3.5 mr-2 text-green-500 flex-shrink-0" />
+        <div className="flex items-center flex-1 min-w-0">
+          <span className="truncate">
+            {metadata.sheetName || 'Google Sheet'}
+          </span>
+          <span className="mx-2 text-white/30">•</span>
+          <span className="flex-shrink-0 text-white/50">
+            {timeAgo}
+          </span>
+        </div>
         <a 
           href={url} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="ml-2 text-primary hover:text-primary-foreground inline-flex items-center"
+          className="ml-2 text-green-500 hover:text-green-400 inline-flex items-center flex-shrink-0"
           title="Open in Google Sheets"
         >
-          <ExternalLink className="h-3 w-3" />
+          <ExternalLink className="h-3.5 w-3.5" />
         </a>
       </div>
     );
   }
   
   return (
-    <div className={`bg-green-500/10 rounded p-3 border border-green-500/20 ${className}`}>
+    <div className={`bg-green-500/10 rounded-md p-3 border border-green-500/20 ${className}`}>
       <div className="flex items-center">
-        <GoogleSheetsIcon className="h-5 w-5 mr-2 text-green-500" />
-        <div className="flex-1">
-          <h4 className="text-sm font-medium text-white/90">
-            Imported from Google Sheets
+        <GoogleSheetsIcon className="h-4 w-4 mr-2 text-green-500 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-medium text-white/90 truncate">
+            {metadata.sheetName || 'Google Sheet'}
           </h4>
-          <div className="flex items-center mt-0.5">
-            <Clock className="h-3 w-3 mr-1.5 text-white/50" />
-            <span className="text-xs text-white/70">{timeAgo}</span>
+          <div className="flex items-center mt-0.5 text-xs text-white/60">
+            <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span>Imported {timeAgo}</span>
+            {metadata.format && (
+              <>
+                <span className="mx-2">•</span>
+                <span className="uppercase">{metadata.format}</span>
+              </>
+            )}
           </div>
         </div>
         <a 
           href={url} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="bg-black/30 hover:bg-primary/20 text-primary hover:text-primary-foreground border border-white/10 rounded px-2 py-1 text-xs flex items-center transition-colors"
+          className="ml-3 bg-black/30 hover:bg-green-500/20 text-green-500 hover:text-green-400 border border-green-500/20 hover:border-green-500/40 rounded px-2 py-1 text-xs flex items-center transition-colors flex-shrink-0"
         >
-          <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-          Open in Google Sheets
+          <ExternalLink className="h-3 w-3 mr-1" />
+          Open
         </a>
-      </div>
-      
-      <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-        <div className="bg-black/20 rounded p-2 border border-white/5">
-          <div className="text-white/50 mb-1">Sheet Name</div>
-          <div className="font-medium text-white/90 flex items-center">
-            <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5 text-green-500/80" />
-            {metadata.sheetName || 'Sheet1'}
-          </div>
-        </div>
-        
-        <div className="bg-black/20 rounded p-2 border border-white/5">
-          <div className="text-white/50 mb-1">Format</div>
-          <div className="font-medium text-white/90 uppercase">
-            {metadata.format || 'CSV'}
-          </div>
-        </div>
       </div>
     </div>
   );

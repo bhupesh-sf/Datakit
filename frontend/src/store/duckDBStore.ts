@@ -8,6 +8,8 @@ import { executePaginatedQuery } from "@/lib/duckdb/query";
 import { PaginatedQueryResult } from "@/lib/duckdb/types";
 import { ColumnType } from "@/types/csv";
 
+import { SAMPLE_EMPLOYEES_DATA } from "./constants";
+
 interface DuckDBState {
   // DB state
   db: duckdb.AsyncDuckDB | null;
@@ -18,14 +20,23 @@ interface DuckDBState {
 
   // Table registry - maps raw names to escaped names
   registeredTables: Map<string, string>;
+  
+  // Sample table state
+  hasSampleTable: boolean;
+  sampleTableName: string;
 
   // Progress tracking
   isLoading: boolean;
   processingProgress: number;
   processingStatus: string;
 
+  // Schema cache for performance
+  schemaCache: Map<string, { name: string; type: string }[]>;
+  lastSchemaCacheUpdate: number;
+
   // Actions
   initialize: () => Promise<boolean>;
+  createSampleTable: () => Promise<void>;
   createTable: (
     tableName: string,
     headers: string[],
@@ -48,6 +59,7 @@ interface DuckDBState {
   getTableSchema: (
     tableName: string
   ) => Promise<{ name: string; type: string }[] | null>;
+  refreshSchemaCache: () => Promise<void>;
   resetError: () => void;
   cleanupDB: () => Promise<void>;
   importFileDirectly: (
@@ -58,6 +70,14 @@ interface DuckDBState {
     page: number,
     pageSize: number
   ) => Promise<PaginatedQueryResult | null>;
+  executeChartQuery: (
+    tableName: string,
+    dimension: string,
+    measure: string,
+    aggregation?: "sum" | "avg" | "min" | "max" | "count",
+    limit?: number,
+    filters?: { field: string; operator: string; value: string }[]
+  ) => Promise<any[]>;
 }
 
 export const useDuckDBStore = create<DuckDBState>((set, get) => ({
@@ -68,11 +88,15 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
   isInitialized: false,
   error: null,
   registeredTables: new Map(),
+  hasSampleTable: false,
+  sampleTableName: "employees_sample",
   isLoading: false,
   processingProgress: 0,
   processingStatus: "",
+  schemaCache: new Map(),
+  lastSchemaCacheUpdate: 0,
 
-  // Initialize DuckDB - should be called early in app lifecycle
+  // Initialize DuckDB and create sample table
   initialize: async () => {
     if (get().isInitialized || get().isInitializing) {
       return get().isInitialized;
@@ -95,6 +119,10 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
           isDevelopment ? "development" : "production"
         } mode`
       );
+
+      // Create sample table immediately after initialization
+      await get().createSampleTable();
+
       return true;
     } catch (err) {
       console.error("[DuckDBStore] Failed to initialize DuckDB:", err);
@@ -105,6 +133,100 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         isInitializing: false,
       });
       return false;
+    }
+  },
+
+  // Create sample employees table
+  createSampleTable: async () => {
+    const { connection, isInitialized, sampleTableName } = get();
+
+    if (!connection || !isInitialized) {
+      throw new Error("DuckDB is not initialized");
+    }
+
+    try {
+      console.log(`[DuckDBStore] Creating sample table: ${sampleTableName}`);
+
+      // Create the sample table
+      const escapedTableName = `"${sampleTableName}"`;
+      const createTableSQL = `
+        CREATE TABLE ${escapedTableName} (
+          id INTEGER,
+          name VARCHAR,
+          department VARCHAR,
+          salary INTEGER
+        )
+      `;
+
+      await connection.query(createTableSQL);
+
+      // Insert sample data
+      const values = SAMPLE_EMPLOYEES_DATA.map(
+        (row) => `(${row[0]}, '${row[1]}', '${row[2]}', ${row[3]})`
+      ).join(", ");
+
+      const insertSQL = `
+        INSERT INTO ${escapedTableName} (id, name, department, salary)
+        VALUES ${values}
+      `;
+
+      await connection.query(insertSQL);
+
+      // Register the sample table
+      const newTables = new Map(get().registeredTables);
+      newTables.set(sampleTableName, escapedTableName);
+
+      set({
+        registeredTables: newTables,
+        hasSampleTable: true,
+      });
+
+      console.log(
+        `[DuckDBStore] Sample table '${sampleTableName}' created with ${SAMPLE_EMPLOYEES_DATA.length} rows`
+      );
+
+      // Refresh schema cache
+      await get().refreshSchemaCache();
+    } catch (err) {
+      console.error(`[DuckDBStore] Failed to create sample table:`, err);
+      throw err;
+    }
+  },
+
+  // Refresh schema cache for all tables
+  refreshSchemaCache: async () => {
+    const { connection, registeredTables } = get();
+    if (!connection) return;
+
+    try {
+      const newCache = new Map();
+      
+      // Create a snapshot of current tables to avoid race conditions
+      const tablesToProcess = Array.from(registeredTables.entries());
+      
+      for (const [tableName, escapedName] of tablesToProcess) {
+        try {
+          const schemaQuery = `PRAGMA table_info(${escapedName})`;
+          const result = await connection.query(schemaQuery);
+          const schema = result.toArray().map((col) => ({
+            name: col.name,
+            type: col.type,
+          }));
+          newCache.set(tableName, schema);
+        } catch (err) {
+          console.warn(`[DuckDBStore] Failed to get schema for ${tableName}:`, err);
+        }
+      }
+
+      // Only update state once with all the new schemas
+      set((state) => ({
+        schemaCache: new Map([...state.schemaCache, ...newCache]),
+        lastSchemaCacheUpdate: Date.now(),
+      }));
+
+      console.log(`[DuckDBStore] Schema cache refreshed for ${newCache.size} tables`);
+    } catch (err) {
+      console.error(`[DuckDBStore] Failed to refresh schema cache:`, err);
     }
   },
 
@@ -133,10 +255,10 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
           case ColumnType.Boolean:
             return "BOOLEAN";
           case ColumnType.Date:
-            return "VARCHAR"; // Using VARCHAR for dates to avoid parsing issues
+            return "VARCHAR";
           case ColumnType.Array:
           case ColumnType.Object:
-            return "TEXT"; // Use TEXT instead of JSON for better compatibility
+            return "TEXT";
           default:
             return "VARCHAR";
         }
@@ -149,7 +271,6 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
             index < columnTypes.length
               ? duckDBTypeFromColumnType(columnTypes[index])
               : "VARCHAR";
-          // Properly escape header names with double quotes
           return `"${header.replace(/"/g, '""')}" ${type}`;
         })
         .join(", ");
@@ -185,6 +306,10 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
       set({ isLoading: false });
       console.log(`[DuckDBStore] Table created successfully`);
+
+      // Refresh schema cache
+      await get().refreshSchemaCache();
+
       return escapedTableName;
     } catch (err) {
       console.error(`[DuckDBStore] Failed to create table:`, err);
@@ -227,7 +352,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       console.log(`[DuckDBStore] Column names:`, columnNames);
 
       // Process in smaller batches to prevent blocking
-      const batchSize = 1000; // Start with smaller batches for debugging
+      const batchSize = 1000;
       const totalBatches = Math.ceil(data.length / batchSize);
       let totalInserted = 0;
 
@@ -348,6 +473,10 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
       set({ isLoading: false, processingProgress: 0, processingStatus: "" });
       console.log(`[DuckDBStore] Data insertion completed`);
+
+      // Refresh schema cache
+      await get().refreshSchemaCache();
+
       return true;
     } catch (err) {
       console.error(`[DuckDBStore] Failed to insert data into DuckDB:`, err);
@@ -430,8 +559,6 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
         // Replace unquoted table names with quoted versions
         for (const tableName of knownTableNames) {
-          // This regex matches the table name when it's not already in quotes
-          // and not part of another identifier
           const tableNameRegex = new RegExp(
             `\\b${tableName}\\b(?=(?:[^"]*"[^"]*")*[^"]*$)`,
             "g"
@@ -469,10 +596,15 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
   },
 
   getTableSchema: async (tableName) => {
-    const { connection, isInitialized, registeredTables } = get();
+    const { connection, isInitialized, registeredTables, schemaCache } = get();
 
     if (!connection || !isInitialized) {
       return null;
+    }
+
+    // Check cache first
+    if (schemaCache.has(tableName)) {
+      return schemaCache.get(tableName)!;
     }
 
     try {
@@ -480,10 +612,17 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         registeredTables.get(tableName) || `"${tableName}"`;
       const schemaQuery = `PRAGMA table_info(${escapedTableName})`;
       const result = await connection.query(schemaQuery);
-      return result.toArray().map((col) => ({
+      const schema = result.toArray().map((col) => ({
         name: col.name,
         type: col.type,
       }));
+
+      // Update cache using functional update to avoid race conditions
+      set((state) => ({
+        schemaCache: new Map(state.schemaCache).set(tableName, schema),
+      }));
+
+      return schema;
     } catch (err) {
       console.error(
         `[DuckDBStore] Failed to get schema for ${tableName}:`,
@@ -513,6 +652,9 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       connection: null,
       isInitialized: false,
       registeredTables: new Map(),
+      hasSampleTable: false,
+      schemaCache: new Map(),
+      lastSchemaCacheUpdate: 0,
     });
   },
 
@@ -645,6 +787,9 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
               processingProgress: 1.0,
             });
 
+            // Refresh schema cache
+            await get().refreshSchemaCache();
+
             return {
               tableName: rawTableName,
               rowCount: count,
@@ -755,6 +900,9 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
             processingProgress: 1.0,
           });
 
+          // Refresh schema cache
+          await get().refreshSchemaCache();
+
           return {
             tableName: rawTableName,
             rowCount: count,
@@ -810,11 +958,6 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
   /**
    * Execute a SQL query with pagination
-   *
-   * @param sql - SQL query to execute
-   * @param page - Current page number (1-based)
-   * @param pageSize - Number of rows per page
-   * @returns Promise resolving to paginated query result
    */
   executePaginatedQuery: async (sql, page, pageSize) => {
     const { connection, isInitialized, registeredTables } = get();

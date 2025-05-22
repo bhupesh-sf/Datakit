@@ -11,25 +11,33 @@ import { Table, BarChart, Database } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useAppStore } from "@/store/appStore";
+import { 
+  selectActiveFileInfo, 
+  selectStatusText,
+  selectFileName,
+  selectSourceType,
+  selectJsonSchema
+} from "@/store/selectors/appSelectors";
 import { DataSourceType } from "@/types/json";
 
 /**
  * Main application home page component
  */
 const Home = () => {
+  // Use selectors for reactive data access
+  const activeFileInfo = useAppStore(selectActiveFileInfo);
+  const statusText = useAppStore(selectStatusText);
+  const fileName = useAppStore(selectFileName);
+  const sourceType = useAppStore(selectSourceType);
+  const jsonSchema = useAppStore(selectJsonSchema);
+  
+  // Get UI state and actions
   const {
-    fileName,
-    sourceType,
-    jsonSchema,
-    rowCount,
-    columnCount,
-    inDuckDB,
-    tableName,
     activeTab,
     jsonViewMode,
     setActiveTab,
     setJsonViewMode,
-    loadData,
+    addFile,
   } = useAppStore();
 
   // Define available tabs
@@ -45,47 +53,14 @@ const Home = () => {
    */
   const handleDataLoad = (result: DataLoadWithDuckDBResult) => {
     // Use store action to load data
-    loadData(result);
-
-    // Switch to preview tab when new data is loaded
-    setActiveTab("preview");
-  };
-
-  /**
-   * Get status text for the current dataset
-   */
-  const getStatusText = () => {
-    if (!fileName) {
-      return "Bring a CSV, PARQUET, XSLX or JSON file to get started.";
-    }
-
-    const baseText = `${rowCount.toLocaleString()} rows × ${columnCount.toLocaleString()} columns | ${
-      sourceType === DataSourceType.JSON
-        ? "JSON data"
-        : sourceType === DataSourceType.PARQUET
-        ? "Parquet data"
-        : sourceType === DataSourceType.XLSX
-        ? "Excel data"
-        : "CSV data"
-    }`;
-
-    const duckDBText = inDuckDB
-      ? ` | Loaded in DuckDB (table: ${tableName})`
-      : "";
-
-    const interactionText =
-      sourceType === DataSourceType.JSON && jsonViewMode === "tree"
-        ? " | Explore the JSON structure."
-        : " | Use SQL queries for analysis.";
-
-    return baseText + duckDBText + interactionText;
+    addFile(result);
   };
 
   // Prepare feedback context
   const feedbackContext = fileName
     ? `Feedback provided while working with: ${fileName} (${
         sourceType === DataSourceType.JSON ? "JSON" : "CSV"
-      }, ${rowCount} rows)`
+      }, ${activeFileInfo?.rowCount || 0} rows)`
     : undefined;
 
   // Animation variants for tab content
@@ -104,7 +79,7 @@ const Home = () => {
               {fileName ? `Viewing: ${fileName}` : "Playground"}
             </h2>
             <p className="text-white text-opacity-70 text-sm">
-              {getStatusText()}
+              {statusText}
             </p>
           </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import {
   Play,
   ChevronLeft,
@@ -6,20 +6,22 @@ import {
   Maximize,
   Minimize,
   Save,
+  Database,
   Clock,
   AlertTriangle,
   Zap,
 } from "lucide-react";
 
-import { useAppStore } from "@/store/appStore";
+import {
+  useInitialQuery,
+  useDuckDBInitialization,
+} from "@/hooks/query/useQueryInitialization";
 
 import SchemaBrowser from "./SchemaBrowser";
 import MonacoEditor from "./MonacoEditor";
 import QueryHistory from "./QueryHistory";
 import QueryResults from "./query-results/QueryResults";
-
 import QueryAssistant from "./assistant/QueryAssistant";
-
 import { Button } from "@/components/ui/Button";
 
 import { useSchemaInfo } from "@/hooks/query/useSchemaInfo";
@@ -27,25 +29,43 @@ import { useResizable } from "@/hooks/useResizable";
 import { useQueryExecution } from "@/hooks/query/useQueryExecution";
 import { useQueryHistory } from "@/hooks/query/useQueryHistory";
 import { useQueryOptimization } from "@/hooks/query/useQueryOptimization";
-
+import { useWorkspaceUIState } from "./useWorkspaceUIState";
 
 // Constants for panel dimensions
 const PANEL_WIDTH = 260;
-const QUERY_INPUT_DEFAULT_HEIGHT = 300;
 
 /**
  * Main container for the enhanced query tab with resizable panels
  */
 const QueryWorkspace: React.FC = () => {
-  const { tableName } = useAppStore();
+  const {
+    isInitialized,
+    isInitializing,
+    error: initError,
+    retry,
+  } = useDuckDBInitialization();
 
-  // State for query editor
-  const [query, setQuery] = useState<string>(`-- Write your SQL query here
-SELECT *
-FROM "${tableName || "table"}"
-LIMIT 10;`);
+  const { query, setQuery, canExecuteQueries, hasUserTables } =
+    useInitialQuery();
 
-  // Custom hooks for query functionality
+  const { tableSchema } = useSchemaInfo();
+
+  const {
+    showSchemaBrowser,
+    showQueryHistory,
+    showOptimizationTips,
+    fullScreenMode,
+    queryInputHeight,
+    saveDialogOpen,
+    queryName,
+    setShowOptimizationTips,
+    setSaveDialogOpen,
+    setQueryName,
+    toggleSchemaBrowser,
+    toggleQueryHistory,
+    toggleFullScreenMode,
+  } = useWorkspaceUIState();
+
   const {
     results,
     columns,
@@ -72,55 +92,6 @@ LIMIT 10;`);
   const { suggestions, hasWarnings, analyzeQuery, optimizeQuery } =
     useQueryOptimization();
 
-  const { tableSchema } = useSchemaInfo();
-
-  // UI state
-  const [showSchemaBrowser, setShowSchemaBrowser] = useState(() => {
-    return localStorage.getItem("datakit-show-schema-browser") !== "false";
-  });
-
-  const [showQueryHistory, setShowQueryHistory] = useState(() => {
-    return localStorage.getItem("datakit-show-query-history") !== "false";
-  });
-
-  const [showOptimizationTips, setShowOptimizationTips] =
-    useState<boolean>(false);
-  const [fullScreenMode, setFullScreenMode] = useState<
-    "none" | "editor" | "results"
-  >("none");
-  const [queryInputHeight, setQueryInputHeight] = useState<number>(() => {
-    return parseInt(
-      localStorage.getItem("datakit-query-editor-height") ||
-        String(QUERY_INPUT_DEFAULT_HEIGHT),
-      10
-    );
-  });
-  const [saveDialogOpen, setSaveDialogOpen] = useState<boolean>(false);
-  const [queryName, setQueryName] = useState<string>("");
-
-  // Run query analysis whenever the query changes
-  useEffect(() => {
-    analyzeQuery(query);
-  }, [query, analyzeQuery]);
-
-  // Initialize localStorage values if not set
-  useEffect(() => {
-    if (localStorage.getItem("datakit-show-schema-browser") === null) {
-      localStorage.setItem("datakit-show-schema-browser", "true");
-    }
-
-    if (localStorage.getItem("datakit-show-query-history") === null) {
-      localStorage.setItem("datakit-show-query-history", "true");
-    }
-
-    if (localStorage.getItem("datakit-query-editor-height") === null) {
-      localStorage.setItem(
-        "datakit-query-editor-height",
-        String(QUERY_INPUT_DEFAULT_HEIGHT)
-      );
-    }
-  }, []);
-
   // Element refs for resizing
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -136,41 +107,12 @@ LIMIT 10;`);
     storageKey: "datakit-query-editor-height",
   });
 
-  // Toggle sidebar panels
-  const toggleSchemaBrowser = () => {
-    const newValue = !showSchemaBrowser;
-    console.log(`[Panel] Toggling schema browser: ${newValue}`);
-    setShowSchemaBrowser(newValue);
-    localStorage.setItem("datakit-show-schema-browser", String(newValue));
-
-    // Force layout recalculation after state update
-    requestAnimationFrame(() => {
-      if (containerRef.current) {
-        const event = new Event("resize");
-        window.dispatchEvent(event);
-      }
-    });
-  };
-
-  const toggleQueryHistory = () => {
-    const newValue = !showQueryHistory;
-    console.log(`[Panel] Toggling query history: ${newValue}`);
-    setShowQueryHistory(newValue);
-    localStorage.setItem("datakit-show-query-history", String(newValue));
-
-    // Force layout recalculation after state update
-    requestAnimationFrame(() => {
-      if (containerRef.current) {
-        const event = new Event("resize");
-        window.dispatchEvent(event);
-      }
-    });
-  };
-
-  // Toggle full screen mode
-  const toggleFullScreenMode = (mode: "editor" | "results") => {
-    setFullScreenMode((prevMode) => (prevMode === mode ? "none" : mode));
-  };
+  // Run query analysis whenever the query changes
+  useEffect(() => {
+    if (canExecuteQueries && query.trim()) {
+      analyzeQuery(query);
+    }
+  }, [query, analyzeQuery, canExecuteQueries]);
 
   // Handle saving query
   const handleSaveQuery = () => {
@@ -185,10 +127,6 @@ LIMIT 10;`);
     }
   };
 
-  // Toggle UI panels
-  const toggleOptimizationTips = () =>
-    setShowOptimizationTips(!showOptimizationTips);
-
   // Apply query optimizations
   const handleOptimizeQuery = () => {
     const optimizedQuery = optimizeQuery(query);
@@ -196,45 +134,153 @@ LIMIT 10;`);
     setShowOptimizationTips(false);
   };
 
+  // Memoized event handlers to prevent unnecessary re-renders
+  const keyboardHandlers = useMemo(
+    () => ({
+      executeQuery: () => {
+        if (canExecuteQueries && query.trim()) {
+          executeQuery();
+        }
+      },
+      saveQuery: handleSaveQuery,
+      exitFullScreen: () => setFullScreenMode("none"),
+    }),
+    [canExecuteQueries, query, executeQuery, handleSaveQuery]
+  );
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl/Cmd + Enter to execute query
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
-        executeQuery();
+        keyboardHandlers.executeQuery();
       }
 
       // Ctrl/Cmd + S to save query
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
-        handleSaveQuery();
+        keyboardHandlers.saveQuery();
       }
 
       // Escape to exit full screen
       if (e.key === "Escape" && fullScreenMode !== "none") {
         e.preventDefault();
-        setFullScreenMode("none");
+        keyboardHandlers.exitFullScreen();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [query, fullScreenMode, queryName, executeQuery]);
+  }, [keyboardHandlers, fullScreenMode]);
 
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      // Force re-render on window resize
-      if (containerRef.current) {
-        // This is just to trigger a re-render
-        setQueryInputHeight((prev) => prev);
-      }
-    };
+  // Show getting started state
+  if (!isInitialized) {
+    if (initError) {
+      return (
+        <div className="h-full flex items-center justify-center">
+          <div className="text-center p-8 max-w-md">
+            <div className="mb-6 flex justify-center">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-8 h-8 text-red-500" />
+              </div>
+            </div>
+            <h3 className="text-lg font-heading font-medium text-white mb-2">
+              DuckDB Initialization Failed
+            </h3>
+            <p className="text-white/70 mb-4">{initError}</p>
+            <Button onClick={retry} variant="primary">
+              Retry Initialization
+            </Button>
+          </div>
+        </div>
+      );
+    }
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center p-8 max-w-md">
+          <div className="mb-6 flex justify-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+              <Database className="w-8 h-8 text-primary animate-pulse" />
+            </div>
+          </div>
+          <h3 className="text-lg font-heading font-medium text-white mb-2">
+            {isInitializing ? "Initializing DuckDB" : "DuckDB Not Ready"}
+          </h3>
+          <p className="text-white/70 mb-4">
+            {isInitializing
+              ? "Setting up your in-browser SQL database..."
+              : "Preparing your data analysis environment..."}
+          </p>
+          <div className="text-sm text-white/60">
+            <div className="flex items-center justify-center gap-2">
+              <Zap className="w-4 h-4 text-secondary" />
+              <span>Powered by WebAssembly</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const ResultsToolbar = () => (
+    <div className="flex items-center justify-between p-2 bg-darkNav border-b border-white/10">
+      <div className="flex items-center space-x-3">
+        <h3 className="text-sm font-medium">Query Results</h3>
+
+        {executionTime !== null && (
+          <div className="flex items-center text-xs text-white/60">
+            <Clock size={12} className="mr-1" />
+            <span>{executionTime.toFixed(0)}ms</span>
+          </div>
+        )}
+
+        {totalRows > 0 && (
+          <div className="text-xs text-white/60">
+            {totalRows.toLocaleString()} rows
+          </div>
+        )}
+
+        {/* <div className="text-xs text-white/50">{duckDBStatus}</div> */}
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => toggleFullScreenMode("results")}
+          title="Full Screen Results"
+        >
+          <Maximize size={16} />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={toggleQueryHistory}
+          title={showQueryHistory ? "Hide Query History" : "Show Query History"}
+        >
+          <ChevronRight
+            size={16}
+            className={`transition-transform ${
+              showQueryHistory ? "" : "rotate-180"
+            }`}
+          />
+        </Button>
+      </div>
+    </div>
+    // ),
+    // [
+    //   executionTime,
+    //   totalRows,
+    //   showQueryHistory,
+    //   toggleFullScreenMode,
+    //   toggleQueryHistory,
+    // ]
+  );
 
   // Return the appropriate layout based on fullscreen mode
   if (fullScreenMode !== "none") {
@@ -242,7 +288,6 @@ LIMIT 10;`);
       <div className="w-full h-full flex flex-col">
         {fullScreenMode === "editor" ? (
           <>
-            {/* Editor Toolbar */}
             <div className="flex items-center justify-between p-2 bg-darkNav border-b border-white/10">
               <h3 className="text-sm font-medium">SQL Editor (Fullscreen)</h3>
               <Button
@@ -255,19 +300,16 @@ LIMIT 10;`);
                 <Minimize size={16} />
               </Button>
             </div>
-
-            {/* Fullscreen Editor */}
             <div className="flex-1 overflow-hidden">
               <MonacoEditor
                 value={query}
                 onChange={setQuery}
-                onExecute={executeQuery}
+                onExecute={keyboardHandlers.executeQuery}
               />
             </div>
           </>
         ) : (
           <>
-            {/* Results Toolbar */}
             <div className="flex items-center justify-between p-2 bg-darkNav border-b border-white/10">
               <div className="flex items-center space-x-3">
                 <h3 className="text-sm font-medium">
@@ -295,8 +337,6 @@ LIMIT 10;`);
                 <Minimize size={16} />
               </Button>
             </div>
-
-            {/* Fullscreen Results */}
             <div className="flex-1 overflow-hidden">
               <QueryResults
                 results={results}
@@ -320,7 +360,7 @@ LIMIT 10;`);
   // Regular layout with panels
   return (
     <div ref={containerRef} className="h-full w-full flex overflow-hidden">
-      {/* Fixed-width left panel (Schema Browser) */}
+      {/* Schema Browser Panel */}
       <div
         className="flex-shrink-0 transition-all duration-200 overflow-hidden"
         style={{
@@ -335,15 +375,14 @@ LIMIT 10;`);
         )}
       </div>
 
-      {/* Main content area (always flexible) */}
+      {/* Main Content Area */}
       <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
-        {/* Editor area */}
+        {/* Editor Area */}
         <div
           ref={editorRef}
           className="flex flex-col relative"
           style={{ height: `${queryInputHeight}px` }}
         >
-          {/* Editor toolbar */}
           <div className="flex items-center justify-between p-2 bg-darkNav border-b border-white/10">
             <div className="flex items-center space-x-2">
               <Button
@@ -374,7 +413,7 @@ LIMIT 10;`);
               {hasWarnings && (
                 <button
                   className="flex items-center text-xs px-2 py-0.5 bg-warning/20 text-warning rounded cursor-pointer"
-                  onClick={toggleOptimizationTips}
+                  onClick={() => setShowOptimizationTips(!showOptimizationTips)}
                   title="Query optimization suggestions available"
                 >
                   <Zap size={12} className="mr-1" />
@@ -384,17 +423,18 @@ LIMIT 10;`);
             </div>
 
             <div className="flex items-center space-x-2">
-              <QueryAssistant
-                onQueryGenerated={(sql) => setQuery(sql)}
-                tableSchema={tableSchema}
-              />
+              {/* TODO */}
+              {/* <QueryAssistant
+            onQueryGenerated={(sql) => setQuery(sql)}
+            tableSchema={tableSchema}
+          /> */}
 
-            
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleSaveQuery}
                 className="h-8"
+                disabled={!query.trim()}
               >
                 <Save size={14} className="mr-1" />
                 <span>Save</span>
@@ -403,8 +443,13 @@ LIMIT 10;`);
               <Button
                 variant="primary"
                 size="sm"
-                onClick={executeQuery}
-                disabled={isLoading || isChangingPage}
+                onClick={keyboardHandlers.executeQuery}
+                disabled={
+                  isLoading ||
+                  isChangingPage ||
+                  !query.trim() ||
+                  !canExecuteQueries
+                }
                 className="h-8"
               >
                 <Play size={14} className="mr-1" />
@@ -423,16 +468,13 @@ LIMIT 10;`);
             </div>
           </div>
 
-          {/* Monaco Editor */}
           <div className="flex-1 overflow-hidden">
             <MonacoEditor
               value={query}
               onChange={setQuery}
-              onExecute={executeQuery}
+              onExecute={keyboardHandlers.executeQuery}
             />
           </div>
-
-          
 
           {/* Optimization Tips Panel */}
           {showOptimizationTips && suggestions.length > 0 && (
@@ -490,7 +532,7 @@ LIMIT 10;`);
           )}
         </div>
 
-        {/* Resizer handle */}
+        {/* Resizer Handle */}
         <div
           ref={dividerRef}
           className="h-2 bg-darkNav/50 cursor-row-resize hover:bg-primary/30 transition-colors flex items-center justify-center"
@@ -499,61 +541,14 @@ LIMIT 10;`);
           <div className="w-8 h-1 bg-white/20 rounded-full" />
         </div>
 
-        {/* Results area */}
+        {/* Results Area */}
         <div
           ref={resultsRef}
           className="flex-1 flex flex-col min-h-0 overflow-hidden"
         >
-          {/* Results toolbar */}
-          <div className="flex items-center justify-between p-2 bg-darkNav border-b border-white/10">
-            <div className="flex items-center space-x-3">
-              <h3 className="text-sm font-medium">Query Results</h3>
+          {ResultsToolbar()}
 
-              {executionTime !== null && (
-                <div className="flex items-center text-xs text-white/60">
-                  <Clock size={12} className="mr-1" />
-                  <span>{executionTime.toFixed(0)}ms</span>
-                </div>
-              )}
-
-              {totalRows > 0 && (
-                <div className="text-xs text-white/60">
-                  {totalRows.toLocaleString()} rows
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => toggleFullScreenMode("results")}
-                title="Full Screen Results"
-              >
-                <Maximize size={16} />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={toggleQueryHistory}
-                title={
-                  showQueryHistory ? "Hide Query History" : "Show Query History"
-                }
-              >
-                <ChevronRight
-                  size={16}
-                  className={`transition-transform ${
-                    showQueryHistory ? "" : "rotate-180"
-                  }`}
-                />
-              </Button>
-            </div>
-          </div>
-
-          {/* Large dataset warning */}
+          {/* Large Dataset Warning */}
           {showLargeDataWarning && totalRows > 10000 && (
             <div className="bg-primary/10 border border-primary/30 rounded p-3 m-3 text-white text-sm">
               <div className="flex items-start">
@@ -570,7 +565,6 @@ LIMIT 10;`);
                     performance. Consider adding filters or LIMIT clause to
                     reduce the result size.
                   </p>
-
                   <div className="flex justify-end space-x-2 mt-2">
                     <button
                       className="text-xs px-3 py-1 rounded bg-primary text-white"
@@ -590,7 +584,32 @@ LIMIT 10;`);
             </div>
           )}
 
-          {/* Query results component */}
+          {/* Getting Started Help Panel */}
+          {!canExecuteQueries && (
+            <div className="bg-secondary/10 border border-secondary/30 rounded p-3 m-3 text-white text-sm">
+              <div className="flex items-start">
+                <Database
+                  size={18}
+                  className="text-secondary mt-0.5 mr-2 flex-shrink-0"
+                />
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium mb-1">
+                    Ready to Query Sample Data!
+                  </h4>
+                  <p className="text-xs text-white/80 mb-2">
+                    {hasUserTables
+                      ? "You have uploaded data ready to query. Try the sample query above or write your own SQL."
+                      : "A sample employees table is available for testing. Import your own CSV, JSON, or Parquet files to query your data."}
+                  </p>
+                  {/* <div className="text-xs text-white/60">
+                    Available tables:{" "}
+                    {tablesWithMetadata.map((t) => t.name).join(", ")}
+                  </div> */}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex-1 overflow-hidden">
             <QueryResults
               results={results}
@@ -608,7 +627,7 @@ LIMIT 10;`);
         </div>
       </div>
 
-      {/* Fixed-width right panel (Query History) */}
+      {/* Query History Panel */}
       <div
         className="flex-shrink-0 transition-all duration-200 overflow-hidden"
         style={{

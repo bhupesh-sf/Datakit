@@ -40,20 +40,6 @@ const ChartConfigPanel: React.FC = () => {
             placeholder="Enter chart title"
           />
         </div>
-
-        <div>
-          <label className="block text-xs font-medium mb-1">
-            Description (Optional)
-          </label>
-          <textarea
-            value={currentChart.description || ""}
-            onChange={(e) =>
-              updateCurrentChart({ description: e.target.value })
-            }
-            className="w-full p-2 bg-background border border-white/10 rounded text-white text-sm h-16 resize-none"
-            placeholder="Brief description of this chart"
-          />
-        </div>
       </div>
 
       {/* Tab navigation */}

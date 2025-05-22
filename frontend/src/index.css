@@ -134,12 +134,7 @@
     border-radius: var(--radius);
   }
 
-  .csv-grid-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: var(--background);
-    border-spacing: 0;
-  }
+
 
   /* Header row styling */
   .csv-grid-header {
@@ -230,33 +225,41 @@
     opacity: 0;
     transition: opacity 150ms ease-in-out;
   }
-  
+
   /* Enhance sidebar collapse/expand transition */
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
-  
+
   @keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
-  
+
   .sidebar-fade-in {
     animation: fadeIn 300ms ease-in-out forwards;
   }
-  
+
   .sidebar-fade-out {
     animation: fadeOut 200ms ease-in-out forwards;
   }
-  
+
   /* Add this to your existing transition utilities */
   .sidebar-transition {
     transition-property: width, margin, padding;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 300ms;
   }
-  
+
   /* Any icon in collapsed sidebar should have a smooth transition */
   .sidebar-collapsed-icon {
     transition: all 150ms ease-in-out;
@@ -264,11 +267,185 @@
   .sidebar-collapsed-icon:hover {
     transform: scale(1.1);
   }
-  
+
   /* Apply this to the toggle button for hover effect */
   .sidebar-toggle:hover {
     background-color: color-mix(in srgb, var(--primary) 20%, transparent);
     color: var(--primary);
+  }
+
+  .performance-grid-container {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--background);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    will-change: scroll-position;
+  }
+
+  /* Grid cell base styling */
+  .grid-cell {
+    contain: layout style paint;
+    transform: translateZ(0);
+    will-change: transform, background-color;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border-right: 1px solid
+      color-mix(in srgb, var(--foreground) 15%, transparent);
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--foreground) 15%, transparent);
+    background-color: var(--background);
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--foreground);
+  }
+
+  .grid-cell:hover {
+    background-color: color-mix(in srgb, var(--primary) 8%, transparent);
+  }
+
+  .grid-cell:active {
+    background-color: color-mix(in srgb, var(--primary) 15%, transparent);
+  }
+
+  /* Header cell styling */
+  .grid-cell.csv-grid-header {
+    background-color: var(--dark-nav);
+    font-weight: 500;
+    color: var(--foreground);
+    border-bottom: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
+    justify-content: center;
+    z-index: 20;
+    position: sticky;
+    top: 0;
+  }
+
+  /* Row number cell styling */
+  .grid-cell.csv-grid-row-number {
+    background-color: color-mix(
+      in srgb,
+      var(--dark-nav) 95%,
+      var(--background) 5%
+    );
+    color: var(--foreground);
+    opacity: 0.8;
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    border-right: 2px solid color-mix(in srgb, var(--primary) 20%, transparent);
+    justify-content: center;
+    z-index: 15;
+    position: sticky;
+    left: 0;
+    min-width: 60px;
+  }
+
+  /* Data cell styling */
+  .grid-cell.csv-grid-cell {
+    background-color: var(--background);
+    color: var(--foreground);
+    line-height: 1.4;
+  }
+
+  /* Type-specific cell styling */
+  .grid-cell.csv-grid-cell-number {
+    color: var(--tertiary);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    justify-content: flex-end;
+    padding-right: 16px;
+  }
+
+  .grid-cell.csv-grid-cell-date {
+    color: color-mix(in srgb, var(--secondary) 85%, var(--foreground) 15%);
+  }
+
+  .grid-cell.csv-grid-cell-boolean {
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 1rem;
+    justify-content: center;
+  }
+
+  /* Cell content styling */
+  .grid-cell .cell-content {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: inherit;
+  }
+
+  /* Enhanced cell input styling */
+  .grid-cell .csv-grid-cell-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 2px solid var(--primary);
+    background-color: color-mix(
+      in srgb,
+      var(--background) 95%,
+      var(--primary) 5%
+    );
+    color: var(--foreground);
+    font-size: 0.875rem;
+    font-family: inherit;
+    padding: 4px 12px;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 50%, transparent);
+    z-index: 30;
+  }
+
+  .grid-cell .csv-grid-cell-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 30%, transparent),
+      0 2px 8px color-mix(in srgb, var(--primary) 20%, transparent);
+  }
+
+  /* Animation support for welcome message */
+  .grid-cell.animate-word-entry {
+    animation: wordEntry 500ms ease-out;
+  }
+
+  @keyframes wordEntry {
+    0% {
+      opacity: 0;
+      transform: translateY(-5px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Performance optimized scrollbars */
+  .performance-grid-container ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .performance-grid-container ::-webkit-scrollbar-track {
+    background: color-mix(in srgb, var(--background) 80%, transparent);
+    border-radius: 4px;
+  }
+
+  .performance-grid-container ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--primary) 40%, transparent);
+    border-radius: 4px;
+    transition: background-color 200ms ease;
+  }
+
+  .performance-grid-container ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--primary) 60%, transparent);
   }
 }
 
