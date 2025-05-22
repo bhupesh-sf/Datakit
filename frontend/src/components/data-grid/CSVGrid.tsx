@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
+
 import { useAppStore } from "@/store/appStore";
+
+import { selectData, selectColumnTypes } from "@/store/selectors/appSelectors";
 
 import {
   useEmptyGrid,
@@ -16,11 +19,10 @@ import { ColumnType } from "@/types/csv";
  * with cell editing, formatting, tooltips, and animations.
  */
 const CSVGrid: React.FC = () => {
-  const { 
-    data: storeData, 
-    columnTypes, 
-    setActiveTab 
-  } = useAppStore();
+
+  const storeData = useAppStore(selectData);
+  const columnTypes = useAppStore(selectColumnTypes);
+  const { setActiveTab } = useAppStore();
   
   // Track if this component has been mounted
   const isMounted = useRef(false);
@@ -136,10 +138,6 @@ const CSVGrid: React.FC = () => {
 
   /**
    * Check if a cell is truncated
-   * 
-   * @param rowIndex - Row index in the grid
-   * @param colIndex - Column index in the grid
-   * @returns Boolean indicating if cell content is truncated
    */
   const isCellTruncated = useCallback((rowIndex: number, colIndex: number): boolean => {
     const cellRef = cellRefs.current.get(`${rowIndex}-${colIndex}`);
@@ -151,10 +149,6 @@ const CSVGrid: React.FC = () => {
 
   /**
    * Handle showing tooltip on mouse enter
-   * 
-   * @param content - Cell content to show in tooltip
-   * @param rowIndex - Row index in the grid
-   * @param colIndex - Column index in the grid
    */
   const handleShowTooltip = useCallback((content: string, rowIndex: number, colIndex: number, e: React.MouseEvent) => {
     // Only show tooltip if content is truncated
@@ -230,10 +224,6 @@ const CSVGrid: React.FC = () => {
 
   /**
    * Determine cell class based on state and content
-   * 
-   * @param rowIndex - Row index in the grid
-   * @param colIndex - Column index in the grid
-   * @returns CSS class string for the cell
    */
   const getCellClass = useCallback(
     (rowIndex: number, colIndex: number): string => {
@@ -300,11 +290,6 @@ const CSVGrid: React.FC = () => {
 
   /**
    * Format cell value based on type
-   * 
-   * @param value - Original cell value
-   * @param rowIndex - Row index in the grid
-   * @param colIndex - Column index in the grid
-   * @returns Formatted value string
    */
   const formatCellValue = useCallback(
     (value: string, rowIndex: number, colIndex: number): string => {
@@ -383,7 +368,6 @@ const CSVGrid: React.FC = () => {
 
   /**
    * Handle context menu for DuckDB operations
-   * @param e - Right-click event
    */
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

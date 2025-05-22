@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useAppStore } from '@/store/appStore';
-import { useDuckDBStore } from '@/store/duckDBStore';
+import { useState, useEffect, useCallback } from "react";
+
+import { useDuckDBStore } from "@/store/duckDBStore";
 
 export interface TableColumn {
   name: string;
@@ -12,95 +12,46 @@ export interface TableSchema {
   columns: TableColumn[];
 }
 
-export function useSchemaInfo() {
-  const { tableName, inDuckDB } = useAppStore();
-  const { getTableSchema, getAvailableTables } = useDuckDBStore();
-  const [schemaData, setSchemaData] = useState<{
-    schema: TableSchema[],
-    isLoading: boolean,
-    error: string | null
-  }>({
-    schema: [],
-    isLoading: false,
-    error: null
-  });
+/**
+ * Hook for managing DuckDB table schemas with caching
+ */
+export const useSchemaInfo = (tableName?: string) => {
+  const [schema, setSchema] = useState<{ name: string; type: string }[] | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Memoize the functions to ensure they don't change on every render
-  const fetchSchema = useCallback(async () => {
-    if (!inDuckDB) {
-      setSchemaData({
-        schema: [],
-        isLoading: false,
-        error: null
-      });
-      return;
-    }
+  const { getTableSchema } = useDuckDBStore();
 
-    setSchemaData(prev => ({
-      ...prev,
-      isLoading: true,
-      error: null
-    }));
+  const fetchSchema = useCallback(
+    async (table: string) => {
+      if (!table) return;
 
-    try {
-      // Get available tables
-      const availableTables = getAvailableTables();
-      
-      if (availableTables.length === 0) {
-        setSchemaData({
-          schema: [],
-          isLoading: false,
-          error: null
-        });
-        return;
+      setIsLoading(true);
+      try {
+        const result = await getTableSchema(table);
+        setSchema(result);
+      } catch (error) {
+        console.error("Failed to fetch table schema:", error);
+        setSchema(null);
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [getTableSchema]
+  );
 
-      // Use the current table if available, otherwise use the first table
-      const targetTable = tableName && availableTables.includes(tableName) 
-        ? tableName 
-        : availableTables[0];
-      
-      // Get schema for the current table
-      const schema = await getTableSchema(targetTable);
-      
-      if (schema) {
-        setSchemaData({
-          schema: [{
-            name: targetTable,
-            columns: schema.map(col => ({
-              name: col.name,
-              type: col.type
-            }))
-          }],
-          isLoading: false,
-          error: null
-        });
-      } else {
-        setSchemaData({
-          schema: [],
-          isLoading: false,
-          error: null
-        });
-      }
-    } catch (err) {
-      console.error('Error fetching schema info:', err);
-      setSchemaData({
-        schema: [],
-        isLoading: false,
-        error: `Failed to load schema: ${err instanceof Error ? err.message : String(err)}`
-      });
-    }
-  }, [tableName, inDuckDB, getTableSchema, getAvailableTables]);
-
-  // Fetch schema data when dependencies change
   useEffect(() => {
-    fetchSchema();
-  }, [fetchSchema]);
+    if (tableName) {
+      fetchSchema(tableName);
+    } else {
+      setSchema(null);
+    }
+  }, [tableName, fetchSchema]);
 
-  // Return memoized values
-  return useMemo(() => ({
-    tableSchema: schemaData.schema,
-    isLoading: schemaData.isLoading,
-    error: schemaData.error
-  }), [schemaData]);
-}
+  return {
+    tableSchema: schema,
+    isLoading,
+    refetch: () => tableName && fetchSchema(tableName),
+  };
+};
