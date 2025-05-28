@@ -19,8 +19,27 @@ const EmptyDataState = () => {
         <p className="text-white/70 mb-6 leading-relaxed">
           Import your files from the sidebar to start analyzing your data.
           <br />
-          <span className="text-primary">Your data stays private</span> —
-          everything runs locally in your browser.
+          <motion.span
+            className="relative overflow-hidden"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            <motion.span
+              className="bg-gradient-to-r from-primary via-blue-400 to-primary bg-clip-text text-transparent bg-[length:200%_100%]"
+              animate={{
+                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            >
+              Your data stays private
+            </motion.span>
+          </motion.span>{" "}
+          — everything runs locally in your browser.
         </p>
 
         {/* Import instruction */}

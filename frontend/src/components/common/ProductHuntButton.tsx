@@ -59,7 +59,7 @@ const ProductHuntButton: React.FC<ProductHuntButtonProps> = ({
         href={productHuntUrl}
         target="_blank" 
         rel="noopener noreferrer"
-        className="inline-flex items-center"
+        className="inline-flex items-center hover:text-primary"
       >
         <ProductHuntIcon size={14} className="mr-1.5 text-[#da552f]" />
         <span className="text-xs">{text}</span>

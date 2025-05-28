@@ -4,6 +4,7 @@ import DataPreviewTab from "@/components/tabs/DataPreviewTab";
 import QueryTab from "@/components/tabs/QueryTab";
 import VisualizationTab from "@/components/tabs/VisualizationTab";
 import FeedbackButton from "@/components/common/FeedbackButton";
+import DiscordButton from "@/components/common/DiscordButton";
 import ProductHuntButton from "@/components/common/ProductHuntButton";
 import { DataLoadWithDuckDBResult } from "@/components/layout/Sidebar";
 
@@ -11,12 +12,12 @@ import { Table, BarChart, Database } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useAppStore } from "@/store/appStore";
-import { 
-  selectActiveFileInfo, 
+import {
+  selectActiveFileInfo,
   selectStatusText,
   selectFileName,
   selectSourceType,
-  selectJsonSchema
+  selectJsonSchema,
 } from "@/store/selectors/appSelectors";
 import { DataSourceType } from "@/types/json";
 
@@ -30,15 +31,10 @@ const Home = () => {
   const fileName = useAppStore(selectFileName);
   const sourceType = useAppStore(selectSourceType);
   const jsonSchema = useAppStore(selectJsonSchema);
-  
+
   // Get UI state and actions
-  const {
-    activeTab,
-    jsonViewMode,
-    setActiveTab,
-    setJsonViewMode,
-    addFile,
-  } = useAppStore();
+  const { activeTab, jsonViewMode, setActiveTab, setJsonViewMode, addFile } =
+    useAppStore();
 
   // Define available tabs
   const tabs: Tab[] = [
@@ -78,18 +74,13 @@ const Home = () => {
             <h2 className="text-xl font-heading font-semibold">
               {fileName ? `Viewing: ${fileName}` : "Playground"}
             </h2>
-            <p className="text-white text-opacity-70 text-sm">
-              {statusText}
-            </p>
+            <p className="text-white text-opacity-70 text-sm">{statusText}</p>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* ProductHunt Button */}
-            <ProductHuntButton variant="primary" size="sm" text="Support us" />
-
-            {/* Feedback Button using our reusable component */}
+            <DiscordButton />
             <FeedbackButton context={feedbackContext} />
-
+            <ProductHuntButton variant="primary" size="sm" text="Support us" />
             {/* JSON View Mode Toggle (only show for JSON data) */}
             {sourceType === DataSourceType.JSON && jsonSchema?.isNested && (
               <div className="border border-white border-opacity-20 rounded overflow-hidden">

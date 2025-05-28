@@ -244,7 +244,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       <div className="px-5 py-4">
         <p className="text-sm text-white text-opacity-70">
           Datakit leverages WebAssembly to process large datasets directly in
-          your browser, without uploading your data to any server.
+          your browser.
         </p>
       </div>
 
@@ -308,7 +308,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       <div className="px-5 py-3 flex-1 overflow-auto">
         <h3 className="text-xs font-medium text-white text-opacity-50 tracking-wider mb-3">
           <span className="flex items-center">
-            <span className="uppercase">Recent Files</span>
+            <span className="uppercase">Loaded Files</span>
             <span className="text-[10px] bg-white/10 text-white/60 px-1.5 py-0.5 rounded ml-1.5">
               from localStorage
             </span>

@@ -55,7 +55,7 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
         variant={variant}
         size={size}
         onClick={openFeedbackModal}
-        className={`flex items-center ${className}`}
+        className={`flex items-center hover:text-primary ${className}`}
       >
         <MessageSquare size={14} className="mr-1.5 text-primary" />
         <span className="text-xs">{text}</span>
