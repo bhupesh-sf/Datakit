@@ -47,6 +47,13 @@ export interface InspectorMetrics {
       maxDate: string;
       invalidDates: number;
     };
+
+    // Histogram data for charts
+    histogramData?: {
+      bin: string;
+      count: number;
+      range: string;
+    }[];
   }[];
 
   // Data Type Issues
@@ -103,7 +110,7 @@ interface InspectorState {
 }
 
 const INITIAL_PANEL_WIDTH = 550; // Wider for charts
-const MIN_PANEL_WIDTH = 500;   // Minimum for charts
+const MIN_PANEL_WIDTH = 500; // Minimum for charts
 const MAX_PANEL_WIDTH = 800;
 
 // Health score calculation weights
@@ -140,23 +147,29 @@ const calculateHealthScore = (metrics: Partial<InspectorMetrics>): number => {
 // Load initial panel state from localStorage
 const getInitialPanelState = () => {
   try {
-    const saved = localStorage.getItem('inspector-panel-state');
+    const saved = localStorage.getItem("inspector-panel-state");
     if (saved) {
       const parsed = JSON.parse(saved);
       return {
         isOpen: false, // Always start closed
-        width: Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, parsed.width || INITIAL_PANEL_WIDTH)),
+        width: Math.max(
+          MIN_PANEL_WIDTH,
+          Math.min(MAX_PANEL_WIDTH, parsed.width || INITIAL_PANEL_WIDTH)
+        ),
       };
     }
   } catch (error) {
-    console.warn('Failed to load inspector panel state from localStorage:', error);
+    console.warn(
+      "Failed to load inspector panel state from localStorage:",
+      error
+    );
   }
   return { isOpen: false, width: INITIAL_PANEL_WIDTH };
 };
 
 export const useInspectorStore = create<InspectorState>((set, get) => {
   const initialState = getInitialPanelState();
-  
+
   return {
     // Initial state
     isOpen: initialState.isOpen,
@@ -173,28 +186,36 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
     openPanel: () => {
       set({ isOpen: true });
     },
-    
+
     closePanel: () => {
       set({ isOpen: false });
     },
-    
+
     togglePanel: () => {
       set((state) => ({ isOpen: !state.isOpen }));
     },
 
     setWidth: (width: number) => {
-      const constrainedWidth = Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, width));
+      const constrainedWidth = Math.max(
+        MIN_PANEL_WIDTH,
+        Math.min(MAX_PANEL_WIDTH, width)
+      );
       set({ width: constrainedWidth });
-      
+
       // Persist width to localStorage
       try {
-        const currentState = JSON.parse(localStorage.getItem('inspector-panel-state') || '{}');
-        localStorage.setItem('inspector-panel-state', JSON.stringify({
-          ...currentState,
-          width: constrainedWidth
-        }));
+        const currentState = JSON.parse(
+          localStorage.getItem("inspector-panel-state") || "{}"
+        );
+        localStorage.setItem(
+          "inspector-panel-state",
+          JSON.stringify({
+            ...currentState,
+            width: constrainedWidth,
+          })
+        );
       } catch (error) {
-        console.warn('Failed to save panel width to localStorage:', error);
+        console.warn("Failed to save panel width to localStorage:", error);
       }
     },
 
@@ -235,17 +256,24 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
         const escapedTableName = duckDBStore.registeredTables.get(tableName);
         if (!escapedTableName) {
           throw new Error(
-            `Table "${tableName}" not found in registered tables. Available tables: ${availableTables.join(", ")}`
+            `Table "${tableName}" not found in registered tables. Available tables: ${availableTables.join(
+              ", "
+            )}`
           );
         }
 
         console.log("[Inspector] Using escaped table name:", escapedTableName);
 
         // Step 1: Basic table info
-        set({ analysisProgress: 10, analysisStatus: "Getting table information..." });
+        set({
+          analysisProgress: 10,
+          analysisStatus: "Getting table information...",
+        });
 
         const tableInfoQuery = `SELECT COUNT(*) as total_rows FROM ${escapedTableName}`;
-        const tableInfoResult = await duckDBStore.connection.query(tableInfoQuery);
+        const tableInfoResult = await duckDBStore.connection.query(
+          tableInfoQuery
+        );
         const totalRows = Number(tableInfoResult.toArray()[0].total_rows);
 
         // Step 2: Get column information
@@ -259,7 +287,10 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
         const totalColumns = schema.length;
 
         // Step 3: Check for duplicates
-        set({ analysisProgress: 30, analysisStatus: "Checking for duplicates..." });
+        set({
+          analysisProgress: 30,
+          analysisStatus: "Checking for duplicates...",
+        });
 
         const duplicateQuery = `
           WITH row_counts AS (
@@ -272,13 +303,21 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
           SELECT rc.total_count, uc.unique_count
           FROM row_counts rc, unique_counts uc
         `;
-        const duplicateResult = await duckDBStore.connection.query(duplicateQuery);
+        const duplicateResult = await duckDBStore.connection.query(
+          duplicateQuery
+        );
         const duplicateData = duplicateResult.toArray()[0];
-        const duplicateRows = Number(duplicateData.total_count) - Number(duplicateData.unique_count);
-        const duplicatePercentage = totalRows > 0 ? (duplicateRows / totalRows) * 100 : 0;
+        const duplicateRows =
+          Number(duplicateData.total_count) -
+          Number(duplicateData.unique_count);
+        const duplicatePercentage =
+          totalRows > 0 ? (duplicateRows / totalRows) * 100 : 0;
 
         // Step 4: Analyze each column
-        set({ analysisProgress: 40, analysisStatus: "Analyzing individual columns..." });
+        set({
+          analysisProgress: 40,
+          analysisStatus: "Analyzing individual columns...",
+        });
 
         const columnMetrics = [];
 
@@ -303,8 +342,10 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
             const nullResult = await duckDBStore.connection.query(nullQuery);
             const nullData = nullResult.toArray()[0];
 
-            const nullCount = Number(nullData.total_count) - Number(nullData.non_null_count);
-            const nullPercentage = totalRows > 0 ? (nullCount / totalRows) * 100 : 0;
+            const nullCount =
+              Number(nullData.total_count) - Number(nullData.non_null_count);
+            const nullPercentage =
+              totalRows > 0 ? (nullCount / totalRows) * 100 : 0;
             const uniqueCount = Number(nullData.unique_count);
             const cardinality = totalRows > 0 ? uniqueCount / totalRows : 0;
 
@@ -320,8 +361,12 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
             // Type-specific analysis
             const columnType = column.type.toLowerCase();
 
-            if (columnType.includes("int") || columnType.includes("double") || columnType.includes("numeric")) {
-              // Numeric analysis
+            if (
+              columnType.includes("int") ||
+              columnType.includes("double") ||
+              columnType.includes("numeric")
+            ) {
+              // Numeric analysis with histogram
               try {
                 const statsQuery = `
                   SELECT 
@@ -334,23 +379,91 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
                   WHERE "${column.name}" IS NOT NULL
                 `;
 
-                const statsResult = await duckDBStore.connection.query(statsQuery);
+                const statsResult = await duckDBStore.connection.query(
+                  statsQuery
+                );
                 const stats = statsResult.toArray()[0];
 
                 if (stats && stats.min_val !== null) {
+                  const min = Number(stats.min_val);
+                  const max = Number(stats.max_val);
+                  const mean = Number(stats.mean_val) || 0;
+                  const median = Number(stats.median_val) || 0;
+                  const std = Number(stats.std_val) || 0;
+
                   columnMetric.numericStats = {
-                    min: Number(stats.min_val),
-                    max: Number(stats.max_val),
-                    mean: Number(stats.mean_val) || 0,
-                    median: Number(stats.median_val) || 0,
-                    std: Number(stats.std_val) || 0,
+                    min,
+                    max,
+                    mean,
+                    median,
+                    std,
                     outliers: 0, // TODO: Calculate outliers using IQR method
                   };
+
+                  // Generate histogram data using DuckDB width_bucket
+                  const binCount = 8;
+                  const histogramQuery = `
+                    WITH bins AS (
+                      SELECT 
+                        width_bucket("${
+                          column.name
+                        }", ${min}, ${max}, ${binCount}) as bin_num,
+                        COUNT(*) as count
+                      FROM ${escapedTableName}
+                      WHERE "${column.name}" IS NOT NULL
+                      GROUP BY bin_num
+                      ORDER BY bin_num
+                    ),
+                    bin_ranges AS (
+                      SELECT 
+                        bin_num,
+                        count,
+                        ROUND(${min} + (bin_num - 1) * (${
+                    max - min
+                  }) / ${binCount}, 2) as bin_start,
+                        ROUND(${min} + bin_num * (${
+                    max - min
+                  }) / ${binCount}, 2) as bin_end
+                      FROM bins
+                    )
+                    SELECT 
+                      bin_num,
+                      count,
+                      bin_start || '-' || bin_end as range,
+                      'Bin ' || bin_num as bin
+                    FROM bin_ranges
+                    ORDER BY bin_num
+                  `;
+
+                  try {
+                    const histogramResult = await duckDBStore.connection.query(
+                      histogramQuery
+                    );
+                    const histogramData = histogramResult
+                      .toArray()
+                      .map((row) => ({
+                        bin: String(row.bin),
+                        count: Number(row.count),
+                        range: String(row.range),
+                      }));
+                    columnMetric.histogramData = histogramData;
+                  } catch (histErr) {
+                    console.warn(
+                      `Could not generate histogram for ${column.name}:`,
+                      histErr
+                    );
+                  }
                 }
               } catch (statsErr) {
-                console.warn(`Could not get numeric stats for ${column.name}:`, statsErr);
+                console.warn(
+                  `Could not get numeric stats for ${column.name}:`,
+                  statsErr
+                );
               }
-            } else if (columnType.includes("varchar") || columnType.includes("text")) {
+            } else if (
+              columnType.includes("varchar") ||
+              columnType.includes("text")
+            ) {
               // Text analysis
               try {
                 const textQuery = `
@@ -363,7 +476,9 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
                   WHERE "${column.name}" IS NOT NULL
                 `;
 
-                const textResult = await duckDBStore.connection.query(textQuery);
+                const textResult = await duckDBStore.connection.query(
+                  textQuery
+                );
                 const textStats = textResult.toArray()[0];
 
                 if (textStats) {
@@ -375,7 +490,10 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
                   };
                 }
               } catch (textErr) {
-                console.warn(`Could not get text stats for ${column.name}:`, textErr);
+                console.warn(
+                  `Could not get text stats for ${column.name}:`,
+                  textErr
+                );
               }
             }
 
@@ -395,7 +513,10 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
         }
 
         // Step 5: Get frequent values for categorical columns
-        set({ analysisProgress: 85, analysisStatus: "Analyzing frequent values..." });
+        set({
+          analysisProgress: 85,
+          analysisStatus: "Analyzing frequent values...",
+        });
 
         const frequentValues = [];
         for (const column of schema.slice(0, 5)) {
@@ -424,7 +545,10 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
               values,
             });
           } catch (freqErr) {
-            console.warn(`Could not get frequent values for ${column.name}:`, freqErr);
+            console.warn(
+              `Could not get frequent values for ${column.name}:`,
+              freqErr
+            );
           }
         }
 
@@ -451,10 +575,16 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
         metrics.healthScore = calculateHealthScore(metrics);
         metrics.healthBreakdown = {
           completeness: Math.round(
-            columnMetrics.reduce((sum, col) => sum + (100 - col.nullPercentage), 0) / columnMetrics.length
+            columnMetrics.reduce(
+              (sum, col) => sum + (100 - col.nullPercentage),
+              0
+            ) / columnMetrics.length
           ),
           uniqueness: Math.round(100 - duplicatePercentage),
-          consistency: Math.max(0, 100 - (metrics.typeIssues?.length || 0) * 10),
+          consistency: Math.max(
+            0,
+            100 - (metrics.typeIssues?.length || 0) * 10
+          ),
         };
 
         // Store results
@@ -475,7 +605,9 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
       } catch (error) {
         console.error("Inspector analysis failed:", error);
         set({
-          error: `Analysis failed: ${error instanceof Error ? error.message : String(error)}`,
+          error: `Analysis failed: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
           isAnalyzing: false,
           analysisProgress: 0,
           analysisStatus: "",
@@ -518,41 +650,128 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
         csvData.push(["Metric Category", "Metric Name", "Value", "Details"]);
 
         // Health Score
-        csvData.push(["Health Score", "Overall Score", results.healthScore, "0-100 scale"]);
-        csvData.push(["Health Score", "Completeness", results.healthBreakdown.completeness, "Based on missing data"]);
-        csvData.push(["Health Score", "Uniqueness", results.healthBreakdown.uniqueness, "Based on duplicates"]);
-        csvData.push(["Health Score", "Consistency", results.healthBreakdown.consistency, "Based on data types"]);
+        csvData.push([
+          "Health Score",
+          "Overall Score",
+          results.healthScore,
+          "0-100 scale",
+        ]);
+        csvData.push([
+          "Health Score",
+          "Completeness",
+          results.healthBreakdown.completeness,
+          "Based on missing data",
+        ]);
+        csvData.push([
+          "Health Score",
+          "Uniqueness",
+          results.healthBreakdown.uniqueness,
+          "Based on duplicates",
+        ]);
+        csvData.push([
+          "Health Score",
+          "Consistency",
+          results.healthBreakdown.consistency,
+          "Based on data types",
+        ]);
 
         // Basic Metrics
         csvData.push(["Basic Metrics", "Total Rows", results.totalRows, ""]);
-        csvData.push(["Basic Metrics", "Total Columns", results.totalColumns, ""]);
-        csvData.push(["Basic Metrics", "Duplicate Rows", results.duplicateRows, ""]);
-        csvData.push(["Basic Metrics", "Duplicate Percentage", `${results.duplicatePercentage.toFixed(2)}%`, ""]);
+        csvData.push([
+          "Basic Metrics",
+          "Total Columns",
+          results.totalColumns,
+          "",
+        ]);
+        csvData.push([
+          "Basic Metrics",
+          "Duplicate Rows",
+          results.duplicateRows,
+          "",
+        ]);
+        csvData.push([
+          "Basic Metrics",
+          "Duplicate Percentage",
+          `${results.duplicatePercentage.toFixed(2)}%`,
+          "",
+        ]);
 
         // Column Metrics
         results.columnMetrics.forEach((col) => {
           csvData.push(["Column Analysis", col.name, "Data Type", col.type]);
-          csvData.push(["Column Analysis", col.name, "Null Count", col.nullCount]);
-          csvData.push(["Column Analysis", col.name, "Null Percentage", `${col.nullPercentage.toFixed(2)}%`]);
-          csvData.push(["Column Analysis", col.name, "Unique Values", col.uniqueCount]);
-          csvData.push(["Column Analysis", col.name, "Cardinality", col.cardinality.toFixed(4)]);
+          csvData.push([
+            "Column Analysis",
+            col.name,
+            "Null Count",
+            col.nullCount,
+          ]);
+          csvData.push([
+            "Column Analysis",
+            col.name,
+            "Null Percentage",
+            `${col.nullPercentage.toFixed(2)}%`,
+          ]);
+          csvData.push([
+            "Column Analysis",
+            col.name,
+            "Unique Values",
+            col.uniqueCount,
+          ]);
+          csvData.push([
+            "Column Analysis",
+            col.name,
+            "Cardinality",
+            col.cardinality.toFixed(4),
+          ]);
 
           if (col.numericStats) {
-            csvData.push(["Column Analysis", col.name, "Min Value", col.numericStats.min]);
-            csvData.push(["Column Analysis", col.name, "Max Value", col.numericStats.max]);
-            csvData.push(["Column Analysis", col.name, "Mean Value", col.numericStats.mean.toFixed(2)]);
-            csvData.push(["Column Analysis", col.name, "Median Value", col.numericStats.median.toFixed(2)]);
+            csvData.push([
+              "Column Analysis",
+              col.name,
+              "Min Value",
+              col.numericStats.min,
+            ]);
+            csvData.push([
+              "Column Analysis",
+              col.name,
+              "Max Value",
+              col.numericStats.max,
+            ]);
+            csvData.push([
+              "Column Analysis",
+              col.name,
+              "Mean Value",
+              col.numericStats.mean.toFixed(2),
+            ]);
+            csvData.push([
+              "Column Analysis",
+              col.name,
+              "Median Value",
+              col.numericStats.median.toFixed(2),
+            ]);
           }
 
           if (col.textStats) {
-            csvData.push(["Column Analysis", col.name, "Avg Length", col.textStats.avgLength.toFixed(1)]);
-            csvData.push(["Column Analysis", col.name, "Empty Strings", col.textStats.emptyStrings]);
+            csvData.push([
+              "Column Analysis",
+              col.name,
+              "Avg Length",
+              col.textStats.avgLength.toFixed(1),
+            ]);
+            csvData.push([
+              "Column Analysis",
+              col.name,
+              "Empty Strings",
+              col.textStats.emptyStrings,
+            ]);
           }
         });
 
         // Convert to CSV string
         const csvString = csvData
-          .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+          .map((row) =>
+            row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+          )
           .join("\n");
 
         // Download
@@ -562,7 +781,9 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
         link.setAttribute("href", url);
         link.setAttribute(
           "download",
-          `data-inspector-results-${fileId}-${new Date().toISOString().split("T")[0]}.csv`
+          `data-inspector-results-${fileId}-${
+            new Date().toISOString().split("T")[0]
+          }.csv`
         );
         link.style.visibility = "hidden";
         document.body.appendChild(link);
@@ -571,7 +792,11 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
         URL.revokeObjectURL(url);
       } catch (error) {
         console.error("Export failed:", error);
-        throw new Error(`Export failed: ${error instanceof Error ? error.message : String(error)}`);
+        throw new Error(
+          `Export failed: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
       }
     },
 

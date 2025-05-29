@@ -9,7 +9,7 @@ import {
 } from "@/store/selectors/appSelectors";
 
 import Grid from "./Grid";
-import InspectorPanel from "@/components/tabs/preview/InspectorPanel";
+import InspectorPanel from "@/components/tabs/preview/inspector/InspectorPanel";
 
 import { useGridEditing } from "./hooks/useGridEditing";
 import { useCellFormatting } from "./hooks/useCellFormatting";

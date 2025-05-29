@@ -11,6 +11,7 @@
 0> add good charts
 1> connect geenrated query from inspector to query panel
 2> make the panel wider
+3> autosize sidebar
 3> test out with some files
 
 
