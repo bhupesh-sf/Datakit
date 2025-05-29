@@ -1,5 +1,5 @@
 import { DataSourceType } from "@/types/json";
-import { FileTab } from "@/types/multiFile";
+import { DataFile, FileTab } from "@/types/multiFile";
 
 // Define the store state type (extract from your store)
 export interface AppState {
@@ -18,7 +18,7 @@ let lastFilesLength = -1;
 let lastActiveFileId: string | null = null;
 
 // Multi-file selectors
-export const selectActiveFile = (state: AppState) =>
+export const selectActiveFile = (state: AppState) : DataFile | null =>
   state.files.find((f) => f.id === state.activeFileId) || null;
 
 // ✅ FIXED: Memoized selectFileTabs to prevent infinite loops
@@ -121,7 +121,7 @@ export const selectStatusText = (state: AppState) => {
     activeFile.sourceType === DataSourceType.JSON &&
     state.jsonViewMode === "tree"
       ? " | Explore the JSON structure."
-      : " | Use SQL queries for analysis.";
+      : " ";
 
   return baseText + interactionText;
 };

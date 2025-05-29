@@ -11,7 +11,7 @@ import {
 } from "@/store/selectors/duckdbSelectors";
 
 /**
- * Custom hook that provides stable query state management
+ * Custom hook that provides query state management
  */
 export const useInitialQuery = () => {
   const [query, setQuery] = useState<string>("");

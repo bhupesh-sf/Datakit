@@ -78,8 +78,6 @@ DataKit is a modern web-based data analysis tool that leverages WebAssembly and 
 
 #### 3.3.2 UI Hooks
 - `useResizable.ts`: Resize panels and track dimensions
-- `usePanels.ts`: Manage collapsible side panels
-- `usePerformanceMonitor.ts`: Track rendering performance with large datasets
 
 ## 4. Data Flow
 
@@ -190,17 +188,6 @@ executePaginatedQuery: async (sql, page, pageSize) => {
 ### 6.3 Custom Hooks for UI Management
 
 ```typescript
-// Panel management hook
-const {
-  showLeftPanel,
-  showRightPanel,
-  toggleLeftPanel,
-  toggleRightPanel
-} = usePanels({
-  leftStorageKey: "datakit-show-schema-browser",
-  rightStorageKey: "datakit-show-query-history"
-});
-
 // Query optimization hook
 const {
   suggestions,

@@ -231,13 +231,13 @@ const ContextMenu: React.FC<{
       label: "Rename",
       icon: FileText,
       action: () => onRename?.(tab.id),
-      disabled: false
+      disabled: true
     },
     {
       label: "Duplicate",
       icon: Plus,
       action: () => onDuplicate?.(tab.id),
-      disabled: false
+      disabled: true
     },
     { type: "separator" },
     {
@@ -292,7 +292,7 @@ const ContextMenu: React.FC<{
               onClose();
             }}
             disabled={item.disabled}
-            className="w-full px-3 py-2 text-left text-sm text-white/80 hover:text-white flex items-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full px-3 py-2 text-left text-sm text-white/80 hover:text-white flex items-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             <Icon className="h-4 w-4 mr-3" />
             {item.label}
