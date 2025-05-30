@@ -106,7 +106,7 @@ export const selectStatusText = (state: AppState) => {
     return "Bring a CSV, PARQUET, XLSX or JSON file to get started.";
   }
 
-  const baseText = `${activeFile.rowCount.toLocaleString()} rows × ${activeFile.columnCount.toLocaleString()} columns | ${
+  const baseText = `${activeFile?.rowCount?.toLocaleString() ?  `${activeFile?.rowCount?.toLocaleString()} rows x` : '' } ${activeFile.columnCount.toLocaleString()} columns | ${
     activeFile.sourceType === DataSourceType.JSON
       ? "JSON data"
       : activeFile.sourceType === DataSourceType.PARQUET

@@ -64,8 +64,10 @@ export function useFileAccess() {
     []
   );
 
-  // Request file using File System Access API
-  const requestFile = useCallback(async (): Promise<File | null> => {
+  const requestFileHandle = useCallback(async (): Promise<{
+    handle: FileSystemFileHandle;
+    file: File;
+  } | null> => {
     setIsLoading(true);
     setError(null);
 
@@ -82,19 +84,20 @@ export function useFileAccess() {
             accept: {
               "text/csv": [".csv"],
               "application/json": [".json"],
+              "application/vnd.apache.parquet": [".parquet"],
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+              "application/vnd.ms-excel": [".xls"],
             },
           },
         ],
         multiple: false,
       });
 
+      // Only get file for metadata, not for processing
       const file = await fileHandle.getFile();
-
-      // Add to recent files
       addRecentFile(file, fileHandle);
-
       setIsLoading(false);
-      return file;
+      return { handle: fileHandle, file };
     } catch (err) {
       // Don't show error if user cancelled
       if (err instanceof Error && err.name === "AbortError") {
@@ -110,6 +113,12 @@ export function useFileAccess() {
       return null;
     }
   }, [addRecentFile]);
+
+  // Request file using File System Access API (legacy method)
+  const requestFile = useCallback(async (): Promise<File | null> => {
+    const result = await requestFileHandle();
+    return result?.file || null;
+  }, [requestFileHandle]);
 
   // Get file streams for efficient processing
   const getFileStream = useCallback(
@@ -149,15 +158,18 @@ export function useFileAccess() {
     []
   );
 
-  // Open a recent file using its handle if available
-  const openRecentFile = useCallback(
-    async (fileEntry: FileAccessEntry): Promise<File | null> => {
+  // 🆕 NEW: Get file handle from recent files
+  const getRecentFileHandle = useCallback(
+    async (fileEntry: FileAccessEntry): Promise<{
+      handle: FileSystemFileHandle;
+      file: File;
+    } | null> => {
       setIsLoading(true);
       setError(null);
 
       try {
         if (fileEntry.handle) {
-          // Get a fresh file object from the handle
+          // Get a fresh file object from the handle for metadata
           const file = await fileEntry.handle.getFile();
 
           // Update last accessed time
@@ -168,10 +180,10 @@ export function useFileAccess() {
           );
 
           setIsLoading(false);
-          return file;
+          return { handle: fileEntry.handle, file };
         } else {
           throw new Error(
-            "File is no longer accessible. Please brign it again."
+            "File is no longer accessible. Please bring it again."
           );
         }
       } catch (err) {
@@ -188,6 +200,14 @@ export function useFileAccess() {
     []
   );
 
+  const openRecentFile = useCallback(
+    async (fileEntry: FileAccessEntry): Promise<File | null> => {
+      const result = await getRecentFileHandle(fileEntry);
+      return result?.file || null;
+    },
+    [getRecentFileHandle]
+  );
+
   // Clear recent files list
   const clearRecentFiles = useCallback(() => {
     setRecentFiles([]);
@@ -200,9 +220,11 @@ export function useFileAccess() {
     error,
     addRecentFile,
     requestFile,
+    requestFileHandle,
     getFileStream,
     getStreamFromHandle,
     openRecentFile,
+    getRecentFileHandle,
     clearRecentFiles,
   };
 }

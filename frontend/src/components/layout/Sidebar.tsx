@@ -51,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   const uploadPopover = usePopover();
 
   const {
-    handleRecentFileSelect,
+    processFileStreaming,
     processFile,
     isProcessing: isProcessingLocalFile,
     loadingStatus: localFileLoadingStatus,
@@ -71,6 +71,20 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
     processingProgress: duckDBProgress,
     error: duckDBError,
   } = useDuckDBStore();
+
+  const handleFileWithStreaming = async (
+    handle: FileSystemFileHandle,
+    file: File
+  ) => {
+    if (!onDataLoad) return;
+
+    try {
+      uploadPopover.close();
+      return await processFileStreaming(handle, file, onDataLoad);
+    } catch (error) {
+      console.error("Error importing file with streaming:", error);
+    }
+  };
 
   const handleURLSubmit = async (
     result: any,
@@ -128,6 +142,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       </div>
 
       <FileUploadButton
+        onFileHandleSelect={handleFileWithStreaming}
         onFileSelect={(file) => {
           uploadPopover.close();
           return onDataLoad ? processFile(file, onDataLoad) : processFile(file);
@@ -251,6 +266,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       {/* File Upload section */}
       <div className="px-5 pt-2 pb-2">
         <FileUploadButton
+          onFileHandleSelect={handleFileWithStreaming}
           onFileSelect={(file) => {
             return onDataLoad
               ? processFile(file, onDataLoad)
@@ -264,9 +280,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
         <div className="mt-2 mb-2 flex items-center">
           <div className="flex-1">
             <GoogleSheetsImport
-              onImport={(result) =>
-                handleURLSubmit(result!, "google_sheets")
-              }
+              onImport={(result) => handleURLSubmit(result!, "google_sheets")}
             />
           </div>
         </div>

@@ -16,3 +16,16 @@
 
 
 
+# Inspector
+0> download
+1> Generated query
+    - connect geenrated query from inspector to query panel
+2> STRUCT be able to have charts as well
+3> Make the panel wider like full screen maybe?
+
+
+# DuckDB
+0> memory management - resolved 
+
+# self hosting
+0> 
