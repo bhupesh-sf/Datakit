@@ -1,6 +1,6 @@
 {
     "name": "datakit-cli",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "CLI tool to run DataKit locally - a modern web-based data analysis tool",
     "main": "index.js",
     "bin": {
