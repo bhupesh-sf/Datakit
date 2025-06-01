@@ -1,7 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
-import { useDuckDBStore } from '@/store/duckDBStore';
-import { Database, Table, ChevronRight, ChevronDown, FileText, Hash, Calendar, Check, Type } from 'lucide-react';
+import { useDuckDBStore } from "@/store/duckDBStore";
+import {
+  Database,
+  Table,
+  ChevronRight,
+  ChevronDown,
+  FileText,
+  Hash,
+  Calendar,
+  Check,
+  Type,
+} from "lucide-react";
+import Tooltip from "@/components/ui/Tooltip";
 
 interface SchemaBrowserProps {
   onInsertQuery: (text: string) => void;
@@ -19,59 +30,63 @@ interface TableSchema {
  * Schema browser component to display database tables and columns
  */
 const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
-  const { getAvailableTables, registeredTables, executeQuery } = useDuckDBStore();
-  
+  const {
+    getAvailableTables,
+    registeredTables,
+    executeQuery,
+    lastTableRefresh,
+  } = useDuckDBStore();
+
   const [tables, setTables] = useState<string[]>([]);
   const [schemas, setSchemas] = useState<Record<string, TableSchema>>({});
   const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState<boolean>(true);
-  
-  // Fetch available tables
+
+  // Fetch tables on mount and when registered tables change
   useEffect(() => {
     const fetchTables = async () => {
       setLoading(true);
       try {
         const tableNames = getAvailableTables();
         setTables(tableNames);
-        
+
         // Fetch schema for each table
         const schemaData: Record<string, TableSchema> = {};
-        
+
         for (const tableName of tableNames) {
           try {
             // Execute a query to get column information
             const result = await executeQuery(`DESCRIBE "${tableName}"`);
-            
+
             if (result) {
-              const columns = result.toArray().map(row => ({
-                name: row.column_name || row.name || '',
-                type: row.column_type || row.type || ''
+              const columns = result.toArray().map((row) => ({
+                name: row.column_name || row.name || "",
+                type: row.column_type || row.type || "",
               }));
-              
+
               schemaData[tableName] = {
                 name: tableName,
-                columns
+                columns,
               };
             }
           } catch (err) {
             console.error(`Error fetching schema for ${tableName}:`, err);
           }
         }
-        
+
         setSchemas(schemaData);
       } catch (err) {
-        console.error('Error fetching tables:', err);
+        console.error("Error fetching tables:", err);
       } finally {
         setLoading(false);
       }
     };
-    
     fetchTables();
-  }, [getAvailableTables, registeredTables, executeQuery]);
-  
+  }, [getAvailableTables, registeredTables, executeQuery, lastTableRefresh]);
+
   // Toggle table expansion
   const toggleTable = (tableName: string) => {
-    setExpandedTables(prev => {
+    setExpandedTables((prev) => {
       const next = new Set(prev);
       if (next.has(tableName)) {
         next.delete(tableName);
@@ -81,28 +96,32 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
       return next;
     });
   };
-  
+
   // Generate query based on table
   const generateSelectQuery = (tableName: string) => {
     const query = `\nSELECT *\nFROM "${tableName}"\nLIMIT 10;`;
     onInsertQuery(query);
   };
-  
+
   // Get icon for column type
   const getColumnTypeIcon = (type: string) => {
     const lowerType = type.toLowerCase();
-    if (lowerType.includes('int') || lowerType.includes('float') || lowerType.includes('double')) {
+    if (
+      lowerType.includes("int") ||
+      lowerType.includes("float") ||
+      lowerType.includes("double")
+    ) {
       return <Hash size={14} className="text-tertiary" />;
     }
-    if (lowerType.includes('date') || lowerType.includes('time')) {
+    if (lowerType.includes("date") || lowerType.includes("time")) {
       return <Calendar size={14} className="text-secondary" />;
     }
-    if (lowerType.includes('bool')) {
+    if (lowerType.includes("bool")) {
       return <Check size={14} className="text-primary" />;
     }
     return <Type size={14} className="text-white/70" />;
   };
-  
+
   if (loading) {
     return (
       <div className="p-4 h-full">
@@ -116,7 +135,7 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
       </div>
     );
   }
-  
+
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-white/10">
@@ -125,7 +144,7 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
           Schema Browser
         </h3>
       </div>
-      
+
       <div className="p-2 flex-1 overflow-auto">
         {tables.length === 0 ? (
           <div className="p-4 text-center text-white/50 text-xs">
@@ -133,41 +152,56 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
           </div>
         ) : (
           <div className="space-y-1">
-            {tables.map(tableName => (
-              <div key={tableName} className="schema-item">
+            {tables.map((tableName) => (
+              <div key={tableName} className="schema-item group">
                 {/* Table row */}
-                <div 
+                <div
                   className="flex items-center p-2 hover:bg-white/5 rounded cursor-pointer text-sm"
                   onClick={() => toggleTable(tableName)}
                 >
                   <span className="mr-1.5 text-white/70">
-                    {expandedTables.has(tableName) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    {expandedTables.has(tableName) ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
+                    )}
                   </span>
                   <Table size={16} className="mr-1.5 text-primary" />
-                  <span className="flex-1 text-white/90 truncate" title={tableName}>
+                  <span
+                    className="flex-1 text-white/90 truncate"
+                    title={tableName}
+                  >
                     {tableName}
                   </span>
-                  <button
-                    className="opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity text-white/70"
-                    onClick={(e) => { e.stopPropagation(); generateSelectQuery(tableName); }}
-                    title="Insert SELECT query"
-                  >
-                    <FileText size={14} />
-                  </button>
+                  <Tooltip placement="left" content="Insert SELECT query">
+                    <button
+                      className="opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity text-white/70"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        generateSelectQuery(tableName);
+                      }}
+                    >
+                      <FileText size={14} />
+                    </button>
+                  </Tooltip>
                 </div>
-                
+
                 {/* Columns */}
                 {expandedTables.has(tableName) && schemas[tableName] && (
                   <div className="ml-7 pl-2 border-l border-white/10 mt-1 mb-2 space-y-1">
-                    {schemas[tableName].columns.map(column => (
-                      <div 
+                    {schemas[tableName].columns.map((column) => (
+                      <div
                         key={`${tableName}-${column.name}`}
                         className="flex items-center p-1.5 hover:bg-white/5 rounded text-xs"
                         title={`${column.name}: ${column.type}`}
                       >
                         {getColumnTypeIcon(column.type)}
-                        <span className="ml-1.5 text-white/80 truncate">{column.name}</span>
-                        <span className="ml-auto text-white/50 text-xs">{column.type}</span>
+                        <span className="ml-1.5 text-white/80 truncate">
+                          {column.name}
+                        </span>
+                        <span className="ml-auto text-white/50 text-xs">
+                          {column.type}
+                        </span>
                       </div>
                     ))}
                   </div>
