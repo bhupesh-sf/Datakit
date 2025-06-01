@@ -8,8 +8,8 @@ export interface TableColumn {
 }
 
 export interface TableSchema {
-  name: string;
-  columns: TableColumn[];
+  name?: string;
+  columns: TableColumn[] | null;
 }
 
 /**
@@ -50,6 +50,7 @@ export const useSchemaInfo = (tableName?: string) => {
   }, [tableName, fetchSchema]);
 
   return {
+    name: tableName,
     tableSchema: schema,
     isLoading,
     refetch: () => tableName && fetchSchema(tableName),

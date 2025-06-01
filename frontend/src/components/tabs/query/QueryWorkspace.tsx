@@ -30,6 +30,8 @@ import { useQueryExecution } from "@/hooks/query/useQueryExecution";
 import { useQueryHistory } from "@/hooks/query/useQueryHistory";
 import { useQueryOptimization } from "@/hooks/query/useQueryOptimization";
 import { useWorkspaceUIState } from "./useWorkspaceUIState";
+import { useAppStore } from "@/store/appStore";
+import { selectTableName } from "@/store/selectors/appSelectors";
 
 // Constants for panel dimensions
 const PANEL_WIDTH = 260;
@@ -45,10 +47,12 @@ const QueryWorkspace: React.FC = () => {
     retry,
   } = useDuckDBInitialization();
 
+  const tableName = useAppStore(selectTableName) || 'employees_sample';
+
   const { query, setQuery, canExecuteQueries, hasUserTables } =
     useInitialQuery();
 
-  const { tableSchema } = useSchemaInfo();
+  const { tableSchema } = useSchemaInfo(tableName);
 
   const {
     showSchemaBrowser,
@@ -423,11 +427,10 @@ const QueryWorkspace: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-2">
-              {/* TODO */}
-              {/* <QueryAssistant
-            onQueryGenerated={(sql) => setQuery(sql)}
-            tableSchema={tableSchema}
-          /> */}
+              <QueryAssistant
+                onQueryGenerated={(sql) => setQuery(sql)}
+                tableSchema={[{ name: tableName, columns: tableSchema }]}
+              />
 
               <Button
                 variant="ghost"
