@@ -403,12 +403,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
             </a>
             {" @ "}
             <a
-              href="https://wavequery.com"
+              href="https://www.linkedin.com/company/datakitpage"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              WaveQuery
+              DataKit
             </a>
           </p>
         </div>

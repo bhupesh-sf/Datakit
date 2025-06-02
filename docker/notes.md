@@ -4,7 +4,7 @@
 
 no need to tag this if we dont have it
 ```
-docker tag datakit/app:latest yourusername/datakit:latest
+docker tag datakit/app:latest datakitpage/datakit:latest
 ```
 
 ```
