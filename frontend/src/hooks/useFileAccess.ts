@@ -87,6 +87,7 @@ export function useFileAccess() {
               "application/vnd.apache.parquet": [".parquet"],
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
               "application/vnd.ms-excel": [".xls"],
+              "text/plain": [".txt"],
             },
           },
         ],

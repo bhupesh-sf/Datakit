@@ -5,6 +5,7 @@ export enum DataSourceType {
   JSON = "JSON",
   PARQUET = "Parquet",
   XLSX = "xlsx",
+  TXT = "TXT"
 }
 
 export interface JsonSchema {

@@ -18,7 +18,7 @@ let lastFilesLength = -1;
 let lastActiveFileId: string | null = null;
 
 // Multi-file selectors
-export const selectActiveFile = (state: AppState) : DataFile | null =>
+export const selectActiveFile = (state: AppState): DataFile | null =>
   state.files.find((f) => f.id === state.activeFileId) || null;
 
 // ✅ FIXED: Memoized selectFileTabs to prevent infinite loops
@@ -26,7 +26,7 @@ export const selectFileTabs = (state: AppState): FileTab[] => {
   // Check if we need to recompute
   const filesChanged = state.files.length !== lastFilesLength;
   const activeFileChanged = state.activeFileId !== lastActiveFileId;
-  
+
   if (filesChanged || activeFileChanged) {
     // Only recompute when files array length or activeFileId changes
     cachedFileTabs = state.files.map((file) => ({
@@ -37,12 +37,12 @@ export const selectFileTabs = (state: AppState): FileTab[] => {
       remoteProvider: file?.remoteProvider,
       hasGoogleSheetsMetadata: !!file.googleSheets,
     }));
-    
+
     // Update cache keys
     lastFilesLength = state.files.length;
     lastActiveFileId = state.activeFileId;
   }
-  
+
   return cachedFileTabs;
 };
 
@@ -106,16 +106,21 @@ export const selectStatusText = (state: AppState) => {
     return "Bring a CSV, PARQUET, XLSX or JSON file to get started.";
   }
 
-  const baseText = `${activeFile?.rowCount?.toLocaleString() ?  `${activeFile?.rowCount?.toLocaleString()} rows x` : '' } ${activeFile.columnCount.toLocaleString()} columns | ${
+  const baseText = `${
+    activeFile?.rowCount?.toLocaleString()
+      ? `${activeFile?.rowCount?.toLocaleString()} rows x`
+      : ""
+  } ${activeFile.columnCount.toLocaleString()} columns | ${
     activeFile.sourceType === DataSourceType.JSON
       ? "JSON data"
+      : activeFile.sourceType === DataSourceType.TXT
+      ? "TXT data"
       : activeFile.sourceType === DataSourceType.PARQUET
       ? "Parquet data"
       : activeFile.sourceType === DataSourceType.XLSX
       ? "Excel data"
       : "CSV data"
   }`;
-
 
   const interactionText =
     activeFile.sourceType === DataSourceType.JSON &&

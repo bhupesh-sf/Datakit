@@ -3,8 +3,15 @@ import * as duckdb from "@duckdb/duckdb-wasm";
 
 import { cleanup, initializeDuckDB } from "@/lib/duckdb/init";
 import { isDevelopment } from "@/lib/duckdb/config";
+
 import { executePaginatedQuery } from "@/lib/duckdb/query";
-import { discoverAllTables, getTableSchema, detectTableModifyingSQL  } from "@/lib/duckdb/ingestion/tables";
+
+import {
+  discoverAllTables,
+  getTableSchema,
+  detectTableModifyingSQL,
+} from "@/lib/duckdb/ingestion/tables";
+import { analyzeTxtFile } from "@/lib/duckdb/ingestion/analyzeTextFile";
 
 import { PaginatedQueryResult } from "@/lib/duckdb/types";
 import { ColumnType } from "@/types/csv";
@@ -678,6 +685,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       lastSchemaCacheUpdate: 0,
     });
   },
+
   importFileDirectlyStreaming: async (
     fileHandle: FileSystemFileHandle,
     fileName: string,
@@ -707,13 +715,275 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         `[DuckDBStore] Hybrid import: ${fileName} (${fileSizeMB.toFixed(2)}MB)`
       );
 
-      // Get the File object (DuckDB-WASM expects File, not FileSystemFileHandle)
+      // Get the File object
       const file = await fileHandle.getFile();
 
       set({
         processingStatus: "Analyzing file for optimal import strategy...",
         processingProgress: 0.2,
       });
+
+      // TXT files - analyze and convert to CSV
+      if (fileExt === "txt") {
+        set({ processingStatus: "Analyzing TXT file structure..." });
+
+        const analysis = await analyzeTxtFile(file);
+        console.log(`[DuckDBStore] TXT analysis:`, analysis);
+
+        // If it's delimited (any delimiter), import directly
+        if (analysis.format === "delimited_direct" && analysis.separator) {
+          const delimiterName =
+            {
+              ",": "comma",
+              "\t": "tab",
+              "|": "pipe",
+              ";": "semicolon",
+              " ": "space",
+            }[analysis.separator] || "custom";
+
+          set({
+            processingStatus: `TXT file is ${delimiterName}-delimited, importing directly...`,
+          });
+
+          const baseName = fileName.replace(/\.[^/.]+$/, "");
+          const rawTableName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
+          const escapedTableName = `"${rawTableName}"`;
+
+          await get().connection!.query(
+            `DROP VIEW IF EXISTS ${escapedTableName}`
+          );
+          await get().connection!.query(
+            `DROP TABLE IF EXISTS ${escapedTableName}`
+          );
+
+          const conn = await get().db!.connect();
+
+          try {
+            const registeredFileName = `import_${Date.now()}.csv`; // Always register as .csv for DuckDB
+            await get().db!.registerFileHandle(
+              registeredFileName,
+              file,
+              duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
+              false
+            );
+
+            set({
+              processingStatus: `Creating table from ${delimiterName}-delimited TXT...`,
+            });
+
+            // Try multiple approaches with the detected delimiter
+            let success = false;
+
+            // Approach 1: Explicit delimiter with strict_mode=false
+            try {
+              const createTableQuery = `CREATE TABLE ${escapedTableName} AS SELECT * FROM read_csv('${registeredFileName}', 
+                header=true, 
+                delim='${analysis.separator}',
+                quote='"',
+                escape='"',
+                strict_mode=false,
+                auto_detect=true
+              )`;
+
+              console.log(
+                `[DuckDBStore] Trying ${delimiterName}-delimited import:`,
+                createTableQuery
+              );
+              await conn.query(createTableQuery);
+              success = true;
+            } catch (err1) {
+              console.log(`[DuckDBStore] Strict approach failed:`, err1);
+
+              // Approach 2: Very permissive
+              try {
+                await get().connection!.query(
+                  `DROP TABLE IF EXISTS ${escapedTableName}`
+                );
+                const createTableQuery = `CREATE TABLE ${escapedTableName} AS SELECT * FROM read_csv('${registeredFileName}', 
+                  header=true, 
+                  delim='${analysis.separator}',
+                  strict_mode=false,
+                  ignore_errors=true,
+                  auto_detect=true
+                )`;
+
+                console.log(
+                  `[DuckDBStore] Trying permissive ${delimiterName}-delimited import:`,
+                  createTableQuery
+                );
+                await conn.query(createTableQuery);
+                success = true;
+              } catch (err2) {
+                console.log(`[DuckDBStore] Permissive approach failed:`, err2);
+
+                // Approach 3: Force all varchar
+                try {
+                  await get().connection!.query(
+                    `DROP TABLE IF EXISTS ${escapedTableName}`
+                  );
+                  const createTableQuery = `CREATE TABLE ${escapedTableName} AS SELECT * FROM read_csv('${registeredFileName}', 
+                    header=true, 
+                    delim='${analysis.separator}',
+                    strict_mode=false,
+                    ignore_errors=true,
+                    all_varchar=true
+                  )`;
+
+                  console.log(
+                    `[DuckDBStore] Trying varchar-only ${delimiterName}-delimited import:`,
+                    createTableQuery
+                  );
+                  await conn.query(createTableQuery);
+                  success = true;
+                } catch (err3) {
+                  console.log(`[DuckDBStore] All approaches failed:`, err3);
+                  throw new Error(
+                    `Failed to import ${delimiterName}-delimited TXT file: ${
+                      err3 instanceof Error ? err3.message : String(err3)
+                    }`
+                  );
+                }
+              }
+            }
+
+            if (!success) {
+              throw new Error(
+                `Failed to import ${delimiterName}-delimited TXT file`
+              );
+            }
+
+            await conn.close();
+
+            // Count rows and get column info
+            const countQuery = `SELECT COUNT(*) as count FROM ${escapedTableName}`;
+            const countResult = await get().connection!.query(countQuery);
+            const count = countResult.toArray()[0].count;
+
+            const columnsQuery = `PRAGMA table_info(${escapedTableName})`;
+            const columnsResult = await get().connection!.query(columnsQuery);
+            const columns = columnsResult.toArray();
+
+            console.log(
+              `[DuckDBStore] Successfully imported ${count} rows with ${columns.length} columns from ${delimiterName}-delimited TXT:`,
+              columns.map((c) => c.name)
+            );
+
+            const newTables = new Map(get().registeredTables);
+            newTables.set(rawTableName, escapedTableName);
+
+            set({
+              registeredTables: newTables,
+              isLoading: false,
+              processingStatus: `TXT imported: ${(
+                fileSizeMB || fileSize
+              ).toFixed(2)}MB table with ${count} rows, ${
+                columns.length
+              } columns (${delimiterName}-delimited)`,
+              processingProgress: 1.0,
+            });
+
+            await get().refreshSchemaCache();
+            return {
+              tableName: rawTableName,
+              rowCount: count,
+              columnCount: columns.length,
+              isView: false,
+              convertedToCsv: false,
+              fileSizeMB: fileSizeMB || fileSize,
+              instantImport: false,
+              txtFormat: "delimited_direct",
+              delimiter: analysis.separator,
+              delimiterName: delimiterName,
+            };
+          } catch (err) {
+            await conn.close();
+            throw err;
+          }
+        }
+
+        // For single-column format, do the conversion as before
+        set({ processingStatus: "Converting single-column TXT to CSV..." });
+
+        const text = await file.text();
+        const lines = text.split("\n").filter((line) => line.trim() !== "");
+
+        // Single column format - each line becomes a row
+        const csvData =
+          "line_content\n" +
+          lines
+            .map((line) => {
+              const escaped = line.trim().replace(/"/g, '""');
+              return escaped.includes(",") ? `"${escaped}"` : escaped;
+            })
+            .join("\n");
+
+        const baseName = fileName.replace(/\.[^/.]+$/, "");
+        const csvFile = new File([csvData], `${baseName}_converted.csv`, {
+          type: "text/csv",
+        });
+
+        const rawTableName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
+        const escapedTableName = `"${rawTableName}"`;
+
+        await get().connection!.query(
+          `DROP VIEW IF EXISTS ${escapedTableName}`
+        );
+        await get().connection!.query(
+          `DROP TABLE IF EXISTS ${escapedTableName}`
+        );
+
+        const conn = await get().db!.connect();
+
+        try {
+          const registeredFileName = `import_${Date.now()}.csv`;
+          await get().db!.registerFileHandle(
+            registeredFileName,
+            csvFile,
+            duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
+            false
+          );
+
+          set({ processingStatus: "Creating table from single-column TXT..." });
+          const createTableQuery = `CREATE TABLE ${escapedTableName} AS SELECT * FROM read_csv('${registeredFileName}', header=true, auto_detect=true)`;
+          await conn.query(createTableQuery);
+          await conn.close();
+
+          // Count rows
+          const countQuery = `SELECT COUNT(*) as count FROM ${escapedTableName}`;
+          const countResult = await get().connection!.query(countQuery);
+          const count = countResult.toArray()[0].count;
+
+          console.log(
+            `[DuckDBStore] Successfully imported ${count} rows from single-column TXT conversion`
+          );
+
+          const newTables = new Map(get().registeredTables);
+          newTables.set(rawTableName, escapedTableName);
+
+          set({
+            registeredTables: newTables,
+            isLoading: false,
+            processingStatus: `TXT converted: ${(
+              fileSizeMB || fileSize
+            ).toFixed(2)}MB table with ${count} rows (single-column)`,
+            processingProgress: 1.0,
+          });
+
+          await get().refreshSchemaCache();
+          return {
+            tableName: rawTableName,
+            rowCount: count,
+            isView: false,
+            convertedToCsv: true,
+            fileSizeMB: fileSizeMB || fileSize,
+            instantImport: false,
+            txtFormat: "single_column",
+          };
+        } catch (err) {
+          await conn.close();
+          throw err;
+        }
+      }
 
       // Excel files - handle with size limits and convert to CSV
       if (fileExt === "xlsx" || fileExt === "xls") {
@@ -763,7 +1033,6 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
             false
           );
 
-          // Excel files always use TABLE approach (since they're limited to 100MB)
           set({
             processingStatus: "Creating table from converted Excel data...",
           });
@@ -840,7 +1109,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         set({ processingProgress: 0.5 });
         console.log(`[DuckDBStore] File registered successfully`);
 
-        // 🔥 HYBRID APPROACH: Table for ≤600MB, View for >600MB
+        // HYBRID APPROACH: Table for ≤500MB, View for >500MB
         const useTableApproach = fileSizeMB <= 500;
 
         let createQuery = "";
@@ -853,7 +1122,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
                 2
               )}MB)...`,
             });
-            console.log(`[DuckDBStore] Creating CSV TABLE for files ≤600MB`);
+            console.log(`[DuckDBStore] Creating CSV TABLE for files ≤500MB`);
             createQuery = `CREATE TABLE ${escapedTableName} AS SELECT * FROM read_csv('${registeredFileName}', strict_mode=false)`;
           } else {
             set({
@@ -861,7 +1130,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
                 2
               )}MB)...`,
             });
-            console.log(`[DuckDBStore] Creating CSV VIEW for files >600MB`);
+            console.log(`[DuckDBStore] Creating CSV VIEW for files >500MB`);
             createQuery = `CREATE VIEW ${escapedTableName} AS SELECT * FROM read_csv('${registeredFileName}', strict_mode=false)`;
           }
         } else if (fileExt === "json") {
@@ -871,7 +1140,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
                 2
               )}MB)...`,
             });
-            console.log(`[DuckDBStore] Creating JSON TABLE for files ≤600MB`);
+            console.log(`[DuckDBStore] Creating JSON TABLE for files ≤500MB`);
             createQuery = `CREATE TABLE ${escapedTableName} AS SELECT * FROM read_json('${registeredFileName}')`;
           } else {
             set({
@@ -879,7 +1148,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
                 2
               )}MB)...`,
             });
-            console.log(`[DuckDBStore] Creating JSON VIEW for files >600MB`);
+            console.log(`[DuckDBStore] Creating JSON VIEW for files >500MB`);
             createQuery = `CREATE VIEW ${escapedTableName} AS SELECT * FROM read_json('${registeredFileName}')`;
           }
         } else if (fileExt === "parquet") {
@@ -890,7 +1159,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
               )}MB)...`,
             });
             console.log(
-              `[DuckDBStore] Creating Parquet TABLE for files ≤600MB`
+              `[DuckDBStore] Creating Parquet TABLE for files ≤500MB`
             );
             createQuery = `CREATE TABLE ${escapedTableName} AS SELECT * FROM read_parquet('${registeredFileName}')`;
           } else {
@@ -899,7 +1168,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
                 2
               )}MB)...`,
             });
-            console.log(`[DuckDBStore] Creating Parquet VIEW for files >600MB`);
+            console.log(`[DuckDBStore] Creating Parquet VIEW for files >500MB`);
             createQuery = `CREATE VIEW ${escapedTableName} AS SELECT * FROM read_parquet('${registeredFileName}')`;
           }
         } else {
@@ -924,7 +1193,6 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         let statusMessage = "";
 
         if (useTableApproach) {
-          // For tables ≤600MB: Count rows like importFileDirectly
           set({ processingStatus: "Verifying table and counting rows..." });
           console.log(`[DuckDBStore] Counting rows for table approach`);
 
@@ -948,7 +1216,6 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
             );
           }
         } else {
-          // For views >600MB: No counting, instant completion
           console.log(
             `[DuckDBStore] VIEW created instantly: ${rawTableName} (${fileSizeMB.toFixed(
               2
@@ -1006,7 +1273,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
           errMsg.includes("memory") ||
           errMsg.includes("out of bounds")
         ) {
-          if (fileSizeMB <= 600) {
+          if (fileSizeMB <= 500) {
             errorMessage =
               `Memory limit exceeded with ${fileSizeMB.toFixed(
                 2
@@ -1027,7 +1294,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         ) {
           errorMessage =
             `File format not supported or file may be corrupted. ` +
-            `Supported formats: CSV, JSON, Parquet, Excel (.xlsx/.xls).`;
+            `Supported formats: CSV, JSON, Parquet, Excel (.xlsx/.xls), TXT.`;
         }
       }
 
@@ -1062,11 +1329,273 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       });
 
       // Get file extension and size
+      const fileName = file.name;
       const fileExt = file.name.split(".").pop()?.toLowerCase();
       const fileSize = file.size / (1024 * 1024); // Size in MB
       console.log(
         `[DuckDBStore] Importing file: ${file.name} (${fileSize.toFixed(2)} MB)`
       );
+
+      if (fileExt === "txt") {
+        set({ processingStatus: "Analyzing TXT file structure..." });
+
+        const analysis = await analyzeTxtFile(file);
+        console.log(`[DuckDBStore] TXT analysis:`, analysis);
+
+        // If it's delimited (any delimiter), import directly
+        if (analysis.format === "delimited_direct" && analysis.separator) {
+          const delimiterName =
+            {
+              ",": "comma",
+              "\t": "tab",
+              "|": "pipe",
+              ";": "semicolon",
+              " ": "space",
+            }[analysis.separator] || "custom";
+
+          set({
+            processingStatus: `TXT file is ${delimiterName}-delimited, importing directly...`,
+          });
+
+          const baseName = fileName.replace(/\.[^/.]+$/, "");
+          const rawTableName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
+          const escapedTableName = `"${rawTableName}"`;
+
+          await get().connection!.query(
+            `DROP VIEW IF EXISTS ${escapedTableName}`
+          );
+          await get().connection!.query(
+            `DROP TABLE IF EXISTS ${escapedTableName}`
+          );
+
+          const conn = await get().db!.connect();
+
+          try {
+            const registeredFileName = `import_${Date.now()}.csv`; // Always register as .csv for DuckDB
+            await get().db!.registerFileHandle(
+              registeredFileName,
+              file,
+              duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
+              false
+            );
+
+            set({
+              processingStatus: `Creating table from ${delimiterName}-delimited TXT...`,
+            });
+
+            // Try multiple approaches with the detected delimiter
+            let success = false;
+
+            // Approach 1: Explicit delimiter with strict_mode=false
+            try {
+              const createTableQuery = `CREATE TABLE ${escapedTableName} AS SELECT * FROM read_csv('${registeredFileName}', 
+                header=true, 
+                delim='${analysis.separator}',
+                quote='"',
+                escape='"',
+                strict_mode=false,
+                auto_detect=true
+              )`;
+
+              console.log(
+                `[DuckDBStore] Trying ${delimiterName}-delimited import:`,
+                createTableQuery
+              );
+              await conn.query(createTableQuery);
+              success = true;
+            } catch (err1) {
+              console.log(`[DuckDBStore] Strict approach failed:`, err1);
+
+              // Approach 2: Very permissive
+              try {
+                await get().connection!.query(
+                  `DROP TABLE IF EXISTS ${escapedTableName}`
+                );
+                const createTableQuery = `CREATE TABLE ${escapedTableName} AS SELECT * FROM read_csv('${registeredFileName}', 
+                  header=true, 
+                  delim='${analysis.separator}',
+                  strict_mode=false,
+                  ignore_errors=true,
+                  auto_detect=true
+                )`;
+
+                console.log(
+                  `[DuckDBStore] Trying permissive ${delimiterName}-delimited import:`,
+                  createTableQuery
+                );
+                await conn.query(createTableQuery);
+                success = true;
+              } catch (err2) {
+                console.log(`[DuckDBStore] Permissive approach failed:`, err2);
+
+                // Approach 3: Force all varchar
+                try {
+                  await get().connection!.query(
+                    `DROP TABLE IF EXISTS ${escapedTableName}`
+                  );
+                  const createTableQuery = `CREATE TABLE ${escapedTableName} AS SELECT * FROM read_csv('${registeredFileName}', 
+                    header=true, 
+                    delim='${analysis.separator}',
+                    strict_mode=false,
+                    ignore_errors=true,
+                    all_varchar=true
+                  )`;
+
+                  console.log(
+                    `[DuckDBStore] Trying varchar-only ${delimiterName}-delimited import:`,
+                    createTableQuery
+                  );
+                  await conn.query(createTableQuery);
+                  success = true;
+                } catch (err3) {
+                  console.log(`[DuckDBStore] All approaches failed:`, err3);
+                  throw new Error(
+                    `Failed to import ${delimiterName}-delimited TXT file: ${
+                      err3 instanceof Error ? err3.message : String(err3)
+                    }`
+                  );
+                }
+              }
+            }
+
+            if (!success) {
+              throw new Error(
+                `Failed to import ${delimiterName}-delimited TXT file`
+              );
+            }
+
+            await conn.close();
+
+            // Count rows and get column info
+            const countQuery = `SELECT COUNT(*) as count FROM ${escapedTableName}`;
+            const countResult = await get().connection!.query(countQuery);
+            const count = countResult.toArray()[0].count;
+
+            const columnsQuery = `PRAGMA table_info(${escapedTableName})`;
+            const columnsResult = await get().connection!.query(columnsQuery);
+            const columns = columnsResult.toArray();
+
+            console.log(
+              `[DuckDBStore] Successfully imported ${count} rows with ${columns.length} columns from ${delimiterName}-delimited TXT:`,
+              columns.map((c) => c.name)
+            );
+
+            const newTables = new Map(get().registeredTables);
+            newTables.set(rawTableName, escapedTableName);
+
+            set({
+              registeredTables: newTables,
+              isLoading: false,
+              processingStatus: `TXT imported: ${(
+                fileSize || fileSize
+              ).toFixed(2)}MB table with ${count} rows, ${
+                columns.length
+              } columns (${delimiterName}-delimited)`,
+              processingProgress: 1.0,
+            });
+
+            await get().refreshSchemaCache();
+            return {
+              tableName: rawTableName,
+              rowCount: count,
+              columnCount: columns.length,
+              isView: false,
+              convertedToCsv: false,
+              fileSizeMB: fileSize,
+              instantImport: false,
+              txtFormat: "delimited_direct",
+              delimiter: analysis.separator,
+              delimiterName: delimiterName,
+            };
+          } catch (err) {
+            await conn.close();
+            throw err;
+          }
+        }
+
+        // For single-column format, do the conversion as before
+        set({ processingStatus: "Converting single-column TXT to CSV..." });
+
+        const text = await file.text();
+        const lines = text.split("\n").filter((line) => line.trim() !== "");
+
+        // Single column format - each line becomes a row
+        const csvData =
+          "line_content\n" +
+          lines
+            .map((line) => {
+              const escaped = line.trim().replace(/"/g, '""');
+              return escaped.includes(",") ? `"${escaped}"` : escaped;
+            })
+            .join("\n");
+
+        const baseName = fileName.replace(/\.[^/.]+$/, "");
+        const csvFile = new File([csvData], `${baseName}_converted.csv`, {
+          type: "text/csv",
+        });
+
+        const rawTableName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
+        const escapedTableName = `"${rawTableName}"`;
+
+        await get().connection!.query(
+          `DROP VIEW IF EXISTS ${escapedTableName}`
+        );
+        await get().connection!.query(
+          `DROP TABLE IF EXISTS ${escapedTableName}`
+        );
+
+        const conn = await get().db!.connect();
+
+        try {
+          const registeredFileName = `import_${Date.now()}.csv`;
+          await get().db!.registerFileHandle(
+            registeredFileName,
+            csvFile,
+            duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
+            false
+          );
+
+          set({ processingStatus: "Creating table from single-column TXT..." });
+          const createTableQuery = `CREATE TABLE ${escapedTableName} AS SELECT * FROM read_csv('${registeredFileName}', header=true, auto_detect=true)`;
+          await conn.query(createTableQuery);
+          await conn.close();
+
+          // Count rows
+          const countQuery = `SELECT COUNT(*) as count FROM ${escapedTableName}`;
+          const countResult = await get().connection!.query(countQuery);
+          const count = countResult.toArray()[0].count;
+
+          console.log(
+            `[DuckDBStore] Successfully imported ${count} rows from single-column TXT conversion`
+          );
+
+          const newTables = new Map(get().registeredTables);
+          newTables.set(rawTableName, escapedTableName);
+
+          set({
+            registeredTables: newTables,
+            isLoading: false,
+            processingStatus: `TXT converted: ${(
+              fileSizeMB || fileSize
+            ).toFixed(2)}MB table with ${count} rows (single-column)`,
+            processingProgress: 1.0,
+          });
+
+          await get().refreshSchemaCache();
+          return {
+            tableName: rawTableName,
+            rowCount: count,
+            isView: false,
+            convertedToCsv: true,
+            fileSizeMB: fileSizeMB || fileSize,
+            instantImport: false,
+            txtFormat: "single_column",
+          };
+        } catch (err) {
+          await conn.close();
+          throw err;
+        }
+      }
 
       // For Excel files larger than 2MB, use SheetJS conversion
       if (fileExt === "xlsx" || fileExt === "xls") {
@@ -1461,7 +1990,6 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
     try {
       console.log("[DuckDBStore] Auto-refreshing tables...");
-
 
       // Discover all tables in the database
       const currentKnownTables = get().registeredTables;

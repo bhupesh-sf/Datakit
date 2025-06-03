@@ -44,7 +44,7 @@ export function useDirectFileImport() {
         );
 
         // Determine if we should use streaming based on file size
-        const STREAMING_THRESHOLD = 10; // 50MB threshold
+        const STREAMING_THRESHOLD = 10; // 10MB threshold
         const shouldUseStreaming = fileSize > STREAMING_THRESHOLD;
 
         addRecentFile(file);
@@ -173,6 +173,8 @@ export function useDirectFileImport() {
             sourceType = DataSourceType.XLSX;
           } else if (fileExt === "parquet") {
             sourceType = DataSourceType.PARQUET;
+          } else if (fileExt === "txt") {
+            sourceType = DataSourceType.TXT;
           }
 
           // Create result object for the UI
@@ -301,6 +303,7 @@ export function useDirectFileImport() {
           else if (fileExt === "xlsx" || fileExt === "xls")
             sourceType = DataSourceType.XLSX;
           else if (fileExt === "parquet") sourceType = DataSourceType.PARQUET;
+          else if (fileExt === "txt") sourceType = DataSourceType.TXT;
 
           const columnTypes = schemaResult.toArray().map((col) => {
             const type = col.type.toLowerCase();

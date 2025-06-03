@@ -49,6 +49,7 @@ export const FileUploadButton = ({
                 "application/vnd.ms-excel": [".xls"],
                 "application/x-parquet": [".parquet"],
                 "application/vnd.apache.parquet": [".parquet"],
+                "text/plain": [".txt"],
               },
             },
           ],
