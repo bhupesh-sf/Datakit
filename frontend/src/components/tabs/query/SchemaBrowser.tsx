@@ -192,16 +192,33 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
                     {schemas[tableName].columns.map((column) => (
                       <div
                         key={`${tableName}-${column.name}`}
-                        className="flex items-center p-1.5 hover:bg-white/5 rounded text-xs"
-                        title={`${column.name}: ${column.type}`}
+                        className="flex items-center p-1.5 hover:bg-white/5 rounded text-xs group/column"
                       >
                         {getColumnTypeIcon(column.type)}
-                        <span className="ml-1.5 text-white/80 truncate">
+
+                        <span
+                          title={column.name}
+                          className="ml-1.5 text-white/80 truncate"
+                        >
                           {column.name}
                         </span>
+
                         <span className="ml-auto text-white/50 text-xs">
                           {column.type}
                         </span>
+
+                        <Tooltip placement="left" content="Insert column name">
+                          <button
+                            className="opacity-0 group-hover/column:opacity-100 hover:text-primary transition-opacity text-white/70 ml-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const query = `\nSELECT "${column.name}" \nFROM "${tableName}"\nLIMIT 10;`;
+                              onInsertQuery(query);
+                            }}
+                          >
+                            <FileText size={12} />
+                          </button>
+                        </Tooltip>
                       </div>
                     ))}
                   </div>
