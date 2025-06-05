@@ -256,7 +256,9 @@ const S3ImportPanel: FC<S3ImportPanelProps> = ({ onImport }) => {
               type="submit"
               className={cn(
                 "px-6 py-2.5",
-                isValidS3Url ? "border-green-700 hover:border-green-700" : undefined
+                isValidS3Url
+                  ? "border-green-700 hover:border-green-700"
+                  : undefined
               )}
               disabled={isImporting || !customS3Url.trim() || !isValidS3Url}
             >
@@ -274,22 +276,21 @@ const S3ImportPanel: FC<S3ImportPanelProps> = ({ onImport }) => {
             </Button>
           </div>
           <AnimatePresence>
-          {isImporting && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-4 overflow-hidden"
-            >
-              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-                <div className="flex items-center text-sm">
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin text-primary" />
-                  <p className="text-primary font-medium">{importStatus}</p>
+            {isImporting && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 overflow-hidden"
+              >
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                  <div className="flex items-center text-sm">
+                    <p className="text-primary font-medium">{importStatus}</p>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </form>
 
         {/* Example Datasets */}
@@ -321,8 +322,6 @@ const S3ImportPanel: FC<S3ImportPanelProps> = ({ onImport }) => {
             </div>
           )}
         </div>
-
-    
       </div>
 
       {/* Footer Info */}

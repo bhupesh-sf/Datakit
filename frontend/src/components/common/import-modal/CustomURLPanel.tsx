@@ -282,7 +282,6 @@ const CustomURLPanel = ({ onImport }) => {
               >
                 <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
                   <div className="flex items-center text-sm">
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin text-primary" />
                     <p className="text-primary font-medium">{importStatus}</p>
                   </div>
                 </div>
