@@ -55,6 +55,37 @@
 
 /* Set base styles for the entire application */
 @layer base {
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: color-mix(in srgb, var(--background) 90%, var(--foreground) 10%);
+    border-radius: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 6px;
+    border: 2px solid var(--background);
+    transition: all 200ms ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--primary) 80%, var(--foreground) 20%);
+    transform: scale(1.05);
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background: color-mix(in srgb, var(--primary) 70%, var(--foreground) 30%);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: var(--background);
+  }
+
   html,
   body {
     background-color: var(--background);
@@ -62,6 +93,8 @@
     height: 100%;
     margin: 0;
     padding: 0;
+    scrollbar-width: auto;
+    scrollbar-color: var(--primary) color-mix(in srgb, var(--background) 90%, var(--foreground) 10%);
   }
 
   #root {
@@ -85,6 +118,8 @@
   * {
     border-color: var(--border);
     outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
+    scrollbar-width: auto;
+    scrollbar-color: var(--primary) color-mix(in srgb, var(--background) 90%, var(--foreground) 10%);
   }
 }
 

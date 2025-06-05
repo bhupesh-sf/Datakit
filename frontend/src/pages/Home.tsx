@@ -80,7 +80,7 @@ const Home = () => {
         <div className="mb-4 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-heading font-semibold">
-              {fileName ? `Viewing: ${fileName}` : "Playground"}
+              {fileName ? `Viewing: ${fileName}` : "Welcome"}
             </h2>
             <p className="text-white text-opacity-70 text-sm">{statusText}</p>
           </div>

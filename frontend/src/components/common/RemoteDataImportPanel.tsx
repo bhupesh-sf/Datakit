@@ -1,0 +1,304 @@
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Link } from "lucide-react";
+
+import { Button } from "@/components/ui/Button";
+import GoogleSheetsIcon from "@/components/icons/GoogleSheetsIcon";
+
+import { cn } from "@/lib/utils";
+
+import S3ImportPanel from "./import-modal/S3ImportPanel";
+import { CustomURLPanel } from "./import-modal/CustomURLPanel";
+import GoogleSheetsPanel from "./import-modal/GoogleSheetsPanel";
+
+import GCSImportPanel from "./import-modal/GCSImportPanel";
+import GoogleDrivePanel from "./import-modal/GoogleDrivePanel";
+
+import S3 from "@/assets/s3.png";
+import GCS from "@/assets/gcs.svg";
+import Drive from "@/assets/drive.svg";
+
+export interface RemoteDataImportModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onImport: (result: any) => void;
+}
+
+export type ImportProvider =
+  | "s3"
+  | "gcs"
+  | "google-drive"
+  | "custom-url"
+  | "google-sheets";
+
+interface ProviderTab {
+  id: ImportProvider;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+  comingSoon?: boolean;
+}
+
+const PROVIDER_TABS: ProviderTab[] = [
+  {
+    id: "s3",
+    label: "Amazon S3",
+    icon: <img src={S3} className="h-4 w-4" />,
+    description: "Public S3 buckets",
+  },
+  {
+    id: "google-sheets",
+    label: "Google Sheets",
+    icon: <GoogleSheetsIcon className="h-5 w-5" />,
+    description: "Published Google Sheets",
+  },
+  {
+    id: "custom-url",
+    label: "Custom URL",
+    icon: <Link color="white" className="h-4 w-4" />,
+    description: "Import from any public URL",
+  },
+  {
+    id: "gcs",
+    label: "Google Cloud",
+    icon: <img src={GCS} className="h-6 w-6" />,
+    description: "Public GCS buckets",
+    comingSoon: true,
+  },
+  {
+    id: "google-drive",
+    label: "Google Drive",
+    icon: <img src={Drive} className="h-6 w-6" />,
+    description: "Fles from Google Drive",
+    comingSoon: true,
+  },
+];
+
+const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
+  isOpen,
+  onClose,
+  onImport,
+}) => {
+  const [activeProvider, setActiveProvider] = useState<ImportProvider>("s3");
+  const [lastUsedProvider, setLastUsedProvider] =
+    useState<ImportProvider | null>(null);
+
+  // Load last used provider from localStorage
+  React.useEffect(() => {
+    const saved = localStorage.getItem("datakit-last-import-provider");
+    if (saved && PROVIDER_TABS.find((tab) => tab.id === saved)) {
+      setLastUsedProvider(saved as ImportProvider);
+      setActiveProvider(saved as ImportProvider);
+    }
+  }, []);
+
+  // Save provider choice to localStorage
+  const handleProviderChange = (provider: ImportProvider) => {
+    if (PROVIDER_TABS.find((tab) => tab.id === provider)?.comingSoon) {
+      return; // Don't allow switching to coming soon providers
+    }
+    setActiveProvider(provider);
+    localStorage.setItem("datakit-last-import-provider", provider);
+  };
+
+  const handleImportSuccess = (result: any) => {
+    onImport(result);
+    onClose();
+  };
+
+  const renderProviderPanel = () => {
+    switch (activeProvider) {
+      case "s3":
+        return <S3ImportPanel onImport={handleImportSuccess} />;
+      // TODO:
+      // Next iterations
+      //
+      // case 'gcs':
+      //   return <GCSImportPanel onImport={handleImportSuccess} />;
+      // case 'google-drive':
+      //   <></>
+      // return <GoogleDrivePanel onImport={handleImportSuccess} />;
+      case "custom-url":
+        return <CustomURLPanel onImport={handleImportSuccess} />;
+      case "google-sheets":
+        return <GoogleSheetsPanel onImport={handleImportSuccess} />;
+      default:
+        return (
+          <div className="p-8 text-center text-white/60">
+            Select a provider to continue
+          </div>
+        );
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 backdrop-blur-sm bg-black/60"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ delay: 0.1, duration: 0.2 }}
+            className="w-full max-w-6xl h-[85vh] bg-black border border-white/20 rounded-lg shadow-xl shadow-black/30 overflow-hidden flex"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Left Sidebar */}
+            <div className="w-64 bg-gradient-to-b from-darkNav to-black border-r border-white/10 flex flex-col">
+              {/* Header */}
+              <div className="p-4 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-heading font-medium text-white">
+                    Import Remote Data
+                  </h2>
+                </div>
+                <p className="text-xs text-white/60 mt-1">
+                  Connect to various data sources
+                </p>
+              </div>
+
+              {/* Provider Navigation */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-2">
+                  {PROVIDER_TABS.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => handleProviderChange(tab.id)}
+                      disabled={tab.comingSoon}
+                      className={cn(
+                        "w-full text-left p-3 rounded-lg mb-1 transition-all duration-200 group relative",
+                        activeProvider === tab.id && !tab.comingSoon
+                          ? "bg-primary/20 border border-primary/30 text-white"
+                          : tab.comingSoon
+                          ? "text-white/40 cursor-not-allowed"
+                          : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
+                      )}
+                    >
+                      <div className="flex items-center">
+                        <div
+                          className={cn(
+                            "h-8 w-8 rounded-md flex items-center justify-center mr-3 border",
+                            activeProvider === tab.id && !tab.comingSoon
+                              ? "bg-primary/30 border-primary/50 text-primary"
+                              : tab.comingSoon
+                              ? "bg-white/5 border-white/10 text-white/40"
+                              : "bg-white/5 border-white/10 text-white/60 group-hover:border-white/20"
+                          )}
+                        >
+                          {tab.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center">
+                            <p className="text-sm font-medium truncate">
+                              {tab.label}
+                            </p>
+                            {tab.comingSoon && (
+                              <span className="ml-2 text-xs bg-white/10 text-white/50 px-1.5 py-0.5 rounded">
+                                Soon
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs mt-0.5 truncate opacity-80">
+                            {tab.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Active indicator */}
+                      {activeProvider === tab.id && !tab.comingSoon && (
+                        <motion.div
+                          layoutId="activeProvider"
+                          className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-primary rounded-r"
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Content Area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Content Header */}
+              <div className="p-4 border-b border-white/10 bg-gradient-to-r from-background/50 to-background/30">
+                <div className="flex items-center">
+                  <div
+                    className={cn(
+                      "h-8 w-8 rounded-md flex items-center justify-center mr-3 border",
+                      activeProvider === "s3"
+                        ? "bg-orange-500/20 border-orange-500/30"
+                        : activeProvider === "gcs"
+                        ? "bg-blue-500/20 border-blue-500/30"
+                        : activeProvider === "google-drive"
+                        ? "bg-blue-600/20 border-blue-600/30"
+                        : activeProvider === "google-sheets"
+                        ? "bg-green-500/20 border-green-500/30"
+                        : "bg-primary/20 border-primary/30"
+                    )}
+                  >
+                    {
+                      PROVIDER_TABS.find((tab) => tab.id === activeProvider)
+                        ?.icon
+                    }
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-medium text-white">
+                      {
+                        PROVIDER_TABS.find((tab) => tab.id === activeProvider)
+                          ?.label
+                      }
+                    </h3>
+                    <p className="text-sm text-white/70">
+                      {
+                        PROVIDER_TABS.find((tab) => tab.id === activeProvider)
+                          ?.description
+                      }
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onClose}
+                    className="h-8 w-8 p-0 rounded-full text-white/70 hover:text-white hover:bg-white/10"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Dynamic Content */}
+              <div className="flex-1 overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeProvider}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full"
+                  >
+                    {renderProviderPanel()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default RemoteDataImportModal;

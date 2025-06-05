@@ -1606,7 +1606,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
             registeredTables: newTables,
             isLoading: false,
             processingStatus: `TXT converted: ${(
-              fileSizeMB || fileSize
+              fileSize 
             ).toFixed(2)}MB table with ${count} rows (single-column)`,
             processingProgress: 1.0,
           });
@@ -1617,7 +1617,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
             rowCount: count,
             isView: false,
             convertedToCsv: true,
-            fileSizeMB: fileSizeMB || fileSize,
+            fileSizeMB:  fileSize,
             instantImport: false,
             txtFormat: "single_column",
           };

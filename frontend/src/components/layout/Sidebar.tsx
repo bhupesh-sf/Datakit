@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   FileText,
   ChevronLeft,
   ChevronRight,
-  // FileUp,
   ExternalLink,
+  Cloud,
 } from "lucide-react";
 import { FileUploadButton } from "@/components/common/FileUploadButton";
 import { ThemeColorPicker } from "@/components/common/ThemeColorPicker";
@@ -13,16 +13,15 @@ import { useDuckDBStore } from "@/store/duckDBStore";
 import useDirectFileImport from "@/hooks/useDirectFileImport";
 import { useAppStore } from "@/store/appStore";
 import { motion, AnimatePresence } from "framer-motion";
-// import { Tooltip } from "@/components/ui/Tooltip";
 import usePopover from "@/hooks/usePopover";
+import { Button } from "@/components/ui/Button";
 
-import useRemoteFileImport, {
-  RemoteSourceProvider,
-} from "@/hooks/useRemoteFileImport";
+
+import RemoteDataImportModal from "@/components/common/RemoteDataImportPanel";
 
 import { ColumnType } from "@/types/csv";
 import { DataSourceType } from "@/types/json";
-import GoogleSheetsImport from "../common/import-modal/GoogleSheetsImportModal";
+import { ImportProvider } from "@/types/remoteImport";
 
 export interface DataLoadWithDuckDBResult {
   data: string[][];
@@ -37,7 +36,8 @@ export interface DataLoadWithDuckDBResult {
   tableName?: string;
   isRemote?: boolean;
   remoteURL?: string;
-  remoteProvider?: RemoteSourceProvider;
+  remoteProvider?: ImportProvider;
+
 }
 
 interface SidebarProps {
@@ -48,6 +48,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   const { recentFiles } = useFileAccess();
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
 
+
+  const [isRemoteModalOpen, setIsRemoteModalOpen] = useState(false);
+
   const uploadPopover = usePopover();
 
   const {
@@ -57,14 +60,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
     loadingStatus: localFileLoadingStatus,
     processingError: localFileProcessingError,
   } = useDirectFileImport();
-
-  // TODO: NOT BEING USED FOR NOW: Remote file import hooks
-  const {
-    importFromURL,
-    isImporting: isProcessingRemoteFile,
-    importStatus: remoteFileImportStatus,
-    error: remoteFileImportError,
-  } = useRemoteFileImport();
 
   const {
     isLoading: duckDBLoading,
@@ -86,44 +81,20 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
     }
   };
 
-  const handleURLSubmit = async (
-    result: any,
-    provider: RemoteSourceProvider
-  ) => {
-    if (!onDataLoad) return;
-
-    try {
-      if (provider === "google_sheets") {
-        if (result) {
-          onDataLoad(result);
-        }
-      } else {
-        const result = await importFromURL(url, provider);
-
-        if (result) {
-          onDataLoad({
-            ...result,
-            isRemote: true,
-            remoteURL: url,
-            remoteProvider: provider,
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error importing remote file:", error);
+  const handleRemoteDataImport = (result: DataLoadWithDuckDBResult) => {
+    if (onDataLoad) {
+      onDataLoad(result);
     }
   };
 
   // Determine if any loading state is active
-  const isLoading =
-    isProcessingLocalFile || isProcessingRemoteFile || duckDBLoading;
+  const isLoading = isProcessingLocalFile || duckDBLoading;
 
   // Determine current loading status message
-  const loadingStatus = remoteFileImportStatus || localFileLoadingStatus;
+  const loadingStatus = localFileLoadingStatus;
 
   // Determine current error message
-  const errorMessage =
-    remoteFileImportError || localFileProcessingError || duckDBError;
+  const errorMessage = localFileProcessingError || duckDBError;
 
   // Variants for framer-motion animations
   const sidebarVariants = {
@@ -148,9 +119,21 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
           return onDataLoad ? processFile(file, onDataLoad) : processFile(file);
         }}
         isLoading={isProcessingLocalFile}
-        className="w-full"
+        className="w-full mb-2"
         supportLargeFiles={true}
       />
+
+      <Button
+        variant="outline"
+        className="w-full bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-white"
+        onClick={() => {
+          uploadPopover.close();
+          setIsRemoteModalOpen(true);
+        }}
+      >
+        <Cloud className="h-4 w-4 mr-2 text-blue-500" />
+        <span className="text-sm">Remote Data</span>
+      </Button>
 
       {(isLoading || loadingStatus) && (
         <div className="mt-3 bg-background/30 p-2 border border-white/5 rounded-md">
@@ -178,8 +161,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   const renderCollapsedContent = () => (
     <>
       <div className="p-4 flex justify-center border-b border-white/10">
-        {/* TODO: Figuring out what's wrong here? */}
-        {/* <Tooltip content="Expand sidebar"> */}
         <button
           onClick={toggleSidebar}
           className="text-white text-opacity-70 hover:text-opacity-100 transition-custom p-1 cursor-pointer hover:bg-white/5 rounded"
@@ -187,27 +168,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
         >
           <ChevronRight size={18} />
         </button>
-        {/* </Tooltip> */}
       </div>
 
       <div className="flex flex-col items-center gap-4 p-2 mt-2">
         {/* File Upload Button with Dropdown */}
         <div className="relative" ref={uploadPopover.ref}>
-          {/* <Tooltip content="Upload File">
-            <button
-              onClick={uploadPopover.toggle}
-              className="p-2 hover:bg-background hover:bg-opacity-30 rounded transition-custom text-white text-opacity-70 hover:text-primary"
-              aria-label="Upload File"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-              ) : (
-                <FileUp size={20} />
-              )}
-            </button>
-          </Tooltip> */}
-
           <AnimatePresence>
             {uploadPopover.isOpen && (
               <motion.div
@@ -224,18 +189,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       </div>
 
       <div className="mt-auto p-4 flex flex-col items-center gap-4 border-t border-white/10">
-        {/* External Links */}
-        {/* <Tooltip content="Made by Amin"> */}
         <a
           href="https://amin.contact"
           target="_blank"
           rel="noopener noreferrer"
           className="text-primary hover:text-primary-foreground transition-custom p-2 hover:bg-background hover:bg-opacity-30 rounded"
-          aria-label="Visit WaveQuery"
+          aria-label="Visit Amin"
         >
           <ExternalLink size={16} />
         </a>
-        {/* </Tooltip> */}
       </div>
     </>
   );
@@ -258,7 +220,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       {/* Introduction text */}
       <div className="px-5 py-4">
         <p className="text-sm text-white text-opacity-70">
-          Datakit leverages WebAssembly to process large datasets directly in
+          DataKit leverages WebAssembly to process large datasets directly in
           your browser.
         </p>
       </div>
@@ -273,17 +235,22 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
               : processFile(file);
           }}
           isLoading={isProcessingLocalFile}
-          className="w-full"
+          className="w-full mb-2"
           supportLargeFiles={true}
         />
 
-        <div className="mt-2 mb-2 flex items-center">
-          <div className="flex-1">
-            <GoogleSheetsImport
-              onImport={(result) => handleURLSubmit(result!, "google_sheets")}
-            />
+        {/* New Remote Data Import Button */}
+        <Button
+          variant="outline"
+          className="w-full bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-white group transition-all mb-1"
+          onClick={() => setIsRemoteModalOpen(true)}
+          disabled={isLoading}
+        >
+          <div className="flex items-center justify-center py-1">
+            <Cloud className="h-4.5 w-4.5 mr-2 text-blue-500 group-hover:text-blue-400" />
+            <span className="text-sm font-medium">Import Remote Data</span>
           </div>
-        </div>
+        </Button>
 
         {/* Loading Status - Combined for both local and remote */}
         {(isLoading || loadingStatus) && (
@@ -346,8 +313,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
               return (
                 <li key={file.name + file.lastAccessed}>
                   <button
-                    // TODO:
-                    // onClick={() => handleRecentFileSelect?.(file, onDataLoad)}
                     disabled={isLoading}
                     className="w-full text-left flex items-center p-2 rounded text-xs text-white text-opacity-80 hover:bg-background hover:bg-opacity-30 transition-custom"
                   >
@@ -417,15 +382,24 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   );
 
   return (
-    <motion.div
-      className="bg-darkNav flex flex-col h-full border-r border-white border-opacity-10 overflow-hidden"
-      initial={sidebarCollapsed ? "collapsed" : "expanded"}
-      animate={sidebarCollapsed ? "collapsed" : "expanded"}
-      variants={sidebarVariants}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-    >
-      {sidebarCollapsed ? renderCollapsedContent() : renderExpandedContent()}
-    </motion.div>
+    <>
+      <motion.div
+        className="bg-darkNav flex flex-col h-full border-r border-white border-opacity-10 overflow-hidden"
+        initial={sidebarCollapsed ? "collapsed" : "expanded"}
+        animate={sidebarCollapsed ? "collapsed" : "expanded"}
+        variants={sidebarVariants}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        {sidebarCollapsed ? renderCollapsedContent() : renderExpandedContent()}
+      </motion.div>
+
+      {/* Remote Data Import Modal */}
+      <RemoteDataImportModal
+        isOpen={isRemoteModalOpen}
+        onClose={() => setIsRemoteModalOpen(false)}
+        onImport={handleRemoteDataImport}
+      />
+    </>
   );
 };
 
