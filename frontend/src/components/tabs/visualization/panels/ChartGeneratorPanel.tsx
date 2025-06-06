@@ -22,6 +22,13 @@ const ChartGenerator: React.FC = () => {
     "sum" | "avg" | "min" | "max" | "count"
   >("sum");
 
+  // Get field type for selected measure
+  const measureField = fields.find((f) => f.name === measure);
+  const measureType = measureField?.type || "";
+
+  // Get valid aggregations for the selected measure field
+  const validAggregations = getValidAggregationsForType(measureType);
+
   // Load schema when table changes
   useEffect(() => {
     if (tableName) {
@@ -38,14 +45,43 @@ const ChartGenerator: React.FC = () => {
         );
 
         const measureField = tableSchema.find(
-          (f) => isNumericType(f.type) && f.name !== dimensionField?.name
+          (f) =>
+            (isNumericType(f.type) || isDateType(f.type)) &&
+            f.name !== dimensionField?.name
         );
 
         if (dimensionField) setDimension(dimensionField.name);
-        if (measureField) setMeasure(measureField.name);
+        if (measureField) {
+          setMeasure(measureField.name);
+          // Set appropriate default aggregation based on field type
+          const validAggs = getValidAggregationsForType(measureField.type);
+          if (validAggs.includes("sum")) {
+            setAggregation("sum");
+          } else if (validAggs.includes("count")) {
+            setAggregation("count");
+          } else {
+            setAggregation(validAggs[0] as any);
+          }
+        }
       }
     }
   }, [tableName, tableSchema]);
+
+  // Update aggregation when measure changes
+  useEffect(() => {
+    if (measure && validAggregations.length > 0) {
+      // If current aggregation is not valid for new field type, switch to a valid one
+      if (!validAggregations.includes(aggregation)) {
+        if (validAggregations.includes("sum")) {
+          setAggregation("sum");
+        } else if (validAggregations.includes("count")) {
+          setAggregation("count");
+        } else {
+          setAggregation(validAggregations[0] as any);
+        }
+      }
+    }
+  }, [measure, validAggregations, aggregation]);
 
   const handleGenerateChart = async () => {
     if (tableName && dimension && measure) {
@@ -76,7 +112,7 @@ const ChartGenerator: React.FC = () => {
             <option value="">Select field...</option>
             {fields.map((field) => (
               <option key={`dim-${field.name}`} value={field.name}>
-                {field.name}
+                {field.name} ({getFieldTypeLabel(field.type)})
               </option>
             ))}
           </select>
@@ -98,15 +134,17 @@ const ChartGenerator: React.FC = () => {
             >
               <option value="">Select field...</option>
               {fields
-                .filter((f) => isNumericType(f.type))
+                .filter((f) => isNumericType(f.type) || isDateType(f.type))
                 .map((field) => (
                   <option key={`measure-${field.name}`} value={field.name}>
-                    {field.name}
+                    {field.name} ({getFieldTypeLabel(field.type)})
                   </option>
                 ))}
             </select>
             <p className="mt-1 text-xs text-white/60">
-              Numeric values to measure
+              {isDateType(measureType)
+                ? "Date fields for time analysis"
+                : "Numeric values to measure"}
             </p>
           </div>
 
@@ -119,15 +157,16 @@ const ChartGenerator: React.FC = () => {
               value={aggregation}
               onChange={(e) => setAggregation(e.target.value as any)}
               className="w-full p-2 bg-background/50 border border-white/10 rounded text-white text-xs"
+              disabled={validAggregations.length <= 1}
             >
-              <option value="sum">Sum</option>
-              <option value="avg">Average</option>
-              <option value="min">Minimum</option>
-              <option value="max">Maximum</option>
-              <option value="count">Count</option>
+              {validAggregations.map((agg) => (
+                <option key={agg} value={agg}>
+                  {getAggregationLabel(agg)}
+                </option>
+              ))}
             </select>
             <p className="mt-1 text-xs text-white/60">
-              How to calculate the values
+              {getAggregationHelpText(measureType)}
             </p>
           </div>
         </div>
@@ -135,7 +174,12 @@ const ChartGenerator: React.FC = () => {
         {/* Description of what will happen */}
         {measure && dimension && (
           <div className="mt-2 p-2 bg-primary/5 rounded-md text-xs text-white/80 border border-white/5">
-            {getAggregationDescription(aggregation, measure, dimension)}
+            {getAggregationDescription(
+              aggregation,
+              measure,
+              dimension,
+              measureType
+            )}
             <p className="mt-1 text-white/50">
               Using all {tableName} data for visualization
             </p>
@@ -183,25 +227,86 @@ function isNumericType(type: string): boolean {
     "numeric",
     "decimal",
     "bigint",
+    "number",
   ];
   return numericTypes.some((t) => type.toLowerCase().includes(t));
 }
 
-// Helper function to get aggregation description - more concise
+// Helper function to determine if a type is date/time
+function isDateType(type: string): boolean {
+  const dateTypes = ["date", "datetime", "timestamp", "time"];
+  return dateTypes.some((t) => type.toLowerCase().includes(t));
+}
+
+// Get valid aggregations based on field type
+function getValidAggregationsForType(type: string): string[] {
+  if (isDateType(type)) {
+    return ["min", "max", "count"]; // Only meaningful aggregations for dates
+  }
+  if (isNumericType(type)) {
+    return ["sum", "avg", "min", "max", "count"];
+  }
+  return ["count"]; // For text fields
+}
+
+// Get user-friendly field type label
+function getFieldTypeLabel(type: string): string {
+  if (isNumericType(type)) return "number";
+  if (isDateType(type)) return "date";
+  return "text";
+}
+
+// Get user-friendly aggregation labels
+function getAggregationLabel(agg: string): string {
+  switch (agg) {
+    case "sum":
+      return "Sum";
+    case "avg":
+      return "Average";
+    case "min":
+      return "Minimum";
+    case "max":
+      return "Maximum";
+    case "count":
+      return "Count";
+    default:
+      return agg;
+  }
+}
+
+// Get help text for aggregation based on field type
+function getAggregationHelpText(measureType: string): string {
+  if (isDateType(measureType)) {
+    return "Date aggregations: earliest, latest, or count";
+  }
+  if (isNumericType(measureType)) {
+    return "How to calculate the numeric values";
+  }
+  return "How to aggregate the values";
+}
+
+// Enhanced aggregation description with type awareness
 function getAggregationDescription(
   aggregation: string,
   measure: string,
-  dimension: string
+  dimension: string,
+  measureType: string
 ): string {
+  const isDate = isDateType(measureType);
+
   switch (aggregation) {
     case "sum":
       return `This chart will show the total sum of "${measure}" for each "${dimension}" category.`;
     case "avg":
       return `This chart will show the average "${measure}" for each "${dimension}" category.`;
     case "min":
-      return `This chart will show the minimum "${measure}" value for each "${dimension}" category.`;
+      return isDate
+        ? `This chart will show the earliest "${measure}" date for each "${dimension}" category.`
+        : `This chart will show the minimum "${measure}" value for each "${dimension}" category.`;
     case "max":
-      return `This chart will show the maximum "${measure}" value for each "${dimension}" category.`;
+      return isDate
+        ? `This chart will show the latest "${measure}" date for each "${dimension}" category.`
+        : `This chart will show the maximum "${measure}" value for each "${dimension}" category.`;
     case "count":
       return `This chart will show the count of items in each "${dimension}" category.`;
     default:
