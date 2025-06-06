@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
-import Home from "./pages/Home";
-import { useDuckDBStore } from "./store/duckDBStore";
+
+import { useDuckDBStore } from "@/store/duckDBStore";
+
+import Home from "@/pages/Home";
+import { Button } from "@/components/ui/Button";
+
 import { applyThemeColor } from '@/utils/theme';
+
+import { DISCORD_URL } from "@/components/common/ActionButtons";
+
+import discord from '@/assets/discord.png';
 
 const MobileWarning = () => {
   return (
@@ -11,7 +19,18 @@ const MobileWarning = () => {
         <p className="text-white mb-6">
           This application is optimized for desktop browsers. For the best experience, please open this application on a desktop or laptop computer.
         </p>
-       
+        <Button variant="link" size="lg" asChild>
+        <a
+          href={DISCORD_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center"
+          title="Join our Discord community"
+        >
+          <img src={discord} alt="Discord" className="w-6 h-6 mr-1.5" />
+          <span className="text-md text-white">Discord</span>
+        </a>
+      </Button>
       </div>
     </div>
   );

@@ -7,6 +7,8 @@ import FeedbackButton from "@/components/common/FeedbackButton";
 
 import discord from "@/assets/discord.png";
 
+export const DISCORD_URL =  "https://discord.gg/gZmXmhbBdP";
+
 interface UnifiedActionButtonsProps {
   /** Context for feedback button */
   feedbackContext?: string;
@@ -24,7 +26,7 @@ interface UnifiedActionButtonsProps {
  */
 const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
   feedbackContext,
-  discordInviteUrl = "https://discord.gg/gZmXmhbBdP",
+  discordInviteUrl = DISCORD_URL,
   docsUrl = "https://docs.datakit.page/",
   productHuntUrl = "https://www.producthunt.com/products/datakit",
 }) => {
