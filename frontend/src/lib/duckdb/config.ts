@@ -95,7 +95,7 @@ export async function getBundles(): Promise<duckdb.DuckDBBundles> {
 export const duckDBConfig = {
   MEMORY_LIMIT: '4GB',
   TEMP_DIRECTORY: '/tmp/duckdb',
-  REQUIRED_EXTENSIONS: ['json'],
+  REQUIRED_EXTENSIONS: ['json', 'parquet'],
 };
 
 // Cleanup function to revoke blob URLs

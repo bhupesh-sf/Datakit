@@ -12,9 +12,11 @@ import {
   Eye,
   Users,
   Calendar,
-  FileText,
   Lock,
   Key,
+  Zap,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -43,9 +45,7 @@ const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
               Featured
             </span>
           )}
-          {dataset.gated && (
-            <Lock className="h-3 w-3 text-yellow-500 ml-1" />
-          )}
+          {dataset.gated && <Lock className="h-3 w-3 text-yellow-500 ml-1" />}
         </div>
         <p className="text-xs text-white/70 line-clamp-2 leading-relaxed">
           {dataset.description}
@@ -56,7 +56,7 @@ const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
         <div className="flex items-center space-x-3">
           <span className="flex items-center">
             <Users className="h-3 w-3 mr-1" />
-            {dataset.downloads?.toLocaleString() || 'N/A'}
+            {dataset.downloads?.toLocaleString() || "N/A"}
           </span>
           <span className="text-white/50">{dataset.size}</span>
         </div>
@@ -65,7 +65,7 @@ const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center text-xs text-white/60">
           <Calendar className="h-3 w-3 mr-1" />
-          <span>Updated {dataset.lastModified || 'Recently'}</span>
+          <span>Updated {dataset.lastModified || "Recently"}</span>
         </div>
         {dataset.likes && (
           <div className="flex items-center text-xs text-white/60">
@@ -97,12 +97,47 @@ const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
   );
 };
 
+const ImportStrategyIndicator = ({ strategy, status }) => {
+  const strategyConfig = {
+    "Direct Streaming": {
+      icon: <Zap className="h-3 w-3" />,
+      color: "text-blue-400",
+      description: "Fastest, no download required",
+    },
+    "Parquet Download": {
+      icon: <Download className="h-3 w-3" />,
+      color: "text-green-400",
+      description: "Reliable, full dataset download",
+    },
+    "Alternative Format": {
+      icon: <RefreshCw className="h-3 w-3" />,
+      color: "text-yellow-400",
+      description: "Fallback to CSV/JSON format",
+    },
+  };
+
+  const config = strategyConfig[strategy];
+  if (!config) return null;
+
+  return (
+    <div className="flex items-center text-xs text-white/70 mb-1">
+      <div className={cn("mr-2", config.color)}>{config.icon}</div>
+      <span className="font-medium">{strategy}</span>
+      <span className="mx-2">•</span>
+      <span className="text-white/50">{config.description}</span>
+    </div>
+  );
+};
+
 const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
   const [datasetId, setDatasetId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [authToken, setAuthToken] = useState("");
   const [showAuth, setShowAuth] = useState(false);
   const [inputError, setInputError] = useState(null);
+  const [availableFormats, setAvailableFormats] = useState([]);
+  const [selectedFormat, setSelectedFormat] = useState("auto");
+  const [currentStrategy, setCurrentStrategy] = useState("");
 
   // Hooks
   const {
@@ -113,18 +148,44 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
     isSearching,
     searchResults,
   } = usePublicDatasets("huggingface");
-  
-  const { 
-    importFromHuggingFace, 
-    isImporting, 
-    importStatus, 
+
+  const {
+    importWithProgressiveFallback,
+    importFromHuggingFaceStreaming,
+    importFromHuggingFace,
+    detectAvailableFormats,
+    isImporting,
+    importStatus,
+    importProgress,
     validateDatasetId,
     testDatasetAccess,
+    error: importError,
+    resetError,
   } = useHuggingFaceImport();
 
   useEffect(() => {
     fetchDatasets();
   }, [fetchDatasets]);
+
+  // Reset error when dataset ID changes
+  useEffect(() => {
+    if (importError) {
+      resetError();
+    }
+  }, [datasetId, resetError, importError]);
+
+  // Detect import strategy from status
+  useEffect(() => {
+    if (importStatus) {
+      if (importStatus.includes("Direct Streaming")) {
+        setCurrentStrategy("Direct Streaming");
+      } else if (importStatus.includes("Parquet Download")) {
+        setCurrentStrategy("Parquet Download");
+      } else if (importStatus.includes("Alternative Format")) {
+        setCurrentStrategy("Alternative Format");
+      }
+    }
+  }, [importStatus]);
 
   const validateInput = (id) => {
     setInputError(null);
@@ -143,32 +204,87 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
     return true;
   };
 
+  // Detect available formats when dataset ID changes
+  useEffect(() => {
+    const detectFormats = async () => {
+      if (datasetId.trim() && validateDatasetId(datasetId).isValid) {
+        try {
+          const { formats, recommendedFormat } = await detectAvailableFormats(
+            datasetId,
+            authToken || undefined
+          );
+          setAvailableFormats(formats);
+          if (selectedFormat === "auto") {
+            // Don't override user selection, but show recommendation
+          }
+        } catch (err) {
+          console.warn("Failed to detect formats:", err);
+          setAvailableFormats([]);
+        }
+      } else {
+        setAvailableFormats([]);
+      }
+    };
+
+    const timeoutId = setTimeout(detectFormats, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [
+    datasetId,
+    authToken,
+    detectAvailableFormats,
+    validateDatasetId,
+    selectedFormat,
+  ]);
+
+  const getImportMethod = () => {
+    switch (selectedFormat) {
+      case "streaming":
+        return importFromHuggingFaceStreaming;
+      case "download":
+        return importFromHuggingFace;
+      case "auto":
+      default:
+        return importWithProgressiveFallback;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (validateInput(datasetId)) {
       try {
-        const result = await importFromHuggingFace(datasetId, {
+        const importMethod = getImportMethod();
+        const options = {
           authToken: authToken || undefined,
-        });
+          preferredFormat: selectedFormat === "auto" ? "auto" : selectedFormat,
+        };
+
+        const result = await importMethod(datasetId, options);
+
         const enhancedResult = {
           ...result,
           isRemote: true,
           remoteProvider: "huggingface",
           remoteURL: `https://huggingface.co/datasets/${datasetId}`,
         };
+
         onImport(enhancedResult);
       } catch (error) {
         console.error("Failed to import HuggingFace dataset:", error);
+        // Error is already set by the hook
       }
     }
   };
 
   const handleDatasetImport = async (dataset) => {
     try {
-      const result = await importFromHuggingFace(dataset.id, {
+      const importMethod = getImportMethod();
+      const options = {
         authToken: authToken || undefined,
-      });
+        preferredFormat: selectedFormat === "auto" ? "auto" : selectedFormat,
+      };
+
+      const result = await importMethod(dataset.id, options);
 
       const enhancedResult = {
         ...result,
@@ -188,13 +304,15 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
       onImport(enhancedResult);
     } catch (error) {
       console.error("Failed to import HuggingFace dataset:", error);
+      // Error is already set by the hook
     }
   };
 
   const handleSearch = async (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      await searchDatasets(searchQuery.trim());
+      const results = await searchDatasets(searchQuery.trim(), { limit: 20 });
+      console.log("[HF Search] API results:", results);
     }
   };
 
@@ -259,6 +377,25 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
               </motion.p>
             )}
 
+            {/* Import error */}
+            {importError && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg"
+              >
+                <div className="flex items-start">
+                  <AlertTriangle className="h-4 w-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-red-400">
+                    <p className="font-medium">Import Failed</p>
+                    <p className="text-xs text-red-400/80 mt-1">
+                      {importError}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Dataset info */}
             {isValidId && idValidation?.organization && (
               <motion.div
@@ -283,6 +420,24 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
                     </a>
                   </div>
 
+                  {/* Available formats */}
+                  {/* {availableFormats.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs text-white/60 mb-2">
+                        Available formats:
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {availableFormats.map((format, index) => (
+                          <FormatBadge
+                            key={index}
+                            format={format.type}
+                            isRecommended={index === 0} // First format is recommended
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )} */}
+
                   <div className="flex items-center text-xs text-white/70">
                     <CheckCircle className="h-3.5 w-3.5 mr-1.5 text-white/50" />
                     <span>Valid dataset ID - ready to import</span>
@@ -297,7 +452,9 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center">
                 <Key className="h-4 w-4 mr-2 text-yellow-500" />
-                <span className="text-sm font-medium text-white">Authentication (Optional)</span>
+                <span className="text-sm font-medium text-white">
+                  Authentication (Optional)
+                </span>
               </div>
               <button
                 type="button"
@@ -366,6 +523,7 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
             </Button>
           </div>
 
+          {/* Import Progress */}
           <AnimatePresence>
             {isImporting && (
               <motion.div
@@ -375,9 +533,34 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
                 className="mt-4 overflow-hidden"
               >
                 <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-                  <div className="flex items-center text-sm">
+                  {/* Current strategy indicator */}
+                  {currentStrategy && (
+                    <ImportStrategyIndicator
+                      strategy={currentStrategy}
+                      status="active"
+                    />
+                  )}
+
+                  <div className="flex items-center text-sm mb-2">
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin text-primary" />
                     <p className="text-primary font-medium">{importStatus}</p>
                   </div>
+
+                  {/* Progress bar */}
+                  {importProgress > 0 && (
+                    <div className="w-full bg-white/10 rounded-full h-2 mb-2">
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${importProgress * 100}%` }}
+                      />
+                    </div>
+                  )}
+
+                  <p className="text-xs text-primary/80">
+                    {importProgress > 0
+                      ? `${Math.round(importProgress * 100)}% complete`
+                      : "Initializing..."}
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -477,15 +660,15 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
           <ul className="space-y-1 ml-4">
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Automatic Parquet format conversion
+              Direct streaming for optimal performance
             </li>
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Direct browser access with CORS support
+              Memory-efficient processing for large datasets
             </li>
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Optional authentication for private datasets
+              Multi-format support (Parquet, CSV, JSON, XLSX, TXT)
             </li>
           </ul>
         </div>

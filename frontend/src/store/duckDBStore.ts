@@ -10,6 +10,7 @@ import {
   discoverAllTables,
   getTableSchema,
   detectTableModifyingSQL,
+  getObjectType,
 } from "@/lib/duckdb/ingestion/tables";
 import { analyzeTxtFile } from "@/lib/duckdb/ingestion/analyzeTextFile";
 import {
@@ -78,6 +79,7 @@ interface DuckDBState {
   getTableSchema: (
     tableName: string
   ) => Promise<{ name: string; type: string }[] | null>;
+  getObjectType: (objectName: string) => Promise<'table' | 'view' | null>;
   refreshSchemaCache: () => Promise<void>;
   resetError: () => void;
   cleanupDB: () => Promise<void>;
@@ -108,6 +110,7 @@ interface DuckDBState {
   ) => Promise<any[]>;
   refreshAllTables: () => Promise<void>;
   autoDetectTableChanges: (executedSQL: string) => Promise<void>;
+  
 }
 
 export const useDuckDBStore = create<DuckDBState>((set, get) => ({
@@ -565,6 +568,19 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     }
   },
 
+  registerTableManually: async (tableName: string, escapedTableName: string, options: any) => {
+    console.log(`[DuckDBStore] Manually registering: ${tableName} -> ${escapedTableName}`);
+    
+    const currentTables = new Map(get().registeredTables);
+    currentTables.set(tableName, escapedTableName);
+    
+    set({
+      registeredTables: currentTables,
+      lastTableRefresh: Date.now(),
+      ...options
+    });
+  },
+
   executeQuery: async (sql) => {
     const { connection, isInitialized, registeredTables } = get();
 
@@ -629,6 +645,16 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
   getAvailableTables: () => {
     return Array.from(get().registeredTables.keys());
+  },
+
+  getObjectType: async (objectName: string): Promise<'table' | 'view' | null> => {
+    const { connection, isInitialized } = get();
+    
+    if (!connection || !isInitialized) {
+      return null;
+    }
+
+    return await getObjectType(connection, objectName);
   },
 
   getTableSchema: async (tableName) => {
@@ -2005,74 +2031,78 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
   refreshAllTables: async () => {
     const { connection, isInitialized } = get();
-
+  
     if (!connection || !isInitialized) {
       console.warn("[DuckDBStore] Cannot refresh tables - not initialized");
       return;
     }
-
+  
     try {
-      console.log("[DuckDBStore] Auto-refreshing tables...");
+      console.log("[DuckDBStore] Auto-refreshing tables and views...");
 
-      // Discover all tables in the database
       const currentKnownTables = get().registeredTables;
-      const discoveredTables = await discoverAllTables(
-        connection,
-        currentKnownTables
-      );
-
-      // Update the registered tables map
-      const newRegisteredTables = new Map<string, string>();
+      const newRegisteredTables = new Map(currentKnownTables); // Copy existing
       const newSchemaCache = new Map(get().schemaCache);
-
-      let newTablesCount = 0;
-
-      for (const tableInfo of discoveredTables) {
-        newRegisteredTables.set(tableInfo.name, tableInfo.escapedName);
-
-        // If this is a newly discovered table, fetch its schema
-        if (
-          tableInfo.isUserCreated &&
-          !currentKnownTables.has(tableInfo.name)
-        ) {
+  
+      const discoveredObjects = await discoverAllTables(connection, currentKnownTables);
+  
+      let newObjectsCount = 0;
+  
+      for (const objectInfo of discoveredObjects) {        // 🔧 FIXED: Only add if it's actually NEW (not already registered)
+        if (!currentKnownTables.has(objectInfo.name)) {
+          newRegisteredTables.set(objectInfo.name, objectInfo.escapedName);
+  
           try {
-            const schema = await getTableSchema(
-              connection,
-              tableInfo.name,
-              tableInfo.escapedName
-            );
-            newSchemaCache.set(tableInfo.name, schema);
-            newTablesCount++;
-
+            const schema = await getTableSchema(connection, objectInfo.name, objectInfo.escapedName);
+            newSchemaCache.set(objectInfo.name, schema);
+            newObjectsCount++;
+  
+            const objectTypeLabel = objectInfo.type === 'view' ? 'view' : 'table';
             console.log(
-              `[DuckDBStore] Discovered new table: ${tableInfo.name} with ${
-                tableInfo.rowCount || 0
+              `[DuckDBStore] Discovered new ${objectTypeLabel}: ${objectInfo.name} with ${
+                objectInfo.rowCount || 0
               } rows`
             );
           } catch (schemaErr) {
             console.warn(
-              `[DuckDBStore] Failed to get schema for discovered table ${tableInfo.name}:`,
+              `[DuckDBStore] Failed to get schema for discovered ${objectInfo.type} ${objectInfo.name}:`,
               schemaErr
             );
           }
+        } else {
+          // Object already exists, just make sure it's still in the map
+          // (it should be since we copied currentKnownTables)
+          console.log(`[DuckDBStore] Object ${objectInfo.name} already registered, skipping`);
         }
       }
-
-      // Update state
+  
+      const existingCount = currentKnownTables.size;
+      const newCount = newRegisteredTables.size;
+      
+      console.log(`[DuckDBStore] Registration update:`, {
+        before: existingCount,
+        after: newCount,
+        newObjects: newObjectsCount,
+        preservedExisting: newCount - newObjectsCount,
+      });
+  
       set({
         registeredTables: newRegisteredTables,
         schemaCache: newSchemaCache,
         lastTableRefresh: Date.now(),
       });
-
-      if (newTablesCount > 0) {
+  
+      if (newObjectsCount > 0) {
+        const tables = discoveredObjects.filter(o => o.type === 'table').length;
+        const views = discoveredObjects.filter(o => o.type === 'view').length;
         console.log(
-          `[DuckDBStore] Auto-refresh complete. Discovered ${newTablesCount} new tables`
+          `[DuckDBStore] Auto-refresh complete. Found ${tables} tables and ${views} views (${newObjectsCount} new)`
         );
+      } else {
+        console.log("[DuckDBStore] Auto-refresh complete. No new objects found.");
       }
     } catch (err) {
       console.error("[DuckDBStore] Failed to auto-refresh tables:", err);
-      // Don't set error state for auto-refresh failures - this is a background operation
     }
   },
 

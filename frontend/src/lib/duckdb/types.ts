@@ -94,3 +94,30 @@ export interface DuckDBInstance {
   /** A connection to the database */
   conn: duckdb.AsyncDuckDBConnection;
 }
+
+
+export interface ImportResult {
+  tableName: string;
+  rowCount: number | boolean;
+  convertedToCsv?: boolean;
+  isView?: boolean;
+  objectType?: 'table' | 'view';
+  fileSizeMB?: number;
+  fileType?: string;
+  instantImport?: boolean;
+  columnCount?: number;
+  txtFormat?: string;
+  delimiter?: string;
+  delimiterName?: string;
+}
+
+export interface StreamingImportResult extends ImportResult {
+  rowCount: number | boolean;
+}
+
+export interface DirectImportResult {
+  tableName: string;
+  rowCount: number;
+  originalFormat?: string;
+  convertedToCsv?: boolean;
+}
