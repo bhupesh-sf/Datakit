@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import S3ImportPanel from "./import-modal/S3ImportPanel";
 import { CustomURLPanel } from "./import-modal/CustomURLPanel";
 import GoogleSheetsPanel from "./import-modal/GoogleSheetsPanel";
-import HuggingFacePanel from "./import-modal/HuggingFacePanel"; // New import
+import HuggingFacePanel from "./import-modal/HuggingFacePanel";
 
 import GCSImportPanel from "./import-modal/GCSImportPanel";
 import GoogleDrivePanel from "./import-modal/GoogleDrivePanel";
@@ -60,7 +60,7 @@ const PROVIDER_TABS: ProviderTab[] = [
     id: "huggingface", // Add HF as first tab (featured)
     label: "HuggingFace",
     icon: <img src={HuggingFace} className="h-5 w-5" />,
-    description: "Public ML datasets",
+    description: "ML datasets",
   },
   {
     id: "google-sheets",

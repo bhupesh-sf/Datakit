@@ -47,7 +47,7 @@ const QueryWorkspace: React.FC = () => {
     retry,
   } = useDuckDBInitialization();
 
-  const tableName = useAppStore(selectTableName) || 'employees_sample';
+  const tableName = useAppStore(selectTableName) || "employees_sample";
 
   const { query, setQuery, canExecuteQueries, hasUserTables } =
     useInitialQuery();
@@ -366,17 +366,14 @@ const QueryWorkspace: React.FC = () => {
     <div ref={containerRef} className="h-full w-full flex overflow-hidden">
       {/* Schema Browser Panel */}
       <div
-        className="flex-shrink-0 transition-all duration-200 overflow-hidden"
+        className={`flex-shrink-0 transition-all duration-200 overflow-hidden bg-darkNav border-r border-white/10`}
         style={{
           width: showSchemaBrowser ? `${PANEL_WIDTH}px` : "0px",
-          opacity: showSchemaBrowser ? 1 : 0,
         }}
       >
-        {showSchemaBrowser && (
-          <div className="h-full border-r border-white/10 bg-darkNav overflow-hidden">
-            <SchemaBrowser onInsertQuery={(text) => setQuery(query + text)} />
-          </div>
-        )}
+        <div className="h-full w-full">
+          <SchemaBrowser onInsertQuery={(text) => setQuery(query + text)} />
+        </div>
       </div>
 
       {/* Main Content Area */}

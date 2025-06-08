@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDuckDBStore } from "@/store/duckDBStore";
 import {
   Database,
@@ -54,26 +53,27 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
     getObjectType, 
   } = useDuckDBStore();
 
-
   const [schemas, setSchemas] = useState<Record<string, TableSchema>>({});
   const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
 
-  const fetchTablesAndViews = async () => {
+  const dependencyKey = useMemo(() => {
+    const tableNames = getAvailableTables().sort().join(',');
+    const registeredKeys = Array.from(registeredTables.keys()).sort().join(',');
+    return `${tableNames}-${registeredKeys}-${lastTableRefresh}`;
+  }, [getAvailableTables, registeredTables, lastTableRefresh]);
+
+  const fetchTablesAndViews = useCallback(async () => {
     setLoading(true);
     try {
       const objectNames = getAvailableTables();
-
-      // Fetch schema for each object and determine its type
       const schemaData: Record<string, TableSchema> = {};
 
       for (const objectName of objectNames) {
         try {
           const objectType = await getObjectType(objectName);
-          
-          // Execute a query to get column information
           const result = await executeQuery(`DESCRIBE "${objectName}"`);
 
           if (result) {
@@ -99,25 +99,21 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
       }
 
       setSchemas(schemaData);
-
-      const tables = Object.values(schemaData).filter(s => s.type === 'table');
-      const views = Object.values(schemaData).filter(s => s.type === 'view');
-      console.log(`[SchemaBrowser] Loaded ${tables.length} tables and ${views.length} views`);
       
     } catch (err) {
       console.error("Error fetching objects:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAvailableTables, getObjectType, executeQuery]);
 
+  // Only fetch when dependencies actually change
   useEffect(() => {
     fetchTablesAndViews();
-  }, [getAvailableTables, registeredTables, executeQuery, lastTableRefresh]);
+  }, [dependencyKey]);
 
   const handleRefresh = async () => {
     if (refreshing) return;
-    
     setRefreshing(true);
     try {
       await fetchTablesAndViews();
@@ -126,7 +122,6 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
     }
   };
 
-  // Toggle table expansion
   const toggleTable = (tableName: string) => {
     setExpandedTables((prev) => {
       const next = new Set(prev);
@@ -139,13 +134,11 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
     });
   };
 
-  // Generate query based on table/view
   const generateSelectQuery = (objectName: string) => {
     const escapedName = registeredTables.get(objectName) || `"${objectName}"`;
     const query = `\nSELECT *\nFROM ${escapedName}\nLIMIT 10;`;
     onInsertQuery(query);
   };
-
 
   const getObjectIcon = (type: "table" | "view") => {
     if (type === "view") {
@@ -154,7 +147,6 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
     return <Table size={16} className="text-primary" />;
   };
 
-  // Get icon for column type
   const getColumnTypeIcon = (type: string) => {
     const lowerType = type.toLowerCase();
     if (
@@ -193,7 +185,7 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-white/10">
+      <div className="px-4 py-3 border-b border-white/10">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium flex items-center">
             <Database size={16} className="mr-2 text-primary" />
@@ -209,13 +201,11 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
             </button>
           </Tooltip>
         </div>
-        
-       
       </div>
 
       <div className="p-2 flex-1 overflow-auto">
         {allSchemas.length === 0 ? (
-          <div className="p-4 text-center text-white/50 text-xs">
+          <div className="px-4 py-2 text-center text-white/50 text-xs">
             No tables or views available. Import a dataset to get started.
           </div>
         ) : (
@@ -305,8 +295,6 @@ const ObjectRow: React.FC<ObjectRowProps> = ({
         >
           {schema.name}
         </span>
-        
-       
         
         <Tooltip placement="left" content="Insert SELECT query">
           <button

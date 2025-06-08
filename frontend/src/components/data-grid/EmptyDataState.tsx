@@ -102,7 +102,7 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
                 backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
               }}
               transition={{
-                duration: 1,
+                duration: 2,
                 repeat: Infinity,
                 ease: "linear",
               }}
@@ -122,13 +122,13 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
         >
           <div className="flex items-center justify-center gap-4 flex-wrap">
             {/* Local file instruction */}
-            <div className="flex items-center text-white/70 text-sm">
+            <div className="flex items-center text-primary text-sm">
               {/* <ArrowLeft className="h-4 w-4 mr-2" /> */}
               <span>Upload local files from sidebar</span>
             </div>
 
             {/* Divider */}
-            <span className="text-primary text-sm">or</span>
+            <span className="text-white/50 text-sm">or</span>
 
             {/* Remote options label */}
             <span className="text-white/70 text-sm">import from:</span>

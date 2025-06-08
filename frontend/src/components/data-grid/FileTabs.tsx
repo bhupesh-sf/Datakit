@@ -495,9 +495,6 @@ const FileTabs: React.FC<FileTabsProps> = ({
             <Plus className="h-4 w-4" />
           </motion.button>
         )}
-        
-        {/* Spacer */}
-        <div className="flex-1 min-w-4" />
       </div>
       
       {/* Enhanced Context Menu */}
