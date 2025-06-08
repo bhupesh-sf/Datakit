@@ -1,25 +1,18 @@
-/**
- * @fileoverview Import strategy utilities for HuggingFace datasets
- * @module ImportStrategies
- */
-
 import { useDuckDBStore } from "@/store/duckDBStore";
+
 import { ColumnType } from "@/types/csv";
 import { DataSourceType } from "@/types/json";
 import {
   HFImportResult,
   HFImportOptions,
   ImportStrategy,
-  AvailableFormat,
 } from "./types";
+
 import { getDatasetInfo, getParquetFiles, detectAvailableFormats } from "./api";
 import { fetchWithCORSFallback } from "./network";
 
 /**
  * Utility function to map file format to DataSourceType
- *
- * @param format - File format string
- * @returns Corresponding DataSourceType enum value
  */
 export function getDataSourceTypeFromExtension(
   format?: string
@@ -37,15 +30,6 @@ export function getDataSourceTypeFromExtension(
 
 /**
  * Maps DuckDB schema types to ColumnType enum
- *
- * @param duckdbType - DuckDB column type string
- * @returns Corresponding ColumnType enum value
- *
- * @example
- * ```typescript
- * const colType = mapDuckDBTypeToColumnType("VARCHAR"); // ColumnType.Text
- * const numType = mapDuckDBTypeToColumnType("DOUBLE");  // ColumnType.Number
- * ```
  */
 export function mapDuckDBTypeToColumnType(duckdbType: string): ColumnType {
   const type = duckdbType.toLowerCase();
@@ -71,22 +55,6 @@ export function mapDuckDBTypeToColumnType(duckdbType: string): ColumnType {
 
 /**
  * Creates a streaming view for direct parquet access
- *
- * @param duckDB - DuckDB store instance
- * @param datasetId - HuggingFace dataset identifier
- * @param parquetUrl - Direct URL to parquet file
- * @param options - Import options
- * @returns Promise resolving to import result
- *
- * @example
- * ```typescript
- * const result = await createStreamingView(
- *   duckDBStore,
- *   "microsoft/DialoGPT-medium",
- *   "https://..../train.parquet",
- *   { split: "train" }
- * );
- * ```
  */
 export async function createStreamingView(
   duckDB: ReturnType<typeof useDuckDBStore>,
@@ -94,19 +62,28 @@ export async function createStreamingView(
   parquetUrl: string,
   options: HFImportOptions & {
     split?: string;
+    config?: string;
     datasetInfo?: any;
-    formats?: AvailableFormat[];
+    formats?: any[];
   }
 ): Promise<HFImportResult> {
   const [, dataset] = datasetId.split("/");
   const split = options.split || "train";
+  const config = options.config || "default";
 
   // Create table name
   const cleanDatasetName = dataset.replace(/[^a-zA-Z0-9_-]/g, "_");
-  const tableName = `${cleanDatasetName}_${split}`;
-  const escapedTableName = `"${tableName}"`;
+  let tableName = cleanDatasetName;
+  if (config && config !== "default") {
+    tableName += `_${config}`;
+  }
+  if (split && split !== "train") {
+    tableName += `_${split}`;
+  }
 
-  console.log(`[ImportStrategy] Creating streaming view: ${tableName}`);
+  const escapedTableName = `"${tableName}"`;
+  
+  console.log(`[ImportStrategy] Creating streaming view: ${escapedTableName}`);
 
   // Test if DuckDB can read the parquet file directly
   const testQuery = `SELECT COUNT(*) as count FROM '${parquetUrl}' LIMIT 1`;
@@ -184,9 +161,6 @@ export async function createStreamingView(
 
   await duckDB.registerTableManually(tableName, escapedTableName, {
     isLoading: false,
-    // processingStatus: `TXT converted: ${(fileSizeMB || fileSize).toFixed(
-    //   2
-    // )}MB table with ${count} rows (single-column)`,
     processingProgress: 1.0,
   });
 
@@ -203,10 +177,10 @@ export async function createStreamingView(
     tableName: tableName,
     huggingface: {
       datasetId,
-      config: options.config || "default",
+      config: config,
       split,
       parquetUrl,
-      method: "direct",
+      method: "streaming",
       metadata: options.datasetInfo,
       availableFormats: options.formats,
     },
@@ -218,16 +192,17 @@ export async function createStreamingView(
 
 /**
  * Downloads and imports dataset using alternative format
- *
- * @param duckDB - DuckDB store instance
- * @param format - Available format information
- * @param datasetId - Dataset identifier
- * @param options - Import options
- * @returns Promise resolving to import result
  */
 export async function importAlternativeFormat(
   duckDB: ReturnType<typeof useDuckDBStore>,
-  format: AvailableFormat,
+  format: {
+    type: "parquet" | "csv" | "json";
+    url: string;
+    split: string;
+    config: string;
+    size?: number;
+    filename?: string;
+  },
   datasetId: string,
   options: HFImportOptions = {}
 ): Promise<HFImportResult> {
@@ -302,6 +277,8 @@ export async function importAlternativeFormat(
     tableName: importResult.tableName,
     huggingface: {
       datasetId,
+      config: format.config,
+      split: format.split,
       parquetUrl: format.url,
       fileSize,
       method,
@@ -311,11 +288,6 @@ export async function importAlternativeFormat(
 
 /**
  * Standard parquet download and import strategy
- *
- * @param duckDB - DuckDB store instance
- * @param datasetId - Dataset identifier
- * @param options - Import options
- * @returns Promise resolving to import result
  */
 export async function importParquetDownload(
   duckDB: ReturnType<typeof useDuckDBStore>,
@@ -341,14 +313,23 @@ export async function importParquetDownload(
     );
   }
 
+  // Filter by split if specified
+  let targetFiles = parquetInfo.parquet_files;
+  if (options.split) {
+    targetFiles = parquetInfo.parquet_files.filter(f => f.split === options.split);
+    if (targetFiles.length === 0) {
+      throw new Error(`No parquet files found for split: ${options.split}`);
+    }
+  }
+
   // Use first parquet file
-  const firstParquetFile = parquetInfo.parquet_files[0];
+  const firstParquetFile = targetFiles[0];
   const parquetUrl = firstParquetFile.url;
   const split = firstParquetFile.split || "train";
 
   // Download file
   const [, dataset] = datasetId.split("/");
-  const fileName = `${dataset}_${split}.parquet`;
+  const fileName = `${dataset}_${config}_${split}.parquet`;
   const { blob, method, fileSize } = await fetchWithCORSFallback(
     parquetUrl,
     fileName
@@ -356,7 +337,15 @@ export async function importParquetDownload(
 
   // Create file and import
   const cleanDatasetName = dataset.replace(/[^a-zA-Z0-9_-]/g, "_");
-  const finalFileName = `${cleanDatasetName}_${split}.parquet`;
+  let finalFileName = cleanDatasetName;
+  if (config && config !== "default") {
+    finalFileName += `_${config}`;
+  }
+  if (split && split !== "train") {
+    finalFileName += `_${split}`;
+  }
+  finalFileName += ".parquet";
+
 
   const file = new File([blob], finalFileName, {
     type: "application/octet-stream",
@@ -364,7 +353,7 @@ export async function importParquetDownload(
 
   const importResult = await duckDB.importFileDirectly(file);
 
-  // Get schema and sample data (same as alternative format)
+  // Get schema and sample data
   const schemaResult = await duckDB.executeQuery(
     `PRAGMA table_info("${importResult.tableName}")`
   );
@@ -419,25 +408,6 @@ export async function importParquetDownload(
 
 /**
  * Creates progressive fallback strategies for dataset import
- *
- * @param duckDB - DuckDB store instance
- * @param datasetId - Dataset identifier
- * @param options - Import options
- * @returns Array of import strategies in priority order
- *
- * @example
- * ```typescript
- * const strategies = createImportStrategies(duckDB, "microsoft/DialoGPT-medium");
- * for (const strategy of strategies) {
- *   try {
- *     const result = await strategy.fn();
- *     console.log(`Success with ${strategy.name}`);
- *     return result;
- *   } catch (error) {
- *     console.warn(`${strategy.name} failed:`, error);
- *   }
- * }
- * ```
  */
 export async function createImportStrategies(
   duckDB: ReturnType<typeof useDuckDBStore>,
@@ -453,18 +423,32 @@ export async function createImportStrategies(
 
   const strategies: ImportStrategy[] = [];
 
+  // Filter formats by config/split if specified
+  let targetFormats = formats;
+  if (options.config || options.split) {
+    targetFormats = formats.filter(f => {
+      const configMatch = !options.config || f.config === options.config;
+      const splitMatch = !options.split || f.split === options.split;
+      return configMatch && splitMatch;
+    });
+  }
+
   // Strategy 1: Direct Streaming (fastest, if parquet available)
-  const parquetFormat = formats.find((f) => f.type === "parquet");
+  const parquetFormat = targetFormats.find((f) => f.type === "parquet");
   if (parquetFormat) {
     strategies.push({
       name: "Direct Streaming",
-      fn: () =>
+      description: "Direct streaming from parquet",
+      execute: () =>
         createStreamingView(duckDB, datasetId, parquetFormat.url, {
           ...options,
+          config: parquetFormat.config,
           split: parquetFormat.split,
           datasetInfo,
           formats,
         }),
+      requiresAuth: false,
+      supportedFormats: ["parquet"],
     });
   }
 
@@ -472,30 +456,41 @@ export async function createImportStrategies(
   if (parquetFormat) {
     strategies.push({
       name: "Parquet Download",
-      fn: () => importParquetDownload(duckDB, datasetId, options),
+      description: "Download and import parquet",
+      execute: () => importParquetDownload(duckDB, datasetId, options),
+      requiresAuth: false,
+      supportedFormats: ["parquet"],
     });
   }
 
   // Strategy 3: Alternative Formats (CSV, JSON fallback)
-  const csvFormat = formats.find((f) => f.type === "csv");
+  const csvFormat = targetFormats.find((f) => f.type === "csv");
   if (csvFormat) {
     strategies.push({
       name: "CSV Alternative Format",
-      fn: () => importAlternativeFormat(duckDB, csvFormat, datasetId, options),
+      description: "Download and import CSV",
+      execute: () => importAlternativeFormat(duckDB, csvFormat, datasetId, options),
+      requiresAuth: false,
+      supportedFormats: ["csv"],
     });
   }
 
-  const jsonFormat = formats.find((f) => f.type === "json");
+  const jsonFormat = targetFormats.find((f) => f.type === "json");
   if (jsonFormat) {
     strategies.push({
       name: "JSON Alternative Format",
-      fn: () => importAlternativeFormat(duckDB, jsonFormat, datasetId, options),
+      description: "Download and import JSON",
+      execute: () => importAlternativeFormat(duckDB, jsonFormat, datasetId, options),
+      requiresAuth: false,
+      supportedFormats: ["json"],
     });
   }
 
   // If no strategies available, throw error
   if (strategies.length === 0) {
-    throw new Error("No suitable import strategies available for this dataset");
+    const configInfo = options.config ? ` (config: ${options.config})` : "";
+    const splitInfo = options.split ? ` (split: ${options.split})` : "";
+    throw new Error(`No suitable import strategies available for ${datasetId}${configInfo}${splitInfo}`);
   }
 
   return strategies;
@@ -503,22 +498,6 @@ export async function createImportStrategies(
 
 /**
  * Executes import strategies with progressive fallback
- *
- * @param strategies - Array of import strategies to try
- * @param onStrategyStart - Callback when a strategy starts
- * @param onStrategyFail - Callback when a strategy fails
- * @returns Promise resolving to successful import result
- * @throws {Error} When all strategies fail
- *
- * @example
- * ```typescript
- * const strategies = await createImportStrategies(duckDB, "dataset/name");
- * const result = await executeStrategiesWithFallback(
- *   strategies,
- *   (name) => console.log(`Trying ${name}...`),
- *   (name, error) => console.warn(`${name} failed:`, error)
- * );
- * ```
  */
 export async function executeStrategiesWithFallback(
   strategies: ImportStrategy[],
@@ -538,7 +517,7 @@ export async function executeStrategiesWithFallback(
         }`
       );
 
-      const result = await strategy.fn();
+      const result = await strategy.execute();
       console.log(`[ImportStrategy] ✅ Success with ${strategy.name}`);
       return result;
     } catch (error) {
@@ -571,20 +550,6 @@ export async function executeStrategiesWithFallback(
 
 /**
  * Validates dataset compatibility with available import strategies
- *
- * @param datasetId - Dataset identifier to validate
- * @param authToken - Optional authentication token
- * @returns Promise resolving to compatibility information
- *
- * @example
- * ```typescript
- * const compat = await validateDatasetCompatibility("microsoft/DialoGPT-medium");
- * if (compat.isCompatible) {
- *   console.log(`Dataset supports: ${compat.supportedFormats.join(", ")}`);
- * } else {
- *   console.error("Dataset not compatible:", compat.reason);
- * }
- * ```
  */
 export async function validateDatasetCompatibility(
   datasetId: string,

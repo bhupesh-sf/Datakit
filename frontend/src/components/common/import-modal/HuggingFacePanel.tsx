@@ -7,7 +7,6 @@ import {
   Download,
   Database,
   Search,
-  Shield,
   ChevronRight,
   Eye,
   Users,
@@ -17,16 +16,259 @@ import {
   Zap,
   AlertTriangle,
   RefreshCw,
+  Settings,
+  Info,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
+
 import { cn } from "@/lib/utils";
 
 import useHuggingFaceImport from "@/hooks/remote/huggingface/useHuggingFaceImport";
 import usePublicDatasets from "@/hooks/remote/usePublicDatasets";
 
+
+import type { DatasetConfig, DatasetSplit } from "@/hooks/remote/huggingface/types";
+
 interface HuggingFacePanelProps {
   onImport: (result: any) => void;
 }
+
+/**
+ * Config/Split Selector Component
+ */
+const ConfigSplitSelector = ({ 
+  configs, 
+  splits, 
+  selectedConfig, 
+  selectedSplit, 
+  onConfigChange, 
+  onSplitChange, 
+  disabled = false,
+  loading = false 
+}: {
+  configs: DatasetConfig[];
+  splits: DatasetSplit[];
+  selectedConfig?: string;
+  selectedSplit?: string;
+  onConfigChange: (config: string) => void;
+  onSplitChange: (split: string) => void;
+  disabled?: boolean;
+  loading?: boolean;
+}) => {
+  const availableSplits = selectedConfig 
+    ? splits.filter(s => s.config === selectedConfig)
+    : splits;
+
+  if (loading) {
+    return (
+      <div className="flex items-center space-x-2 p-3 bg-white/5 rounded-lg border border-white/10">
+        <span className="text-sm text-white/60">Loading configurations...</span>
+      </div>
+    );
+  }
+
+  if (configs.length === 0 && splits.length === 0) {
+    return null;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      className="space-y-3 p-4 bg-white/5 rounded-lg border border-white/10"
+    >
+      <div className="flex items-center text-sm text-white/80 mb-2">
+        <Settings className="h-4 w-4 mr-2" />
+        <span className="font-medium">Dataset Configuration</span>
+      </div>
+
+      {/* Config Selector */}
+      {configs.length > 1 && (
+        <div>
+          <label className="block text-xs text-white/60 mb-1">
+            Configuration (Subset)
+          </label>
+          <select
+            value={selectedConfig || configs[0]?.config_name || ""}
+            onChange={(e) => onConfigChange(e.target.value)}
+            disabled={disabled}
+            className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded text-white/90 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-50"
+          >
+            {configs.map((config) => (
+              <option key={config.config_name} value={config.config_name}>
+                {config.config_name}
+                {config.description && ` - ${config.description}`}
+              </option>
+            ))}
+          </select>
+          
+          {selectedConfig && (
+            <div className="mt-2 p-2 bg-black/20 rounded text-xs text-white/70">
+              <div className="flex items-center justify-between">
+                <span>Available splits:</span>
+                <span className="text-primary">
+                  {configs.find(c => c.config_name === selectedConfig)?.splits.join(", ")}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Split Selector */}
+      {availableSplits.length > 1 && (
+        <div>
+          <label className="block text-xs text-white/60 mb-1">
+            Split
+          </label>
+          <select
+            value={selectedSplit || availableSplits[0]?.split || ""}
+            onChange={(e) => onSplitChange(e.target.value)}
+            disabled={disabled}
+            className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded text-white/90 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-50"
+          >
+            {availableSplits.map((split) => (
+              <option key={`${split.config}-${split.split}`} value={split.split}>
+                {split.split}
+                {split.num_examples && ` (${split.num_examples.toLocaleString()} examples)`}
+              </option>
+            ))}
+          </select>
+          
+         
+        </div>
+      )}
+
+      {/* Summary */}
+      <div className="flex items-center text-xs text-white/60 pt-1">
+        <Info className="h-3 w-3 mr-1" />
+        <span>
+          Will import: <span className="text-white/80 font-medium">
+            {selectedConfig || configs[0]?.config_name || "default"}/
+            {selectedSplit || availableSplits[0]?.split || "train"}
+          </span>
+        </span>
+      </div>
+    </motion.div>
+  );
+};
+
+/**
+ * Enhanced Dataset ID Input with parsing feedback
+ */
+const DatasetIdInput = ({ 
+  value, 
+  onChange, 
+  onConfigDetected, 
+  onSplitDetected, 
+  disabled, 
+  isValid, 
+  error 
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onConfigDetected: (config?: string) => void;
+  onSplitDetected: (split?: string) => void;
+  disabled: boolean;
+  isValid: boolean;
+  error?: string;
+}) => {
+
+
+  // Parse the input to detect config/split
+  useEffect(() => {
+    if (value.trim()) {
+      // Parse format: dataset[:config][/split]
+      let datasetPart = value.trim();
+      let config: string | undefined;
+      let split: string | undefined;
+      
+      // Extract split if present (after last /)
+      const lastSlashIndex = datasetPart.lastIndexOf("/");
+      if (lastSlashIndex > -1) {
+        const potentialSplit = datasetPart.substring(lastSlashIndex + 1);
+        const datasetWithoutSplit = datasetPart.substring(0, lastSlashIndex);
+        
+        // Check if this looks like a split
+        const commonSplits = ["train", "test", "validation", "val", "dev", "eval"];
+        if (commonSplits.includes(potentialSplit.toLowerCase()) || 
+            potentialSplit.match(/^(train|test|val|validation|dev|eval)[\d_-]*$/i)) {
+          split = potentialSplit;
+          datasetPart = datasetWithoutSplit;
+        }
+      }
+      
+      // Extract config if present (after :)
+      const colonIndex = datasetPart.indexOf(":");
+      if (colonIndex > -1) {
+        config = datasetPart.substring(colonIndex + 1);
+      }
+      
+      onConfigDetected(config);
+      onSplitDetected(split);
+    } else {
+      onConfigDetected(undefined);
+      onSplitDetected(undefined);
+    }
+  }, [value, onConfigDetected, onSplitDetected]);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label htmlFor="dataset-id" className="block text-sm font-medium text-white/80">
+          Dataset ID
+        </label>
+      
+      </div>
+
+      <div className="relative">
+        <input
+          id="dataset-id"
+          type="text"
+          placeholder="microsoft/DialoGPT-medium or yandex/yambda:SelfRC/train"
+          className={cn(
+            "w-full px-3 py-3 h-12 bg-black/30 border border-white/20 rounded-lg text-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 placeholder:text-white/40 transition-all",
+            error && "border-destructive focus:ring-destructive/50 focus:border-destructive",
+            isValid && "border-green-500/50 focus:ring-green-500/50 focus:border-green-500"
+          )}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+        />
+
+        {/* Status indicator */}
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+          {disabled ? (
+            <Loader2 className="h-4 w-4 text-white/40 animate-spin" />
+          ) : isValid ? (
+            <div className="bg-green-500/20 text-green-500 p-1.5 rounded-full">
+              <CheckCircle className="h-4 w-4" />
+            </div>
+          ) : value ? (
+            <div className="bg-red-500/20 text-red-500 p-1.5 rounded-full">
+              <AlertCircle className="h-4 w-4" />
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+    
+
+      {/* Error display */}
+      {error && (
+        <motion.p
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-2 text-xs text-destructive flex items-center"
+        >
+          <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+          {error}
+        </motion.p>
+      )}
+    </div>
+  );
+};
 
 const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
   return (
@@ -58,7 +300,6 @@ const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
             <Users className="h-3 w-3 mr-1" />
             {dataset.downloads?.toLocaleString() || "N/A"}
           </span>
-          <span className="text-white/50">{dataset.size}</span>
         </div>
       </div>
 
@@ -84,7 +325,7 @@ const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
         {isImporting ? (
           <>
             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-            Importing...
+            Importing
           </>
         ) : (
           <>
@@ -135,9 +376,16 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
   const [authToken, setAuthToken] = useState("");
   const [showAuth, setShowAuth] = useState(false);
   const [inputError, setInputError] = useState(null);
-  const [availableFormats, setAvailableFormats] = useState([]);
-  const [selectedFormat, setSelectedFormat] = useState("auto");
   const [currentStrategy, setCurrentStrategy] = useState("");
+  
+  // Config/Split state
+  const [availableConfigs, setAvailableConfigs] = useState<DatasetConfig[]>([]);
+  const [availableSplits, setAvailableSplits] = useState<DatasetSplit[]>([]);
+  const [selectedConfig, setSelectedConfig] = useState<string>("");
+  const [selectedSplit, setSelectedSplit] = useState<string>("");
+  const [loadingConfigs, setLoadingConfigs] = useState(false);
+  const [detectedConfig, setDetectedConfig] = useState<string | undefined>();
+  const [detectedSplit, setDetectedSplit] = useState<string | undefined>();
 
   // Hooks
   const {
@@ -151,14 +399,11 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
 
   const {
     importWithProgressiveFallback,
-    importFromHuggingFaceStreaming,
-    importFromHuggingFace,
-    detectAvailableFormats,
+    getDatasetSplits,
     isImporting,
     importStatus,
     importProgress,
     validateDatasetId,
-    testDatasetAccess,
     error: importError,
     resetError,
   } = useHuggingFaceImport();
@@ -187,6 +432,60 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
     }
   }, [importStatus]);
 
+  // Load configs and splits when dataset ID changes
+  useEffect(() => {
+    const loadDatasetMetadata = async () => {
+      const validation = validateDatasetId(datasetId);
+      if (!validation.isValid || !datasetId.trim()) {
+        setAvailableConfigs([]);
+        setAvailableSplits([]);
+        setSelectedConfig("");
+        setSelectedSplit("");
+        return;
+      }
+
+      try {
+        setLoadingConfigs(true);
+        
+        // Extract base dataset ID (without config/split)
+        const baseDatasetId = validation.organization 
+          ? `${validation.organization}/${validation.dataset}`
+          : validation.dataset;
+
+        const { splits, configs } = await getDatasetSplits(baseDatasetId, authToken || undefined);
+        
+        setAvailableConfigs(configs);
+        setAvailableSplits(splits);
+        
+        // Set default selections or use detected values
+        if (configs.length > 0) {
+          const defaultConfig = detectedConfig || validation.config || configs[0].config_name;
+          setSelectedConfig(defaultConfig);
+          
+          // Find splits for the selected config
+          const configSplits = splits.filter(s => s.config === defaultConfig);
+          if (configSplits.length > 0) {
+            const defaultSplit = detectedSplit || validation.split || configSplits[0].split;
+            setSelectedSplit(defaultSplit);
+          }
+        } else if (splits.length > 0) {
+          const defaultSplit = detectedSplit || validation.split || splits[0].split;
+          setSelectedSplit(defaultSplit);
+        }
+        
+      } catch (error) {
+        console.warn("Failed to load dataset metadata:", error);
+        setAvailableConfigs([]);
+        setAvailableSplits([]);
+      } finally {
+        setLoadingConfigs(false);
+      }
+    };
+
+    const timeoutId = setTimeout(loadDatasetMetadata, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [datasetId, authToken, getDatasetSplits, validateDatasetId, detectedConfig, detectedSplit]);
+
   const validateInput = (id) => {
     setInputError(null);
 
@@ -204,62 +503,18 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
     return true;
   };
 
-  // Detect available formats when dataset ID changes
-  useEffect(() => {
-    const detectFormats = async () => {
-      if (datasetId.trim() && validateDatasetId(datasetId).isValid) {
-        try {
-          const { formats, recommendedFormat } = await detectAvailableFormats(
-            datasetId,
-            authToken || undefined
-          );
-          setAvailableFormats(formats);
-          if (selectedFormat === "auto") {
-            // Don't override user selection, but show recommendation
-          }
-        } catch (err) {
-          console.warn("Failed to detect formats:", err);
-          setAvailableFormats([]);
-        }
-      } else {
-        setAvailableFormats([]);
-      }
-    };
-
-    const timeoutId = setTimeout(detectFormats, 500); // Debounce
-    return () => clearTimeout(timeoutId);
-  }, [
-    datasetId,
-    authToken,
-    detectAvailableFormats,
-    validateDatasetId,
-    selectedFormat,
-  ]);
-
-  const getImportMethod = () => {
-    switch (selectedFormat) {
-      case "streaming":
-        return importFromHuggingFaceStreaming;
-      case "download":
-        return importFromHuggingFace;
-      case "auto":
-      default:
-        return importWithProgressiveFallback;
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (validateInput(datasetId)) {
       try {
-        const importMethod = getImportMethod();
         const options = {
           authToken: authToken || undefined,
-          preferredFormat: selectedFormat === "auto" ? "auto" : selectedFormat,
+          config: selectedConfig || undefined,
+          split: selectedSplit || undefined,
         };
 
-        const result = await importMethod(datasetId, options);
+        const result = await importWithProgressiveFallback(datasetId, options);
 
         const enhancedResult = {
           ...result,
@@ -271,20 +526,19 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
         onImport(enhancedResult);
       } catch (error) {
         console.error("Failed to import HuggingFace dataset:", error);
-        // Error is already set by the hook
       }
     }
   };
 
   const handleDatasetImport = async (dataset) => {
     try {
-      const importMethod = getImportMethod();
       const options = {
         authToken: authToken || undefined,
-        preferredFormat: selectedFormat === "auto" ? "auto" : selectedFormat,
+        config: selectedConfig || undefined,
+        split: selectedSplit || undefined,
       };
 
-      const result = await importMethod(dataset.id, options);
+      const result = await importWithProgressiveFallback(dataset.id, options);
 
       const enhancedResult = {
         ...result,
@@ -304,19 +558,18 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
       onImport(enhancedResult);
     } catch (error) {
       console.error("Failed to import HuggingFace dataset:", error);
-      // Error is already set by the hook
     }
   };
 
   const handleSearch = async (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      const results = await searchDatasets(searchQuery.trim(), { limit: 20 });
-      console.log("[HF Search] API results:", results);
+      console.log('searchQuery', searchQuery);
+      await searchDatasets(searchQuery.trim(), { limit: 20 });
     }
   };
 
-  // Validate dataset ID
+
   const idValidation = datasetId.trim() ? validateDatasetId(datasetId) : null;
   const isValidId = idValidation?.isValid;
 
@@ -325,131 +578,82 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
       <div className="flex-1 overflow-y-auto p-6">
         {/* Dataset ID Input Form */}
         <form onSubmit={handleSubmit} className="space-y-4 mb-8">
-          <div>
-            <label
-              htmlFor="dataset-id"
-              className="block text-sm font-medium text-white/80 mb-2"
+          <DatasetIdInput
+            value={datasetId}
+            onChange={setDatasetId}
+            onConfigDetected={setDetectedConfig}
+            onSplitDetected={setDetectedSplit}
+            disabled={isImporting}
+            isValid={isValidId}
+            error={inputError}
+          />
+
+          {/* Import error */}
+          {importError && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg"
             >
-              Dataset ID
-            </label>
-            <div className="relative">
-              <input
-                id="dataset-id"
-                type="text"
-                placeholder="microsoft/DialoGPT-medium or huggingface/dataset-name"
-                className={cn(
-                  "w-full px-3 py-3 h-12 bg-black/30 border border-white/20 rounded-lg text-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 placeholder:text-white/40 transition-all",
-                  inputError &&
-                    "border-destructive focus:ring-destructive/50 focus:border-destructive",
-                  isValidId &&
-                    "border-green-500/50 focus:ring-green-500/50 focus:border-green-500"
-                )}
-                value={datasetId}
-                onChange={(e) => setDatasetId(e.target.value)}
-                disabled={isImporting}
-              />
-
-              {/* Status indicator */}
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                {isImporting ? (
-                  <Loader2 className="h-4 w-4 text-white/40 animate-spin" />
-                ) : isValidId ? (
-                  <div className="bg-green-500/20 text-green-500 p-1.5 rounded-full">
-                    <CheckCircle className="h-4 w-4" />
-                  </div>
-                ) : datasetId ? (
-                  <div className="bg-red-500/20 text-red-500 p-1.5 rounded-full">
-                    <AlertCircle className="h-4 w-4" />
-                  </div>
-                ) : null}
+              <div className="flex items-start">
+                <AlertTriangle className="h-4 w-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-red-400">
+                  <p className="font-medium">Import Failed</p>
+                  <p className="text-xs text-red-400/80 mt-1">
+                    {importError}
+                  </p>
+                </div>
               </div>
-            </div>
+            </motion.div>
+          )}
 
-            {/* Input feedback */}
-            {inputError && (
-              <motion.p
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-2 text-xs text-destructive flex items-center"
-              >
-                <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                {inputError}
-              </motion.p>
-            )}
-
-            {/* Import error */}
-            {importError && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg"
-              >
-                <div className="flex items-start">
-                  <AlertTriangle className="h-4 w-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-red-400">
-                    <p className="font-medium">Import Failed</p>
-                    <p className="text-xs text-red-400/80 mt-1">
-                      {importError}
-                    </p>
-                  </div>
+          {/* Dataset info and config/split selector */}
+          {isValidId && idValidation?.organization && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mt-3 overflow-hidden space-y-4"
+            >
+              <div className="bg-green-500/10 rounded-lg border border-green-500/20 p-4">
+                <div className="flex items-center text-sm text-white/90 mb-2">
+                  <Database className="h-4 w-4 mr-2 text-green-500" />
+                  <span className="font-medium font-mono">
+                    {idValidation.organization}/{idValidation.dataset}
+                  </span>
+                  <a
+                    href={`https://huggingface.co/datasets/${datasetId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded flex items-center hover:bg-green-500/30"
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
+                    View
+                  </a>
                 </div>
-              </motion.div>
-            )}
 
-            {/* Dataset info */}
-            {isValidId && idValidation?.organization && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="mt-3 overflow-hidden"
-              >
-                <div className="bg-green-500/10 rounded-lg border border-green-500/20 p-4">
-                  <div className="flex items-center text-sm text-white/90 mb-2">
-                    <Database className="h-4 w-4 mr-2 text-green-500" />
-                    <span className="font-medium font-mono">
-                      {idValidation.organization}/{idValidation.dataset}
-                    </span>
-                    <a
-                      href={`https://huggingface.co/datasets/${datasetId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded flex items-center hover:bg-green-500/30"
-                    >
-                      <Eye className="h-3 w-3 mr-1" />
-                      View
-                    </a>
-                  </div>
-
-                  {/* Available formats */}
-                  {/* {availableFormats.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-xs text-white/60 mb-2">
-                        Available formats:
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {availableFormats.map((format, index) => (
-                          <FormatBadge
-                            key={index}
-                            format={format.type}
-                            isRecommended={index === 0} // First format is recommended
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )} */}
-
-                  <div className="flex items-center text-xs text-white/70">
-                    <CheckCircle className="h-3.5 w-3.5 mr-1.5 text-white/50" />
-                    <span>Valid dataset ID - ready to import</span>
-                  </div>
+                <div className="flex items-center text-xs text-white/70">
+                  <CheckCircle className="h-3.5 w-3.5 mr-1.5 text-white/50" />
+                  <span>Valid dataset ID - ready to import</span>
                 </div>
-              </motion.div>
-            )}
-          </div>
+              </div>
+
+              {/* Config/Split Selector */}
+              <ConfigSplitSelector
+                configs={availableConfigs}
+                splits={availableSplits}
+                selectedConfig={selectedConfig}
+                selectedSplit={selectedSplit}
+                onConfigChange={setSelectedConfig}
+                onSplitChange={setSelectedSplit}
+                disabled={isImporting}
+                loading={loadingConfigs}
+              />
+            </motion.div>
+          )}
 
           {/* Authentication Section */}
           <div className="border border-white/10 rounded-lg p-4 bg-white/5">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Key className="h-4 w-4 mr-2 text-yellow-500" />
                 <span className="text-sm font-medium text-white">
@@ -512,7 +716,7 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
               {isImporting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Importing...
+                  Importing
                 </>
               ) : (
                 <>
@@ -542,7 +746,6 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
                   )}
 
                   <div className="flex items-center text-sm mb-2">
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin text-primary" />
                     <p className="text-primary font-medium">{importStatus}</p>
                   </div>
 
@@ -652,16 +855,12 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
       <div className="border-t border-white/10 p-4 bg-white/5">
         <div className="text-xs text-white/60">
           <div className="flex items-center mb-2">
-            <Shield className="h-3 w-3 mr-1.5 text-primary" />
+         
             <span className="font-medium text-white/80">
               HuggingFace Integration:
             </span>
           </div>
           <ul className="space-y-1 ml-4">
-            <li className="flex items-center">
-              <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Direct streaming for optimal performance
-            </li>
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
               Memory-efficient processing for large datasets

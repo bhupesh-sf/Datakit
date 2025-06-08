@@ -4,6 +4,7 @@
 export type ImportProvider =
   | "s3"
   | "gcs"
+  | "aws"
   | "google-drive"
   | "custom-url"
   | "huggingface"

@@ -1,20 +1,23 @@
 import { useState, useCallback } from "react";
 import { useDuckDBStore } from "@/store/duckDBStore";
 
-// Import modular utilities
 import type { 
   HFImportResult, 
   HFImportOptions, 
-  DatasetIdValidation 
+  DatasetIdValidation,
+  DatasetConfig,
+  DatasetSplit 
 } from "./types";
+
 import { 
   parseDatasetId, 
   getDatasetInfo, 
   detectAvailableFormats, 
   searchDatasets as apiSearchDatasets,
-  getDatasetSplits,
+  getDatasetSplits as apiGetDatasetSplits,
   testDatasetAccess as apiTestDatasetAccess
 } from "./api";
+
 import { 
   createImportStrategies, 
   executeStrategiesWithFallback,
@@ -22,29 +25,9 @@ import {
   importParquetDownload,
   validateDatasetCompatibility
 } from "./importStrategies";
-// import { monitorMemoryUsage } from "./memory";
 
 /**
- * Hook for importing datasets from HuggingFace Hub with modular, well-documented utilities
- * 
- * @returns Object containing import functions, state, and utilities
- * 
- * @example
- * ```typescript
- * const {
- *   importWithProgressiveFallback,
- *   isImporting,
- *   importStatus,
- *   error
- * } = useHuggingFaceImport();
- * 
- * try {
- *   const result = await importWithProgressiveFallback("microsoft/DialoGPT-medium");
- *   console.log(`Imported ${result.rowCount} rows`);
- * } catch (error) {
- *   console.error("Import failed:", error);
- * }
- * ```
+ * Hook for importing datasets from HuggingFace Hub with config/split support
  */
 export default function useHuggingFaceImport() {
   const [isImporting, setIsImporting] = useState(false);
@@ -56,10 +39,6 @@ export default function useHuggingFaceImport() {
 
   /**
    * Updates import progress and status
-   * 
-   * @internal
-   * @param progress - Progress value between 0 and 1
-   * @param status - Current status message
    */
   const updateProgress = useCallback((progress: number, status: string) => {
     setImportProgress(progress);
@@ -68,51 +47,21 @@ export default function useHuggingFaceImport() {
 
   /**
    * Resets error state
-   * 
-   * @example
-   * ```typescript
-   * const { resetError } = useHuggingFaceImport();
-   * resetError(); // Clear any existing errors
-   * ```
    */
   const resetError = useCallback(() => setError(null), []);
 
   /**
-   * Validates a HuggingFace dataset ID format
-   * 
-   * @param datasetId - Dataset ID to validate (e.g., "microsoft/DialoGPT-medium")
-   * @returns Validation result with extracted components
-   * 
-   * @example
-   * ```typescript
-   * const { validateDatasetId } = useHuggingFaceImport();
-   * const result = validateDatasetId("microsoft/DialoGPT-medium");
-   * 
-   * if (result.isValid) {
-   *   console.log(result.organization); // "microsoft"
-   *   console.log(result.dataset);      // "DialoGPT-medium"
-   * } else {
-   *   console.error(result.error);
-   * }
-   * ```
+   *  Dataset ID validation with config/split support
    */
   const validateDatasetId = useCallback(
-    (datasetId: string): DatasetIdValidation => parseDatasetId(datasetId),
+    (datasetId: string): DatasetIdValidation & { config?: string; split?: string } => {
+      return parseDatasetId(datasetId);
+    },
     []
   );
 
   /**
-   * Tests if a dataset is accessible with current credentials
-   * 
-   * @param datasetId - Dataset identifier to test
-   * @param authToken - Optional authentication token
-   * @returns Promise resolving to boolean indicating accessibility
-   * 
-   * @example
-   * ```typescript
-   * const { testDatasetAccess } = useHuggingFaceImport();
-   * const canAccess = await testDatasetAccess("private/dataset", "hf_token");
-   * ```
+   * Test dataset access
    */
   const testDatasetAccess = useCallback(
     async (datasetId: string, authToken?: string): Promise<boolean> => {
@@ -122,22 +71,17 @@ export default function useHuggingFaceImport() {
   );
 
   /**
-   * Searches for datasets on HuggingFace Hub
-   * 
-   * @param query - Search query string
-   * @param options - Search options including limit and auth token
-   * @returns Promise resolving to search results
-   * 
-   * @example
-   * ```typescript
-   * const { searchDatasets } = useHuggingFaceImport();
-   * const results = await searchDatasets("sentiment analysis", { limit: 10 });
-   * ```
+   * Dataset search
    */
   const searchDatasets = useCallback(
     async (
       query: string,
-      options: { limit?: number; authToken?: string } = {}
+      options: { 
+        limit?: number; 
+        author?: string;
+        authToken?: string;
+        sort?: "lastModified" | "downloads" | "likes";
+      } = {}
     ): Promise<any[]> => {
       return apiSearchDatasets(query, options);
     },
@@ -145,24 +89,40 @@ export default function useHuggingFaceImport() {
   );
 
   /**
-   * Imports dataset using direct streaming (fastest method)
-   * 
-   * @param datasetId - HuggingFace dataset identifier
-   * @param options - Import configuration options
-   * @returns Promise resolving to import result
-   * @throws {Error} When streaming is not supported or fails
-   * 
-   * @example
-   * ```typescript
-   * const { importFromHuggingFaceStreaming } = useHuggingFaceImport();
-   * 
-   * try {
-   *   const result = await importFromHuggingFaceStreaming("microsoft/DialoGPT-medium");
-   *   console.log(`Streaming view created with ${result.rowCount} rows`);
-   * } catch (error) {
-   *   console.log("Streaming failed, try download method");
-   * }
-   * ```
+   * Get dataset splits and configurations
+   */
+  const getDatasetSplits = useCallback(
+    async (
+      datasetId: string,
+      authToken?: string
+    ): Promise<{
+      splits: DatasetSplit[];
+      configs: DatasetConfig[];
+    }> => {
+      return apiGetDatasetSplits(datasetId, authToken);
+    },
+    []
+  );
+
+  /**
+   * Detect available formats
+   */
+  const detectAvailableFormatsHook = useCallback(
+    async (
+      datasetId: string,
+      authToken?: string
+    ): Promise<{
+      formats: any[];
+      recommendedFormat: string;
+      availableConfigs: DatasetConfig[];
+    }> => {
+      return detectAvailableFormats(datasetId, authToken);
+    },
+    []
+  );
+
+  /**
+   * Enhanced streaming import with config/split support
    */
   const importFromHuggingFaceStreaming = useCallback(
     async (
@@ -174,25 +134,38 @@ export default function useHuggingFaceImport() {
         setError(null);
         updateProgress(0, "Validating dataset ID...");
 
-        // Validate dataset ID
-        const idValidation = parseDatasetId(datasetId);
-        if (!idValidation.isValid) {
-          throw new Error(idValidation.error || "Invalid dataset ID");
+        // Parse and validate dataset ID
+        const parsedId = parseDatasetId(datasetId);
+        if (!parsedId.isValid) {
+          throw new Error(parsedId.error || "Invalid dataset ID");
         }
 
-        console.log(`[HFImport] Streaming import: ${datasetId}`);
+        // Extract base dataset ID and resolve config/split
+        const baseDatasetId = parsedId.organization 
+          ? `${parsedId.organization}/${parsedId.dataset}`
+          : parsedId.dataset;
+        
+        const targetConfig = options.config || parsedId.config || "default";
+        const targetSplit = options.split || parsedId.split || "train";
+
+        console.log(`[HFImport] Streaming import: ${baseDatasetId} (config: ${targetConfig}, split: ${targetSplit})`);
         updateProgress(0.1, "Getting dataset metadata...");
 
         // Get dataset info and available formats
-        const datasetInfo = await getDatasetInfo(datasetId, options.authToken);
-        const { formats } = await detectAvailableFormats(datasetId, options.authToken);
+        const datasetInfo = await getDatasetInfo(baseDatasetId, options.authToken);
+        const { formats } = await detectAvailableFormats(baseDatasetId, options.authToken);
 
         updateProgress(0.3, "Testing direct streaming access...");
 
-        // Find parquet format for streaming
-        const parquetFormat = formats.find(f => f.type === "parquet");
+        // Find parquet format for the specific config/split
+        const parquetFormat = formats.find(f => 
+          f.type === "parquet" && 
+          f.config === targetConfig && 
+          f.split === targetSplit
+        );
+        
         if (!parquetFormat) {
-          throw new Error("No parquet format available for streaming");
+          throw new Error(`No parquet format available for ${targetConfig}/${targetSplit}`);
         }
 
         updateProgress(0.5, "Creating streaming view...");
@@ -200,20 +173,30 @@ export default function useHuggingFaceImport() {
         // Create streaming view
         const result = await createStreamingView(
           duckDB,
-          datasetId,
+          baseDatasetId,
           parquetFormat.url,
           {
             ...options,
-            split: parquetFormat.split,
+            config: targetConfig,
+            split: targetSplit,
             datasetInfo,
             formats,
           }
         );
 
+        const enhancedResult: HFImportResult = {
+          ...result,
+          huggingface: {
+            ...result.huggingface,
+            config: targetConfig,
+            split: targetSplit,
+          }
+        };
+
         updateProgress(1.0, "Successfully connected via direct streaming");
         console.log(`[HFImport] ✅ Streaming view created: ${result.tableName}`);
         
-        return result;
+        return enhancedResult;
 
       } catch (err) {
         console.error("[HFImport] Streaming import failed:", err);
@@ -222,7 +205,6 @@ export default function useHuggingFaceImport() {
         throw err;
       } finally {
         setIsImporting(false);
-        // Reset progress after delay
         setTimeout(() => {
           setImportProgress(0);
           setImportStatus("");
@@ -233,18 +215,7 @@ export default function useHuggingFaceImport() {
   );
 
   /**
-   * Imports dataset using standard download method (most reliable)
-   * 
-   * @param datasetId - HuggingFace dataset identifier
-   * @param options - Import configuration options
-   * @returns Promise resolving to import result
-   * 
-   * @example
-   * ```typescript
-   * const { importFromHuggingFace } = useHuggingFaceImport();
-   * const result = await importFromHuggingFace("microsoft/DialoGPT-medium");
-   * console.log(`Downloaded and imported ${result.rowCount} rows`);
-   * ```
+   * Download import with config/split support
    */
   const importFromHuggingFace = useCallback(
     async (
@@ -256,22 +227,46 @@ export default function useHuggingFaceImport() {
         setError(null);
         updateProgress(0, "Validating dataset ID...");
 
-        // Validate dataset ID
-        const idValidation = parseDatasetId(datasetId);
-        if (!idValidation.isValid) {
-          throw new Error(idValidation.error || "Invalid dataset ID");
+        // Parse and validate dataset ID
+        const parsedId = parseDatasetId(datasetId);
+        if (!parsedId.isValid) {
+          throw new Error(parsedId.error || "Invalid dataset ID");
         }
 
-        console.log(`[HFImport] Download import: ${datasetId}`);
+        // Extract base dataset ID and resolve config/split
+        const baseDatasetId = parsedId.organization 
+          ? `${parsedId.organization}/${parsedId.dataset}`
+          : parsedId.dataset;
+        
+        const targetConfig = options.config || parsedId.config || "default";
+        const targetSplit = options.split || parsedId.split || "train";
+
+        console.log(`[HFImport] Download import: ${baseDatasetId} (config: ${targetConfig}, split: ${targetSplit})`);
         updateProgress(0.2, "Starting parquet download...");
 
-        // Use parquet download strategy
-        const result = await importParquetDownload(duckDB, datasetId, options);
+        // Use enhanced parquet download strategy with config/split
+        const enhancedOptions: HFImportOptions = {
+          ...options,
+          config: targetConfig,
+          split: targetSplit,
+        };
+
+        const result = await importParquetDownload(duckDB, baseDatasetId, enhancedOptions);
+
+        // Enhance result with config/split info
+        const enhancedResult: HFImportResult = {
+          ...result,
+          huggingface: {
+            ...result.huggingface,
+            config: targetConfig,
+            split: targetSplit,
+          }
+        };
 
         updateProgress(1.0, `Successfully imported ${result.rowCount.toLocaleString()} rows`);
         console.log(`[HFImport] ✅ Download import completed: ${result.tableName}`);
         
-        return result;
+        return enhancedResult;
 
       } catch (err) {
         console.error("[HFImport] Download import failed:", err);
@@ -290,29 +285,7 @@ export default function useHuggingFaceImport() {
   );
 
   /**
-   * Imports dataset using progressive fallback strategies (recommended)
-   * 
-   * Tries multiple import methods in order of preference:
-   * 1. Direct Streaming (fastest)
-   * 2. Parquet Download (reliable)
-   * 3. Alternative Formats (CSV/JSON fallback)
-   * 
-   * @param datasetId - HuggingFace dataset identifier
-   * @param options - Import configuration options
-   * @returns Promise resolving to import result
-   * 
-   * @example
-   * ```typescript
-   * const { importWithProgressiveFallback } = useHuggingFaceImport();
-   * 
-   * // This will automatically try the best available method
-   * const result = await importWithProgressiveFallback("microsoft/DialoGPT-medium", {
-   *   authToken: "hf_your_token",
-   *   preferredFormat: "auto"
-   * });
-   * 
-   * console.log(`Import successful: ${result.huggingface.method} method used`);
-   * ```
+   * Progressive fallback import with config/split support
    */
   const importWithProgressiveFallback = useCallback(
     async (
@@ -324,25 +297,46 @@ export default function useHuggingFaceImport() {
         setError(null);
         updateProgress(0, "Validating dataset ID...");
 
-        // Validate dataset ID
-        const idValidation = parseDatasetId(datasetId);
-        if (!idValidation.isValid) {
-          throw new Error(idValidation.error || "Invalid dataset ID");
+        // Parse and validate dataset ID
+        const parsedId = parseDatasetId(datasetId);
+        if (!parsedId.isValid) {
+          throw new Error(parsedId.error || "Invalid dataset ID");
         }
 
-        console.log(`[HFImport] Progressive fallback import: ${datasetId}`);
+        // Extract base dataset ID and resolve config/split
+        const baseDatasetId = parsedId.organization 
+          ? `${parsedId.organization}/${parsedId.dataset}`
+          : parsedId.dataset;
+        
+        const targetConfig = options.config || parsedId.config;
+        const targetSplit = options.split || parsedId.split;
+
+        console.log(`[HFImport] Progressive fallback import: ${baseDatasetId}`);
+        if (targetConfig) {
+          console.log(`[HFImport] Target config: ${targetConfig}`);
+        }
+        if (targetSplit) {
+          console.log(`[HFImport] Target split: ${targetSplit}`);
+        }
+
         updateProgress(0.1, "Analyzing dataset compatibility...");
 
-        // Check dataset compatibility and memory safety
-        const compatibility = await validateDatasetCompatibility(datasetId, options.authToken);
+        // Check dataset compatibility
+        const compatibility = await validateDatasetCompatibility(baseDatasetId, options.authToken);
         if (!compatibility.isCompatible) {
           throw new Error(compatibility.reason || "Dataset not compatible");
         }
 
         updateProgress(0.2, "Creating import strategies...");
 
-        // Create and execute strategies
-        const strategies = await createImportStrategies(duckDB, datasetId, options);
+        // Create enhanced import strategies with config/split support
+        const enhancedOptions: HFImportOptions = {
+          ...options,
+          config: targetConfig,
+          split: targetSplit,
+        };
+        console.log('enhancedOptions', enhancedOptions);
+        const strategies = await createImportStrategies(duckDB, baseDatasetId, enhancedOptions);
         
         updateProgress(0.3, "Executing import strategies...");
 
@@ -357,10 +351,20 @@ export default function useHuggingFaceImport() {
           }
         );
 
+        // Enhance result with config/split info
+        const enhancedResult: HFImportResult = {
+          ...result,
+          huggingface: {
+            ...result.huggingface,
+            config: targetConfig || result.huggingface.config || "default",
+            split: targetSplit || result.huggingface.split || "train",
+          }
+        };
+
         updateProgress(1.0, `Successfully imported via ${result.huggingface.method} method`);
         console.log(`[HFImport] ✅ Progressive fallback completed: ${result.tableName}`);
         
-        return result;
+        return enhancedResult;
 
       } catch (err) {
         console.error("[HFImport] Progressive fallback failed:", err);
@@ -385,19 +389,16 @@ export default function useHuggingFaceImport() {
     importStatus,
     error,
 
-    // Core import methods
     importFromHuggingFace,
     importFromHuggingFaceStreaming,
     importWithProgressiveFallback,
 
-    // Utility methods
     validateDatasetId,
     testDatasetAccess,
     searchDatasets,
     getDatasetSplits,
-    detectAvailableFormats,
+    detectAvailableFormats: detectAvailableFormatsHook,
 
-    // Error handling
     resetError,
   };
 }

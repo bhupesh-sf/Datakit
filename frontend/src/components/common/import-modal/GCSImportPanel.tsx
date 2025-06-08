@@ -188,7 +188,7 @@ const DatasetCard: React.FC<{
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 className="h-3 w-3 border border-white border-t-transparent rounded-full mr-1"
               />
-              Importing...
+              Importing
             </>
           ) : (
             <>
@@ -326,7 +326,7 @@ const DatasetPreviewModal: React.FC<{
                   disabled={isImporting}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
-                  {isImporting ? "Importing..." : "Import Dataset"}
+                  {isImporting ? "Importing" : "Import Dataset"}
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>

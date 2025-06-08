@@ -1,8 +1,3 @@
-/**
- * @fileoverview DuckDB integration utilities for HuggingFace imports
- * @module DuckDBUtils
- */
-
 import { ColumnType } from "@/types/csv";
 import { DataSourceType } from "@/types/json";
 

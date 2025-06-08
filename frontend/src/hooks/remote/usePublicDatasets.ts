@@ -3,6 +3,8 @@ import { useState, useCallback } from "react";
 import { S3_PUBLIC_DATASETS, GITHUB_PUBLIC_DATASETS, HUGGINGFACE_PUBLIC_DATASETS } from '@/constants/public_datasets';
 import { PublicDataset } from "@/types/remoteImport";
 
+import { searchDatasets as hfSearchDatasets } from "@/hooks/remote/huggingface/api";
+
 // All datasets combined
 const ALL_DATASETS = [...S3_PUBLIC_DATASETS, ...GITHUB_PUBLIC_DATASETS, ...HUGGINGFACE_PUBLIC_DATASETS];
 
@@ -23,9 +25,6 @@ export default function usePublicDatasets(provider?: "aws" | "github" | "custom-
     try {
       setLoading(true);
       setError(null);
-
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
 
       let filteredDatasets: PublicDataset[] = [];
 
@@ -78,29 +77,50 @@ export default function usePublicDatasets(provider?: "aws" | "github" | "custom-
   }, [provider]);
 
   /**
-   * Search datasets - for HuggingFace, this could call the real API in the future
+   * Search datasets
    */
-  const searchDatasets = useCallback(async (query: string) => {
+  const searchDatasets = useCallback(async (query: string, options: {
+    authToken?: string;
+    limit?: number;
+    author?: string;
+  } = {}) => {
     try {
       setIsSearching(true);
       setError(null);
 
-      // For now, search in local datasets. In the future, we can call HF API here
       if (provider === "huggingface") {
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        
-        // Search in local HF datasets for now
-        const lowercaseQuery = query.toLowerCase();
-        const results = HUGGINGFACE_PUBLIC_DATASETS.filter(dataset =>
-          dataset.name.toLowerCase().includes(lowercaseQuery) ||
-          dataset.description.toLowerCase().includes(lowercaseQuery) ||
-          dataset.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery)) ||
-          (dataset.task && dataset.task.toLowerCase().includes(lowercaseQuery))
-        );
-        
-        setSearchResults(results);
-        console.log(`[PublicDatasets] Found ${results.length} HuggingFace datasets for query: ${query}`);
+        const apiResults = await hfSearchDatasets(query, {
+          limit: options.limit || 20,
+          author: options.author,
+          authToken: options.authToken,
+          sort: "downloads",
+          direction: "desc",
+        });
+  
+        const transformedResults = apiResults.map(dataset => ({
+          id: dataset.id,
+          name: dataset.name,
+          description: dataset.description,
+          downloads: dataset.downloads,
+          likes: dataset.likes,
+          lastModified: dataset.lastModified,
+          size: dataset.size,
+        }));
+
+        setSearchResults(transformedResults);
+
+        // If no API results, fall back to local search as backup
+        if (transformedResults.length === 0) {
+          console.log(`[PublicDatasets] 🔄 No API results, falling back to local search...`);
+          const localResults = HUGGINGFACE_PUBLIC_DATASETS.filter(dataset =>
+            dataset.name.toLowerCase().includes(query.toLowerCase()) ||
+            dataset.description.toLowerCase().includes(query.toLowerCase()) ||
+            dataset.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+          );
+          setSearchResults(localResults);
+          console.log(`[PublicDatasets] 📂 Found ${localResults.length} local results as fallback`);
+        }
+
       } else {
         // Regular search for other providers
         const lowercaseQuery = query.toLowerCase();
@@ -333,7 +353,7 @@ export default function usePublicDatasets(provider?: "aws" | "github" | "custom-
     // Actions
     fetchDatasets,
     refreshDatasets,
-    searchDatasets, // API search for HuggingFace
+    searchDatasets,
     clearSearchResults,
 
     // Computed data
@@ -342,8 +362,8 @@ export default function usePublicDatasets(provider?: "aws" | "github" | "custom-
     getDatasetsByTag,
     getDatasetsByFormat,
     getDatasetsBySize,
-    getDatasetsByTask, // New for HF
-    searchDatasetsLocal, // Local search
+    getDatasetsByTask, 
+    searchDatasetsLocal,
     getFeaturedDatasets,
     getDatasetById,
     getCategories,

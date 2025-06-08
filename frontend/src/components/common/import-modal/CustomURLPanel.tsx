@@ -72,7 +72,7 @@ const URLDatasetCard = ({ dataset, onImport, isImporting }) => {
         {isImporting ? (
           <>
             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-            Importing...
+            Importing
           </>
         ) : (
           <>
@@ -262,7 +262,7 @@ const CustomURLPanel = ({ onImport }) => {
               {isImporting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Importing...
+                  Importing
                 </>
               ) : (
                 <>

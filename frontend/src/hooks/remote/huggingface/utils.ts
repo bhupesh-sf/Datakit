@@ -1,8 +1,3 @@
-/**
- * @fileoverview Memory monitoring and management utilities for browser environments
- * @module MemoryUtils
- */
-
 import { MemoryInfo } from "./types";
 
 /**

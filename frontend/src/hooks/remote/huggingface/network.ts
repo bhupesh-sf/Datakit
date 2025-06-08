@@ -1,9 +1,5 @@
-/**
- * @fileoverview Network utilities for handling CORS, proxies, and file downloads
- * @module NetworkUtils
- */
-
 import { FetchResult } from "./types";
+
 import { monitorMemoryUsage, waitForMemoryStabilization } from "./utils";
 
 /**
