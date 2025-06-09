@@ -2,7 +2,7 @@
 ./build-docker.sh
 
 
-no need to tag this if we dont have it
+Need to tag this first (the way we want but here just latest)
 ```
 docker tag datakit/app:latest datakitpage/datakit:latest
 ```

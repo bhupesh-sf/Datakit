@@ -173,12 +173,12 @@ datakit serve
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+AGPL-3.0-only License - see [LICENSE](LICENSE) file for details.
 
 ## Support
 
 - 📚 **Documentation**: https://docs.datakit.page
-- 💬 **Discussions**: https://discord.gg/grKvFZHh
+- 💬 **Discussions**: https://discord.gg/gZmXmhbBdP
 - 🌐 **Website**: https://datakit.page
 
 ## Acknowledgments

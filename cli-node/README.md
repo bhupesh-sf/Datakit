@@ -102,8 +102,8 @@ npx datakit-cli
 ## Support
 
 - 📚 Documentation: https://docs.datakit.page
-- 💬 Discussions on Discord: https://discord.gg/grKvFZHh
+- 💬 Discussions on Discord: https://discord.gg/gZmXmhbBdP
 
 ## License
 
-MIT License - see LICENSE file for details.
+AGPL-3.0-only License - see LICENSE file for details.
