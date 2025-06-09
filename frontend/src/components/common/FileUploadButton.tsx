@@ -156,7 +156,7 @@ export const FileUploadButton = ({
     const validExtensions = ["csv", "json", "xlsx", "xls", "parquet"];
 
     if (!validExtensions.includes(fileExt || "")) {
-      alert("Please upload a CSV, JSON, Excel, or Parquet file");
+      alert("Please import a CSV, JSON, Excel, or Parquet file");
       return;
     }
 

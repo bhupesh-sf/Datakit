@@ -124,7 +124,7 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
             {/* Local file instruction */}
             <div className="flex items-center text-primary text-sm">
               {/* <ArrowLeft className="h-4 w-4 mr-2" /> */}
-              <span>Upload local files from sidebar</span>
+              <span>Import local files from sidebar</span>
             </div>
 
             {/* Divider */}
