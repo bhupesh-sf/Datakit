@@ -133,7 +133,7 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
       case "google-sheets":
         return <GoogleSheetsPanel onImport={handleImportSuccess} />;
       case "motherduck":
-        return <MotherDuckPanel onImport={handleImportSuccess} />;
+        return <MotherDuckPanel onImport={onClose} />;
       default:
         return (
           <div className="p-8 text-center text-white/60">

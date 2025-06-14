@@ -7,10 +7,10 @@ import { useAppStore } from "@/store/appStore";
 import useMotherDuck from "@/hooks/remote/motherduck/useMotherDuck";
 
 interface MotherDuckPanelProps {
-  onImport: (params: { databaseName: string; tableName: string }) => void;
+  onImport: () => void;
 }
 
-const MotherDuckPanel: React.FC<MotherDuckPanelProps> = () => {
+const MotherDuckPanel: React.FC<MotherDuckPanelProps> = ({ onImport }) => {
   const {
     isConnected,
     isConnecting,
@@ -21,7 +21,6 @@ const MotherDuckPanel: React.FC<MotherDuckPanelProps> = () => {
     disconnect,
     getStoredToken,
     clearError,
-    refreshDatabases,
   } = useMotherDuck();
 
   const { setActiveTab } = useAppStore();
@@ -53,7 +52,6 @@ const MotherDuckPanel: React.FC<MotherDuckPanelProps> = () => {
           databaseCount={databases.length}
           connectionInfo={connectionInfo}
           onDisconnect={handleDisconnect}
-          onRefresh={refreshDatabases}
         />
       </div>
 
@@ -80,8 +78,8 @@ const MotherDuckPanel: React.FC<MotherDuckPanelProps> = () => {
                 You're all set!
               </h2>
               <p className="text-white/70">
-                Connection successful. Your MotherDuck tables are now available
-                in the Schema Browser.
+                Connection successful. You can query your MotherDuck in the
+                query tab.
               </p>
 
               <Button
@@ -89,9 +87,10 @@ const MotherDuckPanel: React.FC<MotherDuckPanelProps> = () => {
                 variant="outline"
                 onClick={() => {
                   setActiveTab("query");
+                  onImport();
                 }}
               >
-                Go to Query Panel
+                Go to Query Tab
               </Button>
             </motion.div>
           </div>

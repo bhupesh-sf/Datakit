@@ -14,7 +14,6 @@ interface ConnectionStatusProps {
     connectedAt: Date;
   } | null;
   onDisconnect: () => void;
-  onRefresh: () => void;
   className?: string;
 }
 
@@ -25,7 +24,6 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   databaseCount,
   connectionInfo,
   onDisconnect,
-  onRefresh,
   className,
 }) => {
   const getStatusColor = () => {
@@ -120,15 +118,6 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
             exit={{ opacity: 0, x: 10 }}
             className="flex items-center gap-2"
           >
-            <Tooltip placement="left" content="Refresh databases">
-              <button
-                onClick={onRefresh}
-                className="p-1.5 text-white/50 hover:text-white/70 hover:bg-white/10 rounded transition-all"
-              >
-                <RefreshCw size={14} />
-              </button>
-            </Tooltip>
-
             <Tooltip placement="left" content="Disconnect">
               <button
                 onClick={onDisconnect}
