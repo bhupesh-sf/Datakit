@@ -19,7 +19,8 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    exclude: ['@duckdb/duckdb-wasm'],
+    exclude: ['@duckdb/duckdb-wasm', '@motherduck/wasm-client'],
+    include: ['apache-arrow']
   },
   build: {
     rollupOptions: {
@@ -40,6 +41,16 @@ export default defineConfig({
           }
         },
       },
+    },
+  },
+  server: {
+    headers: {
+      // Required headers for MotherDuck WASM client (SharedArrayBuffer support)
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+    fs: {
+      allow: ['..'], // Allow serving files from parent directories if needed
     },
   },
 })

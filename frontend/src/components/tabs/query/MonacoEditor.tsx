@@ -3,12 +3,14 @@ import Editor, { OnMount, useMonaco } from "@monaco-editor/react";
 import { useDuckDBStore } from "@/store/duckDBStore";
 import { format } from "sql-formatter";
 
-import { DUCKDB_FUNCTIONS, SQL_KEYWORDS, SQL_SNIPPETS } from './constants';
+import { DUCKDB_FUNCTIONS, SQL_KEYWORDS, SQL_SNIPPETS } from "./constants";
 
 interface DatabaseObject {
   name: string;
   type: "table" | "view";
   columns: string[];
+  database?: string;
+  source: "local" | "motherduck";
 }
 
 interface MonacoEditorProps {
@@ -28,16 +30,35 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
   onExecute,
   className = "",
 }) => {
-  const { getAvailableTables, registeredTables, executeQuery, getObjectType, lastTableRefresh } = useDuckDBStore();
+  const {
+    getAvailableTables,
+    registeredTables,
+    executeQuery,
+    getObjectType,
+    lastTableRefresh,
+    motherDuckConnected,
+    motherDuckSchemas,
+    executeMotherDuckQuery,
+  } = useDuckDBStore();
+
   const monaco = useMonaco();
   const editorRef = useRef<any>(null);
   const schemaLoadedRef = useRef<string>("");
 
+  // Include MotherDuck schemas in dependency key
   const schemaDependencyKey = useMemo(() => {
-    const tableNames = getAvailableTables().sort().join(',');
-    const registeredKeys = Array.from(registeredTables.keys()).sort().join(',');
-    return `${tableNames}-${registeredKeys}-${lastTableRefresh}`;
-  }, [getAvailableTables, registeredTables, lastTableRefresh]);
+    const tableNames = getAvailableTables().sort().join(",");
+    const registeredKeys = Array.from(registeredTables.keys()).sort().join(",");
+    const motherDuckKeys = Array.from(motherDuckSchemas.entries())
+      .map(([db, schemas]) => `${db}:${schemas.map((s) => s.name).join(",")}`)
+      .join(";");
+    return `${tableNames}-${registeredKeys}-${lastTableRefresh}-${motherDuckKeys}`;
+  }, [
+    getAvailableTables,
+    registeredTables,
+    lastTableRefresh,
+    motherDuckSchemas,
+  ]);
 
   const formatSql = useCallback(() => {
     if (!editorRef.current) return;
@@ -61,17 +82,13 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
 
     try {
       console.log("[MonacoEditor] Loading schema data...");
-      const objectNames = getAvailableTables();
+      const validObjects: DatabaseObject[] = [];
 
-      console.log('objectNames', objectNames);
-      // Process objects in parallel for better performance
-      const objectPromises = objectNames.map(async (objectName) => {
+      // Load local tables
+      const objectNames = getAvailableTables();
+      const localObjectPromises = objectNames.map(async (objectName) => {
         try {
           const objectType = await getObjectType(objectName);
-          console.log(
-            `[MonacoEditor] Object ${objectName} detected as: ${objectType}`
-          );
-
           const result = await executeQuery(`DESCRIBE "${objectName}"`);
 
           if (result && objectType) {
@@ -79,18 +96,12 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
               .toArray()
               .map((row) => row.column_name || row.name || "");
 
-            console.log(`[MonacoEditor] Columns for ${objectName}:`, columns);
-
             return {
               name: objectName,
               type: objectType,
               columns,
+              source: "local" as const,
             };
-          } else {
-            console.warn(
-              `[MonacoEditor] Missing result or objectType for ${objectName}:`,
-              { result: !!result, objectType }
-            );
           }
         } catch (err) {
           console.warn(
@@ -98,17 +109,62 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
             err
           );
         }
-
         return null;
       });
-      
-      const results = await Promise.all(objectPromises);
-      const validObjects = results.filter(
-        (obj): obj is DatabaseObject => obj !== null
+
+      const localResults = await Promise.all(localObjectPromises);
+      validObjects.push(
+        ...localResults.filter((obj): obj is DatabaseObject => obj !== null)
       );
+
+      // Load MotherDuck tables if connected
+      if (motherDuckConnected) {
+        console.log("[MonacoEditor] Loading MotherDuck schemas...");
+
+        for (const [database, schemas] of motherDuckSchemas.entries()) {
+          for (const schema of schemas) {
+            try {
+              // Try to get columns for MotherDuck tables
+              const result = await executeMotherDuckQuery(
+                `DESCRIBE "${database}"."${schema.name}"`,
+                database
+              );
+
+              if (result && Array.isArray(result)) {
+                const columns = result.map(
+                  (row: any) => row.column_name || row.name || ""
+                );
+
+                validObjects.push({
+                  name: schema.name,
+                  type: schema.type as "table" | "view",
+                  columns,
+                  database,
+                  source: "motherduck",
+                });
+              }
+            } catch (err) {
+              // If we can't get columns, still add the table without columns
+              console.warn(
+                `[MonacoEditor] Failed to load columns for ${database}.${schema.name}, adding without columns`
+              );
+              validObjects.push({
+                name: schema.name,
+                type: schema.type as "table" | "view",
+                columns: [],
+                database,
+                source: "motherduck",
+              });
+            }
+          }
+        }
+      }
 
       console.log("[MonacoEditor] Loaded schema data:", {
         total: validObjects.length,
+        local: validObjects.filter((o) => o.source === "local").length,
+        motherduck: validObjects.filter((o) => o.source === "motherduck")
+          .length,
         tables: validObjects.filter((o) => o.type === "table").length,
         views: validObjects.filter((o) => o.type === "view").length,
       });
@@ -118,203 +174,307 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
       console.error("[MonacoEditor] Error loading schema data:", err);
       return { objects: [] };
     }
-  }, [monaco, getAvailableTables, getObjectType, executeQuery]);
+  }, [
+    monaco,
+    getAvailableTables,
+    getObjectType,
+    executeQuery,
+    motherDuckConnected,
+    motherDuckSchemas,
+    executeMotherDuckQuery,
+  ]);
 
-  const registerLanguageProviders = useCallback((schema: { objects: DatabaseObject[] }) => {
-    if (!monaco) return;
+  const registerLanguageProviders = useCallback(
+    (schema: { objects: DatabaseObject[] }) => {
+      if (!monaco) return;
 
-    // Dispose existing providers to prevent memory leaks
-    monaco.languages.getLanguages().forEach(lang => {
-      if (lang.id === 'sql') {
-        // Clean up existing providers if needed
-      }
-    });
+      // Register completionItemProvider
+      const completionDisposable =
+        monaco.languages.registerCompletionItemProvider("sql", {
+          triggerCharacters: [" ", ".", '"', "'"],
+          provideCompletionItems: (model, position) => {
+            const textUntilPosition = model.getValueInRange({
+              startLineNumber: position.lineNumber,
+              startColumn: 1,
+              endLineNumber: position.lineNumber,
+              endColumn: position.column,
+            });
 
-    // Register completionItemProvider
-    const completionDisposable = monaco.languages.registerCompletionItemProvider("sql", {
-      triggerCharacters: [" ", ".", '"', "'"],
-      provideCompletionItems: (model, position) => {
-        const textUntilPosition = model.getValueInRange({
-          startLineNumber: position.lineNumber,
-          startColumn: 1,
-          endLineNumber: position.lineNumber,
-          endColumn: position.column,
-        });
+            const word = model.getWordUntilPosition(position);
+            const range = {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: word.startColumn,
+              endColumn: word.endColumn,
+            };
 
-        const word = model.getWordUntilPosition(position);
-        const range = {
-          startLineNumber: position.lineNumber,
-          endLineNumber: position.lineNumber,
-          startColumn: word.startColumn,
-          endColumn: word.endColumn,
-        };
+            // Base suggestions array
+            const suggestions: any[] = [];
 
-        // Base suggestions array
-        const suggestions: any[] = [];
+            // Add SQL keywords
+            SQL_KEYWORDS.forEach((keyword) => {
+              suggestions.push({
+                label: keyword,
+                kind: monaco.languages.CompletionItemKind.Keyword,
+                insertText: keyword,
+                range,
+              });
+            });
 
-        // Add SQL keywords
-        SQL_KEYWORDS.forEach((keyword) => {
-          suggestions.push({
-            label: keyword,
-            kind: monaco.languages.CompletionItemKind.Keyword,
-            insertText: keyword,
-            range,
-          });
-        });
+            // Add DuckDB functions
+            DUCKDB_FUNCTIONS.forEach((func) => {
+              suggestions.push({
+                label: func,
+                kind: monaco.languages.CompletionItemKind.Function,
+                insertText: func,
+                range,
+              });
+            });
 
-        // Add DuckDB functions
-        DUCKDB_FUNCTIONS.forEach((func) => {
-          suggestions.push({
-            label: func,
-            kind: monaco.languages.CompletionItemKind.Function,
-            insertText: func,
-            range,
-          });
-        });
+            // Add SQL snippets
+            SQL_SNIPPETS.forEach((snippet) => {
+              suggestions.push({
+                ...snippet,
+                range,
+              });
+            });
 
-        // Add SQL snippets
-        SQL_SNIPPETS.forEach((snippet) => {
-          suggestions.push({
-            ...snippet,
-            range,
-          });
-        });
+            // Check if we're after a database name (for MotherDuck)
+            const dbMatch = textUntilPosition.match(/"([^"]+)"\s*\.\s*$/);
+            if (dbMatch) {
+              const databaseName = dbMatch[1];
+              // Show only tables from this database
+              schema.objects
+                .filter((obj) => obj.database === databaseName)
+                .forEach((obj) => {
+                  const kind =
+                    obj.type === "view"
+                      ? monaco.languages.CompletionItemKind.Interface
+                      : monaco.languages.CompletionItemKind.Class;
 
-        schema.objects.forEach((obj) => {
-          const kind =
-            obj.type === "view"
-              ? monaco.languages.CompletionItemKind.Interface
-              : monaco.languages.CompletionItemKind.Class;
+                  suggestions.push({
+                    label: obj.name,
+                    kind: kind,
+                    insertText: `"${obj.name}"`,
+                    range,
+                    detail: `${obj.type} in ${databaseName}`,
+                    documentation:
+                      obj.columns.length > 0
+                        ? `Columns: ${obj.columns.join(", ")}`
+                        : "Columns not loaded",
+                  });
+                });
+            } else {
+              // Add all tables/views with appropriate formatting
+              schema.objects.forEach((obj) => {
+                const kind =
+                  obj.type === "view"
+                    ? monaco.languages.CompletionItemKind.Interface
+                    : monaco.languages.CompletionItemKind.Class;
 
-          const detail = obj.type === "view" ? "View" : "Table";
+                const detail =
+                  obj.source === "motherduck"
+                    ? `${obj.type} (${obj.database})`
+                    : `${obj.type} (local)`;
 
-          suggestions.push({
-            label: obj.name,
-            kind: kind,
-            insertText: `"${obj.name}"`,
-            range,
-            detail: detail,
-            documentation: `${detail}: ${obj.columns.join(", ")}`,
-          });
-        });
+                const insertText =
+                  obj.source === "motherduck" && obj.database
+                    ? `"${obj.database}"."${obj.name}"`
+                    : `"${obj.name}"`;
 
-        // Check if we're typing a column name after a table/view reference
-        const objectMatch = textUntilPosition.match(
-          /from\s+"?([a-zA-Z0-9_]+)"?\s+(?:as\s+)?([a-zA-Z0-9_]+)?.*?(?:where|$)/i
-        );
-        if (objectMatch) {
-          const objectName = objectMatch[1];
-          const objectAlias = objectMatch[2] || objectName;
-
-          // Find the database object (table or view)
-          const dbObject = schema.objects.find(
-            (obj) => obj.name === objectName
-          );
-
-          // If we're after objectName. or objectAlias., suggest columns
-          const columnPrefixMatch = textUntilPosition.match(
-            new RegExp(`${objectAlias}\\.([a-zA-Z0-9_]*)$`)
-          );
-
-          if (columnPrefixMatch || textUntilPosition.match(/SELECT\s+/i)) {
-            if (dbObject) {
-              dbObject.columns.forEach((column) => {
                 suggestions.push({
-                  label: column,
-                  kind: monaco.languages.CompletionItemKind.Field,
-                  insertText: column,
+                  label:
+                    obj.source === "motherduck"
+                      ? `${obj.database}.${obj.name}`
+                      : obj.name,
+                  kind: kind,
+                  insertText: insertText,
                   range,
-                  detail: `Column from ${dbObject.name} (${dbObject.type})`,
+                  detail: detail,
+                  documentation:
+                    obj.columns.length > 0
+                      ? `Columns: ${obj.columns.join(", ")}`
+                      : "Columns not loaded",
+                  sortText:
+                    obj.source === "local"
+                      ? `0_${obj.name}`
+                      : `1_${obj.database}_${obj.name}`,
                 });
               });
             }
+
+            // Column suggestions after table reference
+            const patterns = [
+              // Pattern 1: FROM "database"."table" alias
+              /FROM\s+"([^"]+)"\."([^"]+)"\s+(?:AS\s+)?([a-zA-Z_]\w*)?\s*$/i,
+              // Pattern 2: FROM "table" alias (local tables)
+              /FROM\s+"([^"]+)"\s+(?:AS\s+)?([a-zA-Z_]\w*)?\s*$/i,
+              // Pattern 3: JOIN patterns
+              /JOIN\s+"([^"]+)"\."([^"]+)"\s+(?:AS\s+)?([a-zA-Z_]\w*)?\s*$/i,
+              /JOIN\s+"([^"]+)"\s+(?:AS\s+)?([a-zA-Z_]\w*)?\s*$/i,
+            ];
+
+            for (const pattern of patterns) {
+              const match = textUntilPosition.match(pattern);
+              if (match) {
+                let dbObject: DatabaseObject | undefined;
+                let alias: string | undefined;
+
+                if (match.length === 4 && match[2]) {
+                  // Database.table pattern
+                  const [, database, table, tableAlias] = match;
+                  dbObject = schema.objects.find(
+                    (obj) => obj.database === database && obj.name === table
+                  );
+                  alias = tableAlias;
+                } else if (match.length === 3) {
+                  // Local table pattern
+                  const [, table, tableAlias] = match;
+                  dbObject = schema.objects.find(
+                    (obj) => obj.source === "local" && obj.name === table
+                  );
+                  alias = tableAlias;
+                }
+
+                // Check if we're typing after alias.
+                if (alias && textUntilPosition.endsWith(`${alias}.`)) {
+                  if (dbObject && dbObject.columns.length > 0) {
+                    dbObject.columns.forEach((column) => {
+                      suggestions.push({
+                        label: column,
+                        kind: monaco.languages.CompletionItemKind.Field,
+                        insertText: `"${column}"`,
+                        range,
+                        detail: `Column from ${dbObject.name}`,
+                      });
+                    });
+                  }
+                }
+              }
+            }
+
+            return { suggestions };
+          },
+        });
+
+      const hoverDisposable = monaco.languages.registerHoverProvider("sql", {
+        provideHover: (model, position) => {
+          const word = model.getWordAtPosition(position);
+          if (!word) return null;
+
+          const wordText = word.word.toLowerCase();
+
+          // Check for database.table pattern
+          const line = model.getLineContent(position.lineNumber);
+          const beforeWord = line.substring(0, word.startColumn - 1);
+          const afterWord = line.substring(word.endColumn - 1);
+
+          let dbObject: DatabaseObject | undefined;
+
+          // Check if we're hovering over a database name
+          if (afterWord.match(/^\s*\.\s*"/)) {
+            const tables = schema.objects.filter(
+              (obj) => obj.database?.toLowerCase() === wordText
+            );
+            if (tables.length > 0) {
+              return {
+                contents: [
+                  { value: `**${wordText}** (MotherDuck Database)` },
+                  {
+                    value: `Tables: ${
+                      tables.filter((t) => t.type === "table").length
+                    }`,
+                  },
+                  {
+                    value: `Views: ${
+                      tables.filter((t) => t.type === "view").length
+                    }`,
+                  },
+                ],
+              };
+            }
           }
-        }
 
-        return { suggestions };
-      },
-    });
-
-    const hoverDisposable = monaco.languages.registerHoverProvider("sql", {
-      provideHover: (model, position) => {
-        const word = model.getWordAtPosition(position);
-        if (!word) return null;
-
-        const wordText = word.word.toLowerCase();
-
-        const dbObject = schema.objects.find(
-          (obj) => obj.name.toLowerCase() === wordText
-        );
-
-        if (dbObject) {
-          const typeLabel = dbObject.type === "view" ? "View" : "Table";
-
-          return {
-            contents: [
-              { value: `**${dbObject.name}** (${typeLabel})` },
-              { value: `Columns: ${dbObject.columns.join(", ")}` },
-              {
-                value: `Type: ${
-                  dbObject.type.charAt(0).toUpperCase() +
-                  dbObject.type.slice(1)
-                }`,
-              },
-            ],
-          };
-        }
-
-        // Check if it's a SQL keyword
-        if (SQL_KEYWORDS.some((k) => k.toLowerCase() === wordText)) {
-          const keyword = SQL_KEYWORDS.find(
-            (k) => k.toLowerCase() === wordText
+          // Check if it's a table/view name
+          dbObject = schema.objects.find(
+            (obj) => obj.name.toLowerCase() === wordText
           );
 
-          const keywordDocs: Record<string, string> = {
-            select: "Retrieves data from one or more tables or views",
-            from: "Specifies the table(s) or view(s) to query",
-            where: "Filters rows based on a condition",
-            join: "Combines rows from two or more tables or views",
-            "group by": "Groups rows that have the same values",
-            having: "Filters groups based on a condition",
-            "order by": "Sorts the result set",
-            limit: "Limits the number of rows returned",
-            "create view":
-              "Creates a virtual table based on a SELECT statement",
-            "drop view": "Removes a view from the database",
-          };
+          if (dbObject) {
+            const typeLabel = dbObject.type === "view" ? "View" : "Table";
+            const location =
+              dbObject.source === "motherduck"
+                ? `MotherDuck (${dbObject.database})`
+                : "Local";
 
-          return {
-            contents: [
-              { value: `**${keyword}**` },
-              { value: keywordDocs[wordText] || "SQL keyword" },
-            ],
-          };
-        }
+            return {
+              contents: [
+                { value: `**${dbObject.name}** (${typeLabel})` },
+                { value: `Location: ${location}` },
+                {
+                  value:
+                    dbObject.columns.length > 0
+                      ? `Columns: ${dbObject.columns.join(", ")}`
+                      : "Columns not loaded",
+                },
+              ],
+            };
+          }
 
-        // Check if it's a DuckDB function
-        if (DUCKDB_FUNCTIONS.some((f) => f.toLowerCase() === wordText)) {
-          const func = DUCKDB_FUNCTIONS.find(
-            (f) => f.toLowerCase() === wordText
-          );
+          // Check if it's a SQL keyword
+          if (SQL_KEYWORDS.some((k) => k.toLowerCase() === wordText)) {
+            const keyword = SQL_KEYWORDS.find(
+              (k) => k.toLowerCase() === wordText
+            );
 
-          return {
-            contents: [
-              { value: `**${func}**` },
-              { value: "DuckDB SQL function" },
-            ],
-          };
-        }
+            const keywordDocs: Record<string, string> = {
+              select: "Retrieves data from one or more tables or views",
+              from: "Specifies the table(s) or view(s) to query",
+              where: "Filters rows based on a condition",
+              join: "Combines rows from two or more tables or views",
+              "group by": "Groups rows that have the same values",
+              having: "Filters groups based on a condition",
+              "order by": "Sorts the result set",
+              limit: "Limits the number of rows returned",
+              "create view":
+                "Creates a virtual table based on a SELECT statement",
+              "drop view": "Removes a view from the database",
+            };
 
-        return null;
-      },
-    });
+            return {
+              contents: [
+                { value: `**${keyword}**` },
+                { value: keywordDocs[wordText] || "SQL keyword" },
+              ],
+            };
+          }
 
-    // Store disposables for cleanup if needed
-    return () => {
-      completionDisposable.dispose();
-      hoverDisposable.dispose();
-    };
-  }, [monaco]);
+          // Check if it's a DuckDB function
+          if (DUCKDB_FUNCTIONS.some((f) => f.toLowerCase() === wordText)) {
+            const func = DUCKDB_FUNCTIONS.find(
+              (f) => f.toLowerCase() === wordText
+            );
+
+            return {
+              contents: [
+                { value: `**${func}**` },
+                { value: "DuckDB SQL function" },
+              ],
+            };
+          }
+
+          return null;
+        },
+      });
+
+      // Store disposables for cleanup if needed
+      return () => {
+        completionDisposable.dispose();
+        hoverDisposable.dispose();
+      };
+    },
+    [monaco]
+  );
 
   // Only load schema and register providers when dependencies actually change
   useEffect(() => {
@@ -332,34 +492,37 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
   }, [schemaDependencyKey, monaco, loadSchemaData, registerLanguageProviders]);
 
   // Handle editor mount
-  const handleEditorDidMount: OnMount = useCallback((editor, monacoInstance) => {
-    editorRef.current = editor;
+  const handleEditorDidMount: OnMount = useCallback(
+    (editor, monacoInstance) => {
+      editorRef.current = editor;
 
-    // Add keyboard shortcut for query execution
-    editor.addCommand(
-      monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter,
-      () => {
-        if (onExecute) onExecute();
-      }
-    );
+      // Add keyboard shortcut for query execution
+      editor.addCommand(
+        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter,
+        () => {
+          if (onExecute) onExecute();
+        }
+      );
 
-    // Add keyboard shortcut for SQL formatting
-    editor.addCommand(
-      monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF,
-      () => {
-        formatSql();
-      }
-    );
+      // Add keyboard shortcut for SQL formatting
+      editor.addCommand(
+        monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF,
+        () => {
+          formatSql();
+        }
+      );
 
-    // Add context menu for formatting
-    editor.addAction({
-      id: "format-sql",
-      label: "Format SQL",
-      keybindings: [monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF],
-      contextMenuGroupId: "modification",
-      run: formatSql,
-    });
-  }, [onExecute, formatSql]);
+      // Add context menu for formatting
+      editor.addAction({
+        id: "format-sql",
+        label: "Format SQL",
+        keybindings: [monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF],
+        contextMenuGroupId: "modification",
+        run: formatSql,
+      });
+    },
+    [onExecute, formatSql]
+  );
 
   return (
     <div className={`h-full ${className}`}>

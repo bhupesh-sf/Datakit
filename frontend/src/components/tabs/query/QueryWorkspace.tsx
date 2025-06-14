@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from "react";
+import React, { useRef, useEffect, useMemo, useState, useCallback } from "react";
 import {
   Play,
   ChevronLeft,
@@ -34,7 +34,9 @@ import { useAppStore } from "@/store/appStore";
 import { selectTableName } from "@/store/selectors/appSelectors";
 
 // Constants for panel dimensions
-const PANEL_WIDTH = 260;
+const DEFAULT_PANEL_WIDTH = 260;
+const MIN_PANEL_WIDTH = 50;
+const MAX_PANEL_WIDTH = 400;
 
 /**
  * Main container for the enhanced query tab with resizable panels
@@ -96,6 +98,15 @@ const QueryWorkspace: React.FC = () => {
   const { suggestions, hasWarnings, analyzeQuery, optimizeQuery } =
     useQueryOptimization();
 
+  // Schema browser width state
+  const [schemaBrowserWidth, setSchemaBrowserWidth] = useState(() => {
+    const saved = localStorage.getItem('datakit-schema-browser-width');
+    return saved ? parseInt(saved, 10) : DEFAULT_PANEL_WIDTH;
+  });
+
+  // Resizing state
+  const [isResizingSchema, setIsResizingSchema] = useState(false);
+
   // Element refs for resizing
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -110,6 +121,51 @@ const QueryWorkspace: React.FC = () => {
     maxSize: 800,
     storageKey: "datakit-query-editor-height",
   });
+
+  // Handle schema browser resize
+  const handleSchemaResize = useCallback((e: MouseEvent) => {
+    requestAnimationFrame(() => {
+      if (!containerRef.current) return;
+      
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const newWidth = Math.min(
+        Math.max(e.clientX - containerRect.left, MIN_PANEL_WIDTH),
+        MAX_PANEL_WIDTH
+      );
+      
+      setSchemaBrowserWidth(newWidth);
+    });
+  }, []);
+
+  const startSchemaResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizingSchema(true);
+  }, []);
+
+  const stopSchemaResize = useCallback(() => {
+    if (isResizingSchema) {
+      setIsResizingSchema(false);
+      // Save the width to localStorage
+      localStorage.setItem('datakit-schema-browser-width', schemaBrowserWidth.toString());
+    }
+  }, [isResizingSchema, schemaBrowserWidth]);
+
+  // Handle mouse events for schema browser resizing
+  useEffect(() => {
+    if (isResizingSchema) {
+      document.addEventListener('mousemove', handleSchemaResize);
+      document.addEventListener('mouseup', stopSchemaResize);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+
+      return () => {
+        document.removeEventListener('mousemove', handleSchemaResize);
+        document.removeEventListener('mouseup', stopSchemaResize);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      };
+    }
+  }, [isResizingSchema, handleSchemaResize, stopSchemaResize]);
 
   // Run query analysis whenever the query changes
   useEffect(() => {
@@ -245,8 +301,6 @@ const QueryWorkspace: React.FC = () => {
             {totalRows.toLocaleString()} rows
           </div>
         )}
-
-        {/* <div className="text-xs text-white/50">{duckDBStatus}</div> */}
       </div>
 
       <div className="flex items-center space-x-2">
@@ -276,14 +330,6 @@ const QueryWorkspace: React.FC = () => {
         </Button>
       </div>
     </div>
-    // ),
-    // [
-    //   executionTime,
-    //   totalRows,
-    //   showQueryHistory,
-    //   toggleFullScreenMode,
-    //   toggleQueryHistory,
-    // ]
   );
 
   // Return the appropriate layout based on fullscreen mode
@@ -363,17 +409,44 @@ const QueryWorkspace: React.FC = () => {
 
   // Regular layout with panels
   return (
-    <div ref={containerRef} className="h-full w-full flex overflow-hidden">
+    <div ref={containerRef} className="h-full w-full flex overflow-hidden relative">
+      {/* Resize Overlay - prevents interference from iframes/content during resize */}
+      {isResizingSchema && (
+        <div className="absolute inset-0 z-50" style={{ cursor: 'col-resize' }} />
+      )}
+
       {/* Schema Browser Panel */}
       <div
-        className={`flex-shrink-0 transition-all duration-200 overflow-hidden bg-darkNav border-r border-white/10`}
+        className={`flex-shrink-0 overflow-hidden bg-darkNav border-r border-white/10 relative ${
+          isResizingSchema ? '' : 'transition-all duration-200'
+        }`}
         style={{
-          width: showSchemaBrowser ? `${PANEL_WIDTH}px` : "0px",
+          width: showSchemaBrowser ? `${schemaBrowserWidth}px` : "0px",
         }}
       >
         <div className="h-full w-full">
           <SchemaBrowser onInsertQuery={(text) => setQuery(query + text)} />
         </div>
+
+        {/* Resize Handle */}
+        {showSchemaBrowser && (
+          <div
+            className={`absolute top-0 right-0 w-1 h-full cursor-col-resize bg-transparent ${
+              isResizingSchema ? 'bg-primary/50' : 'hover:bg-primary/30 transition-colors'
+            }`}
+            onMouseDown={startSchemaResize}
+            style={{
+              // Make the hit area wider for easier grabbing
+              width: '5px',
+              right: '-2px',
+            }}
+          >
+            {/* Visual indicator during resize */}
+            {isResizingSchema && (
+              <div className="absolute inset-0 bg-primary/50" />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Main Content Area */}
@@ -601,10 +674,6 @@ const QueryWorkspace: React.FC = () => {
                       ? "You have uploaded data ready to query. Try the sample query above or write your own SQL."
                       : "A sample employees table is available for testing. Import your own CSV, JSON, or Parquet files to query your data."}
                   </p>
-                  {/* <div className="text-xs text-white/60">
-                    Available tables:{" "}
-                    {tablesWithMetadata.map((t) => t.name).join(", ")}
-                  </div> */}
                 </div>
               </div>
             </div>
@@ -631,7 +700,7 @@ const QueryWorkspace: React.FC = () => {
       <div
         className="flex-shrink-0 transition-all duration-200 overflow-hidden"
         style={{
-          width: showQueryHistory ? `${PANEL_WIDTH}px` : "0px",
+          width: showQueryHistory ? `${DEFAULT_PANEL_WIDTH}px` : "0px",
           opacity: showQueryHistory ? 1 : 0,
         }}
       >

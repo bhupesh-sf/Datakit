@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Link } from "lucide-react";
 
+import { useAppStore } from "@/store/appStore";
+
 import { Button } from "@/components/ui/Button";
 import GoogleSheetsIcon from "@/components/icons/GoogleSheetsIcon";
 
@@ -11,6 +13,7 @@ import S3ImportPanel from "./import-modal/S3ImportPanel";
 import { CustomURLPanel } from "./import-modal/CustomURLPanel";
 import GoogleSheetsPanel from "./import-modal/GoogleSheetsPanel";
 import HuggingFacePanel from "./import-modal/HuggingFacePanel";
+import MotherDuckPanel from "./import-modal/MotherDuckPanel";
 
 import GCSImportPanel from "./import-modal/GCSImportPanel";
 import GoogleDrivePanel from "./import-modal/GoogleDrivePanel";
@@ -19,7 +22,8 @@ import S3 from "@/assets/s3.png";
 import GCS from "@/assets/gcs.svg";
 import Drive from "@/assets/drive.svg";
 import HuggingFace from "@/assets/huggingface.png";
-import { useAppStore } from "@/store/appStore";
+import MotherDuckIcon from "@/assets/motherduck.png";
+import { ImportProvider } from "@/types/remoteImport";
 
 export interface RemoteDataImportModalProps {
   isOpen: boolean;
@@ -27,13 +31,6 @@ export interface RemoteDataImportModalProps {
   onImport: (result: any) => void;
 }
 
-export type ImportProvider =
-  | "s3"
-  | "gcs"
-  | "google-drive"
-  | "custom-url"
-  | "google-sheets"
-  | "huggingface";
 
 interface ProviderTab {
   id: ImportProvider;
@@ -41,6 +38,7 @@ interface ProviderTab {
   icon: React.ReactNode;
   description: string;
   comingSoon?: boolean;
+  featured?: boolean;
 }
 
 const PROVIDER_TABS: ProviderTab[] = [
@@ -61,6 +59,13 @@ const PROVIDER_TABS: ProviderTab[] = [
     label: "HuggingFace",
     icon: <img src={HuggingFace} className="h-5 w-5" />,
     description: "ML datasets",
+  },
+  {
+    id: "motherduck", // Position MotherDuck first as main cloud option
+    label: "MotherDuck",
+    icon: <img src={MotherDuckIcon} className="h-8 w-8" alt="MotherDuck" />,
+    description: "Cloud DuckDB",
+    featured: true,
   },
   {
     id: "google-sheets",
@@ -127,6 +132,8 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
         return <CustomURLPanel onImport={handleImportSuccess} />;
       case "google-sheets":
         return <GoogleSheetsPanel onImport={handleImportSuccess} />;
+      case "motherduck":
+        return <MotherDuckPanel onImport={handleImportSuccess} />;
       default:
         return (
           <div className="p-8 text-center text-white/60">
@@ -181,9 +188,10 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                         "w-full text-left p-3 rounded-lg mb-1 transition-all duration-200 group relative",
                         activeProvider === tab.id && !tab.comingSoon
                           ? tab.id === "huggingface"
-                            ? "bg-orange-500/10 border border-orange-500/20 text-white" // HF orange
+                          
+                            ? "bg-yellow-400/10 border border-yellow-400/20 text-white" // HF yellow
                             : tab.id === "s3"
-                            ? "bg-amber-600/10 border border-amber-600/20 text-white" // AWS amber/orange
+                            ? "bg-orange-500/10 border border-orange-500/20 text-white" // AWS orange
                             : tab.id === "google-sheets"
                             ? "bg-green-500/15 border border-green-500/20 text-white" // Google green
                             : tab.id === "custom-url"
@@ -192,6 +200,8 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                             ? "bg-sky-500/15 border border-sky-500/20 text-white" // Google Cloud blue
                             : tab.id === "google-drive"
                             ? "bg-blue-600/20 border border-blue-600/30 text-white" // Drive blue
+                           : tab.id === "motherduck"
+                            ? "bg-orange-300/10 border border-orange-300/20 text-white" // Light orange
                             : "bg-primary/20 border border-primary/30 text-white"
                           : tab.comingSoon
                           ? "text-white/40 cursor-not-allowed"
@@ -204,9 +214,9 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                             "h-8 w-8 rounded-md flex items-center justify-center mr-3 border",
                             activeProvider === tab.id && !tab.comingSoon
                               ? tab.id === "huggingface"
-                                ? "bg-orange-500/30 border-orange-500/50 text-orange-500"
+                                ? "border-yellow-400/50 text-yellow-400"
                                 : tab.id === "s3"
-                                ? "bg-amber-600/30 border-amber-600/50 text-amber-600"
+                                ? "border-orange-500/50 text-orange-500"
                                 : tab.id === "google-sheets"
                                 ? "bg-green-500/30 border-green-500/50 text-green-500"
                                 : tab.id === "custom-url"
@@ -215,6 +225,8 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                                 ? "bg-sky-500/30 border-sky-500/50 text-sky-500"
                                 : tab.id === "google-drive"
                                 ? "bg-blue-600/30 border-blue-600/50 text-blue-600"
+                                : tab.id === "motherduck"
+                                ? "border-orange-300/50 text-orange-300"
                                 : "bg-primary/30 border-primary/50 text-primary"
                               : tab.comingSoon
                               ? "bg-white/5 border-white/10 text-white/40"
@@ -247,9 +259,9 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                           className={cn(
                             "absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 rounded-r",
                             tab.id === "huggingface"
-                              ? "bg-orange-500"
+                              ? "bg-yellow-400"
                               : tab.id === "s3"
-                              ? "bg-amber-600"
+                              ? "bg-orange-500"
                               : tab.id === "google-sheets"
                               ? "bg-green-500"
                               : tab.id === "custom-url"
@@ -258,6 +270,8 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                               ? "bg-sky-500"
                               : tab.id === "google-drive"
                               ? "bg-blue-600"
+                              : tab.id === "motherduck"
+                              ? "bg-orange-300"
                               : "bg-primary"
                           )}
                           transition={{
@@ -282,9 +296,9 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                     className={cn(
                       "h-8 w-8 rounded-md flex items-center justify-center mr-3 border",
                       activeProvider === "huggingface"
-                        ? "bg-orange-500/20 border-orange-500/30"
+                        ? "border-yellow-400/30"
                         : activeProvider === "s3"
-                        ? "bg-amber-600/20 border-amber-600/30"
+                        ? "border-orange-500/30"
                         : activeProvider === "google-sheets"
                         ? "bg-green-500/20 border-green-500/30"
                         : activeProvider === "custom-url"
@@ -293,6 +307,8 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                         ? "bg-sky-500/20 border-sky-500/30"
                         : activeProvider === "google-drive"
                         ? "bg-blue-600/20 border-blue-600/30"
+                        : activeProvider === "motherduck"
+                        ? "border-orange-300/50"
                         : "bg-primary/20 border-primary/30"
                     )}
                   >

@@ -13,6 +13,9 @@ import {
   Type,
   Layers,
   RefreshCw,
+  HardDrive,
+  Cloud,
+  Loader2,
 } from "lucide-react";
 import Tooltip from "@/components/ui/Tooltip";
 
@@ -23,6 +26,8 @@ interface SchemaBrowserProps {
 interface TableSchema {
   name: string;
   type: "table" | "view";
+  source: "local" | "motherduck";
+  database?: string;
   columns: {
     name: string;
     type: string;
@@ -30,43 +35,45 @@ interface TableSchema {
   rowCount?: number;
 }
 
-interface ObjectRowProps {
-  schema: TableSchema;
-  expanded: boolean;
-  onToggle: () => void;
-  onGenerateQuery: () => void;
-  onInsertQuery: (text: string) => void;
-  getObjectIcon: (type: "table" | "view") => React.ReactNode;
-  getColumnTypeIcon: (type: string) => React.ReactNode;
-  registeredTables: Map<string, string>;
-}
-
 /**
- * Schema browser component to display database tables and views
+ * Enhanced schema browser showing both local and MotherDuck tables
  */
 const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
   const {
+    // Local state
     getAvailableTables,
     registeredTables,
     executeQuery,
     lastTableRefresh,
-    getObjectType, 
+    getObjectType,
+    
+    motherDuckConnected,
+    motherDuckDatabases,
+    motherDuckSchemas,
+    refreshMotherDuckSchemas,
+    motherDuckConnecting,
+    motherDuckError,
+    executeMotherDuckQuery,
   } = useDuckDBStore();
 
-  const [schemas, setSchemas] = useState<Record<string, TableSchema>>({});
+  const [localSchemas, setLocalSchemas] = useState<Record<string, TableSchema>>({});
+  const [motherDuckTableSchemas, setMotherDuckTableSchemas] = useState<Record<string, TableSchema>>({});
+  const [expandedDatabases, setExpandedDatabases] = useState<Set<string>>(new Set(["local"]));
   const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [localLoading, setLocalLoading] = useState<boolean>(true);
+  const [localRefreshing, setLocalRefreshing] = useState<boolean>(false);
+  const [motherDuckRefreshing, setMotherDuckRefreshing] = useState<Set<string>>(new Set());
+  const [loadingColumns, setLoadingColumns] = useState<Set<string>>(new Set());
 
-
-  const dependencyKey = useMemo(() => {
+  // Dependency tracking for local tables
+  const localDependencyKey = useMemo(() => {
     const tableNames = getAvailableTables().sort().join(',');
     const registeredKeys = Array.from(registeredTables.keys()).sort().join(',');
     return `${tableNames}-${registeredKeys}-${lastTableRefresh}`;
   }, [getAvailableTables, registeredTables, lastTableRefresh]);
 
-  const fetchTablesAndViews = useCallback(async () => {
-    setLoading(true);
+  const fetchLocalSchemas = useCallback(async () => {
+    setLocalLoading(true);
     try {
       const objectNames = getAvailableTables();
       const schemaData: Record<string, TableSchema> = {};
@@ -85,6 +92,7 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
             schemaData[objectName] = {
               name: objectName,
               type: objectType || "table",
+              source: "local",
               columns,
             };
           }
@@ -93,170 +101,471 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
           schemaData[objectName] = {
             name: objectName,
             type: "table",
+            source: "local",
             columns: [],
           };
         }
       }
 
-      setSchemas(schemaData);
-      
+      setLocalSchemas(schemaData);
     } catch (err) {
-      console.error("Error fetching objects:", err);
+      console.error("Error fetching local schemas:", err);
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   }, [getAvailableTables, getObjectType, executeQuery]);
 
-  // Only fetch when dependencies actually change
-  useEffect(() => {
-    fetchTablesAndViews();
-  }, [dependencyKey]);
+  // Fetch MotherDuck table columns on demand
+  const fetchMotherDuckTableColumns = useCallback(async (database: string, tableName: string) => {
+    const tableId = `${database}.${tableName}`;
+    
+    // Skip if already loaded or currently loading
+    if (motherDuckTableSchemas[tableId]?.columns?.length > 0 || loadingColumns.has(tableId)) {
+      return;
+    }
 
-  const handleRefresh = async () => {
-    if (refreshing) return;
-    setRefreshing(true);
+    setLoadingColumns(prev => new Set(prev).add(tableId));
+
     try {
-      await fetchTablesAndViews();
+      const result = await executeMotherDuckQuery(
+        `DESCRIBE "${database}"."${tableName}"`,
+        database
+      );
+
+      if (result && Array.isArray(result)) {
+        const columns = result.map((row: any) => ({
+          name: row.column_name || row.name || "",
+          type: row.column_type || row.type || "",
+        }));
+
+        setMotherDuckTableSchemas(prev => ({
+          ...prev,
+          [tableId]: {
+            name: tableName,
+            type: motherDuckSchemas.get(database)?.find(s => s.name === tableName)?.type as "table" | "view" || "table",
+            source: "motherduck",
+            database,
+            columns,
+          }
+        }));
+      }
+    } catch (err) {
+      console.error(`Error fetching columns for ${database}.${tableName}:`, err);
     } finally {
-      setRefreshing(false);
+      setLoadingColumns(prev => {
+        const next = new Set(prev);
+        next.delete(tableId);
+        return next;
+      });
+    }
+  }, [executeMotherDuckQuery, motherDuckSchemas, motherDuckTableSchemas]);
+
+  // Fetch local schemas when dependencies change
+  useEffect(() => {
+    fetchLocalSchemas();
+  }, [localDependencyKey]);
+
+  // Handle local refresh
+  const handleLocalRefresh = async () => {
+    if (localRefreshing) return;
+    setLocalRefreshing(true);
+    try {
+      await fetchLocalSchemas();
+    } finally {
+      setLocalRefreshing(false);
     }
   };
 
-  const toggleTable = (tableName: string) => {
-    setExpandedTables((prev) => {
+  // Handle MotherDuck database refresh
+  const handleMotherDuckRefresh = async (databaseName: string) => {
+    if (motherDuckRefreshing.has(databaseName)) return;
+    
+    setMotherDuckRefreshing(prev => new Set(prev).add(databaseName));
+    try {
+      await refreshMotherDuckSchemas(databaseName);
+      // Clear cached columns for this database
+      const keysToRemove = Object.keys(motherDuckTableSchemas).filter(key => 
+        key.startsWith(`${databaseName}.`)
+      );
+      setMotherDuckTableSchemas(prev => {
+        const next = { ...prev };
+        keysToRemove.forEach(key => delete next[key]);
+        return next;
+      });
+    } catch (err) {
+      console.error(`Failed to refresh MotherDuck schemas for ${databaseName}:`, err);
+    } finally {
+      setMotherDuckRefreshing(prev => {
+        const next = new Set(prev);
+        next.delete(databaseName);
+        return next;
+      });
+    }
+  };
+
+  const toggleDatabase = async (dbId: string) => {
+    const isExpanding = !expandedDatabases.has(dbId);
+    
+    // If expanding a MotherDuck database and schemas not loaded, auto-refresh
+    if (isExpanding && dbId !== 'local' && motherDuckConnected) {
+      const schemas = motherDuckSchemas.get(dbId);
+      if (!schemas || schemas.length === 0) {
+        await handleMotherDuckRefresh(dbId);
+      }
+    }
+    
+    setExpandedDatabases(prev => {
       const next = new Set(prev);
-      if (next.has(tableName)) {
-        next.delete(tableName);
+      if (next.has(dbId)) {
+        next.delete(dbId);
       } else {
-        next.add(tableName);
+        next.add(dbId);
       }
       return next;
     });
   };
 
-  const generateSelectQuery = (objectName: string) => {
-    const escapedName = registeredTables.get(objectName) || `"${objectName}"`;
-    const query = `\nSELECT *\nFROM ${escapedName}\nLIMIT 10;`;
+  const toggleTable = async (tableId: string) => {
+    // If it's a MotherDuck table and we're expanding it, fetch columns
+    if (!expandedTables.has(tableId) && tableId.includes('.')) {
+      const [database, ...tableNameParts] = tableId.split('.');
+      const tableName = tableNameParts.join('.'); // Handle table names with dots
+      if (database !== 'local') {
+        await fetchMotherDuckTableColumns(database, tableName);
+      }
+    }
+
+    setExpandedTables(prev => {
+      const next = new Set(prev);
+      if (next.has(tableId)) {
+        next.delete(tableId);
+      } else {
+        next.add(tableId);
+      }
+      return next;
+    });
+  };
+
+  const generateSelectQuery = (schema: TableSchema) => {
+    let query: string;
+    
+    if (schema.source === 'local') {
+      const escapedName = registeredTables.get(schema.name) || `"${schema.name}"`;
+      query = `\nSELECT *\nFROM ${escapedName}\nLIMIT 10;`;
+    } else {
+      // MotherDuck table
+      const tableRef = schema.database ? `"${schema.database}"."${schema.name}"` : `"${schema.name}"`;
+      query = `\nSELECT *\nFROM ${tableRef}\nLIMIT 10;`;
+    }
+    
+    onInsertQuery(query);
+  };
+
+  const generateColumnQuery = (schema: TableSchema, columnName: string) => {
+    let query: string;
+    
+    if (schema.source === 'local') {
+      const escapedName = registeredTables.get(schema.name) || `"${schema.name}"`;
+      query = `\nSELECT "${columnName}"\nFROM ${escapedName}\nLIMIT 10;`;
+    } else {
+      // MotherDuck table
+      const tableRef = schema.database ? `"${schema.database}"."${schema.name}"` : `"${schema.name}"`;
+      query = `\nSELECT "${columnName}"\nFROM ${tableRef}\nLIMIT 10;`;
+    }
+    
     onInsertQuery(query);
   };
 
   const getObjectIcon = (type: "table" | "view") => {
     if (type === "view") {
-      return <Eye size={16} className="text-blue-400" />;
+      return <Eye size={14} className="text-blue-400" />;
     }
-    return <Table size={16} className="text-primary" />;
+    return <Table size={14} className="text-primary" />;
   };
 
   const getColumnTypeIcon = (type: string) => {
     const lowerType = type.toLowerCase();
-    if (
-      lowerType.includes("int") ||
-      lowerType.includes("float") ||
-      lowerType.includes("double")
-    ) {
-      return <Hash size={14} className="text-yellow-400" />;
+    if (lowerType.includes("int") || lowerType.includes("float") || lowerType.includes("double") || lowerType.includes("numeric")) {
+      return <Hash size={12} className="text-yellow-400" />;
     }
     if (lowerType.includes("date") || lowerType.includes("time")) {
-      return <Calendar size={14} className="text-green-400" />;
+      return <Calendar size={12} className="text-green-400" />;
     }
     if (lowerType.includes("bool")) {
-      return <Check size={14} className="text-blue-400" />;
+      return <Check size={12} className="text-blue-400" />;
     }
-    return <Type size={14} className="text-white/70" />;
+    return <Type size={12} className="text-white/70" />;
   };
 
-  const allSchemas = Object.values(schemas);
-  const tables = allSchemas.filter(s => s.type === "table");
-  const views = allSchemas.filter(s => s.type === "view");
-
-  if (loading) {
-    return (
-      <div className="p-4 h-full">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium">Schema Browser</h3>
-        </div>
-        <div className="flex flex-col items-center justify-center h-full text-white/50">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent mb-2"></div>
-          <p className="text-xs">Loading schema...</p>
-        </div>
-      </div>
-    );
-  }
+  // Prepare data
+  const localTables = Object.values(localSchemas);
+  const localTablesData = localTables.filter(s => s.type === "table");
+  const localViewsData = localTables.filter(s => s.type === "view");
 
   return (
     <div className="h-full flex flex-col">
+      {/* Header */}
       <div className="px-4 py-3 border-b border-white/10">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium flex items-center">
             <Database size={16} className="mr-2 text-primary" />
             Schema Browser
           </h3>
-          <Tooltip content="Refresh schema">
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="p-1 hover:bg-white/10 rounded text-white/70 hover:text-white transition-colors"
-            >
-              <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-            </button>
-          </Tooltip>
         </div>
       </div>
 
-      <div className="p-2 flex-1 overflow-auto">
-        {allSchemas.length === 0 ? (
-          <div className="px-4 py-2 text-center text-white/50 text-xs">
-            No tables or views available. Import a dataset to get started.
+      {/* Content */}
+      <div className="flex-1 overflow-auto">
+        {/* Local Database Section */}
+        <div className="border-b border-white/5">
+          {/* Database Header */}
+          <div className="flex items-center justify-between px-2 py-2 hover:bg-white/5 cursor-pointer"
+               onClick={() => toggleDatabase('local')}>
+            <div className="flex items-center space-x-2">
+              <span className="text-white/70">
+                {expandedDatabases.has('local') ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </span>
+              <HardDrive size={14} className="text-primary" />
+              <span className="text-sm font-medium text-white">Local Database</span>
+              <span className="text-xs text-white/60">
+                ({localTablesData.length + localViewsData.length})
+              </span>
+            </div>
+            <Tooltip content="Refresh local schemas">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLocalRefresh();
+                }}
+                disabled={localRefreshing}
+                className="p-1 hover:bg-white/10 rounded text-white/70 hover:text-white transition-colors"
+              >
+                <RefreshCw size={12} className={localRefreshing ? "animate-spin" : ""} />
+              </button>
+            </Tooltip>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {tables.length > 0 && (
-              <div>
-                <div className="flex items-center px-2 py-1 text-xs font-medium text-white/60 tracking-wide">
-                  <Layers size={12} className="mr-1.5" />
-                  Tables ({tables.length})
-                </div>
-                <div className="space-y-1">
-                  {tables.map((schema) => (
-                    <ObjectRow
-                      key={`table-${schema.name}`}
-                      schema={schema}
-                      expanded={expandedTables.has(schema.name)}
-                      onToggle={() => toggleTable(schema.name)}
-                      onGenerateQuery={() => generateSelectQuery(schema.name)}
-                      onInsertQuery={onInsertQuery}
-                      getObjectIcon={getObjectIcon}
-                      getColumnTypeIcon={getColumnTypeIcon}
-                      registeredTables={registeredTables}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {views.length > 0 && (
-              <div>
-                <div className="flex items-center px-2 py-1 text-xs font-medium text-white/60 tracking-wide">
-                  <Eye size={12} className="mr-1.5" />
-                  Views ({views.length})
+          {/* Database Content */}
+          {expandedDatabases.has('local') && (
+            <div className="pl-6">
+              {localLoading ? (
+                <div className="flex items-center justify-center py-4 text-white/50">
+                  <Loader2 size={16} className="animate-spin mr-2" />
+                  <span className="text-sm">Loading local schemas...</span>
                 </div>
-                <div className="space-y-1">
-                  {views.map((schema) => (
-                    <ObjectRow
-                      key={`view-${schema.name}`}
-                      schema={schema}
-                      expanded={expandedTables.has(schema.name)}
-                      onToggle={() => toggleTable(schema.name)}
-                      onGenerateQuery={() => generateSelectQuery(schema.name)}
-                      onInsertQuery={onInsertQuery}
-                      getObjectIcon={getObjectIcon}
-                      getColumnTypeIcon={getColumnTypeIcon}
-                      registeredTables={registeredTables}
-                    />
-                  ))}
+              ) : localTables.length === 0 ? (
+                <div className="px-2 py-4 text-center text-white/50 text-sm">
+                  No local tables. Import data to get started.
                 </div>
+              ) : (
+                <div className="py-1">
+                  {/* Tables Section */}
+                  {localTablesData.length > 0 && (
+                    <div className="mb-2">
+                      <div className="flex items-center px-2 py-1 text-xs font-medium text-white/50">
+                        <Layers size={12} className="mr-1" />
+                        Tables ({localTablesData.length})
+                      </div>
+                      {localTablesData.map(schema => (
+                        <TableItem
+                          key={schema.name}
+                          schema={schema}
+                          tableId={`local.${schema.name}`}
+                          isExpanded={expandedTables.has(`local.${schema.name}`)}
+                          onToggle={() => toggleTable(`local.${schema.name}`)}
+                          onGenerateQuery={generateSelectQuery}
+                          onGenerateColumnQuery={generateColumnQuery}
+                          getObjectIcon={getObjectIcon}
+                          getColumnTypeIcon={getColumnTypeIcon}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Views Section */}
+                  {localViewsData.length > 0 && (
+                    <div className="mb-2">
+                      <div className="flex items-center px-2 py-1 text-xs font-medium text-white/50">
+                        <Eye size={12} className="mr-1" />
+                        Views ({localViewsData.length})
+                      </div>
+                      {localViewsData.map(schema => (
+                        <TableItem
+                          key={schema.name}
+                          schema={schema}
+                          tableId={`local.${schema.name}`}
+                          isExpanded={expandedTables.has(`local.${schema.name}`)}
+                          onToggle={() => toggleTable(`local.${schema.name}`)}
+                          onGenerateQuery={generateSelectQuery}
+                          onGenerateColumnQuery={generateColumnQuery}
+                          getObjectIcon={getObjectIcon}
+                          getColumnTypeIcon={getColumnTypeIcon}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* MotherDuck Database Sections */}
+        {motherDuckConnected ? (
+          motherDuckDatabases.map((db) => {
+            const schemas = motherDuckSchemas.get(db.name) || [];
+            const tables = schemas.filter(s => s.type === 'table');
+            const views = schemas.filter(s => s.type === 'view');
+            const isExpanded = expandedDatabases.has(db.name);
+
+            return (
+              <div key={db.name} className="border-b border-white/5">
+                {/* Database Header */}
+                <div className="flex items-center justify-between px-2 py-2 hover:bg-white/5 cursor-pointer"
+                     onClick={() => toggleDatabase(db.name)}>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-white/70">
+                      {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    </span>
+                    <Cloud size={16} className="text-orange-300" />
+                    <span className="text-sm font-medium text-white">{db.name}</span>
+                    {db.shared && (
+                      <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">
+                        Shared
+                      </span>
+                    )}
+                    <span className="text-xs text-white/60">
+                      ({tables.length + views.length})
+                    </span>
+                  </div>
+                  <Tooltip content={`Refresh ${db.name} schemas`}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMotherDuckRefresh(db.name);
+                      }}
+                      disabled={motherDuckRefreshing.has(db.name)}
+                      className="p-1 hover:bg-white/10 rounded text-white/70 hover:text-white transition-colors"
+                    >
+                      <RefreshCw size={12} className={motherDuckRefreshing.has(db.name) ? "animate-spin" : ""} />
+                    </button>
+                  </Tooltip>
+                </div>
+
+                {/* Database Content */}
+                {isExpanded && (
+                  <div className="pl-6">
+                    {motherDuckRefreshing.has(db.name) ? (
+                      <div className="flex items-center justify-center py-4 text-white/50">
+                        <Loader2 size={16} className="animate-spin mr-2" />
+                        <span className="text-sm">Loading {db.name} schemas...</span>
+                      </div>
+                    ) : schemas.length === 0 ? (
+                      <div className="px-2 py-4 text-center text-white/50 text-sm">
+                        No tables found in {db.name}
+                      </div>
+                    ) : (
+                      <div className="py-1">
+                        {/* Tables Section */}
+                        {tables.length > 0 && (
+                          <div className="mb-2">
+                            <div className="flex items-center px-2 py-1 text-xs font-medium text-white/50">
+                              <Layers size={12} className="mr-1" />
+                              Tables ({tables.length})
+                            </div>
+                            {tables.map(table => {
+                              const tableId = `${db.name}.${table.name}`;
+                              const schema = motherDuckTableSchemas[tableId] || {
+                                name: table.name,
+                                type: table.type as "table" | "view",
+                                source: "motherduck" as const,
+                                database: db.name,
+                                columns: [],
+                              };
+
+                              return (
+                                <TableItem
+                                  key={tableId}
+                                  schema={schema}
+                                  tableId={tableId}
+                                  isExpanded={expandedTables.has(tableId)}
+                                  isLoadingColumns={loadingColumns.has(tableId)}
+                                  onToggle={() => toggleTable(tableId)}
+                                  onGenerateQuery={generateSelectQuery}
+                                  onGenerateColumnQuery={generateColumnQuery}
+                                  getObjectIcon={getObjectIcon}
+                                  getColumnTypeIcon={getColumnTypeIcon}
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Views Section */}
+                        {views.length > 0 && (
+                          <div className="mb-2">
+                            <div className="flex items-center px-2 py-1 text-xs font-medium text-white/50">
+                              <Eye size={12} className="mr-1" />
+                              Views ({views.length})
+                            </div>
+                            {views.map(view => {
+                              const tableId = `${db.name}.${view.name}`;
+                              const schema = motherDuckTableSchemas[tableId] || {
+                                name: view.name,
+                                type: view.type as "table" | "view",
+                                source: "motherduck" as const,
+                                database: db.name,
+                                columns: [],
+                              };
+
+                              return (
+                                <TableItem
+                                  key={tableId}
+                                  schema={schema}
+                                  tableId={tableId}
+                                  isExpanded={expandedTables.has(tableId)}
+                                  isLoadingColumns={loadingColumns.has(tableId)}
+                                  onToggle={() => toggleTable(tableId)}
+                                  onGenerateQuery={generateSelectQuery}
+                                  onGenerateColumnQuery={generateColumnQuery}
+                                  getObjectIcon={getObjectIcon}
+                                  getColumnTypeIcon={getColumnTypeIcon}
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
+            );
+          })
+        ) : (
+          // MotherDuck not connected
+          <div className="border-b border-white/5">
+            <div className="flex items-center justify-between px-4 py-2 bg-gray-500/5">
+              <div className="flex items-center space-x-2">
+                <Cloud size={14} className="text-gray-400" />
+                <span className="text-sm font-medium text-white/60">MotherDuck</span>
+                {motherDuckConnecting && <Loader2 size={12} className="animate-spin" />}
+              </div>
+            </div>
+            <div className="p-4 text-center">
+              <div className="flex items-center justify-center space-x-2 text-white/50">
+             
+                <span className="text-sm">
+                  {motherDuckConnecting ? 'Connecting...' : ''}
+                </span>
+              </div>
+              {motherDuckError && (
+                <p className="text-xs text-red-400 mt-2">{motherDuckError}</p>
+              )}
+              <p className="text-xs text-white/40 mt-2">
+                Connect from the Import tab to see remote tables
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -264,87 +573,108 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
   );
 };
 
-const ObjectRow: React.FC<ObjectRowProps> = ({
-  schema,
-  expanded,
-  onToggle,
-  onGenerateQuery,
-  onInsertQuery,
+// Table Item Component
+interface TableItemProps {
+  schema: TableSchema;
+  tableId: string;
+  isExpanded: boolean;
+  isLoadingColumns?: boolean;
+  onToggle: () => void;
+  onGenerateQuery: (schema: TableSchema) => void;
+  onGenerateColumnQuery: (schema: TableSchema, columnName: string) => void;
+  getObjectIcon: (type: "table" | "view") => React.ReactNode;
+  getColumnTypeIcon: (type: string) => React.ReactNode;
+}
+
+const TableItem: React.FC<TableItemProps> = ({ 
+  schema, 
+  tableId, 
+  isExpanded, 
+  isLoadingColumns = false,
+  onToggle, 
+  onGenerateQuery, 
+  onGenerateColumnQuery,
   getObjectIcon,
-  getColumnTypeIcon,
-  registeredTables,
+  getColumnTypeIcon 
 }) => {
   return (
     <div className="schema-item group">
-      {/* Object row */}
+      {/* Table/View row */}
       <div
-        className="flex items-center p-2 hover:bg-white/5 rounded cursor-pointer text-sm"
+        className="flex items-center px-2 py-1.5 hover:bg-white/5 rounded cursor-pointer text-sm"
         onClick={onToggle}
       >
         <span className="mr-1.5 text-white/70">
-          {expanded ? (
-            <ChevronDown size={16} />
+          {schema.columns.length > 0 || isLoadingColumns ? (
+            isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />
           ) : (
-            <ChevronRight size={16} />
+            <div className="w-3.5 h-3.5" />
           )}
         </span>
+        
         {getObjectIcon(schema.type)}
-        <span
-          className="flex-1 text-white/90 truncate ml-1.5"
-          title={schema.name}
-        >
+        
+        <span className="flex-1 text-white/90 truncate ml-1.5" title={schema.name}>
           {schema.name}
         </span>
         
         <Tooltip placement="left" content="Insert SELECT query">
           <button
-            className="opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity text-white/70"
+            className="opacity-0 group-hover:opacity-100 hover:text-primary transition-all text-white/70 p-1"
             onClick={(e) => {
               e.stopPropagation();
-              onGenerateQuery();
+              onGenerateQuery(schema);
             }}
           >
-            <FileText size={14} />
+            <FileText size={12} />
           </button>
         </Tooltip>
       </div>
 
       {/* Columns */}
-      {expanded && schema.columns && (
-        <div className="ml-7 pl-2 border-l border-white/10 mt-1 mb-2 space-y-1">
-          {schema.columns.map((column) => (
-            <div
-              key={`${schema.name}-${column.name}`}
-              className="flex items-center p-1.5 hover:bg-white/5 rounded text-xs group/column"
-            >
-              {getColumnTypeIcon(column.type)}
-
-              <span
-                title={column.name}
-                className="ml-1.5 text-white/80 truncate"
-              >
-                {column.name}
-              </span>
-
-              <span className="ml-auto text-white/50 text-xs">
-                {column.type}
-              </span>
-
-              <Tooltip placement="left" content="Insert column query">
-                <button
-                  className="opacity-0 group-hover/column:opacity-100 hover:text-primary transition-opacity text-white/70 ml-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const escapedTableName = registeredTables.get(schema.name) || `"${schema.name}"`;
-                    const query = `\nSELECT "${column.name}" \nFROM ${escapedTableName}\nLIMIT 10;`;
-                    onInsertQuery(query);
-                  }}
-                >
-                  <FileText size={12} />
-                </button>
-              </Tooltip>
+      {isExpanded && (
+        <div className="ml-6 pl-2 border-l border-white/10 mt-1 mb-2">
+          {isLoadingColumns ? (
+            <div className="flex items-center py-2 text-white/40 text-xs">
+              <Loader2 size={12} className="animate-spin mr-1.5" />
+              Loading columns...
             </div>
-          ))}
+          ) : schema.columns.length > 0 ? (
+            <div className="space-y-0.5">
+              {schema.columns.map((column) => (
+                <div
+                  key={`${tableId}-${column.name}`}
+                  className="flex items-center px-2 py-1 hover:bg-white/5 rounded text-xs group/column"
+                >
+                  {getColumnTypeIcon(column.type)}
+                  
+                  <span className="ml-1.5 text-white/80 truncate flex-1" title={column.name}>
+                    {column.name}
+                  </span>
+                  
+                  <span className="text-white/40 text-xs mr-2">
+                    {column.type}
+                  </span>
+                  
+                  <Tooltip placement="left" content="Insert column query">
+                    <button
+                      className="opacity-0 group-hover/column:opacity-100 hover:text-primary transition-all text-white/70 p-0.5"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onGenerateColumnQuery(schema, column.name);
+                      }}
+                    >
+                      <FileText size={10} />
+                    </button>
+                  </Tooltip>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="px-2 py-2 text-white/40 text-xs">
+              No columns available
+            </div>
+          )}
         </div>
       )}
     </div>

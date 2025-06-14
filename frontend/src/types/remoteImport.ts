@@ -8,7 +8,8 @@ export type ImportProvider =
   | "google-drive"
   | "custom-url"
   | "huggingface"
-  | "google-sheets";
+  | "google-sheets"
+  | "motherduck";
 
 /**
  * Provider configuration interface
@@ -104,6 +105,55 @@ export interface GoogleAPIConfig {
   scope: string;
 }
 
+
+export interface MotherDuckDatabase {
+  name: string;
+  shared: boolean;
+  tableCount?: number;
+  lastAccessed?: string;
+  owner?: string;
+}
+
+export interface MotherDuckTable {
+  name: string;
+  database: string;
+  rowCount?: number;
+  columnCount?: number;
+  size?: string;
+  lastModified?: string;
+  schema?: Array<{ name: string; type: string }>;
+  description?: string;
+}
+
+export interface MotherDuckConnection {
+  token: string;
+  isConnected: boolean;
+  databases: MotherDuckDatabase[];
+  currentDatabase?: string;
+  lastConnected?: Date;
+}
+
+export interface MotherDuckImportResult {
+  data: string[][];
+  columnTypes: any[];
+  fileName: string;
+  rowCount: number;
+  columnCount: number;
+  sourceType: any;
+  loadedToDuckDB: boolean;
+  tableName: string;
+  isRemote: true;
+  remoteProvider: "motherduck";
+  remoteURL: string;
+  motherDuck: {
+    database: string;
+    table: string;
+    originalRowCount?: number;
+    token?: string; // Optional, for session persistence
+  };
+}
+
+
 /**
  * Error types for remote imports
  */
@@ -151,13 +201,4 @@ export const SUPPORTED_MIME_TYPES = [
   "application/vnd.google-apps.spreadsheet",
   "text/plain",
   "application/octet-stream", // For parquet files
-] as const;
-
-export const SUPPORTED_EXTENSIONS = [
-  "csv",
-  "json",
-  "xlsx",
-  "xls",
-  "txt",
-  "parquet",
 ] as const;

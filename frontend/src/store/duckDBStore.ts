@@ -26,6 +26,10 @@ import {
   createJsonViewWithFallback,
   importJsonWithFallback,
 } from "@/lib/duckdb/ingestion/json/utils";
+import {
+  addLimitIfMissing,
+  hasLimitClause,
+} from "@/lib/duckdb/query/pagination";
 
 interface DuckDBState {
   // DB state
@@ -54,6 +58,15 @@ interface DuckDBState {
   // Auto-detection
   lastTableRefresh: number;
 
+  // MotherDuck state
+  motherDuckClient: unknown | null;
+  motherDuckConnected: boolean;
+  motherDuckConnecting: boolean;
+  motherDuckError: string | null;
+  motherDuckDatabases: Array<{ name: string; shared: boolean }>;
+  selectedMotherDuckDatabase: string | null;
+  motherDuckSchemas: Map<string, { name: string; type: string }[]>;
+
   // Actions
   initialize: () => Promise<boolean>;
   createSampleTable: () => Promise<void>;
@@ -79,7 +92,7 @@ interface DuckDBState {
   getTableSchema: (
     tableName: string
   ) => Promise<{ name: string; type: string }[] | null>;
-  getObjectType: (objectName: string) => Promise<'table' | 'view' | null>;
+  getObjectType: (objectName: string) => Promise<"table" | "view" | null>;
   refreshSchemaCache: () => Promise<void>;
   resetError: () => void;
   cleanupDB: () => Promise<void>;
@@ -110,7 +123,26 @@ interface DuckDBState {
   ) => Promise<any[]>;
   refreshAllTables: () => Promise<void>;
   autoDetectTableChanges: (executedSQL: string) => Promise<void>;
-  
+
+  connectToMotherDuck: (token: string) => Promise<void>;
+  disconnectFromMotherDuck: () => Promise<void>;
+  executeMotherDuckQuery: (sql: string, databaseName?: string) => Promise<any>;
+  refreshMotherDuckSchemas: (databaseName: string) => Promise<void>;
+  getAllAvailableTables: () => Array<{
+    name: string;
+    source: "local" | "motherduck";
+    database?: string;
+  }>;
+  extractTableReferences: (
+    sql: string
+  ) => Array<{ name: string; database?: string }>;
+  isMotherDuckQuery: (sql: string) => {
+    isMotherDuck: boolean;
+    targetDatabase?: string;
+    localTables: string[];
+    motherDuckTables: Array<{ name: string; database: string }>;
+    isHybrid: boolean;
+  };
 }
 
 export const useDuckDBStore = create<DuckDBState>((set, get) => ({
@@ -129,6 +161,13 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
   schemaCache: new Map(),
   lastSchemaCacheUpdate: 0,
   lastTableRefresh: 0,
+  motherDuckClient: null,
+  motherDuckConnected: false,
+  motherDuckConnecting: false,
+  motherDuckError: null,
+  motherDuckDatabases: [],
+  selectedMotherDuckDatabase: null,
+  motherDuckSchemas: new Map(),
 
   // Initialize DuckDB and create sample table
   initialize: async () => {
@@ -568,16 +607,22 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     }
   },
 
-  registerTableManually: async (tableName: string, escapedTableName: string, options: any) => {
-    console.log(`[DuckDBStore] Manually registering: ${tableName} -> ${escapedTableName}`);
-    
+  registerTableManually: async (
+    tableName: string,
+    escapedTableName: string,
+    options: any
+  ) => {
+    console.log(
+      `[DuckDBStore] Manually registering: ${tableName} -> ${escapedTableName}`
+    );
+
     const currentTables = new Map(get().registeredTables);
     currentTables.set(tableName, escapedTableName);
-    
+
     set({
       registeredTables: currentTables,
       lastTableRefresh: Date.now(),
-      ...options
+      ...options,
     });
   },
 
@@ -647,9 +692,11 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     return Array.from(get().registeredTables.keys());
   },
 
-  getObjectType: async (objectName: string): Promise<'table' | 'view' | null> => {
+  getObjectType: async (
+    objectName: string
+  ): Promise<"table" | "view" | null> => {
     const { connection, isInitialized } = get();
-    
+
     if (!connection || !isInitialized) {
       return null;
     }
@@ -1631,9 +1678,9 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
           set({
             registeredTables: newTables,
             isLoading: false,
-            processingStatus: `TXT converted: ${(
-              fileSize 
-            ).toFixed(2)}MB table with ${count} rows (single-column)`,
+            processingStatus: `TXT converted: ${fileSize.toFixed(
+              2
+            )}MB table with ${count} rows (single-column)`,
             processingProgress: 1.0,
           });
 
@@ -1643,7 +1690,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
             rowCount: count,
             isView: false,
             convertedToCsv: true,
-            fileSizeMB:  fileSize,
+            fileSizeMB: fileSize,
             instantImport: false,
             txtFormat: "single_column",
           };
@@ -1820,7 +1867,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         } else if (fileExt === "json") {
           set({ processingStatus: "Importing JSON file..." });
           console.log(`[DuckDBStore] Creating table from JSON file`);
-          
+
           await importJsonWithFallback(conn, escapedTableName, fileName, false);
         } else if (fileExt === "parquet") {
           set({ processingStatus: "Importing Parquet file..." });
@@ -1921,8 +1968,19 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
   /**
    * Execute a SQL query with pagination
    */
-  executePaginatedQuery: async (sql, page, pageSize) => {
-    const { connection, isInitialized, registeredTables } = get();
+
+  executePaginatedQuery: async (
+    sql: string,
+    page: number,
+    pageSize: number
+  ) => {
+    const {
+      connection,
+      isInitialized,
+      registeredTables,
+      motherDuckConnected,
+      motherDuckClient,
+    } = get();
 
     if (!connection || !isInitialized) {
       await get().initialize();
@@ -1935,36 +1993,216 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      // Use the refactored function from our utilities
-      const result = await executePaginatedQuery(
-        {
-          sql,
-          page,
-          pageSize,
-          applyPagination: true,
-          countTotalRows: true,
-        },
-        connection,
-        registeredTables
-      );
+      // SMART DETECTION: Analyze the query to determine execution target
+      const queryAnalysis = get().isMotherDuckQuery(sql);
 
-      // ✨ AUTO-DETECT TABLE CHANGES AFTER SUCCESSFUL EXECUTION
-      // Only run auto-detection on the first page to avoid multiple triggers
-      if (page === 1) {
-        try {
-          await get().autoDetectTableChanges(sql);
-        } catch (autoDetectErr) {
-          console.warn(
-            "[DuckDBStore] Auto-detection failed in paginated query:",
-            autoDetectErr
+      console.log("[DuckDBStore] Query analysis:", {
+        isMotherDuck: queryAnalysis.isMotherDuck,
+        isHybrid: queryAnalysis.isHybrid,
+        targetDatabase: queryAnalysis.targetDatabase,
+        localTables: queryAnalysis.localTables,
+        motherDuckTables: queryAnalysis.motherDuckTables,
+      });
+
+      // Handle hybrid queries
+      if (queryAnalysis.isHybrid) {
+        set({ isLoading: false });
+        throw new Error(
+          `Cross-database query detected!\n\n` +
+            `This query references both local and MotherDuck tables:\n` +
+            `• Local: ${queryAnalysis.localTables.join(", ")}\n` +
+            `• MotherDuck: ${queryAnalysis.motherDuckTables
+              .map((t) => `${t.database}.${t.name}`)
+              .join(", ")}\n\n` +
+            `DataKit will support cross database queries in future.\n` +
+            `Please run separate queries for each database.`
+        );
+      }
+
+      // Execute in MotherDuck if it's a MotherDuck query
+      if (
+        queryAnalysis.isMotherDuck &&
+        motherDuckConnected &&
+        motherDuckClient
+      ) {
+        console.log(
+          `[DuckDBStore] Executing in MotherDuck (database: ${queryAnalysis.targetDatabase})`
+        );
+        console.log(`[DuckDBStore] Original SQL: "${sql}"`);
+
+        // Check if this is a DDL statement (CREATE/DROP/ALTER)
+        const isDDL = /^\s*(CREATE|DROP|ALTER)\s+/i.test(sql);
+
+        if (isDDL) {
+          console.log(
+            `[DuckDBStore] DDL detected - executing without pagination`
           );
-          // Don't fail the main query for auto-detection issues
+
+          const startTime = Date.now();
+          const result = await get().executeMotherDuckQuery(
+            sql,
+            queryAnalysis.targetDatabase
+          );
+          const queryTime = Date.now() - startTime;
+
+          // DDL operations typically don't return data
+          set({ isLoading: false });
+
+          // Trigger schema refresh if it was a successful DDL operation
+          if (queryAnalysis.targetDatabase) {
+            setTimeout(() => {
+              get().refreshMotherDuckSchemas(queryAnalysis.targetDatabase!);
+            }, 500);
+          }
+
+          return {
+            data: [],
+            columns: [],
+            totalRows: 0,
+            totalPages: 1,
+            currentPage: 1,
+            pageSize: pageSize,
+            queryTime,
+          };
+        }
+
+        // For non-DDL queries, continue with pagination logic
+        const userHasLimit = hasLimitClause(sql);
+        console.log(`[DuckDBStore] hasLimitClause() returned: ${userHasLimit}`);
+        console.log(
+          `[DuckDBStore] Current page: ${page}, pageSize: ${pageSize}`
+        );
+
+        if (userHasLimit) {
+          console.log(`[DuckDBStore] BRANCH: User has LIMIT - executing as-is`);
+
+          const startTime = Date.now();
+          const result = await get().executeMotherDuckQuery(
+            sql,
+            queryAnalysis.targetDatabase
+          );
+          const queryTime = Date.now() - startTime;
+
+          const columns =
+            result && result.length > 0 ? Object.keys(result[0]) : [];
+
+          set({ isLoading: false });
+
+          return {
+            data: Array.isArray(result) ? result : [],
+            columns,
+            totalRows: result.length,
+            totalPages: 1,
+            currentPage: 1,
+            pageSize: result.length,
+            queryTime,
+          };
+        } else {
+          console.log(
+            `[DuckDBStore] BRANCH: No LIMIT found - applying pagination`
+          );
+
+          const paginatedSql = addLimitIfMissing(sql, page, pageSize);
+          console.log(
+            `[DuckDBStore] addLimitIfMissing() returned: "${paginatedSql}"`
+          );
+
+          const startTime = Date.now();
+          const result = await get().executeMotherDuckQuery(
+            paginatedSql,
+            queryAnalysis.targetDatabase
+          );
+          const queryTime = Date.now() - startTime;
+
+          // Get total count for pagination
+          let totalRows = result ? result.length : 0;
+          try {
+            let cleanSql = sql.trim();
+            if (cleanSql.endsWith(";")) {
+              cleanSql = cleanSql.slice(0, -1).trim();
+            }
+
+            const countQuery = cleanSql.replace(
+              /SELECT\s+.*?\s+FROM/i,
+              "SELECT COUNT(*) as total FROM"
+            );
+            console.log(`[DuckDBStore] Count query: ${countQuery}`);
+
+            const countResult = await get().executeMotherDuckQuery(
+              countQuery,
+              queryAnalysis.targetDatabase
+            );
+            if (countResult && countResult[0]) {
+              const rawTotal = countResult[0].total;
+              totalRows =
+                typeof rawTotal === "bigint"
+                  ? Number(rawTotal)
+                  : rawTotal || result.length;
+              console.log(`[DuckDBStore] Total rows from count: ${totalRows}`);
+            }
+          } catch (countErr) {
+            console.warn("[DuckDBStore] Failed to get total count:", countErr);
+            totalRows = result.length;
+          }
+
+          const columns =
+            result && result.length > 0 ? Object.keys(result[0]) : [];
+
+          set({ isLoading: false });
+
+          return {
+            data: Array.isArray(result) ? result : [],
+            columns,
+            totalRows: totalRows,
+            totalPages: Math.ceil(totalRows / pageSize),
+            currentPage: page,
+            pageSize: pageSize,
+            queryTime,
+          };
         }
       }
 
-      set({ isLoading: false });
+      // Check if query references unknown MotherDuck tables but not connected
+      else if (
+        queryAnalysis.motherDuckTables.length > 0 &&
+        !motherDuckConnected
+      ) {
+        set({ isLoading: false });
+        throw new Error(
+          `This query references MotherDuck tables but you're not connected:\n` +
+            `${queryAnalysis.motherDuckTables
+              .map((t) => `• ${t.database}.${t.name}`)
+              .join("\n")}\n\n` +
+            `Please connect to MotherDuck first.`
+        );
+      }
 
-      return result;
+      // Execute locally
+      else {
+        console.log("[DuckDBStore] Executing locally");
+        const result = await executePaginatedQuery(
+          {
+            sql,
+            page,
+            pageSize,
+            applyPagination: true,
+            countTotalRows: true,
+          },
+          connection,
+          registeredTables
+        );
+
+        if (page === 1) {
+          try {
+            await get().autoDetectTableChanges(sql);
+          } catch (autoDetectErr) {
+            console.warn("[DuckDBStore] Auto-detection failed:", autoDetectErr);
+          }
+        }
+
+        set({ isLoading: false });
+        return result;
+      }
     } catch (err) {
       console.error(`[DuckDBStore] Paginated query execution error:`, err);
       set({
@@ -1975,6 +2213,148 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       });
       throw err;
     }
+  },
+
+  extractTableReferences: (sql: string) => {
+    const references: Array<{ name: string; database?: string }> = [];
+
+    // Patterns to match table references in different SQL clauses
+    const patterns = [
+      // FROM/JOIN with optional database qualification
+      /(?:FROM|JOIN)\s+(?:"([^"]+)"\.)?(?:"([^"]+)"|([a-zA-Z_][a-zA-Z0-9_]*))(?:\s+(?:AS\s+)?(?:[a-zA-Z_][a-zA-Z0-9_]*))?/gi,
+      // INSERT INTO
+      /INSERT\s+INTO\s+(?:"([^"]+)"\.)?(?:"([^"]+)"|([a-zA-Z_][a-zA-Z0-9_]*))(?:\s+(?:AS\s+)?(?:[a-zA-Z_][a-zA-Z0-9_]*))?/gi,
+      // UPDATE
+      /UPDATE\s+(?:"([^"]+)"\.)?(?:"([^"]+)"|([a-zA-Z_][a-zA-Z0-9_]*))(?:\s+(?:AS\s+)?(?:[a-zA-Z_][a-zA-Z0-9_]*))?/gi,
+      // CREATE TABLE/VIEW with database qualification
+      /CREATE\s+(?:TABLE|VIEW)\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:"([^"]+)"\.)?(?:"([^"]+)"|([a-zA-Z_][a-zA-Z0-9_]*))/gi,
+      // DROP TABLE/VIEW with database qualification
+      /DROP\s+(?:TABLE|VIEW)\s+(?:IF\s+EXISTS\s+)?(?:"([^"]+)"\.)?(?:"([^"]+)"|([a-zA-Z_][a-zA-Z0-9_]*))/gi,
+      // ALTER TABLE
+      /ALTER\s+TABLE\s+(?:"([^"]+)"\.)?(?:"([^"]+)"|([a-zA-Z_][a-zA-Z0-9_]*))/gi,
+    ];
+
+    patterns.forEach((pattern) => {
+      let match;
+      while ((match = pattern.exec(sql)) !== null) {
+        const [, database, quotedTable, unquotedTable] = match;
+        const tableName = quotedTable || unquotedTable;
+
+        if (tableName) {
+          references.push({
+            name: tableName,
+            database: database || undefined,
+          });
+        }
+      }
+    });
+
+    // Remove duplicates
+    const unique = references.filter(
+      (ref, index, self) =>
+        index ===
+        self.findIndex(
+          (r) => r.name === ref.name && r.database === ref.database
+        )
+    );
+
+    return unique;
+  },
+
+  isMotherDuckQuery: (sql: string) => {
+    const state = get();
+    const { registeredTables, motherDuckSchemas } = state;
+
+    // Extract all table references from the SQL
+    const tableRefs = get().extractTableReferences(sql);
+
+    if (tableRefs.length === 0) {
+      return {
+        isMotherDuck: false,
+        localTables: [],
+        motherDuckTables: [],
+        isHybrid: false,
+      };
+    }
+
+    const localTables: string[] = [];
+    const motherDuckTables: Array<{ name: string; database: string }> = [];
+
+    // Check if this is a DDL operation (CREATE/DROP/ALTER)
+    const isDDL = /^\s*(CREATE|DROP|ALTER)\s+/i.test(sql);
+
+    // Check each table reference
+    tableRefs.forEach((ref) => {
+      // If database is specified, it's ALWAYS a MotherDuck reference
+      // Don't check if table exists for DDL operations!
+      if (ref.database) {
+        // For DDL operations, just check if the database exists
+        if (isDDL) {
+          // Even if the database doesn't exist yet, treat it as MotherDuck
+          // (user might be creating a new database)
+          motherDuckTables.push({ name: ref.name, database: ref.database });
+          return;
+        }
+
+        // For non-DDL operations, check if the database exists
+        const hasSchemas = motherDuckSchemas.has(ref.database);
+        if (hasSchemas) {
+          const schemas = motherDuckSchemas.get(ref.database) || [];
+          const tableExists = schemas.some(
+            (schema) => schema.name === ref.name
+          );
+          if (tableExists) {
+            motherDuckTables.push({ name: ref.name, database: ref.database });
+            return;
+          }
+          // If database exists but table doesn't, still treat as MotherDuck
+          // (might be a typo or the table was just dropped)
+          motherDuckTables.push({ name: ref.name, database: ref.database });
+          return;
+        } else {
+          // Database not in schema - but if it has database prefix, it's still MotherDuck
+          motherDuckTables.push({ name: ref.name, database: ref.database });
+          return;
+        }
+      }
+
+      // No database specified - check if it's a local table
+      if (registeredTables.has(ref.name)) {
+        localTables.push(ref.name);
+        return;
+      }
+
+      // If no database specified, check all MotherDuck databases for this table
+      let foundInMotherDuck = false;
+      motherDuckSchemas.forEach((schemas, databaseName) => {
+        const tableExists = schemas.some((schema) => schema.name === ref.name);
+        if (tableExists && !foundInMotherDuck) {
+          motherDuckTables.push({ name: ref.name, database: databaseName });
+          foundInMotherDuck = true;
+        }
+      });
+
+      // If not found anywhere, assume it might be a local table or CTE
+      if (!foundInMotherDuck) {
+        localTables.push(ref.name);
+      }
+    });
+
+    const isHybrid = localTables.length > 0 && motherDuckTables.length > 0;
+    const isMotherDuckOnly =
+      motherDuckTables.length > 0 && localTables.length === 0;
+
+    // Determine target database (prefer the first one found)
+    const targetDatabase =
+      motherDuckTables.length > 0 ? motherDuckTables[0].database : undefined;
+
+    return {
+      isMotherDuck: isMotherDuckOnly,
+      targetDatabase,
+      localTables,
+      motherDuckTables,
+      isHybrid,
+    };
   },
 
   executeChartQuery: async (
@@ -2031,37 +2411,46 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
   refreshAllTables: async () => {
     const { connection, isInitialized } = get();
-  
+
     if (!connection || !isInitialized) {
       console.warn("[DuckDBStore] Cannot refresh tables - not initialized");
       return;
     }
-  
+
     try {
       console.log("[DuckDBStore] Auto-refreshing tables and views...");
 
       const currentKnownTables = get().registeredTables;
       const newRegisteredTables = new Map(currentKnownTables); // Copy existing
       const newSchemaCache = new Map(get().schemaCache);
-  
-      const discoveredObjects = await discoverAllTables(connection, currentKnownTables);
-  
+
+      const discoveredObjects = await discoverAllTables(
+        connection,
+        currentKnownTables
+      );
+
       let newObjectsCount = 0;
-  
-      for (const objectInfo of discoveredObjects) {        // 🔧 FIXED: Only add if it's actually NEW (not already registered)
+
+      for (const objectInfo of discoveredObjects) {
+        // 🔧 FIXED: Only add if it's actually NEW (not already registered)
         if (!currentKnownTables.has(objectInfo.name)) {
           newRegisteredTables.set(objectInfo.name, objectInfo.escapedName);
-  
+
           try {
-            const schema = await getTableSchema(connection, objectInfo.name, objectInfo.escapedName);
+            const schema = await getTableSchema(
+              connection,
+              objectInfo.name,
+              objectInfo.escapedName
+            );
             newSchemaCache.set(objectInfo.name, schema);
             newObjectsCount++;
-  
-            const objectTypeLabel = objectInfo.type === 'view' ? 'view' : 'table';
+
+            const objectTypeLabel =
+              objectInfo.type === "view" ? "view" : "table";
             console.log(
-              `[DuckDBStore] Discovered new ${objectTypeLabel}: ${objectInfo.name} with ${
-                objectInfo.rowCount || 0
-              } rows`
+              `[DuckDBStore] Discovered new ${objectTypeLabel}: ${
+                objectInfo.name
+              } with ${objectInfo.rowCount || 0} rows`
             );
           } catch (schemaErr) {
             console.warn(
@@ -2072,34 +2461,40 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         } else {
           // Object already exists, just make sure it's still in the map
           // (it should be since we copied currentKnownTables)
-          console.log(`[DuckDBStore] Object ${objectInfo.name} already registered, skipping`);
+          console.log(
+            `[DuckDBStore] Object ${objectInfo.name} already registered, skipping`
+          );
         }
       }
-  
+
       const existingCount = currentKnownTables.size;
       const newCount = newRegisteredTables.size;
-      
+
       console.log(`[DuckDBStore] Registration update:`, {
         before: existingCount,
         after: newCount,
         newObjects: newObjectsCount,
         preservedExisting: newCount - newObjectsCount,
       });
-  
+
       set({
         registeredTables: newRegisteredTables,
         schemaCache: newSchemaCache,
         lastTableRefresh: Date.now(),
       });
-  
+
       if (newObjectsCount > 0) {
-        const tables = discoveredObjects.filter(o => o.type === 'table').length;
-        const views = discoveredObjects.filter(o => o.type === 'view').length;
+        const tables = discoveredObjects.filter(
+          (o) => o.type === "table"
+        ).length;
+        const views = discoveredObjects.filter((o) => o.type === "view").length;
         console.log(
           `[DuckDBStore] Auto-refresh complete. Found ${tables} tables and ${views} views (${newObjectsCount} new)`
         );
       } else {
-        console.log("[DuckDBStore] Auto-refresh complete. No new objects found.");
+        console.log(
+          "[DuckDBStore] Auto-refresh complete. No new objects found."
+        );
       }
     } catch (err) {
       console.error("[DuckDBStore] Failed to auto-refresh tables:", err);
@@ -2117,24 +2512,378 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     }
 
     try {
-      // Analyze the SQL for table-modifying commands
+      // Use the updated detection function
       const analysis = detectTableModifyingSQL(executedSQL);
 
       if (analysis.isModifying) {
         console.log(`[DuckDBStore] Detected table-modifying SQL:`, {
           commands: analysis.commands,
-          possibleTables: analysis.possibleTableNames,
+          possibleTableNames: analysis.possibleTableNames,
+          isMotherDuck: analysis.isMotherDuck,
+          database: analysis.database,
         });
 
-        // Wait a brief moment for the query to complete fully
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        if (analysis.isMotherDuck && analysis.database) {
+          // It's a MotherDuck DDL operation
+          console.log(
+            `[DuckDBStore] Detected MotherDuck DDL for database: ${analysis.database}`
+          );
 
-        // Refresh tables to pick up any changes
-        await get().refreshAllTables();
+          // Wait a moment for the operation to complete
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          // Refresh MotherDuck schemas for that database
+          try {
+            await get().refreshMotherDuckSchemas(analysis.database);
+            console.log(
+              `[DuckDBStore] Refreshed MotherDuck schemas for ${analysis.database}`
+            );
+          } catch (refreshErr) {
+            console.warn(
+              `[DuckDBStore] Failed to refresh MotherDuck schemas:`,
+              refreshErr
+            );
+          }
+        } else {
+          // It's a local operation
+          console.log(`[DuckDBStore] Detected local DDL operation`);
+
+          // Wait a brief moment for the query to complete
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          // Refresh local tables
+          await get().refreshAllTables();
+        }
       }
     } catch (err) {
       console.warn("[DuckDBStore] Auto-detection failed:", err);
       // Don't throw here - this is a background operation
     }
+  },
+
+  // In useDuckDBStore, update the connectToMotherDuck method:
+
+  connectToMotherDuck: async (token: string) => {
+    set({ motherDuckConnecting: true, motherDuckError: null });
+
+    try {
+      console.log("[DuckDBStore] Connecting to MotherDuck...");
+
+      const { MDConnection } = await import("@motherduck/wasm-client");
+      const client = await MDConnection.create({ mdToken: token });
+      await client.isInitialized();
+
+      const result = await client.evaluateQuery("SHOW DATABASES");
+      let databases: Array<{ name: string; shared: boolean }> = [];
+
+      if (result?.data?.toRows) {
+        const rows = result.data.toRows();
+        databases = rows
+          .map((row: any) => ({
+            name: row.database_name || row.name || row.Database || row[0] || "",
+            shared: row.shared || false,
+          }))
+          .filter(
+            (db: any) => db.name && db.name !== "system" && db.name !== "temp"
+          );
+      }
+
+      set({
+        motherDuckClient: client,
+        motherDuckConnected: true,
+        motherDuckConnecting: false,
+        motherDuckDatabases: databases,
+        selectedMotherDuckDatabase:
+          databases.length > 0 ? databases[0].name : null,
+      });
+
+      console.log(
+        `[DuckDBStore] Connected to MotherDuck with ${databases.length} databases`
+      );
+
+      // Auto-fetch schemas for the first database to improve UX
+      if (databases.length > 0) {
+        try {
+          await get().refreshMotherDuckSchemas(databases[0].name);
+          console.log(
+            `[DuckDBStore] Auto-loaded schemas for ${databases[0].name}`
+          );
+        } catch (err) {
+          console.warn(
+            `[DuckDBStore] Failed to auto-load schemas for ${databases[0].name}:`,
+            err
+          );
+        }
+      }
+    } catch (err) {
+      console.error("[DuckDBStore] MotherDuck connection failed:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Connection failed";
+      set({
+        motherDuckConnecting: false,
+        motherDuckError: errorMessage,
+      });
+      throw err;
+    }
+  },
+
+  disconnectFromMotherDuck: async () => {
+    const { motherDuckClient } = get();
+
+    try {
+      if (motherDuckClient) {
+        await motherDuckClient.close();
+      }
+    } catch (err) {
+      console.warn("[DuckDBStore] Error during MotherDuck disconnect:", err);
+    }
+
+    set({
+      motherDuckClient: null,
+      motherDuckConnected: false,
+      motherDuckConnecting: false,
+      motherDuckError: null,
+      motherDuckDatabases: [],
+      selectedMotherDuckDatabase: null,
+      motherDuckSchemas: new Map(),
+    });
+
+    console.log("[DuckDBStore] Disconnected from MotherDuck");
+  },
+
+  executeMotherDuckQuery: async (sql: string, databaseName?: string) => {
+    const { motherDuckClient, selectedMotherDuckDatabase } = get();
+
+    if (!motherDuckClient) {
+      throw new Error("MotherDuck client not available");
+    }
+
+    const dbToUse = databaseName || selectedMotherDuckDatabase;
+
+    console.log(
+      `[DuckDBStore] Executing MotherDuck query in database '${dbToUse}':`
+    );
+    console.log(`[DuckDBStore] SQL: ${sql}`);
+
+    try {
+      // Check if query has qualified table names (database.table pattern)
+      const hasQualifiedNames =
+        /"\w+"\."\w+"/.test(sql) || sql.includes(`"${dbToUse}".`);
+
+      let finalSql = sql;
+
+      if (!hasQualifiedNames && dbToUse) {
+        // Only add USE if no qualified names and we have a target database
+        await motherDuckClient.evaluateQuery(`USE ${dbToUse}`);
+        console.log(`[DuckDBStore] Switched to database: ${dbToUse}`);
+      }
+
+      console.log(`[DuckDBStore] About to execute: ${finalSql}`);
+      const result = await motherDuckClient.evaluateQuery(finalSql);
+
+      // DEBUG: Log the raw result structure
+      console.log(`[DuckDBStore] Raw result type:`, typeof result);
+      console.log(`[DuckDBStore] Raw result structure:`, {
+        hasData: !!result?.data,
+        dataType: typeof result?.data,
+        dataIsArray: Array.isArray(result?.data),
+        dataToRows: typeof result?.data?.toRows,
+        dataToArray: typeof result?.data?.toArray,
+      });
+
+      let extractedData = [];
+
+      // Extract data from MotherDuck result with better debugging
+      if (result?.data?.toRows) {
+        extractedData = result.data.toRows();
+        console.log(
+          `[DuckDBStore] Used toRows(), got ${extractedData.length} rows`
+        );
+      } else if (result?.data?.toArray) {
+        extractedData = result.data.toArray();
+        console.log(
+          `[DuckDBStore] Used toArray(), got ${extractedData.length} rows`
+        );
+      } else if (Array.isArray(result?.data)) {
+        extractedData = result.data;
+        console.log(
+          `[DuckDBStore] Used direct array, got ${extractedData.length} rows`
+        );
+      } else {
+        console.warn(`[DuckDBStore] Unknown result format:`, result);
+        extractedData = [];
+      }
+
+      // CRITICAL: If we got way more rows than expected, something went wrong
+      if (sql.toLowerCase().includes("limit")) {
+        const limitMatch = sql.match(/limit\s+(\d+)/i);
+        if (limitMatch) {
+          const expectedLimit = parseInt(limitMatch[1], 10);
+          if (extractedData.length > expectedLimit * 2) {
+            // Allow some buffer
+            console.error(
+              `[DuckDBStore] LIMIT clause ignored! Expected ~${expectedLimit} rows, got ${extractedData.length}`
+            );
+            console.error(
+              `[DuckDBStore] This suggests MotherDuck is not respecting the LIMIT clause`
+            );
+
+            // FALLBACK: Manually limit the results client-side
+            console.warn(
+              `[DuckDBStore] Applying client-side limit to ${expectedLimit} rows`
+            );
+            extractedData = extractedData.slice(0, expectedLimit);
+          }
+        }
+      }
+
+      console.log(`[DuckDBStore] Final result: ${extractedData.length} rows`);
+      return extractedData;
+    } catch (err) {
+      console.error("[DuckDBStore] MotherDuck query failed:", err);
+      throw err;
+    }
+  },
+
+  refreshMotherDuckSchemas: async (databaseName: string) => {
+    const { motherDuckClient } = get();
+
+    if (!motherDuckClient) {
+      throw new Error("MotherDuck client not available");
+    }
+
+    try {
+      console.log(
+        `[DuckDBStore] Refreshing schemas for MotherDuck database: ${databaseName}`
+      );
+
+      // Switch to the database
+      await motherDuckClient.evaluateQuery(`USE ${databaseName}`);
+
+      // Get all tables
+      const tablesResult = await motherDuckClient.evaluateQuery("SHOW TABLES");
+      let tableNames: Set<string> = new Set();
+      let schemas: { name: string; type: string }[] = [];
+
+      if (tablesResult?.data?.toRows) {
+        const rows = tablesResult.data.toRows();
+        rows.forEach((row: any) => {
+          const tableName = row.name || row.table_name || row[0] || "";
+          if (tableName) {
+            tableNames.add(tableName);
+            schemas.push({
+              name: tableName,
+              type: "table",
+            });
+          }
+        });
+      }
+
+      // Get all views and mark them correctly
+      try {
+        const viewsResult = await motherDuckClient.evaluateQuery("SHOW VIEWS");
+        if (viewsResult?.data?.toRows) {
+          const viewRows = viewsResult.data.toRows();
+          viewRows.forEach((row: any) => {
+            const viewName = row.name || row.view_name || row[0] || "";
+            if (viewName) {
+              // Remove from tables if it was listed there
+              if (tableNames.has(viewName)) {
+                schemas = schemas.filter((s) => s.name !== viewName);
+              }
+              // Add as view
+              schemas.push({
+                name: viewName,
+                type: "view",
+              });
+            }
+          });
+        }
+      } catch (viewErr) {
+        console.log("[DuckDBStore] No views or views query failed:", viewErr);
+      }
+
+      // Alternative approach: Use information_schema if available
+      try {
+        const infoSchemaResult = await motherDuckClient.evaluateQuery(`
+        SELECT table_name, table_type 
+        FROM information_schema.tables 
+        WHERE table_schema = '${databaseName}'
+      `);
+
+        if (infoSchemaResult?.data?.toRows) {
+          const infoRows = infoSchemaResult.data.toRows();
+          // Create a map for accurate type information
+          const typeMap = new Map<string, string>();
+
+          infoRows.forEach((row: any) => {
+            if (row.table_name && row.table_type) {
+              const type = row.table_type.toLowerCase().includes("view")
+                ? "view"
+                : "table";
+              typeMap.set(row.table_name, type);
+            }
+          });
+
+          // Update schemas with accurate types
+          schemas = schemas.map((schema) => ({
+            ...schema,
+            type: typeMap.get(schema.name) || schema.type,
+          }));
+        }
+      } catch (infoErr) {
+        console.log(
+          "[DuckDBStore] information_schema query failed, using SHOW TABLES/VIEWS results"
+        );
+      }
+
+      set((state) => ({
+        motherDuckSchemas: new Map(state.motherDuckSchemas).set(
+          databaseName,
+          schemas
+        ),
+      }));
+
+      console.log(
+        `[DuckDBStore] Refreshed ${schemas.length} schemas for ${databaseName}:`,
+        schemas.map((s) => `${s.name} (${s.type})`).join(", ")
+      );
+    } catch (err) {
+      console.error(
+        `[DuckDBStore] Failed to refresh schemas for ${databaseName}:`,
+        err
+      );
+      throw err;
+    }
+  },
+
+  getAllAvailableTables: () => {
+    const state = get();
+    const tables: Array<{
+      name: string;
+      source: "local" | "motherduck";
+      database?: string;
+    }> = [];
+
+    // Local tables
+    Array.from(state.registeredTables.keys()).forEach((tableName) => {
+      tables.push({
+        name: tableName,
+        source: "local",
+      });
+    });
+
+    // MotherDuck tables
+    state.motherDuckSchemas.forEach((schemas, databaseName) => {
+      schemas.forEach((schema) => {
+        tables.push({
+          name: schema.name,
+          source: "motherduck",
+          database: databaseName,
+        });
+      });
+    });
+
+    return tables;
   },
 }));

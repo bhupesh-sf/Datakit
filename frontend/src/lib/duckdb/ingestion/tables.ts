@@ -242,7 +242,6 @@ export async function discoverAllTables(
       });
     }
 
-
     const userTableInfos = tableInfos.filter((info) => info.isUserCreated);
     const systemTableInfos = tableInfos.filter((info) => !info.isUserCreated);
 
@@ -278,40 +277,63 @@ export function detectTableModifyingSQL(sql: string): {
   isModifying: boolean;
   commands: string[];
   possibleTableNames: string[];
+  isMotherDuck: boolean;
+  database?: string;
 } {
   const normalizedSQL = sql.trim().toUpperCase();
   const commands: string[] = [];
   const possibleTableNames: string[] = [];
+  let isMotherDuck = false;
+  let database: string | undefined;
 
   const patterns = [
+    // MotherDuck patterns (with database qualification)
     {
-      regex: /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(["`]?)(\w+)\1/gi,
+      regex:
+        /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?["`]([^"`]+)["`]\.["`]([^"`]+)["`]/gi,
       command: "CREATE TABLE",
-    },
-    {
-      regex: /CREATE\s+VIEW\s+(?:IF\s+NOT\s+EXISTS\s+)?(["`]?)(\w+)\1/gi,
-      command: "CREATE VIEW",
+      isMotherDuck: true,
     },
     {
       regex:
-        /CREATE\s+(?:TEMP|TEMPORARY)\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(["`]?)(\w+)\1/gi,
-      command: "CREATE TEMP TABLE",
+        /CREATE\s+VIEW\s+(?:IF\s+NOT\s+EXISTS\s+)?["`]([^"`]+)["`]\.["`]([^"`]+)["`]/gi,
+      command: "CREATE VIEW",
+      isMotherDuck: true,
     },
     {
-      regex: /ALTER\s+TABLE\s+(["`]?)(\w+)\1/gi,
-      command: "ALTER TABLE",
-    },
-    {
-      regex: /DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?(["`]?)(\w+)\1/gi,
+      regex:
+        /DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?["`]([^"`]+)["`]\.["`]([^"`]+)["`]/gi,
       command: "DROP TABLE",
+      isMotherDuck: true,
     },
     {
-      regex: /DROP\s+VIEW\s+(?:IF\s+EXISTS\s+)?(["`]?)(\w+)\1/gi,
+      regex:
+        /DROP\s+VIEW\s+(?:IF\s+EXISTS\s+)?["`]([^"`]+)["`]\.["`]([^"`]+)["`]/gi,
       command: "DROP VIEW",
+      isMotherDuck: true,
+    },
+    // Local patterns (no database qualification)
+    {
+      regex:
+        /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(["`]?)(\w+)\1(?!\s*\.)/gi,
+      command: "CREATE TABLE",
+      isMotherDuck: false,
     },
     {
-      regex: /INSERT\s+INTO\s+(["`]?)(\w+)\1/gi,
-      command: "INSERT INTO",
+      regex:
+        /CREATE\s+VIEW\s+(?:IF\s+NOT\s+EXISTS\s+)?(["`]?)(\w+)\1(?!\s*\.)/gi,
+      command: "CREATE VIEW",
+      isMotherDuck: false,
+    },
+    {
+      regex: /DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?(["`]?)(\w+)\1(?!\s*\.)/gi,
+      command: "DROP TABLE",
+      isMotherDuck: false,
+    },
+    {
+      regex: /DROP\s+VIEW\s+(?:IF\s+EXISTS\s+)?(["`]?)(\w+)\1(?!\s*\.)/gi,
+      command: "DROP VIEW",
+      isMotherDuck: false,
     },
   ];
 
@@ -325,17 +347,30 @@ export function detectTableModifyingSQL(sql: string): {
       isModifying = true;
       commands.push(pattern.command);
 
-      // Extract table name (group 2 in our regex patterns)
-      if (match[2]) {
-        possibleTableNames.push(match[2].toLowerCase());
+      if (pattern.isMotherDuck) {
+        // For MotherDuck patterns: match[1] is database, match[2] is table
+        isMotherDuck = true;
+        if (match[1] && !database) {
+          database = match[1];
+        }
+        if (match[2]) {
+          possibleTableNames.push(match[2].toLowerCase());
+        }
+      } else {
+        // For local patterns: match[2] is table
+        if (match[2]) {
+          possibleTableNames.push(match[2].toLowerCase());
+        }
       }
     }
   }
 
   return {
     isModifying,
-    commands: [...new Set(commands)], // Remove duplicates
-    possibleTableNames: [...new Set(possibleTableNames)], // Remove duplicates
+    commands: [...new Set(commands)],
+    possibleTableNames: [...new Set(possibleTableNames)],
+    isMotherDuck,
+    database,
   };
 }
 

@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from 'react';
-
 import { useDuckDBStore } from '@/store/duckDBStore';
 import { useAppStore } from '@/store/appStore';
 
@@ -55,7 +54,12 @@ export const useQueryExecution = (
   } = options;
   
   // External store access
-  const { executePaginatedQuery, isLoading: duckDBLoading } = useDuckDBStore();
+  const { 
+    executePaginatedQuery, 
+    isLoading: duckDBLoading,
+    motherDuckConnected 
+  } = useDuckDBStore();
+  
   const { addRecentQuery } = useAppStore();
   
   // Query result state
@@ -97,10 +101,29 @@ export const useQueryExecution = (
   }, []);
   
   /**
+   * Detect if query is targeting MotherDuck
+   */
+  const isMotherDuckQuery = useCallback((sql: string): boolean => {
+    const normalizedSql = sql.toLowerCase();
+    return normalizedSql.includes('"my_db"') || 
+           normalizedSql.includes('motherduck') ||
+           /"\w+"\."/.test(sql); // database.table pattern
+  }, []);
+  
+  /**
    * Execute the current query
    */
   const executeQuery = useCallback(async () => {
-    if (!query.trim()) return;
+    if (!query.trim()) {
+      setError('Please enter a query');
+      return;
+    }
+    
+    // Check if it's a MotherDuck query but not connected
+    if (isMotherDuckQuery(query) && !motherDuckConnected) {
+      setError('This query targets MotherDuck tables, but MotherDuck is not connected. Please connect first.');
+      return;
+    }
     
     try {
       // Reset state
@@ -114,7 +137,6 @@ export const useQueryExecution = (
       // Show warning for potentially large result set queries
       setShowLargeDataWarning(isLargeDataQuery(query));
       
-      // Execute query with pagination
       console.log(`[useQueryExecution] Executing query (page: 1, size: ${rowsPerPage})`);
       const paginatedResult = await executePaginatedQuery(query, 1, rowsPerPage);
       
@@ -142,13 +164,23 @@ export const useQueryExecution = (
       }
     } catch (err) {
       console.error("[useQueryExecution] Query execution error:", err);
-      setError(err instanceof Error ? err.message : "Unknown error executing query");
+      
+      let errorMessage = err instanceof Error ? err.message : "Unknown error executing query";
+      
+      // Enhanced error messages for common issues
+      if (errorMessage.includes('syntax error at or near "LIMIT"')) {
+        errorMessage = 'SQL syntax error: Invalid LIMIT clause. Please check your query syntax.';
+      } else if (errorMessage.includes('not connected')) {
+        errorMessage = 'Database connection lost. Please refresh and try again.';
+      }
+      
+      setError(errorMessage);
       setResults(null);
       setColumns(null);
       setTotalRows(0);
       setTotalPages(0);
     }
-  }, [query, rowsPerPage, executePaginatedQuery, addRecentQuery, isLargeDataQuery]);
+  }, [query, rowsPerPage, executePaginatedQuery, addRecentQuery, isLargeDataQuery, isMotherDuckQuery, motherDuckConnected]);
   
   /**
    * Change to a different page of results
