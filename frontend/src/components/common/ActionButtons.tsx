@@ -27,8 +27,8 @@ interface UnifiedActionButtonsProps {
 const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
   feedbackContext,
   discordInviteUrl = DISCORD_URL,
-  docsUrl = "https://docs.datakit.page/",
-  productHuntUrl = "https://www.producthunt.com/products/datakit",
+  docsUrl = "https://docs.datakit.page/"
+  // productHuntUrl = "https://www.producthunt.com/products/datakit",
 }) => {
   return (
     <div className="flex items-center gap-2">
@@ -109,20 +109,20 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
   );
 };
 
-const ProductHuntIcon: React.FC<{ size?: number; className?: string }> = ({
-  size = 24,
-  className = "",
-}) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className={className}
-  >
-    <path d="M12 0C5.376 0 0 5.376 0 12s5.376 12 12 12 12-5.376 12-12S18.624 0 12 0zm0 21.6c-5.304 0-9.6-4.296-9.6-9.6s4.296-9.6 9.6-9.6 9.6 4.296 9.6 9.6-4.296 9.6-9.6 9.6zm1.2-14.4H8.4v10.8h3v-3.6h1.8c2.4 0 4.2-1.8 4.2-3.6s-1.8-3.6-4.2-3.6zm0 5.4h-1.8V9h1.8c.96 0 1.8.84 1.8 1.8s-.84 1.8-1.8 1.8z" />
-  </svg>
-);
+// const ProductHuntIcon: React.FC<{ size?: number; className?: string }> = ({
+//   size = 24,
+//   className = "",
+// }) => (
+//   <svg
+//     xmlns="http://www.w3.org/2000/svg"
+//     width={size}
+//     height={size}
+//     viewBox="0 0 24 24"
+//     fill="currentColor"
+//     className={className}
+//   >
+//     <path d="M12 0C5.376 0 0 5.376 0 12s5.376 12 12 12 12-5.376 12-12S18.624 0 12 0zm0 21.6c-5.304 0-9.6-4.296-9.6-9.6s4.296-9.6 9.6-9.6 9.6 4.296 9.6 9.6-4.296 9.6-9.6 9.6zm1.2-14.4H8.4v10.8h3v-3.6h1.8c2.4 0 4.2-1.8 4.2-3.6s-1.8-3.6-4.2-3.6zm0 5.4h-1.8V9h1.8c.96 0 1.8.84 1.8 1.8s-.84 1.8-1.8 1.8z" />
+//   </svg>
+// );
 
 export default ActionButtons;
