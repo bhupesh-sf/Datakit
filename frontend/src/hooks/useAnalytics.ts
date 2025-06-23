@@ -9,19 +9,26 @@ interface AnalyticsEvent {
 export const useAnalytics = () => {
   const { analyticsEnabled, trackEvent } = useConsentManager();
 
-  const track = useCallback((event: AnalyticsEvent) => {
-    // Only track if user has consented to analytics
-    if (analyticsEnabled) {
-      trackEvent(event.name, event.props);
-    }
-  }, [analyticsEnabled, trackEvent]);
+  const track = useCallback(
+    (event: AnalyticsEvent) => {
+      // Only track if user has consented to analytics
+      if (analyticsEnabled) {
+        trackEvent(event.name, event.props);
+      }
+    },
+    [analyticsEnabled, trackEvent]
+  );
 
   // Convenience methods for common events
   const trackFileUpload = useCallback(
     (result: any) => {
       track({
         name: "file_upload",
-        props: { ...result },
+        props: {
+          source_file_type: result.sourceType,
+          is_streaming_import: result.isStreamingImport,
+          row_count: result.rowCount,
+        },
       });
     },
     [track]
