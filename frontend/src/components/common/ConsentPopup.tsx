@@ -154,7 +154,7 @@ export const useConsentManager = () => {
       // Create a new script to reload it
       const newScript = document.createElement('script');
       newScript.defer = true;
-      newScript.setAttribute('data-domain', 'datakit.page');
+      newScript.setAttribute('data-domain', 'https://datakit.page');
       newScript.src = 'https://plausible.io/js/script.js';
       document.head.appendChild(newScript);   
     }
