@@ -27,7 +27,7 @@ export const useAnalytics = () => {
         props: {
           source_file_type: result.sourceType,
           is_streaming_import: result.isStreamingImport,
-          row_count: result.rowCount,
+          row_count: String(result.rowCount),
         },
       });
     },

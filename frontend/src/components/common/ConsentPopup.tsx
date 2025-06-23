@@ -125,7 +125,6 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
 const plausible = Plausible({
   domain: 'datakit.page',
   trackLocalhost: true, // Set to true if you want to track localhost
-  // apiHost: 'https://datakit.page', // Your Plausible instance URL
 });
 
 export const useConsentManager = () => {
@@ -177,9 +176,9 @@ export const useConsentManager = () => {
   };
 
   // Utility function to track custom events (only if consent given)
-  const trackEvent = (eventName: string, props?: Record<string, any>) => {
+  const trackEvent = (eventName: string, data?: Record<string, any>) => {
     if (analyticsEnabled) {
-      plausible.trackEvent(eventName, { ...props });
+      plausible.trackEvent(eventName, { props: {...data} })
     }
   };
 
