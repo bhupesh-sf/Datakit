@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@duckdb/duckdb-wasm": "^1.29.1-dev132.0",
+    "@mlc-ai/web-llm": "^0.2.79",
     "@monaco-editor/react": "^4.7.0",
     "@motherduck/wasm-client": "^0.6.6",
     "@radix-ui/react-slot": "^1.2.2",
