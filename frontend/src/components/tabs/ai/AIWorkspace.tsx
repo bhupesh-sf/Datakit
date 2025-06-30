@@ -125,10 +125,10 @@ const AIWorkspace: React.FC = () => {
               className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-primary/20 transition-colors"
             />
             
-            {/* Collapse Button */}
+            {/* Collapse Button - Centered */}
             <button
               onClick={() => setResultsExpanded(false)}
-              className="absolute top-0 right-2 p-1 rounded bg-white/20 hover:bg-white/10 transition-colors"
+              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black border border-white rounded-full p-2 hover:border-primary/50 transition-colors shadow-lg"
             >
               <ChevronDown className="h-4 w-4 text-white/70" />
             </button>
