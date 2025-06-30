@@ -10,6 +10,17 @@ import {
   QueryIntent
 } from "@/types/ai";
 
+interface QueryResults {
+  data: any[] | null;
+  columns: string[] | null;
+  isLoading: boolean;
+  error: string | null;
+  totalRows: number;
+  currentPage: number;
+  totalPages: number;
+  rowsPerPage: number;
+}
+
 interface AIState {
   // Model Management
   activeProvider: AIProvider;
@@ -25,6 +36,8 @@ interface AIState {
   queryHistory: AIQuery[];
   isProcessing: boolean;
   currentQueryId: string | null;
+  queryResults: QueryResults | null;
+  currentResponse: string | null;
   
   // MCP State
   mcpConnections: MCPConnection[];
@@ -55,6 +68,8 @@ interface AIState {
   addQueryToHistory: (query: AIQuery) => void;
   clearQueryHistory: () => void;
   setProcessing: (isProcessing: boolean) => void;
+  setQueryResults: (results: QueryResults | null) => void;
+  setCurrentResponse: (response: string | null) => void;
   
   // Model Actions
   downloadLocalModel: (modelId: string) => Promise<void>;
@@ -149,6 +164,8 @@ export const useAIStore = create<AIState>()(
       queryHistory: [],
       isProcessing: false,
       currentQueryId: null,
+      queryResults: null,
+      currentResponse: null,
       
       mcpConnections: [],
       activeMCPConnection: null,
@@ -203,6 +220,10 @@ export const useAIStore = create<AIState>()(
       clearQueryHistory: () => set({ queryHistory: [] }),
       
       setProcessing: (isProcessing) => set({ isProcessing }),
+      
+      setQueryResults: (results) => set({ queryResults: results }),
+      
+      setCurrentResponse: (response) => set({ currentResponse: response }),
       
       downloadLocalModel: async (modelId) => {
         try {

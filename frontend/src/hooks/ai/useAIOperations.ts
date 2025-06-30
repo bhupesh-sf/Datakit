@@ -37,21 +37,35 @@ export const useAIOperations = () => {
     }
   }, [apiKeys, activeModel]);
 
-  const getDataContext = useCallback(() => {
+  const getDataContext = useCallback(async () => {
     if (!tableName || !activeFileInfo) {
       return null;
     }
 
-    // TODO: Get schema from DuckDB store
-    // const { getTableSchema } = useDuckDBStore.getState();
-    
-    return {
-      tableName,
-      schema: [], // TODO: Get actual schema
-      rowCount: activeFileInfo.rowCount,
-      description: `${activeFileInfo.fileType} file with ${activeFileInfo.columnCount} columns`,
-    };
-  }, [tableName, activeFileInfo]);
+    // Get actual schema from DuckDB
+    try {
+      const result = await executeQuery(`DESCRIBE "${tableName}"`);
+      const schema = result ? result.toArray().map((row: any) => ({
+        name: row.column_name || row.name || "",
+        type: row.column_type || row.type || "",
+      })) : [];
+      
+      return {
+        tableName,
+        schema,
+        rowCount: activeFileInfo.rowCount,
+        description: `${activeFileInfo.fileType} file with ${activeFileInfo.columnCount} columns`,
+      };
+    } catch (error) {
+      console.error('Failed to get table schema:', error);
+      return {
+        tableName,
+        schema: [],
+        rowCount: activeFileInfo.rowCount,
+        description: `${activeFileInfo.fileType} file with ${activeFileInfo.columnCount} columns`,
+      };
+    }
+  }, [tableName, activeFileInfo, executeQuery]);
 
   const detectIntent = useCallback((prompt: string): QueryIntent => {
     const lowerPrompt = prompt.toLowerCase();
@@ -117,31 +131,8 @@ export const useAIOperations = () => {
     return queries;
   }, []);
 
-  // Auto-execute SQL queries if setting is enabled
-  const autoExecuteSQLQueries = useCallback(async (response: string) => {
-    if (!autoExecuteSQL) return;
-    
-    const queries = extractSQLQueries(response);
-    if (queries.length === 0) return;
-    
-    // For now, execute the first query only
-    // TODO: Handle multiple queries with user selection
-    const firstQuery = queries[0];
-    try {
-      // Use executePaginatedQuery for better data handling
-      const result = await executePaginatedQuery(firstQuery, 1, 100);
-      if (result.success) {
-        console.log('Auto-executed SQL successfully:', result.data?.length || 0, 'rows');
-      } else {
-        console.error('Auto-execution failed:', result.error);
-      }
-    } catch (error) {
-      console.error('Auto-execution failed:', error);
-    }
-  }, [autoExecuteSQL, extractSQLQueries, executePaginatedQuery]);
-
   const generateSQL = useCallback(async (prompt: string) => {
-    const context = getDataContext();
+    const context = await getDataContext();
     if (!context) {
       throw new Error('No data context available');
     }
@@ -154,7 +145,7 @@ export const useAIOperations = () => {
   }, [activeProvider, getDataContext]);
 
   const analyzeData = useCallback(async (prompt: string, data?: any[]) => {
-    const context = getDataContext();
+    const context = await getDataContext();
     if (!context) {
       throw new Error('No data context available');
     }
@@ -278,7 +269,7 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
     const startTime = Date.now();
     
     try {
-      const context = getDataContext();
+      const context = await getDataContext();
       if (!context) {
         throw new Error('No data context available');
       }
@@ -290,6 +281,8 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
           
           Table: ${context.tableName}
           Schema: ${context.schema.map(col => `${col.name} (${col.type})`).join(', ')}
+          
+          IMPORTANT: Only use the column names listed in the schema above. Do not assume any other columns exist.
           
           Provide helpful, accurate responses with SQL queries when appropriate.`,
         },
@@ -380,12 +373,77 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
     return apiKeys.has(activeProvider) && !!apiKeys.get(activeProvider);
   }, [activeProvider, apiKeys, activeModel]);
 
+  // Handle running SQL from the UI
+  const handleRunSQL = useCallback(async (sql: string) => {
+    try {
+      const result = await executePaginatedQuery(sql, 1, 100);
+      
+      if (result.success && result.data) {
+        // Update the AI store with results
+        const { setQueryResults } = useAIStore.getState();
+        
+        const columns = result.data.length > 0 ? Object.keys(result.data[0]) : [];
+        const totalRows = result.totalRows || result.data.length;
+        const totalPages = Math.ceil(totalRows / 100);
+        
+        setQueryResults({
+          data: result.data,
+          columns,
+          totalRows,
+          totalPages,
+          currentPage: 1,
+          rowsPerPage: 100,
+          isLoading: false,
+          error: null,
+        });
+      } else {
+        const { setQueryResults } = useAIStore.getState();
+        setQueryResults({
+          data: null,
+          columns: null,
+          totalRows: 0,
+          totalPages: 0,
+          currentPage: 1,
+          rowsPerPage: 100,
+          isLoading: false,
+          error: result.error || 'Query execution failed',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to execute SQL:', error);
+      const { setQueryResults } = useAIStore.getState();
+      setQueryResults({
+        data: null,
+        columns: null,
+        totalRows: 0,
+        totalPages: 0,
+        currentPage: 1,
+        rowsPerPage: 100,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      });
+    }
+  }, [executePaginatedQuery]);
+
+  // Auto-execute SQL queries if setting is enabled
+  const autoExecuteSQLQueries = useCallback(async (response: string) => {
+    if (!autoExecuteSQL) return;
+    
+    const queries = extractSQLQueries(response);
+    if (queries.length === 0) return;
+    
+    // Auto-execute the first query
+    const firstQuery = queries[0];
+    await handleRunSQL(firstQuery);
+  }, [autoExecuteSQL, extractSQLQueries, handleRunSQL]);
+
   return {
     // State
     isExecuting,
     currentResponse,
     streamingResponse,
     canExecute: canExecute(),
+    isLoading: isExecuting,
     
     // Actions
     executeAIQuery,
@@ -396,6 +454,7 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
     detectIntent,
     previewSQL,
     validateSQL,
+    handleRunSQL,
     
     // Utilities
     extractSQLQueries,

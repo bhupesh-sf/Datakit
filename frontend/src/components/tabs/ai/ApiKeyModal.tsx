@@ -50,7 +50,12 @@ const PROVIDER_CONFIG = {
   // },
 } as const;
 
-const ApiKeyModal: React.FC = () => {
+interface ApiKeyModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
   const [activeProvider, setActiveProvider] = useState<AIProvider>("openai");
   const [keyInputs, setKeyInputs] = useState<Map<AIProvider, string>>(
     new Map()
@@ -65,13 +70,11 @@ const ApiKeyModal: React.FC = () => {
 
   const {
     apiKeys,
-    showApiKeyModal,
     autoExecuteSQL,
     showCostEstimates,
     maxHistoryItems,
     setApiKey,
     validateApiKey,
-    toggleApiKeyModal,
     updateSettings,
   } = useAIStore();
 
@@ -123,7 +126,7 @@ const ApiKeyModal: React.FC = () => {
         setApiKey(provider, key.trim());
       }
     }
-    toggleApiKeyModal();
+    onClose();
   };
 
   const getProviderColorClass = (
@@ -150,14 +153,14 @@ const ApiKeyModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      {showApiKeyModal && (
+      {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-50 flex items-center justify-center px-4 backdrop-blur-sm bg-black/60"
-          onClick={toggleApiKeyModal}
+          onClick={onClose}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -288,7 +291,7 @@ const ApiKeyModal: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={toggleApiKeyModal}
+                    onClick={onClose}
                     className="h-8 w-8 p-0 rounded-full text-white/70 hover:text-white hover:bg-white/10"
                   >
                     <X className="h-4 w-4" />
@@ -513,7 +516,7 @@ const ApiKeyModal: React.FC = () => {
               {/* Footer */}
               <div className="p-4 border-t border-white/10 bg-darkNav/30">
                 <div className="flex justify-end gap-3">
-                  <Button variant="ghost" onClick={toggleApiKeyModal}>
+                  <Button variant="ghost" onClick={onClose}>
                     Cancel
                   </Button>
                   <Button variant="primary" onClick={handleSave}>
