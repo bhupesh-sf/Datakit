@@ -90,8 +90,6 @@ export class OpenAIProvider {
       maxTokens?: number;
     }
   ): Promise<void> {
-    console.log('[OpenAIProvider] Starting stream completion with model:', this.model);
-    console.log('[OpenAIProvider] Messages:', messages);
     try {
       const response = await this.apiProvider.makeRequest('/chat/completions', {
         method: 'POST',

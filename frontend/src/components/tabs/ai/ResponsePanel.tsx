@@ -4,10 +4,21 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { useAIStore } from "@/store/aiStore";
 import { useAIOperations } from "@/hooks/ai/useAIOperations";
+import { aiService } from "@/lib/ai/aiService";
 import SQLQueryCard from "./SQLQueryCard";
+import { Coins } from "lucide-react";
 
 const ResponsePanel: React.FC = () => {
-  const { isProcessing, currentResponse, streamingResponse } = useAIStore();
+  const { 
+    isProcessing, 
+    currentResponse, 
+    streamingResponse,
+    currentTokenUsage,
+    activeProvider,
+    activeModel,
+    availableModels,
+    showCostEstimates
+  } = useAIStore();
   const { extractSQLQueries } = useAIOperations();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -100,14 +111,50 @@ const ResponsePanel: React.FC = () => {
   };
 
   const responseParts = renderResponse();
+  
+  // Calculate cost
+  const calculateCost = () => {
+    if (!currentTokenUsage || !activeProvider) return null;
+    
+    const cost = aiService.calculateCost(activeProvider, {
+      promptTokens: currentTokenUsage.input,
+      completionTokens: currentTokenUsage.output,
+    });
+    
+    return cost;
+  };
+  
+  const cost = calculateCost();
+  const totalTokens = currentTokenUsage ? currentTokenUsage.input + currentTokenUsage.output : 0;
 
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-white/10">
+      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
         <h3 className="text-sm font-medium text-white flex items-center gap-2">
           Response
         </h3>
+        {showCostEstimates && currentTokenUsage && (
+          <div className="flex items-center gap-3 text-xs text-white/60">
+            <div className="flex items-center gap-1">
+              <span>Tokens:</span>
+              <span className="text-white/80 font-mono">
+                {totalTokens.toLocaleString()}
+              </span>
+              <span className="text-white/40">
+                ({currentTokenUsage.input.toLocaleString()} + {currentTokenUsage.output.toLocaleString()})
+              </span>
+            </div>
+            {cost !== null && cost > 0 && (
+              <div className="flex items-center gap-1">
+                <Coins className="h-3 w-3" />
+                <span className="text-white/80 font-mono">
+                  ${cost.toFixed(4)}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content */}

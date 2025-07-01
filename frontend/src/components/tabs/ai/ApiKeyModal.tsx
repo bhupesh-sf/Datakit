@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 
 import OpenAILogo from "@/assets/openai.webp";
 import AnthropicLogo from "@/assets/anthropic.webp";
-import GroqLogo from '@/assets/groq.png';
+import GroqLogo from "@/assets/groq.png";
 
 const PROVIDER_CONFIG = {
   openai: {
@@ -27,7 +27,8 @@ const PROVIDER_CONFIG = {
     color: "blue",
     description: "GPT-4o and GPT-4o Mini models are supported",
     websiteUrl: "https://platform.openai.com/api-keys",
-    helpText: "Get your API key from OpenAI Platform (includes $5 free credits for new users)",
+    helpText:
+      "Get your API key from OpenAI Platform (includes $5 free credits for new users)",
     keyFormat: "sk-...",
   },
   anthropic: {
@@ -36,7 +37,8 @@ const PROVIDER_CONFIG = {
     color: "blue",
     description: "Claude 3.5 Sonnet and Haiku  are supported",
     websiteUrl: "https://console.anthropic.com/",
-    helpText: "Get your API key from Anthropic Console (includes free credits for new users)",
+    helpText:
+      "Get your API key from Anthropic Console (includes free credits for new users)",
     keyFormat: "sk-ant-...",
   },
   groq: {
@@ -45,7 +47,8 @@ const PROVIDER_CONFIG = {
     color: "blue",
     description: "Llama 3.1 models with free tier and ultra-fast inference",
     websiteUrl: "https://console.groq.com/keys",
-    helpText: "Get your free API key from Groq Console (generous free tier included)",
+    helpText:
+      "Get your free API key from Groq Console (generous free tier included)",
     keyFormat: "gsk_...",
   },
   // local: {
@@ -96,7 +99,6 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
   const handleToggleKeyVisibility = (provider: AIProvider) => {
     setShowKeys(new Map(showKeys.set(provider, !showKeys.get(provider))));
   };
-
 
   const handleSave = () => {
     // Save all keys
@@ -328,7 +330,6 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                               </Button>
                             </div>
                           </div>
-
                         </div>
 
                         {PROVIDER_CONFIG[activeProvider].websiteUrl && (
@@ -400,7 +401,8 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                           </button>
                         </div>
 
-                        <div className="flex items-center justify-between">
+                        {/* TODO: Make this work to show cost estimates as part of Response header */}
+                        {/* <div className="flex items-center justify-between">
                           <div>
                             <label className="text-sm text-white/80">
                               Show cost estimates
@@ -429,7 +431,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                               )}
                             />
                           </button>
-                        </div>
+                        </div> */}
 
                         {/* <div>
                           <label className="block text-sm text-white/80 mb-2">

@@ -77,8 +77,6 @@ export class GroqProvider {
     onChunk: (response: AIStreamResponse) => void,
     options: { temperature?: number; maxTokens?: number } = {}
   ): Promise<void> {
-    console.log('[GroqProvider] Starting stream completion with model:', this.model);
-    console.log('[GroqProvider] Messages:', messages);
     try {
       const requestBody = {
         model: this.model,
@@ -91,19 +89,13 @@ export class GroqProvider {
         stream: true,
       };
       
-      console.log('[GroqProvider] Request body:', requestBody);
-      
       const response = await this.apiProvider.makeRequest('/chat/completions', {
         method: 'POST',
         body: JSON.stringify(requestBody),
       });
 
-      console.log('[GroqProvider] Response status:', response.status);
-      console.log('[GroqProvider] Response ok:', response.ok);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[GroqProvider] Error response:', errorText);
         throw new Error(`Groq API error: ${response.status} ${response.statusText}: ${errorText}`);
       }
 

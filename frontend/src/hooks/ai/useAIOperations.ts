@@ -21,6 +21,7 @@ export const useAIOperations = () => {
     streamingResponse,
     setCurrentResponse,
     setStreamingResponse,
+    setCurrentTokenUsage,
   } = useAIStore();
 
   const { executeQuery, executePaginatedQuery } = useDuckDBStore();
@@ -294,6 +295,7 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
     setIsExecuting(true);
     setProcessing(true);
     setStreamingResponse("");
+    setCurrentTokenUsage(null);
 
     const startTime = Date.now();
     
@@ -349,6 +351,14 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
             addQueryToHistory(query);
             setCurrentResponse(fullResponse);
             setStreamingResponse(""); // Clear streaming response
+
+            // Set current token usage
+            if (chunk.usage) {
+              setCurrentTokenUsage({
+                input: chunk.usage.promptTokens,
+                output: chunk.usage.completionTokens,
+              });
+            }
             
             // Auto-execute SQL if enabled
             autoExecuteSQLQueries(fullResponse);
