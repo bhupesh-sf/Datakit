@@ -88,19 +88,32 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
   if (showSetupPrompt) {
     return (
       <div className="h-full flex items-center justify-center p-8">
-        <div className="text-center max-w-sm">
+        <div className="text-center max-w-md">
           <div className="mb-4 flex justify-center">
-           
+            
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">
-            Configure API Keys
+          <h3 className="text-xl font-medium text-white mb-3">
+            Analysis Assistant
           </h3>
-          <p className="text-white/60 text-sm mb-4">
-            Add your API keys to start using AI features with your data.
+          <p className="text-white/70 text-sm mb-4 leading-relaxed">
+            Connect to AI models like GPT-4o, Claude, or Groq to analyze your data with natural language. 
+            
           </p>
+          <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-6 text-left">
+            <p className="text-xs text-white/60 mb-2">What you can do:</p>
+            <ul className="text-xs text-white/70 space-y-1">
+              <li>• Ask questions in plain English</li>
+              <li>• Get generated SQL queries automatically</li>
+              <li>• Get data insights and summaries</li>
+              <li>• Identify patterns and trends</li>
+            </ul>
+            <p className="text-xs text-primary mt-3">
+              AI models only see your table structure, not your actual data
+            </p>
+          </div>
           <Button onClick={onOpenApiKeyModal} variant="outline" size="sm">
             <Settings className="w-4 h-4 mr-2" />
-            Open Settings
+            Configure Models
           </Button>
         </div>
       </div>

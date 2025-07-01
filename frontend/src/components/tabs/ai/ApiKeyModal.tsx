@@ -25,30 +25,31 @@ const PROVIDER_CONFIG = {
     name: "OpenAI",
     icon: <img src={OpenAILogo} className="h-5 w-5" />,
     color: "blue",
-    description: "GPT-4o and GPT-4o Mini models are supported",
+    description: "GPT-4o and GPT-4o Mini models",
     websiteUrl: "https://platform.openai.com/api-keys",
     helpText:
-      "Get your API key from OpenAI Platform (includes $5 free credits for new users)",
+      "Most capable models for complex reasoning and analysis. New users get $5 free credits.",
     keyFormat: "sk-...",
+
   },
   anthropic: {
     name: "Anthropic",
     icon: <img src={AnthropicLogo} className="h-4 w-4" />,
     color: "blue",
-    description: "Claude 3.5 Sonnet and Haiku  are supported",
+    description: "Claude 3.5 Sonnet and Haiku models",
     websiteUrl: "https://console.anthropic.com/",
     helpText:
-      "Get your API key from Anthropic Console (includes free credits for new users)",
+      "Excellent for detailed analysis and explanations. Free credits for new users.",
     keyFormat: "sk-ant-...",
   },
   groq: {
     name: "Groq",
     icon: <img src={GroqLogo} className="h-4 w-4" />,
     color: "blue",
-    description: "Llama 3.1 models with free tier and ultra-fast inference",
+    description: "Ultra-fast Llama 3.1 models with free tier",
     websiteUrl: "https://console.groq.com/keys",
     helpText:
-      "Get your free API key from Groq Console (generous free tier included)",
+      "Fastest inference speed, perfect for trying AI features. Completely free to start.",
     keyFormat: "gsk_...",
   },
   // local: {
@@ -333,7 +334,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                         </div>
 
                         {PROVIDER_CONFIG[activeProvider].websiteUrl && (
-                          <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                          <div className="bg-white/5 border border-white/10 rounded-lg p-4">
                             <div className="flex items-start gap-3">
                               <Key className="h-4 w-4 text-white/60 mt-0.5" />
                               <div className="flex-1">
