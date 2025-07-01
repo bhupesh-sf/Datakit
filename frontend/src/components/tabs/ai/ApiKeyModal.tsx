@@ -1,0 +1,481 @@
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  X,
+  Key,
+  Eye,
+  EyeOff,
+  CheckCircle,
+  ExternalLink,
+  Settings,
+} from "lucide-react";
+
+import { useAIStore } from "@/store/aiStore";
+import { AIProvider } from "@/types/ai";
+import { Button } from "@/components/ui/Button";
+import LocalModelManager from "./LocalModelManager";
+import { cn } from "@/lib/utils";
+
+import OpenAILogo from "@/assets/openai.webp";
+import AnthropicLogo from "@/assets/anthropic.webp";
+import GroqLogo from "@/assets/groq.png";
+
+const PROVIDER_CONFIG = {
+  openai: {
+    name: "OpenAI",
+    icon: <img src={OpenAILogo} className="h-5 w-5" />,
+    color: "blue",
+    description: "GPT-4o and GPT-4o Mini models",
+    websiteUrl: "https://platform.openai.com/api-keys",
+    helpText:
+      "Most capable models for complex reasoning and analysis. New users get $5 free credits.",
+    keyFormat: "sk-...",
+
+  },
+  anthropic: {
+    name: "Anthropic",
+    icon: <img src={AnthropicLogo} className="h-4 w-4" />,
+    color: "blue",
+    description: "Claude 3.5 Sonnet and Haiku models",
+    websiteUrl: "https://console.anthropic.com/",
+    helpText:
+      "Excellent for detailed analysis and explanations. Free credits for new users.",
+    keyFormat: "sk-ant-...",
+  },
+  groq: {
+    name: "Groq",
+    icon: <img src={GroqLogo} className="h-4 w-4" />,
+    color: "blue",
+    description: "Ultra-fast Llama 3.1 models with free tier",
+    websiteUrl: "https://console.groq.com/keys",
+    helpText:
+      "Fastest inference speed, perfect for trying AI features. Completely free to start.",
+    keyFormat: "gsk_...",
+  },
+  // local: {
+  //   name: "Local Models",
+  //   icon: <Cpu className="h-5 w-5" />,
+  //   color: "blue",
+  //   description: "Run AI models locally in your browser (no API key required)",
+  //   websiteUrl: null,
+  //   helpText: "Local models run entirely in your browser",
+  //   keyFormat: null,
+  // },
+} as const;
+
+interface ApiKeyModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
+  const [activeProvider, setActiveProvider] = useState<AIProvider>("openai");
+  const [keyInputs, setKeyInputs] = useState<Map<AIProvider, string>>(
+    new Map()
+  );
+  const [showKeys, setShowKeys] = useState<Map<AIProvider, boolean>>(new Map());
+
+  const {
+    apiKeys,
+    setActiveProvider: setActiveProviderToStore,
+    autoExecuteSQL,
+    showCostEstimates,
+    setApiKey,
+    updateSettings,
+  } = useAIStore();
+
+  // Initialize form with existing keys
+  React.useEffect(() => {
+    const newInputs = new Map();
+    for (const [provider, key] of apiKeys) {
+      newInputs.set(provider, key);
+    }
+    setKeyInputs(newInputs);
+  }, [apiKeys]);
+
+  const handleKeyChange = (provider: AIProvider, value: string) => {
+    setKeyInputs(new Map(keyInputs.set(provider, value)));
+  };
+
+  const handleToggleKeyVisibility = (provider: AIProvider) => {
+    setShowKeys(new Map(showKeys.set(provider, !showKeys.get(provider))));
+  };
+
+  const handleSave = () => {
+    // Save all keys
+    for (const [provider, key] of keyInputs) {
+      if (key.trim()) {
+        setApiKey(provider, key.trim());
+        setActiveProviderToStore(provider);
+      }
+    }
+    onClose();
+  };
+
+  const getProviderColorClass = (
+    provider: AIProvider,
+    type: "bg" | "border" | "text"
+  ) => {
+    const color = PROVIDER_CONFIG[provider].color;
+    switch (type) {
+      case "bg":
+        return `bg-${color}-500/10`;
+      case "border":
+        return `border-${color}-500/30`;
+      case "text":
+        return `text-${color}-500`;
+      default:
+        return "";
+    }
+  };
+
+  const maskApiKey = (key: string) => {
+    if (key.length <= 8) return "•".repeat(key.length);
+    return key.slice(0, 4) + "•".repeat(key.length - 8) + key.slice(-4);
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 backdrop-blur-sm bg-black/60"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ delay: 0.1, duration: 0.2 }}
+            className="w-full max-w-4xl h-[85vh] bg-black border border-white/20 rounded-lg shadow-xl shadow-black/30 overflow-hidden flex"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Left Sidebar - Provider Selection */}
+            <div className="w-64 bg-gradient-to-b from-darkNav to-black border-r border-white/10 flex flex-col">
+              <div className="p-4 border-b border-white/10">
+                <h2 className="text-lg font-heading font-medium text-white">
+                  AI Configuration
+                </h2>
+                <p className="text-xs text-white/60 mt-1">
+                  Configure AI providers and settings
+                </p>
+              </div>
+
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-2">
+                  {(Object.keys(PROVIDER_CONFIG) as AIProvider[]).map(
+                    (provider) => {
+                      const config = PROVIDER_CONFIG[provider];
+                      const hasKey =
+                        apiKeys.has(provider) && !!apiKeys.get(provider);
+
+                      return (
+                        <button
+                          key={provider}
+                          onClick={() => setActiveProvider(provider)}
+                          className={cn(
+                            "w-full text-left p-3 rounded-lg mb-1 transition-all duration-200 group relative",
+                            activeProvider === provider
+                              ? `${getProviderColorClass(
+                                  provider,
+                                  "bg"
+                                )} ${getProviderColorClass(
+                                  provider,
+                                  "border"
+                                )} border text-white`
+                              : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
+                          )}
+                        >
+                          <div className="flex items-center">
+                            <div
+                              className={cn(
+                                "h-8 w-8 rounded-md flex items-center justify-center mr-3 border",
+                                activeProvider === provider
+                                  ? `${getProviderColorClass(
+                                      provider,
+                                      "border"
+                                    )} ${getProviderColorClass(
+                                      provider,
+                                      "text"
+                                    )}`
+                                  : "bg-white/5 border-white/10 text-white/60"
+                              )}
+                            >
+                              {config.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center">
+                                <p className="text-sm font-medium truncate">
+                                  {config.name}
+                                </p>
+                                {hasKey && (
+                                  <CheckCircle className="ml-2 h-3 w-3 text-green-400" />
+                                )}
+                              </div>
+                              <p className="text-xs mt-0.5 truncate opacity-80">
+                                {provider === "local"
+                                  ? "Browser-based"
+                                  : "Cloud API"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {activeProvider === provider && (
+                            <motion.div
+                              layoutId="activeProvider"
+                              className={cn(
+                                "absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 rounded-r",
+                                `bg-${config.color}-500`
+                              )}
+                              transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 30,
+                              }}
+                            />
+                          )}
+                        </button>
+                      );
+                    }
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Content Area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="p-4 border-b border-white/10 bg-gradient-to-r from-background/50 to-background/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div
+                      className={cn(
+                        "h-8 w-8 rounded-md flex items-center justify-center mr-3 border",
+                        `${getProviderColorClass(
+                          activeProvider,
+                          "border"
+                        )} ${getProviderColorClass(activeProvider, "text")}`
+                      )}
+                    >
+                      {PROVIDER_CONFIG[activeProvider].icon}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-white">
+                        {PROVIDER_CONFIG[activeProvider].name}
+                      </h3>
+                      <p className="text-sm text-white/70">
+                        {PROVIDER_CONFIG[activeProvider].description}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onClose}
+                    className="h-8 w-8 p-0 rounded-full text-white/70 hover:text-white hover:bg-white/10"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                {activeProvider === "local" ? (
+                  // Local Models Section
+                  <LocalModelManager />
+                ) : (
+                  // API Key Configuration
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-sm font-medium text-white mb-3">
+                        API Key Configuration
+                      </h4>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-white/80 mb-2">
+                            API Key
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={
+                                showKeys.get(activeProvider)
+                                  ? "text"
+                                  : "password"
+                              }
+                              value={keyInputs.get(activeProvider) || ""}
+                              onChange={(e) =>
+                                handleKeyChange(activeProvider, e.target.value)
+                              }
+                              placeholder={`Enter your ${PROVIDER_CONFIG[activeProvider].name} API key`}
+                              className="w-full px-3 py-2 pr-20 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary/50"
+                            />
+                            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleToggleKeyVisibility(activeProvider)
+                                }
+                                className="h-6 w-6 p-0"
+                              >
+                                {showKeys.get(activeProvider) ? (
+                                  <EyeOff className="h-3 w-3" />
+                                ) : (
+                                  <Eye className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {PROVIDER_CONFIG[activeProvider].websiteUrl && (
+                          <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                              <Key className="h-4 w-4 text-white/60 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-sm text-white/80 mb-2">
+                                  {PROVIDER_CONFIG[activeProvider].helpText}
+                                </p>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    window.open(
+                                      PROVIDER_CONFIG[activeProvider]
+                                        .websiteUrl!,
+                                      "_blank"
+                                    )
+                                  }
+                                  className="h-7"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  Get API Key
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Settings Section */}
+                    <div className="border-t border-white/10 pt-6">
+                      <h4 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+                        <Settings className="h-4 w-4" />
+                        General Settings
+                      </h4>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <label className="text-sm text-white/80">
+                              Auto-execute generated SQL
+                            </label>
+                            <p className="text-xs text-white/60">
+                              Automatically run SQL queries generated by AI
+                            </p>
+                          </div>
+                          <button
+                            onClick={() =>
+                              updateSettings({
+                                autoExecuteSQL: !autoExecuteSQL,
+                              })
+                            }
+                            className={cn(
+                              "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+                              autoExecuteSQL ? "bg-primary" : "bg-white/20"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "inline-block h-3 w-3 transform rounded-full bg-white transition-transform",
+                                autoExecuteSQL
+                                  ? "translate-x-5"
+                                  : "translate-x-1"
+                              )}
+                            />
+                          </button>
+                        </div>
+
+                        {/* TODO: Make this work to show cost estimates as part of Response header */}
+                        {/* <div className="flex items-center justify-between">
+                          <div>
+                            <label className="text-sm text-white/80">
+                              Show cost estimates
+                            </label>
+                            <p className="text-xs text-white/60">
+                              Display estimated costs for API calls
+                            </p>
+                          </div>
+                          <button
+                            onClick={() =>
+                              updateSettings({
+                                showCostEstimates: !showCostEstimates,
+                              })
+                            }
+                            className={cn(
+                              "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+                              showCostEstimates ? "bg-primary" : "bg-white/20"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "inline-block h-3 w-3 transform rounded-full bg-white transition-transform",
+                                showCostEstimates
+                                  ? "translate-x-5"
+                                  : "translate-x-1"
+                              )}
+                            />
+                          </button>
+                        </div> */}
+
+                        {/* <div>
+                          <label className="block text-sm text-white/80 mb-2">
+                            Query history limit
+                          </label>
+                          <select
+                            value={maxHistoryItems}
+                            onChange={(e) =>
+                              updateSettings({
+                                maxHistoryItems: parseInt(e.target.value),
+                              })
+                            }
+                            className="w-32 px-3 py-1 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:border-primary/50"
+                          >
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                            <option value={200}>200</option>
+                          </select>
+                        </div> */}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-white/10 bg-darkNav/30">
+                <div className="flex justify-end gap-3">
+                  <Button variant="ghost" onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <Button variant="outline" onClick={handleSave}>
+                    Save Configuration
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default ApiKeyModal;

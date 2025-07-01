@@ -53,6 +53,32 @@ export default defineConfig({
       allow: ['..'], // Allow serving files from parent directories if needed
     },
     historyApiFallback: true,
+    proxy: {
+      '/api/openai': {
+        target: 'https://api.openai.com/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/openai/, ''),
+        headers: {
+          'Origin': 'https://api.openai.com',
+        },
+      },
+      '/api/anthropic': {
+        target: 'https://api.anthropic.com/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/anthropic/, ''),
+        headers: {
+          'Origin': 'https://api.anthropic.com',
+        },
+      },
+      '/api/groq': {
+        target: 'https://api.groq.com/openai/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/groq/, ''),
+        headers: {
+          'Origin': 'https://api.groq.com',
+        },
+      },
+    },
   },
   preview: {
     headers: {

@@ -5,11 +5,12 @@ import TabNavigation, { Tab } from "@/components/navigation/TabNavigation";
 import DataPreviewTab from "@/components/tabs/DataPreviewTab";
 import QueryTab from "@/components/tabs/QueryTab";
 import VisualizationTab from "@/components/tabs/VisualizationTab";
+import AITab from "@/components/tabs/AITab";
 
 import { DataLoadWithDuckDBResult } from "@/components/layout/Sidebar";
 import ActionButtons from "@/components/common/ActionButtons";
 
-import { Table, BarChart, Database } from "lucide-react";
+import { Table, BarChart, Database, Trees } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useAppStore } from "@/store/appStore";
@@ -55,6 +56,7 @@ const Home = () => {
     { id: "preview", label: "Data Preview", icon: <Table size={16} /> },
     { id: "query", label: "Query", icon: <Database size={16} /> },
     { id: "visualization", label: "Visualize", icon: <BarChart size={16} /> },
+    { id: "ai", label: "Assistant", icon: <Trees size={16} /> }, 
   ];
 
   /**
@@ -155,6 +157,7 @@ const Home = () => {
                 {activeTab === "preview" && <DataPreviewTab />}
                 {activeTab === "query" && <QueryTab />}
                 {activeTab === "visualization" && <VisualizationTab />}
+                {activeTab === "ai" && <AITab />}
               </motion.div>
             </AnimatePresence>
           </div>
