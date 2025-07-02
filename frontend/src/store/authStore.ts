@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { User, LoginCredentials, SignupCredentials, UpdateProfileData, UserSettings } from '@/types/auth';
+import { Workspace } from '@/types/workspace';
 import { authService } from '@/lib/api/authService';
 import { userService } from '@/lib/api/userService';
+import { workspaceService } from '@/lib/api/workspaceService';
 
 interface AuthState {
   // State
@@ -12,6 +14,7 @@ interface AuthState {
   error: string | null;
   settings: UserSettings | null;
   hasInitialized: boolean;
+  currentWorkspace: Workspace | null;
   
   // Actions
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -21,6 +24,8 @@ interface AuthState {
   updateProfile: (data: UpdateProfileData) => Promise<void>;
   updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
   loadUserSettings: () => Promise<void>;
+  switchWorkspace: (workspaceId: string) => Promise<void>;
+  loadCurrentWorkspace: () => Promise<void>;
   
   // Helpers
   setError: (error: string | null) => void;
@@ -37,6 +42,7 @@ export const useAuthStore = create<AuthState>()(
       error: null,
       settings: null,
       hasInitialized: false,
+      currentWorkspace: null,
         
       // Actions
       login: async (credentials) => {
@@ -52,12 +58,19 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           });
           
-          // Load user settings after login
+          // Load user settings and workspace after login
           try {
             await get().loadUserSettings();
           } catch (settingsError) {
             // Don't fail login if settings loading fails
             console.warn('Failed to load user settings:', settingsError);
+          }
+          
+          // Load current workspace
+          try {
+            await get().loadCurrentWorkspace();
+          } catch (workspaceError) {
+            console.warn('Failed to load workspace:', workspaceError);
           }
         } catch (error) {
           set({
@@ -129,6 +142,13 @@ export const useAuthStore = create<AuthState>()(
             error: null,
             hasInitialized: true,
           });
+          
+          // Load current workspace after auth check
+          try {
+            await get().loadCurrentWorkspace();
+          } catch (workspaceError) {
+            console.warn('Failed to load workspace:', workspaceError);
+          }
         } catch (error) {
           // If auth check fails, user is not logged in
           set({
@@ -188,6 +208,30 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.warn('Failed to load user settings:', error);
           // Continue without settings
+        }
+      },
+
+      switchWorkspace: async (workspaceId: string) => {
+        try {
+          await workspaceService.switchWorkspace(workspaceId);
+          // Reload user to get updated currentWorkspace
+          const user = await authService.getCurrentUser();
+          set({ user });
+          await get().loadCurrentWorkspace();
+        } catch (error) {
+          throw error;
+        }
+      },
+
+      loadCurrentWorkspace: async () => {
+        const { user } = get();
+        if (!user?.currentWorkspaceId) return;
+        
+        try {
+          const workspace = await workspaceService.getWorkspace(user.currentWorkspaceId);
+          set({ currentWorkspace: workspace });
+        } catch (error) {
+          console.error('Failed to load current workspace:', error);
         }
       },
         

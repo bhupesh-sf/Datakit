@@ -1,7 +1,9 @@
 import React from "react";
-import { ArrowLeft, User, Database, Bell, CreditCard } from "lucide-react";
+import { ArrowLeft, User, Trees, Bell, CreditCard, Users, Palette, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/auth/useAuth";
+import { Button } from "@components/ui/Button";
 
 interface SettingsSidebarProps {
   activeTab: string;
@@ -13,10 +15,22 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   onTabChange,
 }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   const tabs = [
     { id: "profile", name: "Profile", icon: User },
-    { id: "ai", name: "AI Settings", icon: Database },
+    { id: "workspace", name: "Workspace & Team", icon: Users },
+    { id: "ai", name: "AI assistant settings", icon: Trees },
+    { id: "appearance", name: "Appearance", icon: Palette },
     { id: "notifications", name: "Notifications", icon: Bell },
     { id: "subscription", name: "Subscription", icon: CreditCard },
   ];
@@ -42,20 +56,9 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         </h1>
       </div>
 
-      {/* Description text - matching main sidebar style */}
-      <div className="px-5 py-4">
-        <p className="text-sm text-white text-opacity-70">
-          Manage your account settings, AI preferences, notifications, and
-          subscription.
-        </p>
-      </div>
-
       {/* Settings Navigation */}
       <div className="px-5 pt-2 pb-2 flex-1">
-        <h3 className="text-xs font-medium text-white text-opacity-50 tracking-wider mb-3 uppercase">
-          Account Settings
-        </h3>
-
+     
         <div className="space-y-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -82,29 +85,43 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         </div>
       </div>
 
-      <div className="px-4 py-3 text-center border-t border-white border-opacity-5">
-        <p className="text-xs text-white text-opacity-50">
-          Powered by WebAssembly and DuckDB
-          <br />
-          <a
-            href="https://amin.contact"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-          >
-            by Amin
-          </a>
-          {" @ "}
-          <a
-            href="https://www.linkedin.com/company/datakitpage"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-          >
-            DataKit
-          </a>
-        </p>
+      {/* Sign Out Button */}
+      <div className="px-5 py-3 border-t border-white border-opacity-10">
+        <Button
+        variant="outline"
+          onClick={handleLogout}
+          className="w-full flex items-center p-3 rounded text-sm text-white text-opacity-80 hover:bg-background hover:bg-opacity-30 transition-custom"
+        >
+          <LogOut
+            size={16}
+            className="mr-3 flex-shrink-0 text-red-400"
+          />
+          <span className="font-medium">Sign Out</span>
+        </Button>
       </div>
+
+      <div className="px-4 py-3 text-center border-t border-white border-opacity-5">
+          <p className="text-xs text-white text-opacity-50">
+            Powered by DuckDB {" | "}
+            <a
+              href="https://amin.contact"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              built at 
+            </a>
+            {" @ "}
+            <a
+              href="https://www.linkedin.com/company/datakitpage"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              DataKit
+            </a>
+          </p>
+        </div>
     </motion.div>
   );
 };

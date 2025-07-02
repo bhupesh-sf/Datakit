@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Eye, EyeOff, User, Mail, Lock, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/auth/useAuth';
 
@@ -58,11 +59,30 @@ const AuthModal: React.FC<AuthModalProps> = ({
     setFormData({ email: '', password: '', name: '' });
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-darkNav border border-white/10 rounded-lg shadow-lg w-full max-w-md relative">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ 
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+              duration: 0.3 
+            }}
+            className="bg-black backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl w-full max-w-md relative"
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-lg font-medium text-white">
@@ -156,6 +176,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
             {/* Submit button */}
             <Button
+              variant="outline"
               type="submit"
               className="w-full"
               disabled={isLoading}
@@ -195,8 +216,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

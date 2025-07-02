@@ -10,6 +10,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 @Module({
@@ -17,6 +18,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
     TypeOrmModule.forFeature([RefreshToken]),
     forwardRef(() => UsersModule),
     SubscriptionsModule,
+    forwardRef(() => WorkspacesModule),
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

@@ -8,11 +8,12 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Workspace } from '../../workspaces/entities/workspace.entity';
 
 export enum SubscriptionPlan {
   FREE = 'free',
   PRO = 'pro',
-  ENTERPRISE = 'enterprise',
+  TEAM = 'team',
 }
 
 export enum SubscriptionStatus {
@@ -27,12 +28,19 @@ export class Subscription {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  userId: string;
+  @Column({ nullable: true })
+  userId: string; // Keep for backward compatibility during migration
 
   @OneToOne(() => User)
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @Column({ nullable: true })
+  workspaceId: string;
+
+  @OneToOne(() => Workspace)
+  @JoinColumn({ name: 'workspaceId' })
+  workspace: Workspace;
 
   @Column({
     type: 'enum',

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreditUsage } from './entities/credit-usage.entity';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { UsersService } from '../users/users.service';
 
 // Credit costs per 1k tokens for different models
 const CREDIT_COSTS = {
@@ -20,6 +21,7 @@ export class CreditsService {
     @InjectRepository(CreditUsage)
     private creditUsageRepository: Repository<CreditUsage>,
     private subscriptionsService: SubscriptionsService,
+    private usersService: UsersService,
   ) {}
 
   calculateCredits(
@@ -33,15 +35,27 @@ export class CreditsService {
     return Number((inputCredits + outputCredits).toFixed(4));
   }
 
-  async checkCredits(userId: string, estimatedCredits: number): Promise<boolean> {
-    const remainingCredits = await this.subscriptionsService.getCreditsRemaining(userId);
-    
-    // Enterprise users have unlimited credits
-    if (remainingCredits === -1) {
-      return true;
+  async checkCredits(
+    userId: string,
+    estimatedCredits: number,
+  ): Promise<boolean> {
+    // Get user's current workspace
+    const user = await this.usersService.findOne(userId);
+    if (!user.currentWorkspaceId) {
+      // Fallback to user-based credits for backward compatibility
+      const remainingCredits =
+        await this.subscriptionsService.getCreditsRemaining(userId);
+      return remainingCredits === -1 || remainingCredits >= estimatedCredits;
     }
 
-    return remainingCredits >= estimatedCredits;
+    // Check workspace credits
+    const subscription = await this.subscriptionsService.findByWorkspaceId(
+      user.currentWorkspaceId,
+    );
+    return (
+      subscription.creditsRemaining === -1 ||
+      subscription.creditsRemaining >= estimatedCredits
+    );
   }
 
   async recordUsage(
@@ -54,13 +68,30 @@ export class CreditsService {
     response?: string,
     metadata?: Record<string, any>,
   ): Promise<CreditUsage> {
-    const creditsUsed = this.calculateCredits(modelId, inputTokens, outputTokens);
+    const creditsUsed = this.calculateCredits(
+      modelId,
+      inputTokens,
+      outputTokens,
+    );
 
-    // Deduct credits from subscription
-    await this.subscriptionsService.useCredits(userId, creditsUsed);
+    // Get user's current workspace
+    const user = await this.usersService.findOne(userId);
+    let workspaceId = user.currentWorkspaceId;
+
+    if (workspaceId) {
+      // Deduct credits from workspace subscription
+      await this.subscriptionsService.useWorkspaceCredits(
+        workspaceId,
+        creditsUsed,
+      );
+    } else {
+      // Fallback to user-based credits
+      await this.subscriptionsService.useCredits(userId, creditsUsed);
+    }
 
     const usage = this.creditUsageRepository.create({
       userId,
+      workspaceId,
       modelId,
       provider,
       inputTokens,

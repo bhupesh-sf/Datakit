@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User, Settings, LogOut, CreditCard, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/auth/useAuth';
 import AuthModal from './AuthModal';
@@ -45,12 +46,12 @@ const UserMenu: React.FC<UserMenuProps> = ({
     return (
       <>
         <Button
-          variant="primary"
+          variant="outline"
           size="sm"
           onClick={() => setShowAuthModal(true)}
-          className={className}
+          className={`w-full border border-white/30 ${className}`}
         >
-          <User size={14} className="mr-1.5" />
+          <User size={14} className="mr-0.5" />
           <span className="text-xs">Sign In</span>
         </Button>
         
@@ -73,7 +74,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setShowDropdown(!showDropdown)}
-          className={`w-full flex items-center gap-2 p-2 rounded text-white/80 hover:text-white hover:bg-white/5 transition-colors ${className}`}
+          className={`w-full flex items-center gap-2 py-2 px-1 rounded text-white/80 hover:text-white hover:bg-white/5 transition-colors ${className}`}
         >
           {/* Avatar */}
           <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-xs font-medium text-white">
@@ -103,29 +104,58 @@ const UserMenu: React.FC<UserMenuProps> = ({
           />
         </button>
 
-        {/* Dropdown Menu */}
-        {showDropdown && (
-          <div className="absolute bottom-full left-0 mb-2 w-full bg-black border border-white/10 rounded-lg shadow-lg py-1 z-50">
-            <button
-              onClick={goToSettings}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-            >
-              <Settings size={14} />
-              Settings
-            </button>
-            
-            
-            <hr className="border-white/10 my-1" />
-            
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-            >
-              <LogOut size={14} />
-              Sign Out
-            </button>
-          </div>
-        )}
+        {/* Dropdown Menu with Animation */}
+        <AnimatePresence>
+          {showDropdown && (
+            <>
+              {/* Transparent Backdrop - Only covers sidebar */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed left-0 top-0 bottom-0 w-64 bg-black/30 backdrop-blur-sm z-40"
+                onClick={() => setShowDropdown(false)}
+              />
+              
+              {/* Dropdown */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                  duration: 0.2 
+                }}
+                className="absolute bottom-full left-0 mb-2 w-full bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl py-1 z-50"
+              >
+                <motion.button
+                  whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={goToSettings}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors cursor-pointer"
+                >
+                  <Settings size={14} />
+                  Settings
+                </motion.button>
+                
+                <hr className="border-white/10 my-1" />
+                
+                <motion.button
+                  whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors cursor-pointer"
+                >
+                  <LogOut size={14} />
+                  Sign Out
+                </motion.button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -156,48 +186,80 @@ const UserMenu: React.FC<UserMenuProps> = ({
         />
       </button>
 
-      {/* Dropdown Menu */}
-      {showDropdown && (
-        <div className="absolute right-0 top-full mt-2 w-48 bg-darkNav border border-white/10 rounded-lg shadow-lg py-1 z-50">
-          <div className="px-3 py-2 border-b border-white/10">
-            <div className="text-sm font-medium text-white">
-              {user?.name || 'User'}
-            </div>
-            <div className="text-xs text-white/60">
-              {user?.email}
-            </div>
-          </div>
-          
-          <button
-            onClick={goToSettings}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
-          >
-            <Settings size={14} />
-            Settings
-          </button>
-          
-          <button
-            onClick={() => {
-              setShowDropdown(false);
-              // Open billing portal or subscription management
-            }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
-          >
-            <CreditCard size={14} />
-            Billing
-          </button>
-          
-          <hr className="border-white/10 my-1" />
-          
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
-          >
-            <LogOut size={14} />
-            Sign Out
-          </button>
-        </div>
-      )}
+      {/* Dropdown Menu with Animation */}
+      <AnimatePresence>
+        {showDropdown && (
+          <>
+            {/* Transparent Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+              onClick={() => setShowDropdown(false)}
+            />
+            
+            {/* Dropdown */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={{ 
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                duration: 0.2 
+              }}
+              className="absolute right-0 top-full mt-2 w-48 bg-darkNav/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl py-1 z-50"
+            >
+              <div className="px-3 py-2 border-b border-white/10">
+                <div className="text-sm font-medium text-white">
+                  {user?.name || 'User'}
+                </div>
+                <div className="text-xs text-white/60">
+                  {user?.email}
+                </div>
+              </div>
+              
+              <motion.button
+                whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                whileTap={{ scale: 0.98 }}
+                onClick={goToSettings}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
+              >
+                <Settings size={14} />
+                Settings
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setShowDropdown(false);
+                  // Open billing portal or subscription management
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
+              >
+                <CreditCard size={14} />
+                Billing
+              </motion.button>
+              
+              <hr className="border-white/10 my-1" />
+              
+              <motion.button
+                whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
+              >
+                <LogOut size={14} />
+                Sign Out
+              </motion.button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

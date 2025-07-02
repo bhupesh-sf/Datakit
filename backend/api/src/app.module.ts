@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { CreditsModule } from './credits/credits.module';
 import { AIModule } from './ai/ai.module';
+import { WorkspacesModule } from './workspaces/workspaces.module';
 import { getDatabaseConfig } from './config/database.config';
 
 @Module({
@@ -24,6 +25,7 @@ import { getDatabaseConfig } from './config/database.config';
     ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
+    WorkspacesModule,
     SubscriptionsModule,
     CreditsModule,
     AIModule,

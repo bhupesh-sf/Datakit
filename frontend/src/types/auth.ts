@@ -1,9 +1,14 @@
+import { Workspace } from './workspace';
+
 export interface User {
   id: string;
   email: string;
   name: string;
   avatarUrl?: string;
   emailVerified: boolean;
+  currentWorkspaceId?: string;
+  currentWorkspace?: Workspace;
+  ownedWorkspaces?: Workspace[];
   createdAt: string;
   updatedAt: string;
   subscription?: UserSubscription;
@@ -12,9 +17,12 @@ export interface User {
 
 export interface UserSubscription {
   id: string;
-  tier: 'FREE' | 'PRO' | 'ENTERPRISE';
-  status: 'active' | 'cancelled' | 'past_due';
+  tier: 'FREE' | 'PRO' | 'TEAM';
+  planType?: 'free' | 'pro' | 'team'; 
+  status: 'active' | 'cancelled' | 'past_due' | 'trialing';
   monthlyCredits: number;
+  creditsRemaining?: number;
+  creditsResetAt?: string;
   currentPeriodEnd?: string;
   cancelAtPeriodEnd: boolean;
 }

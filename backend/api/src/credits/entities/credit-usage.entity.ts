@@ -7,6 +7,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Workspace } from '../../workspaces/entities/workspace.entity';
 
 @Entity('credit_usage')
 export class CreditUsage {
@@ -19,6 +20,13 @@ export class CreditUsage {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @Column({ nullable: true })
+  workspaceId: string;
+
+  @ManyToOne(() => Workspace)
+  @JoinColumn({ name: 'workspaceId' })
+  workspace: Workspace;
 
   @Column()
   modelId: string;

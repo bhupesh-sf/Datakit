@@ -17,7 +17,6 @@ import usePopover from "@/hooks/usePopover";
 import { Button } from "@/components/ui/Button";
 import UserMenu from "@/components/auth/UserMenu";
 
-
 import RemoteDataImportModal from "@/components/common/RemoteDataImportPanel";
 
 import { ColumnType } from "@/types/csv";
@@ -40,7 +39,6 @@ export interface DataLoadWithDuckDBResult {
   isStreamingImport?: boolean;
   remoteProvider?: ImportProvider;
   convertedFromExcel?: boolean;
-
 }
 
 interface SidebarProps {
@@ -49,7 +47,12 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   const { recentFiles } = useFileAccess();
-  const { sidebarCollapsed, toggleSidebar, isRemoteModalOpen, setIsRemoteModalOpen } = useAppStore();
+  const {
+    sidebarCollapsed,
+    toggleSidebar,
+    isRemoteModalOpen,
+    setIsRemoteModalOpen,
+  } = useAppStore();
 
   const uploadPopover = usePopover();
 
@@ -190,7 +193,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
 
       <div className="mt-auto p-4 flex flex-col items-center gap-4 border-t border-white/10">
         <UserMenu variant="sidebar" className="w-full" />
-        
+
         <a
           href="https://amin.contact"
           target="_blank"
@@ -338,39 +341,26 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       {/* Footer area with UserMenu */}
       <div className="border-t border-white border-opacity-10">
         <div className="p-4">
-          <UserMenu variant="sidebar" className="mb-4" />
-          
-          <div className="flex items-center justify-between">
-            <ThemeColorPicker />
-
-            <div className="h-6 w-px bg-white bg-opacity-10 mx-3"></div>
-
-            <div className="flex items-center text-xs text-white text-opacity-60">
-              <span>DuckDB:</span>
-              {duckDBError ? (
-                <span className="ml-1.5 text-destructive">Error</span>
-              ) : duckDBLoading ? (
-                <span className="ml-1.5 text-secondary">
-                  {Math.round(duckDBProgress * 100)}%
-                </span>
-              ) : (
-                <span className="ml-1.5 text-primary">Ready</span>
-              )}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <UserMenu variant="sidebar" />
+            </div>
+            <div className="flex-shrink-0">
+              <ThemeColorPicker variant="sidebar" />
             </div>
           </div>
         </div>
 
         <div className="px-4 py-3 text-center border-t border-white border-opacity-5">
           <p className="text-xs text-white text-opacity-50">
-            Powered by WebAssembly and DuckDB
-            <br />
+            Powered by DuckDB {" | "}
             <a
               href="https://amin.contact"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              by Amin
+              built at 
             </a>
             {" @ "}
             <a

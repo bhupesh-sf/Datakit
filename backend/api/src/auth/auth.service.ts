@@ -3,10 +3,10 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { WorkspacesService } from '../workspaces/workspaces.service';
 import { RefreshTokenService } from './refresh-token.service';
 import * as bcrypt from 'bcryptjs';
 import { SignupDto } from './dto/signup.dto';
-import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +15,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private subscriptionsService: SubscriptionsService,
+    private workspacesService: WorkspacesService,
     private refreshTokenService: RefreshTokenService,
   ) {}
 
@@ -28,15 +29,17 @@ export class AuthService {
   }
 
   async login(user: any, ipAddress?: string, userAgent?: string) {
-    const payload = { 
-      email: user.email, 
+    const payload = {
+      email: user.email,
       sub: user.id,
-      type: 'access'
+      type: 'access',
     };
-    
+
     // Generate short-lived access token (15 minutes)
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_ACCESS_SECRET') || this.configService.get('JWT_SECRET'),
+      secret:
+        this.configService.get('JWT_ACCESS_SECRET') ||
+        this.configService.get('JWT_SECRET'),
       expiresIn: '15m',
     });
 
@@ -63,7 +66,10 @@ export class AuthService {
     // Create free subscription for new user
     await this.subscriptionsService.createFreeSubscription(user.id);
 
-    // Get user with subscription
+    // Create personal workspace for new user
+    await this.workspacesService.createPersonalWorkspace(user);
+
+    // Get user with subscription and workspace
     const userWithSubscription = await this.usersService.findOne(user.id);
 
     // Use the same login logic for consistent token generation
@@ -87,21 +93,24 @@ export class AuthService {
     }
 
     // Get the token entity to find the user
-    const tokenEntity = await this.refreshTokenService.validateRefreshToken(newRefreshToken);
+    const tokenEntity =
+      await this.refreshTokenService.validateRefreshToken(newRefreshToken);
     if (!tokenEntity) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
     const user = tokenEntity.user;
-    const payload = { 
-      email: user.email, 
+    const payload = {
+      email: user.email,
       sub: user.id,
-      type: 'access'
+      type: 'access',
     };
 
     // Generate new short-lived access token
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_ACCESS_SECRET') || this.configService.get('JWT_SECRET'),
+      secret:
+        this.configService.get('JWT_ACCESS_SECRET') ||
+        this.configService.get('JWT_SECRET'),
       expiresIn: '15m',
     });
 

@@ -15,13 +15,29 @@ export class SubscriptionsService {
     private subscriptionsRepository: Repository<Subscription>,
   ) {}
 
-  async createFreeSubscription(userId: string): Promise<Subscription> {
+  async createFreeSubscription(userId: string, workspaceId?: string): Promise<Subscription> {
     const subscription = this.subscriptionsRepository.create({
-      userId,
+      userId, // Keep for backward compatibility
+      workspaceId,
       planType: SubscriptionPlan.FREE,
       status: SubscriptionStatus.ACTIVE,
       creditsRemaining: 100,
       monthlyCredits: 100,
+      creditsResetAt: this.getNextResetDate(),
+    });
+
+    return this.subscriptionsRepository.save(subscription);
+  }
+
+  async createWorkspaceSubscription(workspaceId: string, planType: SubscriptionPlan = SubscriptionPlan.FREE): Promise<Subscription> {
+    const monthlyCredits = this.getMonthlyCredits(planType);
+    
+    const subscription = this.subscriptionsRepository.create({
+      workspaceId,
+      planType,
+      status: SubscriptionStatus.ACTIVE,
+      creditsRemaining: monthlyCredits,
+      monthlyCredits,
       creditsResetAt: this.getNextResetDate(),
     });
 
@@ -54,17 +70,7 @@ export class SubscriptionsService {
     subscription.stripePriceId = stripePriceId;
 
     // Update monthly credits based on plan
-    switch (planType) {
-      case SubscriptionPlan.FREE:
-        subscription.monthlyCredits = 100;
-        break;
-      case SubscriptionPlan.PRO:
-        subscription.monthlyCredits = 10000;
-        break;
-      case SubscriptionPlan.ENTERPRISE:
-        subscription.monthlyCredits = -1; // Unlimited
-        break;
-    }
+    subscription.monthlyCredits = this.getMonthlyCredits(planType);
 
     return this.subscriptionsRepository.save(subscription);
   }
@@ -72,8 +78,8 @@ export class SubscriptionsService {
   async useCredits(userId: string, amount: number): Promise<boolean> {
     const subscription = await this.findByUserId(userId);
 
-    // Enterprise has unlimited credits
-    if (subscription.planType === SubscriptionPlan.ENTERPRISE) {
+    // Team plan has unlimited credits
+    if (subscription.planType === SubscriptionPlan.TEAM) {
       return true;
     }
 
@@ -89,12 +95,55 @@ export class SubscriptionsService {
   async getCreditsRemaining(userId: string): Promise<number> {
     const subscription = await this.findByUserId(userId);
 
-    // Enterprise has unlimited credits
-    if (subscription.planType === SubscriptionPlan.ENTERPRISE) {
+    // Team plan has unlimited credits
+    if (subscription.planType === SubscriptionPlan.TEAM) {
       return -1;
     }
 
     return subscription.creditsRemaining;
+  }
+
+  async findByWorkspaceId(workspaceId: string): Promise<Subscription> {
+    const subscription = await this.subscriptionsRepository.findOne({
+      where: { workspaceId },
+      relations: ['workspace'],
+    });
+
+    if (!subscription) {
+      throw new NotFoundException('Subscription not found');
+    }
+
+    return subscription;
+  }
+
+  async useWorkspaceCredits(workspaceId: string, amount: number): Promise<boolean> {
+    const subscription = await this.findByWorkspaceId(workspaceId);
+
+    // Team plan has unlimited credits
+    if (subscription.planType === SubscriptionPlan.TEAM) {
+      return true;
+    }
+
+    if (subscription.creditsRemaining < amount) {
+      return false;
+    }
+
+    subscription.creditsRemaining -= amount;
+    await this.subscriptionsRepository.save(subscription);
+    return true;
+  }
+
+  private getMonthlyCredits(planType: SubscriptionPlan): number {
+    switch (planType) {
+      case SubscriptionPlan.FREE:
+        return 100;
+      case SubscriptionPlan.PRO:
+        return 10000;
+      case SubscriptionPlan.TEAM:
+        return -1; // Unlimited
+      default:
+        return 100;
+    }
   }
 
   private getNextResetDate(): Date {
