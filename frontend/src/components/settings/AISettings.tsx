@@ -217,7 +217,7 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
           : 'bg-gradient-to-br from-gray-500/10 to-gray-600/10 border-gray-500/30'
       }`}>
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
-        <div className="relative p-6">
+        <div className="relative px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div>

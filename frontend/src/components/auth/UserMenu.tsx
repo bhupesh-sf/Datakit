@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/auth/useAuth';
 import AuthModal from './AuthModal';
 
 interface UserMenuProps {
-  variant?: 'sidebar' | 'header';
+  variant?: 'sidebar' | 'header' | 'collapsed';
   className?: string;
 }
 
@@ -43,6 +43,26 @@ const UserMenu: React.FC<UserMenuProps> = ({
   };
 
   if (!isAuthenticated) {
+    if (variant === 'collapsed') {
+      return (
+        <>
+          <button
+            onClick={() => setShowAuthModal(true)}
+            className={`p-2 text-white/70 hover:text-white hover:bg-white/5 rounded transition-colors ${className}`}
+            title="Sign In"
+          >
+            <User size={16} />
+          </button>
+          
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            defaultMode="login"
+          />
+        </>
+      );
+    }
+
     return (
       <>
         <Button
@@ -68,6 +88,95 @@ const UserMenu: React.FC<UserMenuProps> = ({
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : user?.email[0].toUpperCase() || '?';
+
+  if (variant === 'collapsed') {
+    return (
+      <>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className={`p-2 text-white/80 hover:text-white hover:bg-white/5 rounded transition-colors ${className}`}
+            title={user?.name || user?.email}
+          >
+            {/* Avatar Icon Only */}
+            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-xs font-medium text-white">
+              {user?.avatarUrl ? (
+                <img 
+                  src={user.avatarUrl} 
+                  alt={user.name || user.email}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                initials
+              )}
+            </div>
+          </button>
+        </div>
+
+        {/* Dropdown Menu positioned as fixed overlay */}
+        <AnimatePresence>
+          {showDropdown && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+                onClick={() => setShowDropdown(false)}
+              />
+              
+              {/* Dropdown positioned to the right of collapsed sidebar - using fixed positioning */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, x: -10 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.95, x: -10 }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 30,
+                  duration: 0.15 
+                }}
+                className="fixed left-20 bottom-20 w-48 bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl py-1 z-50"
+              >
+                <div className="px-3 py-2 border-b border-white/10">
+                  <div className="text-sm font-medium text-white">
+                    {user?.name || 'User'}
+                  </div>
+                  <div className="text-xs text-white/60">
+                    {user?.email}
+                  </div>
+                </div>
+                
+                <motion.button
+                  whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={goToSettings}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
+                >
+                  <Settings size={14} />
+                  Settings
+                </motion.button>
+                
+                <hr className="border-white/10 my-1" />
+                
+                <motion.button
+                  whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
+                >
+                  <LogOut size={14} />
+                  Sign Out
+                </motion.button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
 
   if (variant === 'sidebar') {
     return (

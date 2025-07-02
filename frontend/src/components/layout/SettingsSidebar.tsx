@@ -1,5 +1,17 @@
-import React from "react";
-import { ArrowLeft, User, Trees, Bell, CreditCard, Users, Palette, LogOut } from "lucide-react";
+import React, { useState } from "react";
+import { 
+  ArrowLeft, 
+  User, 
+  Trees, 
+  Bell, 
+  CreditCard, 
+  Users, 
+  Palette, 
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Home
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/auth/useAuth";
@@ -16,6 +28,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -35,25 +48,87 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
     { id: "subscription", name: "Subscription", icon: CreditCard },
   ];
 
-  return (
-    <motion.div
-      className="bg-darkNav flex flex-col h-full border-r border-white border-opacity-10 overflow-hidden w-64"
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      {/* Header with title - matching main sidebar style */}
-      <div className="px-5 py-4 border-b border-white border-opacity-10 flex items-center gap-3">
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
+  // Variants for framer-motion animations
+  const sidebarVariants = {
+    expanded: { width: "16rem" }, // w-64 = 16rem
+    collapsed: { width: "4rem" }, // mini sidebar width
+  };
+
+  // Render collapsed content
+  const renderCollapsedContent = () => (
+    <>
+      <div className="p-4 border-b border-white/10">
+        {/* Header space for collapsed mode */}
+      </div>
+
+      {/* Settings Navigation - Icon Only */}
+      <div className="px-2 pt-2 pb-2 flex-1">
+        <div className="space-y-1">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={`w-full flex items-center justify-center p-3 rounded transition-custom ${
+                  activeTab === tab.id
+                    ? "bg-primary/20 text-primary"
+                    : "text-white text-opacity-60 hover:bg-white/5 hover:text-white"
+                }`}
+                title={tab.name}
+              >
+                <Icon size={16} />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Home and Sign Out Buttons */}
+      <div className="px-2 py-3 space-y-2 border-t border-white/10">
         <button
           onClick={() => navigate("/")}
-          className="text-white text-opacity-70 hover:text-opacity-100 transition-custom p-1 cursor-pointer hover:bg-white/5 rounded"
-          aria-label="Back to main panel"
+          className="w-full flex items-center justify-center p-2 text-white/60 hover:text-white hover:bg-white/5 rounded transition-custom"
+          title="Back to DataKit"
         >
-          <ArrowLeft size={18} />
+          <Home size={16} />
         </button>
-        <h1 className="text-white font-heading font-medium text-lg">
-          Settings
-        </h1>
+        
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center p-2 text-red-400/60 hover:text-red-400 hover:bg-red-400/5 rounded transition-custom"
+          title="Sign Out"
+        >
+          <LogOut size={16} />
+        </button>
+      </div>
+    </>
+  );
+
+  // Render expanded content
+  const renderExpandedContent = () => (
+    <>
+      {/* Header with title - matching main sidebar style */}
+      <div className="px-5 py-4 border-b border-white border-opacity-10">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/")}
+            className="text-white text-opacity-70 hover:text-opacity-100 transition-custom p-1 cursor-pointer hover:bg-white/5 rounded"
+            aria-label="Back to DataKit"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="text-white font-heading font-medium text-lg">
+              Settings
+            </h1>
+            <p className="text-xs text-white/50">Manage your account</p>
+          </div>
+        </div>
       </div>
 
       {/* Settings Navigation */}
@@ -101,28 +176,51 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
       </div>
 
       <div className="px-4 py-3 text-center border-t border-white border-opacity-5">
-          <p className="text-xs text-white text-opacity-50">
-            Powered by DuckDB {" | "}
-            <a
-              href="https://amin.contact"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              built at 
-            </a>
-            {" @ "}
-            <a
-              href="https://www.linkedin.com/company/datakitpage"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              DataKit
-            </a>
-          </p>
-        </div>
-    </motion.div>
+        <p className="text-xs text-white text-opacity-50">
+          Powered by DuckDB {" | "}
+          <a
+            href="https://amin.contact"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            built
+          </a>
+          {" @ "}
+          <a
+            href="https://www.linkedin.com/company/datakitpage"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            DataKit
+          </a>
+        </p>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="relative">
+      <motion.div
+        className="bg-darkNav flex flex-col h-full border-r border-white border-opacity-10 overflow-hidden"
+        initial={isCollapsed ? "collapsed" : "expanded"}
+        animate={isCollapsed ? "collapsed" : "expanded"}
+        variants={sidebarVariants}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        {isCollapsed ? renderCollapsedContent() : renderExpandedContent()}
+      </motion.div>
+      
+      {/* Collapse/Expand Toggle Button on Border */}
+      <button
+        onClick={toggleSidebar}
+        className="absolute top-4 -right-3 w-6 h-6 bg-black border border-white/100 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:border/10 transition-colors z-100 shadow-lg"
+        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+      >
+        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </button>
+    </div>
   );
 };
 

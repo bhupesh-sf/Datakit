@@ -118,7 +118,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
 
   const handleUpgradeClick = () => {
     onClose();
-    navigate("/settings#subscription");
+    navigate("/settings#ai");
   };
 
   const getProviderColorClass = (

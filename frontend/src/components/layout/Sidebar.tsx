@@ -163,19 +163,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   // Define what to show in collapsed mode - only icons with functionality
   const renderCollapsedContent = () => (
     <>
-      <div className="p-4 flex justify-center border-b border-white/10">
-        <button
-          onClick={toggleSidebar}
-          className="text-white text-opacity-70 hover:text-opacity-100 transition-custom p-1 cursor-pointer hover:bg-white/5 rounded"
-          aria-label="Expand sidebar"
-        >
-          <ChevronRight size={18} />
-        </button>
+      <div className="p-4 border-b border-white/10">
+        {/* Header space for collapsed mode */}
       </div>
 
       <div className="flex flex-col items-center gap-4 p-2 mt-2">
         {/* File Upload Button with Dropdown */}
         <div className="relative" ref={uploadPopover.ref}>
+
           <AnimatePresence>
             {uploadPopover.isOpen && (
               <motion.div
@@ -192,7 +187,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       </div>
 
       <div className="mt-auto p-4 flex flex-col items-center gap-4 border-t border-white/10">
-        <UserMenu variant="sidebar" className="w-full" />
+        <UserMenu variant="collapsed" />
 
         <a
           href="https://amin.contact"
@@ -213,13 +208,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       {/* Header with logo and title */}
       <div className="px-5 py-4 border-b border-white border-opacity-10 flex items-center justify-between">
         <h1 className="text-white font-heading font-medium text-lg">DataKit</h1>
-        <button
-          onClick={toggleSidebar}
-          className="text-white text-opacity-70 hover:text-opacity-100 transition-custom p-1 cursor-pointer hover:bg-white/5 rounded"
-          aria-label="Collapse sidebar"
-        >
-          <ChevronLeft size={18} />
-        </button>
       </div>
 
       {/* Introduction text */}
@@ -360,7 +348,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              built at 
+              built
             </a>
             {" @ "}
             <a
@@ -388,6 +376,19 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       >
         {sidebarCollapsed ? renderCollapsedContent() : renderExpandedContent()}
       </motion.div>
+
+      {/* Collapse/Expand Toggle Button on Border */}
+      <button
+        onClick={toggleSidebar}
+        className="absolute top-4 -right-3 w-6 h-6 bg-black border border-white/100 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:border/10 transition-colors z-100 shadow-lg"
+        aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+      >
+        {sidebarCollapsed ? (
+          <ChevronRight size={14} />
+        ) : (
+          <ChevronLeft size={14} />
+        )}
+      </button>
 
       {/* Remote Data Import Modal */}
       <RemoteDataImportModal
