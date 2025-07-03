@@ -379,7 +379,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       {/* Collapse/Expand Toggle Button on Border */}
       <button
         onClick={toggleSidebar}
-        className="absolute top-7 -right-3 w-6 h-6 bg-black border border-white/100 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:border/10 transition-colors z-100 shadow-lg"
+        className="absolute top-7 -right-3 w-6 h-6 bg-black border border-white/100 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:border/10 transition-colors z-11 shadow-lg"
         aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {sidebarCollapsed ? (

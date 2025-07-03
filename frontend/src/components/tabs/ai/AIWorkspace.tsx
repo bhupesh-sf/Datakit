@@ -5,6 +5,7 @@ import { ChevronUp, ChevronDown } from "lucide-react";
 import { useAIStore } from "@/store/aiStore";
 
 import SchemaBrowser from "@/components/tabs/query/SchemaBrowser";
+import AuthModal from "@/components/auth/AuthModal";
 import ContextBar from "./ContextBar";
 import PromptPanel from "./PromptPanel";
 import ResponsePanel from "./ResponsePanel";
@@ -16,57 +17,67 @@ const AIWorkspace: React.FC = () => {
   const [resultsExpanded, setResultsExpanded] = useState(false);
   const [resultsPanelHeight, setResultsPanelHeight] = useState(300);
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
-  
-  const { 
-    queryResults,
-    activeProvider,
-    apiKeys,
-  } = useAIStore();
-  
-  
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<"login" | "signup">(
+    "signup"
+  );
+
+  const { queryResults, activeProvider, apiKeys } = useAIStore();
+
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
   const resultsResizeRef = useRef<HTMLDivElement>(null);
-  
+
   // Auto-expand results when query executes
   useEffect(() => {
     if (queryResults && !resultsExpanded) {
       setResultsExpanded(true);
     }
   }, [queryResults]);
-  
+
   // Focus prompt on mount
   useEffect(() => {
     promptInputRef.current?.focus();
   }, []);
-  
+
   // Handle results panel resize
   const handleResultsResize = (e: React.MouseEvent) => {
     const startY = e.clientY;
     const startHeight = resultsPanelHeight;
-    
+
     const handleMouseMove = (e: MouseEvent) => {
       const deltaY = startY - e.clientY;
       const newHeight = Math.max(200, Math.min(600, startHeight + deltaY));
       setResultsPanelHeight(newHeight);
     };
-    
+
     const handleMouseUp = () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
       document.body.style.cursor = "default";
     };
-    
+
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
     document.body.style.cursor = "ns-resize";
   };
-  const hasApiKey = apiKeys.has(activeProvider) && !!apiKeys.get(activeProvider);
+
+  const handleOpenAuthModal = (mode: "login" | "signup") => {
+    setAuthModalMode(mode);
+    setShowAuthModal(true);
+  };
+
+  const handleOpenSettings = () => {
+    setShowApiKeyModal(true);
+  };
+
+  const hasApiKey =
+    apiKeys.has(activeProvider) && !!apiKeys.get(activeProvider);
   const showSetupPrompt = !hasApiKey && activeProvider !== "local";
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Context Bar */}
       <ContextBar onOpenApiKeyModal={() => setShowApiKeyModal(true)} />
-      
+
       {/* Main Content Area */}
       <div className="flex-1 flex relative overflow-hidden">
         {/* Schema Browser - Collapsible */}
@@ -83,28 +94,28 @@ const AIWorkspace: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        
-        
+
         {/* Chat/Response Area */}
         <div className="flex-1 flex">
           {/* Left: Prompt Panel */}
           <div className="w-[40%] border-r border-white/10">
-            <PromptPanel 
+            <PromptPanel
               inputRef={promptInputRef}
               showSetupPrompt={showSetupPrompt}
-              onOpenApiKeyModal={() => setShowApiKeyModal(true)}
+              onSignUpClick={() => handleOpenAuthModal("signup")}
+              onConfigureClick={handleOpenSettings}
               onToggleSchema={() => setSchemaBrowserOpen(!schemaBrowserOpen)}
               schemaBrowserOpen={schemaBrowserOpen}
             />
           </div>
-          
+
           {/* Right: Response Panel */}
           <div className="flex-1">
             <ResponsePanel />
           </div>
         </div>
       </div>
-      
+
       {/* Bottom: Results Panel - Collapsible */}
       <AnimatePresence>
         {resultsExpanded && (
@@ -121,7 +132,7 @@ const AIWorkspace: React.FC = () => {
               onMouseDown={handleResultsResize}
               className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-primary/20 transition-colors"
             />
-            
+
             {/* Collapse Button - Centered */}
             <button
               onClick={() => setResultsExpanded(false)}
@@ -129,12 +140,12 @@ const AIWorkspace: React.FC = () => {
             >
               <ChevronDown className="h-4 w-4 text-white/70" />
             </button>
-            
+
             <ResultsPanel height={resultsPanelHeight} />
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Results Expand Button (when collapsed) */}
       {!resultsExpanded && queryResults && (
         <button
@@ -145,11 +156,18 @@ const AIWorkspace: React.FC = () => {
           <span className="text-sm text-white/70">Show Results</span>
         </button>
       )}
-      
+
       {/* API Key Modal */}
-      <ApiKeyModal 
+      <ApiKeyModal
         isOpen={showApiKeyModal}
         onClose={() => setShowApiKeyModal(false)}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        defaultMode={authModalMode}
       />
     </div>
   );
