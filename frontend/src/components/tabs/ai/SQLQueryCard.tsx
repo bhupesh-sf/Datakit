@@ -13,10 +13,14 @@ interface SQLQueryCardProps {
   isPrimary?: boolean;
 }
 
-const SQLQueryCard: React.FC<SQLQueryCardProps> = ({ query, index, isPrimary = false }) => {
+const SQLQueryCard: React.FC<SQLQueryCardProps> = ({
+  query,
+  index,
+  isPrimary = false,
+}) => {
   const [copied, setCopied] = useState(false);
   const { handleRunSQL } = useAIOperations();
-  
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(query);
@@ -26,20 +30,20 @@ const SQLQueryCard: React.FC<SQLQueryCardProps> = ({ query, index, isPrimary = f
       console.error("Failed to copy:", err);
     }
   };
-  
+
   const handleRun = () => {
     handleRunSQL(query);
   };
-  
+
   // Get syntax highlighted HTML
   const getHighlightedSQL = () => {
     try {
-      return Prism.highlight(query, Prism.languages.sql, 'sql');
+      return Prism.highlight(query, Prism.languages.sql, "sql");
     } catch {
       return query;
     }
   };
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -62,9 +66,9 @@ const SQLQueryCard: React.FC<SQLQueryCardProps> = ({ query, index, isPrimary = f
             )}
           </span>
         </div>
-        
+
         {/* Actions - visible on hover */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-100 transition-opacity">
           <Button
             variant="ghost"
             size="icon"
@@ -78,7 +82,7 @@ const SQLQueryCard: React.FC<SQLQueryCardProps> = ({ query, index, isPrimary = f
               <Copy className="h-3.5 w-3.5" />
             )}
           </Button>
-          
+
           <Button
             variant="ghost"
             size="icon"
@@ -90,7 +94,7 @@ const SQLQueryCard: React.FC<SQLQueryCardProps> = ({ query, index, isPrimary = f
           </Button>
         </div>
       </div>
-      
+
       {/* SQL Content */}
       <div className="p-4">
         <pre className="text-sm overflow-x-auto">
