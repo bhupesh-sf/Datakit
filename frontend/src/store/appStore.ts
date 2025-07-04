@@ -49,6 +49,8 @@ interface AppState {
   recentQueries: SavedQuery[];
   /** Array of saved queries */
   savedQueries: SavedQuery[];
+  /** Pending query to be loaded in query tab */
+  pendingQuery: string | null;
 
   // Multi-file actions
   /** Add a new file to the collection */
@@ -94,6 +96,8 @@ interface AppState {
   loadQueriesFromStorage: () => void;
   setIsRemoteModalOpen: (val: boolean) => void;
   setActiveProviderRemoteModal: (val: ImportProvider) => void;
+  /** Set a pending query to be loaded in query tab */
+  setPendingQuery: (query: string | null) => void;
 }
 
 // Initial state
@@ -110,6 +114,7 @@ const initialState = {
   // Query history state
   recentQueries: [],
   savedQueries: [],
+  pendingQuery: null,
   isRemoteModalOpen: false,
   activeProviderRemoteModal: 'huggingface' as ImportProvider
 };
@@ -382,5 +387,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   setActiveProviderRemoteModal: (val) => {
     set({ activeProviderRemoteModal: val });
+  },
+  
+  setPendingQuery: (query) => {
+    set({ pendingQuery: query });
   },
 }));

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 import { useDuckDBStore } from "@/store/duckDBStore";
+import { useAppStore } from "@/store/appStore";
 import {
   selectDefaultQuery,
   selectCanExecuteQueries,
@@ -56,6 +57,21 @@ export const useInitialQuery = () => {
     canExecuteQueries,
     hasUserTables,
   };
+};
+
+/**
+ * Custom hook to handle pending queries from AI tab
+ */
+export const usePendingQuery = (setQuery: (query: string) => void) => {
+  const { pendingQuery, setPendingQuery } = useAppStore();
+
+  useEffect(() => {
+    if (pendingQuery) {
+      console.log('Setting pending query:', pendingQuery);
+      setQuery(pendingQuery);
+      setPendingQuery(null); // Clear pending query after using it
+    }
+  }, [pendingQuery, setPendingQuery, setQuery]);
 };
 
 /**

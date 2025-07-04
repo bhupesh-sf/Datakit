@@ -1,11 +1,16 @@
 import React, { useState } from "react";
-import { Play, Copy, Check, Code } from "lucide-react";
+import { Play, Copy, Check, Code, PenSquare } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Prism from "prismjs";
 import "prismjs/components/prism-sql";
 
+import { useAppStore } from "@/store/appStore";
+
 import { useAIOperations } from "@/hooks/ai/useAIOperations";
+
 import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 interface SQLQueryCardProps {
   query: string;
@@ -19,6 +24,8 @@ const SQLQueryCard: React.FC<SQLQueryCardProps> = ({
   isPrimary = false,
 }) => {
   const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
+  const { setActiveTab, setPendingQuery } = useAppStore();
   const { handleRunSQL } = useAIOperations();
 
   const handleCopy = async () => {
@@ -33,6 +40,15 @@ const SQLQueryCard: React.FC<SQLQueryCardProps> = ({
 
   const handleRun = () => {
     handleRunSQL(query);
+  };
+
+  const handleEdit = () => {
+    // Set the query as pending query
+    setPendingQuery(query);
+    // Switch to query tab
+    setActiveTab("query");
+    // Navigate to home page if not already there
+    navigate("/");
   };
 
   // Get syntax highlighted HTML
@@ -69,29 +85,42 @@ const SQLQueryCard: React.FC<SQLQueryCardProps> = ({
 
         {/* Actions - visible on hover */}
         <div className="flex items-center gap-1 opacity-100 transition-opacity">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={handleCopy}
-            title="Copy SQL"
-          >
-            {copied ? (
-              <Check className="h-3.5 w-3.5 text-green-400" />
-            ) : (
-              <Copy className="h-3.5 w-3.5" />
-            )}
-          </Button>
+          <Tooltip content={copied ? "Copied!" : "Copy SQL"} placement="bottom">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={handleCopy}
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-green-400" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </Tooltip>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-primary hover:text-primary/80"
-            onClick={handleRun}
-            title="Run Query"
-          >
-            <Play className="h-3.5 w-3.5" />
-          </Button>
+          <Tooltip content="Edit in Query Tab" placement="bottom">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={handleEdit}
+            >
+              <PenSquare className="h-3.5 w-3.5" />
+            </Button>
+          </Tooltip>
+
+          <Tooltip content="Run" placement="bottom">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-primary hover:text-primary/80"
+              onClick={handleRun}
+            >
+              <Play className="h-3.5 w-3.5" />
+            </Button>
+          </Tooltip>
         </div>
       </div>
 
