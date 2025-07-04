@@ -15,6 +15,8 @@ export const useAIOperations = () => {
     activeModel,
     apiKeys,
     autoExecuteSQL,
+    currentConversation,
+    addMessageToConversation,
     setProcessing,
     addQueryToHistory,
     currentResponse,
@@ -305,22 +307,30 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
         throw new Error('No data context available');
       }
 
+      // Build conversation messages with history
+      const systemMessage = {
+        role: 'system' as const,
+        content: `You are a SQL expert helping users query their data using DuckDB syntax. 
+        
+        Table: ${context.tableName}
+        Schema: ${context.schema.map(col => `${col.name} (${col.type})`).join(', ')}
+        
+        IMPORTANT: Only use the column names listed in the schema above. Do not assume any other columns exist.
+        
+        Provide helpful, accurate responses with SQL queries when appropriate. You are in a conversation with the user, so maintain context from previous exchanges.`,
+      };
+
+      // Create the new user message
+      const userMessage = {
+        role: 'user' as const,
+        content: prompt,
+      };
+
+      // Build messages array: system + conversation history + new message
       const messages = [
-        {
-          role: 'system' as const,
-          content: `You are a SQL expert helping users query their data using DuckDB syntax. 
-          
-          Table: ${context.tableName}
-          Schema: ${context.schema.map(col => `${col.name} (${col.type})`).join(', ')}
-          
-          IMPORTANT: Only use the column names listed in the schema above. Do not assume any other columns exist.
-          
-          Provide helpful, accurate responses with SQL queries when appropriate.`,
-        },
-        {
-          role: 'user' as const,
-          content: prompt,
-        },
+        systemMessage,
+        ...currentConversation,
+        userMessage,
       ];
 
       let fullResponse = "";
@@ -335,6 +345,13 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
           } else {
             // Stream completed
             const executionTime = Date.now() - startTime;
+            
+            // Add messages to conversation
+            addMessageToConversation(userMessage);
+            addMessageToConversation({
+              role: 'assistant',
+              content: fullResponse,
+            });
             
             const query: AIQuery = {
               id: Date.now().toString(),
@@ -390,6 +407,8 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
   }, [
     activeProvider,
     activeModel,
+    currentConversation,
+    addMessageToConversation,
     getDataContext,
     addQueryToHistory,
     setProcessing,

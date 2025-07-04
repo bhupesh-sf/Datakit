@@ -51,7 +51,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(true);
   
   const tableName = useAppStore(selectTableName);
-  const { isProcessing, clearQueryHistory } = useAIStore();
+  const { isProcessing, clearQueryHistory, clearConversation, currentConversation } = useAIStore();
   const { executeAIQueryStream, canExecute } = useAIOperations();
   
   // Hide suggestions when user starts typing
@@ -82,9 +82,26 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
   
   const handleRefreshChat = () => {
     clearQueryHistory();
+    clearConversation();
     setPrompt("");
     setShowSuggestions(true);
     inputRef.current?.focus();
+  };
+  
+  // Determine placeholder text based on conversation state
+  const getPlaceholderText = () => {
+    if (!tableName) {
+      return "Ask about your data...";
+    }
+    
+    // Check if there's an ongoing conversation (has user messages)
+    const hasConversation = currentConversation.some(msg => msg.role === 'user');
+    
+    if (hasConversation) {
+      return `Ask followup question...`;
+    }
+    
+    return `Ask about ${tableName}...`;
   };
   
   // Auto-resize textarea
@@ -169,7 +186,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
             {onToggleSchema && (
               <button
                 onClick={onToggleSchema}
-                className="p-1 hover:bg-white/10 rounded transition-colors"
+                className="p-1 hover:bg-white/10 border rounded transition-colors"
                 title={schemaBrowserOpen ? "Hide Schema" : "Show Schema"}
               >
                 <ChevronRight 
@@ -214,7 +231,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={tableName ? `Ask about ${tableName}...` : "Ask about your data..."}
+                placeholder={getPlaceholderText()}
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
                 rows={2}
                 disabled={isProcessing || showSetupPrompt}

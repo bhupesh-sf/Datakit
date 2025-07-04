@@ -7,6 +7,7 @@ import {
   AIQuery, 
   MCPConnection
 } from "@/types/ai";
+import { AIMessage } from "@/lib/ai/types";
 
 interface QueryResults {
   data: any[] | null;
@@ -38,6 +39,10 @@ interface AIState {
   currentResponse: string | null;
   streamingResponse: string;
   currentTokenUsage: { input: number; output: number } | null;
+  
+  // Conversation State
+  currentConversation: AIMessage[];
+  conversationId: string | null;
   
   // MCP State
   mcpConnections: MCPConnection[];
@@ -72,6 +77,11 @@ interface AIState {
   setCurrentResponse: (response: string | null) => void;
   setStreamingResponse: (response: string) => void;
   setCurrentTokenUsage: (usage: { input: number; output: number } | null) => void;
+  
+  // Conversation Actions
+  addMessageToConversation: (message: AIMessage) => void;
+  clearConversation: () => void;
+  startNewConversation: () => void;
   
   // Model Actions
   downloadLocalModel: (modelId: string) => Promise<void>;
@@ -193,6 +203,9 @@ export const useAIStore = create<AIState>()(
       streamingResponse: '',
       currentTokenUsage: null,
       
+      currentConversation: [],
+      conversationId: null,
+      
       mcpConnections: [],
       activeMCPConnection: null,
       
@@ -254,6 +267,36 @@ export const useAIStore = create<AIState>()(
       setStreamingResponse: (response) => set({ streamingResponse: response }),
       
       setCurrentTokenUsage: (usage) => set({ currentTokenUsage: usage }),
+      
+      addMessageToConversation: (message) => {
+        set((state) => {
+          const newConversation = [...state.currentConversation, message];
+          // Keep conversation manageable (last 20 messages = ~10 exchanges)
+          if (newConversation.length > 20) {
+            newConversation.splice(0, newConversation.length - 20);
+          }
+          return { currentConversation: newConversation };
+        });
+      },
+      
+      clearConversation: () => {
+        set({ 
+          currentConversation: [], 
+          conversationId: null,
+          currentResponse: null,
+          streamingResponse: '',
+        });
+      },
+      
+      startNewConversation: () => {
+        const newConversationId = Date.now().toString();
+        set({ 
+          currentConversation: [], 
+          conversationId: newConversationId,
+          currentResponse: null,
+          streamingResponse: '',
+        });
+      },
       
       downloadLocalModel: async (modelId) => {
         try {
