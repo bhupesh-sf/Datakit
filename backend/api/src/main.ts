@@ -1,17 +1,29 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
+import * as compression from 'compression';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (isProduction) {
+    app.use(helmet());
+    app.use(compression());
+  }
 
   // Enable cookie parsing
   app.use(cookieParser());
 
   // Enable CORS for frontend
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : [process.env.FRONTEND_URL || 'http://localhost:5173'];
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control'],
     exposedHeaders: ['Content-Type'],
@@ -33,6 +45,15 @@ async function bootstrap() {
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
-  console.log(`🚀 DataKit API is running on: http://localhost:${port}/api`);
+  const protocol = isProduction ? 'https' : 'http';
+  const host = isProduction ? 'production' : 'localhost';
+
+  console.log(
+    `🚀 DataKit API is running on: ${protocol}://${host}:${port}/api`,
+  );
+  console.log(
+    `📊 Health check available at: ${protocol}://${host}:${port}/api/health`,
+  );
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 }
 bootstrap();
