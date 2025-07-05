@@ -126,6 +126,54 @@ class ApiClient {
   async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
+
+  // Streaming method for AI responses
+  async stream(
+    endpoint: string,
+    data?: any,
+    options?: RequestOptions
+  ): Promise<Response> {
+    const { skipAuth = false, headers = {}, ...restOptions } = options || {};
+    
+    const authHeaders = skipAuth ? {} : await this.getAuthHeaders();
+    
+    const finalHeaders = {
+      'Content-Type': 'application/json',
+      ...authHeaders,
+      ...headers,
+    };
+
+    const url = `${this.baseURL}${endpoint}`;
+    
+    // Log API call in development
+    logApiCall('POST', url, data);
+
+    try {
+      const response = await fetch(url, {
+        ...restOptions,
+        method: 'POST',
+        headers: finalHeaders,
+        credentials: 'include',
+        body: data ? JSON.stringify(data) : undefined,
+      });
+
+      if (!response.ok) {
+        let errorMessage = `Request failed with status ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          // Ignore JSON parse error
+        }
+        throw new Error(errorMessage);
+      }
+
+      return response;
+    } catch (error) {
+      logApiResponse(url, null, error);
+      throw error;
+    }
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

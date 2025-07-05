@@ -31,7 +31,7 @@ const PROVIDER_CONFIG = {
       "DataKit model uses your credits and provides optimized prompts for data analysis tasks.",
     keyFormat: null,
     websiteUrl: null,
-    models: ["DataKit Smart (Claude 3.5 Sonnet)", "DataKit Fast (GPT-4o Mini)"],
+    models: ["DataKit Smart (Claude 3.5 Sonnet)", "DataKit Fast (Claude 3.5 Haiku)"],
     features: [
       "Optimized for data analysis",
       "No API key required",
@@ -269,11 +269,11 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
                   </div>
                   <div className="text-xs text-white/60">
                     {!isProOrTeam
-                      ? "Free: 100/month"
+                      ? "Free: 315 credits/month"
                       : isProOrTeam &&
                         currentWorkspace?.subscription?.planType === "team"
                       ? "Team: Unlimited"
-                      : "Pro: 10,000/month"}
+                      : "Pro: 1,575 credits/month"}
                   </div>
                 </div>
               </div>
@@ -293,8 +293,8 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
 
             {/* Credits Explanation */}
             <div className="text-xs text-white/50 leading-relaxed">
-              Each AI request consumes credits based on the model and response
-              length.
+              Each AI request consumes credits based on the model and response length. 
+              DataKit Smart uses ~1.8 credits per typical query, DataKit Fast uses ~0.5 credits.
               {!isProOrTeam && (
                 <span className="text-primary">
                   {" "}

@@ -2,6 +2,7 @@ import { OpenAIProvider } from "./providers/openai";
 import { AnthropicProvider } from "./providers/anthropic";
 import { GroqProvider } from "./providers/groq";
 import { WebLLMProvider } from "./providers/webllm";
+
 import { 
   AIProvider, 
   AIMessage, 
@@ -13,6 +14,7 @@ import {
   DataAnalysisResponse,
   AIContextData
 } from "../../types/ai";
+
 import { 
   AIMessage as LibAIMessage, 
   AIResponse as LibAIResponse,
@@ -48,9 +50,16 @@ export class AIService {
       case 'local':
         // Local provider already initialized in constructor
         break;
+      case 'datakit':
+        // DataKit provider is set via setProvider method
+        break;
       default:
         throw new Error(`Unsupported provider: ${provider}`);
     }
+  }
+
+  setProvider(provider: AIProvider, providerInstance: any): void {
+    this.providers.set(provider, providerInstance);
   }
 
   async validateApiKey(provider: AIProvider): Promise<boolean> {
@@ -170,6 +179,10 @@ export class AIService {
   isProviderReady(provider: AIProvider): boolean {
     if (provider === 'local') {
       return this.webllmProvider?.isModelLoaded() || false;
+    }
+    if (provider === 'datakit') {
+      // DataKit provider availability is handled by authentication
+      return this.providers.has(provider);
     }
     return this.providers.has(provider);
   }

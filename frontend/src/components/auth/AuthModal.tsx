@@ -8,12 +8,14 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultMode?: 'login' | 'signup';
+  onLoginSuccess?: () => void;
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ 
   isOpen, 
   onClose, 
-  defaultMode = 'login' 
+  defaultMode = 'login',
+  onLoginSuccess
 }) => {
   const [mode, setMode] = useState<'login' | 'signup'>(defaultMode);
   const [showPassword, setShowPassword] = useState(false);
@@ -40,6 +42,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
           email: formData.email,
           password: formData.password,
         });
+        onLoginSuccess?.();
       } else {
         await signup({
           email: formData.email,

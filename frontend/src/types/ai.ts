@@ -1,5 +1,5 @@
-export type AIProvider = 'openai' | 'anthropic' | 'groq' | 'local' | 'datakit';
-export type ModelType = 'chat' | 'completion' | 'embedding';
+export type AIProvider = "openai" | "anthropic" | "groq" | "datakit" | "local";
+export type ModelType = "chat" | "completion" | "embedding";
 
 export interface AIModel {
   id: string;
@@ -19,7 +19,7 @@ export interface AIModel {
 
 export interface LocalModel extends AIModel {
   size: number; // in MB
-  quantization?: '4bit' | '8bit' | '16bit';
+  quantization?: "4bit" | "8bit" | "16bit";
   downloadUrl?: string;
   isDownloaded?: boolean;
   downloadProgress?: number;
@@ -43,7 +43,7 @@ export interface AIQuery {
 }
 
 export interface QueryIntent {
-  type: 'query' | 'visualization' | 'analysis' | 'transform' | 'explain';
+  type: "query" | "visualization" | "analysis" | "transform" | "explain";
   confidence: number;
   suggestedSQL?: string;
   parameters?: Record<string, any>;
@@ -55,14 +55,14 @@ export interface MCPTool {
   name: string;
   description: string;
   inputSchema?: any;
-  category: 'data' | 'analysis' | 'visualization' | 'other';
+  category: "data" | "analysis" | "visualization" | "other";
 }
 
 export interface MCPConnection {
   id: string;
   name: string;
   endpoint: string;
-  status: 'connected' | 'disconnected' | 'error';
+  status: "connected" | "disconnected" | "error";
   tools: MCPTool[];
   lastConnected?: Date;
 }
@@ -83,18 +83,18 @@ export interface AIExecutionPlan {
 
 export interface AIExecutionStep {
   id: string;
-  type: 'prompt' | 'sql' | 'visualization' | 'analysis';
+  type: "prompt" | "sql" | "visualization" | "analysis";
   description: string;
   model?: string;
   input?: any;
   output?: any;
-  status?: 'pending' | 'running' | 'completed' | 'error';
+  status?: "pending" | "running" | "completed" | "error";
   error?: string;
 }
 
 export interface AIInsight {
   id: string;
-  type: 'pattern' | 'anomaly' | 'trend' | 'summary';
+  type: "pattern" | "anomaly" | "trend" | "summary";
   title: string;
   description: string;
   confidence: number;

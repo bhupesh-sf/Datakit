@@ -116,6 +116,30 @@ interface AIState {
 
 // Default available models
 const DEFAULT_MODELS: Map<AIProvider, AIModel[]> = new Map([
+  ['datakit', [
+    {
+      id: 'datakit-smart',
+      name: 'Smart',
+      provider: 'datakit',
+      type: 'chat',
+      contextWindow: 200000,
+      costPer1kTokens: { input: 0.3, output: 1.5 }, // Credits per 1K tokens
+      capabilities: ['sql-generation', 'data-analysis'],
+      requiresApiKey: false,
+      description: 'Powered by Claude 3.5 Sonnet - Best for complex analysis',
+    },
+    {
+      id: 'datakit-fast',
+      name: 'Fast',
+      provider: 'datakit',
+      type: 'chat',
+      contextWindow: 200000,
+      costPer1kTokens: { input: 0.08, output: 0.4 }, // Credits per 1K tokens
+      capabilities: ['sql-generation', 'data-analysis'],
+      requiresApiKey: false,
+      description: 'Powered by Claude 3.5 Haiku - Economical',
+    },
+  ]],
   ['openai', [
     {
       id: 'gpt-4o-2024-11-20',

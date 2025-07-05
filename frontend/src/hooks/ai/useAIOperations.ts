@@ -5,6 +5,8 @@ import { useAppStore } from "@/store/appStore";
 import { selectTableName, selectActiveFileInfo } from "@/store/selectors/appSelectors";
 import { useAIQueryExecution } from "./useAIQueryExecution";
 import { aiService } from "@/lib/ai/aiService";
+import { DataKitProvider } from "@/lib/ai/providers/datakit";
+import { useAuth } from "@/hooks/auth/useAuth";
 import { AIQuery, QueryIntent } from "@/types/ai";
 
 export const useAIOperations = () => {
@@ -30,15 +32,23 @@ export const useAIOperations = () => {
   const { executeAIGeneratedSQL, previewSQL, validateSQL } = useAIQueryExecution();
   const tableName = useAppStore(selectTableName);
   const activeFileInfo = useAppStore(selectActiveFileInfo);
+  const { isAuthenticated } = useAuth();
 
-  // Initialize AI service with API keys
+  // Initialize AI service with API keys and DataKit provider
   useEffect(() => {
+    // Set up regular API key providers
     for (const [provider, key] of apiKeys) {
-      if (key) {
+      if (key && provider !== 'datakit') {
         aiService.setApiKey(provider, key, activeModel || undefined);
       }
     }
-  }, [apiKeys, activeModel]);
+    
+    // Set up DataKit provider if authenticated
+    if (isAuthenticated && activeModel && (activeModel === 'datakit-smart' || activeModel === 'datakit-fast')) {
+      const datakitProvider = new DataKitProvider(activeModel);
+      aiService.setProvider('datakit', datakitProvider);
+    }
+  }, [apiKeys, activeModel, isAuthenticated]);
 
   const getDataContext = useCallback(async () => {
     if (!tableName || !activeFileInfo) {
@@ -170,6 +180,9 @@ export const useAIOperations = () => {
     }
 
     if (!aiService.isProviderReady(activeProvider)) {
+      if (activeProvider === 'datakit') {
+        throw new Error('Please sign in to use DataKit AI');
+      }
       throw new Error(`AI provider ${activeProvider} not configured`);
     }
 
@@ -183,111 +196,14 @@ export const useAIOperations = () => {
     }
 
     if (!aiService.isProviderReady(activeProvider)) {
+      if (activeProvider === 'datakit') {
+        throw new Error('Please sign in to use DataKit AI');
+      }
       throw new Error(`AI provider ${activeProvider} not configured`);
     }
 
     return await aiService.analyzeData(activeProvider, prompt, context, data);
   }, [activeProvider, getDataContext]);
-
-  const executeAIQuery = useCallback(async (prompt: string) => {
-    if (!prompt.trim()) {
-      throw new Error('Prompt cannot be empty');
-    }
-
-    setIsExecuting(true);
-    setProcessing(true);
-    setCurrentResponse(null);
-    setStreamingResponse("");
-
-    const startTime = Date.now();
-    
-    try {
-      const intent = detectIntent(prompt);
-      let response = "";
-      let generatedSQL: string | undefined;
-      let usage: { promptTokens: number; completionTokens: number } | undefined;
-
-      if (intent.type === 'query' || intent.type === 'visualization') {
-        // Generate SQL for data queries and visualizations
-        const sqlResult = await generateSQL(prompt);
-        generatedSQL = sqlResult.sql;
-        
-        // Create a comprehensive response
-        response = `Based on your request, I've generated the following SQL query:
-
-\`\`\`sql
-${sqlResult.sql}
-\`\`\`
-
-${sqlResult.explanation || ''}
-
-${sqlResult.warnings && sqlResult.warnings.length > 0 ? 
-  `**Warnings:**\n${sqlResult.warnings.map(w => `- ${w}`).join('\n')}` : 
-  ''
-}`;
-
-      } else if (intent.type === 'analysis') {
-        // For analysis requests, we might need to get data first
-        const analysisResult = await analyzeData(prompt);
-        response = analysisResult.analysis;
-        
-        if (analysisResult.suggestions && analysisResult.suggestions.length > 0) {
-          response += `\n\n**Suggestions:**\n${analysisResult.suggestions.map(s => `- ${s}`).join('\n')}`;
-        }
-      }
-
-      const executionTime = Date.now() - startTime;
-      const cost = usage ? aiService.calculateCost(activeProvider, usage) : 0;
-
-      // Create query record
-      const query: AIQuery = {
-        id: Date.now().toString(),
-        prompt,
-        model: activeModel || 'unknown',
-        provider: activeProvider,
-        response,
-        generatedSQL,
-        timestamp: new Date(),
-        executionTime,
-        tokens: usage,
-        cost,
-      };
-
-      // Add to history
-      addQueryToHistory(query);
-      setCurrentResponse(response);
-      
-      return query;
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      
-      const errorQuery: AIQuery = {
-        id: Date.now().toString(),
-        prompt,
-        model: activeModel || 'unknown',
-        provider: activeProvider,
-        error: errorMessage,
-        timestamp: new Date(),
-        executionTime: Date.now() - startTime,
-      };
-
-      addQueryToHistory(errorQuery);
-      throw error;
-      
-    } finally {
-      setIsExecuting(false);
-      setProcessing(false);
-    }
-  }, [
-    activeProvider,
-    activeModel,
-    detectIntent,
-    generateSQL,
-    analyzeData,
-    addQueryToHistory,
-    setProcessing,
-  ]);
 
   const executeAIQueryStream = useCallback(async (prompt: string) => {
     if (!prompt.trim()) {
@@ -376,12 +292,19 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
                 output: chunk.usage.completionTokens,
               });
             }
+
+            // Handle DataKit metadata if present
+            if (activeProvider === 'datakit' && (chunk as any)._datakit) {
+              const datakitData = (chunk as any)._datakit;
+              console.log('DataKit metadata:', datakitData);
+              // You can add additional DataKit-specific handling here
+            }
             
             // Auto-execute SQL if enabled
             autoExecuteSQLQueries(fullResponse);
           }
         },
-        { temperature: 0.1, maxTokens: 2000 }
+        { temperature: 0.1, maxTokens: 8000 }
       );
 
     } catch (error) {
@@ -423,6 +346,11 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
       return false;
     }
     
+    if (activeProvider === 'datakit') {
+      // For DataKit provider, check if user is authenticated
+      return isAuthenticated;
+    }
+    
     if (activeProvider === 'local') {
       // For local provider, check if model is actually loaded
       return aiService.isLocalModelLoaded();
@@ -430,7 +358,7 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
     
     // For cloud providers, check if API key is available
     return apiKeys.has(activeProvider) && !!apiKeys.get(activeProvider);
-  }, [activeProvider, apiKeys, activeModel]);
+  }, [activeProvider, apiKeys, activeModel, isAuthenticated]);
 
   // Handle running SQL from the UI
   const handleRunSQL = useCallback(async (sql: string) => {
@@ -512,7 +440,6 @@ ${sqlResult.warnings && sqlResult.warnings.length > 0 ?
     isLoading: isExecuting,
     
     // Actions
-    executeAIQuery,
     executeAIQueryStream,
     executeGeneratedSQL,
     generateSQL,

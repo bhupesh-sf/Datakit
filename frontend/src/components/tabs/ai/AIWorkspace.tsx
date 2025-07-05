@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronUp, ChevronDown } from "lucide-react";
 
 import { useAIStore } from "@/store/aiStore";
+import { useAuth } from "@/hooks/auth/useAuth";
 
 import SchemaBrowser from "@/components/tabs/query/SchemaBrowser";
 import AuthModal from "@/components/auth/AuthModal";
@@ -22,7 +23,8 @@ const AIWorkspace: React.FC = () => {
     "signup"
   );
 
-  const { queryResults, activeProvider, apiKeys } = useAIStore();
+  const { queryResults, activeProvider, setActiveProvider, apiKeys } = useAIStore();
+  const { isAuthenticated } = useAuth();
 
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
   const resultsResizeRef = useRef<HTMLDivElement>(null);
@@ -70,9 +72,22 @@ const AIWorkspace: React.FC = () => {
     setShowApiKeyModal(true);
   };
 
-  const hasApiKey =
-    apiKeys.has(activeProvider) && !!apiKeys.get(activeProvider);
-  const showSetupPrompt = !hasApiKey && activeProvider !== "local";
+  // Check if current provider is ready to use
+  const isProviderReady = () => {
+    console.log('isProviderReady', activeProvider, isAuthenticated);
+    if (activeProvider === 'datakit') {
+      return isAuthenticated; // DataKit requires authentication
+    }
+    if (activeProvider === 'local') {
+      return true; // Local models don't need setup
+    }
+    // Other providers need API keys
+    return apiKeys.has(activeProvider) && !!apiKeys.get(activeProvider);
+  };
+
+  
+
+  const showSetupPrompt = !isProviderReady();
   
   return (
     <div className="h-full flex flex-col bg-background">
@@ -169,6 +184,7 @@ const AIWorkspace: React.FC = () => {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         defaultMode={authModalMode}
+        onLoginSuccess={() => setActiveProvider('datakit')}
       />
     </div>
   );
