@@ -7,7 +7,9 @@ healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
+[[build.env]]
+NODE_VERSION = "18.20.7"
+
 [variables]
 NODE_ENV = "production"
 PORT = "3000"
-NODE_VERSION = "18.20.7"
