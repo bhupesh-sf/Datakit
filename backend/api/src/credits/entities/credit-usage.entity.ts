@@ -6,8 +6,9 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Workspace } from '../../workspaces/entities/workspace.entity';
+
+import { User } from 'src/users/entities/user.entity';
+import { Workspace } from 'src/workspaces/entities/workspace.entity';
 
 @Entity('credit_usage')
 export class CreditUsage {
@@ -34,10 +35,10 @@ export class CreditUsage {
   @Column()
   provider: string;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   inputTokens: number;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   outputTokens: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 4 })

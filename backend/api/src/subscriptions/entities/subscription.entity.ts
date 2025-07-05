@@ -29,7 +29,7 @@ export class Subscription {
   id: string;
 
   @Column({ nullable: true })
-  userId: string; // Keep for backward compatibility during migration
+  userId: string;
 
   @OneToOne(() => User)
   @JoinColumn({ name: 'userId' })
@@ -56,10 +56,10 @@ export class Subscription {
   })
   status: SubscriptionStatus;
 
-  @Column({ type: 'int', default: 100 })
+  @Column({ type: 'decimal', precision: 10, scale: 4, default: 100 })
   creditsRemaining: number;
 
-  @Column({ type: 'int', default: 100 })
+  @Column({ type: 'decimal', precision: 10, scale: 4, default: 100 })
   monthlyCredits: number;
 
   @Column({ type: 'timestamp', nullable: true })

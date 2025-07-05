@@ -6,16 +6,26 @@ import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { UsersService } from '../users/users.service';
 
 // Credit costs per 1k tokens for different models
+// DataKit models use Claude 3.5 models behind the scenes with our credit system
+// 1 credit = $0.01 USD, with pricing based on Anthropic's API costs
 const CREDIT_COSTS = {
+  // Legacy models for existing API key users
   'gpt-4o': { input: 2.5, output: 10 },
   'gpt-4o-mini': { input: 0.15, output: 0.6 },
   'claude-3-5-sonnet': { input: 3, output: 15 },
   'claude-3-5-haiku': { input: 0.8, output: 4 },
   'llama-3.1-70b': { input: 0, output: 0 }, // Free on Groq
   'llama-3.1-8b': { input: 0, output: 0 }, // Free on Groq
-  // DataKit AI models - competitive pricing
-  'datakit-smart': { input: 1.5, output: 6 }, // Slightly cheaper than Claude
-  'datakit-fast': { input: 0.8, output: 3.2 }, // Competitive with mid-tier models
+
+  // DataKit AI models - using Claude models behind the scenes
+  // Converted from Anthropic pricing: $3/1M input, $15/1M output for Sonnet
+  // Converted from Anthropic pricing: $0.80/1M input, $4/1M output for Haiku
+  'datakit-smart': { input: 0.3, output: 1.5 }, // Claude 3.5 Sonnet backend (0.3 credits per 1K input, 1.5 per 1K output)
+  'datakit-fast': { input: 0.08, output: 0.4 }, // Claude 3.5 Haiku backend (0.08 credits per 1K input, 0.4 per 1K output)
+
+  // Alternative model IDs that map to the same backend models
+  'claude-3-5-sonnet-20241022': { input: 0.3, output: 1.5 }, // Maps to datakit-smart
+  'claude-3-5-haiku-20241022': { input: 0.08, output: 0.4 }, // Maps to datakit-fast
 };
 
 @Injectable()
@@ -79,7 +89,7 @@ export class CreditsService {
 
     // Get user's current workspace
     const user = await this.usersService.findOne(userId);
-    let workspaceId = user.currentWorkspaceId;
+    const workspaceId = user.currentWorkspaceId;
 
     if (workspaceId) {
       // Deduct credits from workspace subscription
@@ -169,7 +179,7 @@ export class CreditsService {
 
   async getRemainingCredits(userId: string): Promise<number> {
     const user = await this.usersService.findOne(userId);
-    
+
     if (!user.currentWorkspaceId) {
       // Fallback to user-based credits
       return await this.subscriptionsService.getCreditsRemaining(userId);

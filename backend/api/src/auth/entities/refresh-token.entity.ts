@@ -21,7 +21,10 @@ export class RefreshToken {
   @Column('uuid')
   userId: string;
 
-  @ManyToOne(() => User, (user) => user.refreshTokens, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.refreshTokens, {
+    onDelete: 'CASCADE',
+    lazy: true,
+  })
   user: User;
 
   @Column('timestamp')

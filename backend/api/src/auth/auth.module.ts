@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { RefreshTokenService } from './refresh-token.service';
+import { PasswordService } from './services/password.service';
 import { UsersModule } from '../users/users.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -30,7 +31,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, RefreshTokenService, LocalStrategy, JwtStrategy],
-  exports: [AuthService, RefreshTokenService],
+  providers: [AuthService, RefreshTokenService, PasswordService, LocalStrategy, JwtStrategy],
+  exports: [AuthService, RefreshTokenService, PasswordService],
 })
 export class AuthModule {}

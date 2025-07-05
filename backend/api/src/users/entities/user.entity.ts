@@ -65,6 +65,6 @@ export class User {
   @OneToMany(() => CreditUsage, creditUsage => creditUsage.user)
   creditUsages: CreditUsage[];
 
-  @OneToMany(() => RefreshToken, refreshToken => refreshToken.user)
+  @OneToMany(() => RefreshToken, refreshToken => refreshToken.user, { lazy: true })
   refreshTokens: RefreshToken[];
 }

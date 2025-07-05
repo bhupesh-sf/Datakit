@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -17,7 +21,9 @@ export class UsersService {
       throw new ConflictException('User with this email already exists');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Use stronger salt rounds (12 instead of 10) for better security
+    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12');
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
     const user = this.usersRepository.create({
       email,
       password: hashedPassword,
@@ -36,11 +42,11 @@ export class UsersService {
       where: { id },
       relations: ['subscription'],
     });
-    
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    
+
     return user;
   }
 
@@ -53,11 +59,13 @@ export class UsersService {
 
   async update(id: string, updateData: Partial<User>): Promise<User> {
     const user = await this.findOne(id);
-    
+
     if (updateData.password) {
-      updateData.password = await bcrypt.hash(updateData.password, 10);
+      // Use stronger salt rounds (12 instead of 10) for better security
+      const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12');
+      updateData.password = await bcrypt.hash(updateData.password, saltRounds);
     }
-    
+
     Object.assign(user, updateData);
     return this.usersRepository.save(user);
   }

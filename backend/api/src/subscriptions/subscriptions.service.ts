@@ -15,23 +15,31 @@ export class SubscriptionsService {
     private subscriptionsRepository: Repository<Subscription>,
   ) {}
 
-  async createFreeSubscription(userId: string, workspaceId?: string): Promise<Subscription> {
+  async createFreeSubscription(
+    userId: string,
+    workspaceId?: string,
+  ): Promise<Subscription> {
+    const monthlyCredits = this.getMonthlyCredits(SubscriptionPlan.FREE);
+
     const subscription = this.subscriptionsRepository.create({
       userId, // Keep for backward compatibility
       workspaceId,
       planType: SubscriptionPlan.FREE,
       status: SubscriptionStatus.ACTIVE,
-      creditsRemaining: 100,
-      monthlyCredits: 100,
+      creditsRemaining: monthlyCredits,
+      monthlyCredits,
       creditsResetAt: this.getNextResetDate(),
     });
 
     return this.subscriptionsRepository.save(subscription);
   }
 
-  async createWorkspaceSubscription(workspaceId: string, planType: SubscriptionPlan = SubscriptionPlan.FREE): Promise<Subscription> {
+  async createWorkspaceSubscription(
+    workspaceId: string,
+    planType: SubscriptionPlan = SubscriptionPlan.FREE,
+  ): Promise<Subscription> {
     const monthlyCredits = this.getMonthlyCredits(planType);
-    
+
     const subscription = this.subscriptionsRepository.create({
       workspaceId,
       planType,
@@ -116,7 +124,10 @@ export class SubscriptionsService {
     return subscription;
   }
 
-  async useWorkspaceCredits(workspaceId: string, amount: number): Promise<boolean> {
+  async useWorkspaceCredits(
+    workspaceId: string,
+    amount: number,
+  ): Promise<boolean> {
     const subscription = await this.findByWorkspaceId(workspaceId);
 
     // Team plan has unlimited credits
@@ -136,13 +147,13 @@ export class SubscriptionsService {
   private getMonthlyCredits(planType: SubscriptionPlan): number {
     switch (planType) {
       case SubscriptionPlan.FREE:
-        return 100;
+        return 315; // €3 + 5% margin (€3.15 ≈ 315 credits at $0.01 per credit)
       case SubscriptionPlan.PRO:
-        return 10000;
+        return 1575; // €15 + 5% margin (€15.75 ≈ 1575 credits at $0.01 per credit)
       case SubscriptionPlan.TEAM:
         return -1; // Unlimited
       default:
-        return 100;
+        return 315;
     }
   }
 
