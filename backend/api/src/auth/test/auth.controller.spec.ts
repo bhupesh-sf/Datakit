@@ -1,8 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { Reflector } from '@nestjs/core';
 
 import { AuthController } from 'src/auth/auth.controller';
 import { AuthService } from 'src/auth/auth.service';
+import { PasswordService } from 'src/auth/services/password.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -38,13 +41,31 @@ describe('AuthController', () => {
     logout: jest.fn(),
   };
 
+  const mockPasswordService = {
+    checkPasswordStrength: jest.fn(),
+    checkPasswordStrengthWithPersonalInfo: jest.fn(),
+    getPasswordRequirements: jest.fn(),
+    getStrengthDescription: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [
+        ThrottlerModule.forRoot([
+          { name: 'default', ttl: 60000, limit: 10 },
+          { name: 'auth', ttl: 900000, limit: 20 },
+          { name: 'signup', ttl: 3600000, limit: 20 },
+        ]),
+      ],
       controllers: [AuthController],
       providers: [
         {
           provide: AuthService,
           useValue: mockAuthService,
+        },
+        {
+          provide: PasswordService,
+          useValue: mockPasswordService,
         },
       ],
     }).compile();

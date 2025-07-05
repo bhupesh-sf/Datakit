@@ -5,6 +5,7 @@ import { UnauthorizedException } from '@nestjs/common';
 
 import { AuthService } from 'src/auth/auth.service';
 import { UsersService } from 'src/users/users.service';
+import { PasswordService } from 'src/auth/services/password.service';
 
 import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 import { WorkspacesService } from 'src/workspaces/workspaces.service';
@@ -65,6 +66,26 @@ describe('AuthService', () => {
     revokeAllUserTokens: jest.fn(),
   };
 
+  const mockPasswordService = {
+    checkPasswordStrength: jest.fn(),
+    checkPasswordStrengthWithPersonalInfo: jest.fn().mockReturnValue({
+      isValid: true,
+      score: 4,
+      feedback: [],
+      requirements: {
+        minLength: true,
+        hasUppercase: true,
+        hasLowercase: true,
+        hasNumbers: true,
+        hasSpecialChars: true,
+        noCommonPatterns: true,
+        noPersonalInfo: true,
+      },
+    }),
+    getPasswordRequirements: jest.fn(),
+    getStrengthDescription: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -92,6 +113,10 @@ describe('AuthService', () => {
         {
           provide: RefreshTokenService,
           useValue: mockRefreshTokenService,
+        },
+        {
+          provide: PasswordService,
+          useValue: mockPasswordService,
         },
       ],
     }).compile();

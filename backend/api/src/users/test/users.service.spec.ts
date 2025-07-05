@@ -90,7 +90,7 @@ describe('UsersService', () => {
         where: { email },
         relations: ['subscription'],
       });
-      expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith(password, 12);
       expect(mockUsersRepository.create).toHaveBeenCalledWith({
         email,
         password: hashedPassword,
@@ -181,7 +181,7 @@ describe('UsersService', () => {
 
       await service.create(email, password, name);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith(password, 12);
     });
   });
 
@@ -397,8 +397,8 @@ describe('UsersService', () => {
 
       await service.create('test@example.com', 'password123');
 
-      // Verify salt rounds is 10 (which is considered secure)
-      expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
+      // Verify salt rounds is 12 (which is considered secure)
+      expect(bcrypt.hash).toHaveBeenCalledWith('password123', 12);
     });
   });
 
