@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useDuckDBStore } from "@/store/duckDBStore";
 import { useAuthStore } from "@/store/authStore";
 import { useConsentManager } from "@/components/common/ConsentPopup";
+import { NotificationProvider } from "@/hooks/useNotifications";
 
 import Home from "@/pages/Home";
 import Privacy from "@/pages/Privacy";
@@ -120,7 +121,9 @@ const AppContent = () => {
 const App = () => {
   return (
     <Router>
-      <AppContent />
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
     </Router>
   );
 };

@@ -46,18 +46,19 @@ export class DataKitProvider {
   }
 
   private getApiHeaders(): HeadersInit {
-    return {
-      "x-ai-provider": "datakit",
-    };
+    return {};
   }
 
   async validateApiKey(): Promise<boolean> {
     try {
       // Check if user has remaining credits
-      const data = await apiClient.get<{ creditsRemaining: number }>('/credits/remaining', {
-        headers: this.getApiHeaders(),
-      });
-      
+      const data = await apiClient.get<{ creditsRemaining: number }>(
+        "/credits/remaining",
+        {
+          headers: this.getApiHeaders(),
+        }
+      );
+
       return data.creditsRemaining > 0 || data.creditsRemaining === -1; // -1 means unlimited
     } catch (error) {
       console.error("DataKit API validation failed:", error);
@@ -72,13 +73,17 @@ export class DataKitProvider {
     canProceed: boolean;
   }> {
     try {
-      return await apiClient.post('/ai/chat/completions/check', {
-        model: this.model,
-        messages: [{ role: "user", content: "test" }], // Minimal message for estimation
-        max_tokens: 100, // Default estimation
-      }, {
-        headers: this.getApiHeaders(),
-      });
+      return await apiClient.post(
+        "/ai/chat/completions/check",
+        {
+          model: this.model,
+          messages: [{ role: "user", content: "test" }], // Minimal message for estimation
+          max_tokens: 100, // Default estimation
+        },
+        {
+          headers: this.getApiHeaders(),
+        }
+      );
     } catch (error) {
       console.error("Credit check failed:", error);
       throw error;
@@ -97,7 +102,7 @@ export class DataKitProvider {
       // Convert to OpenAI-compatible format for backend
       const requestBody = {
         model: this.model,
-        messages: messages.map(msg => ({
+        messages: messages.map((msg) => ({
           role: msg.role,
           content: msg.content,
         })),
@@ -106,9 +111,13 @@ export class DataKitProvider {
         stream: options?.stream || false,
       };
 
-      const data = await apiClient.post<any>('/ai/chat/completions', requestBody, {
-        headers: this.getApiHeaders(),
-      });
+      const data = await apiClient.post<any>(
+        "/ai/chat/completions",
+        requestBody,
+        {
+          headers: this.getApiHeaders(),
+        }
+      );
 
       // DataKit backend returns OpenAI-compatible response with DataKit metadata
       return {
@@ -141,7 +150,7 @@ export class DataKitProvider {
     try {
       const requestBody = {
         model: this.model,
-        messages: messages.map(msg => ({
+        messages: messages.map((msg) => ({
           role: msg.role,
           content: msg.content,
         })),
@@ -150,9 +159,13 @@ export class DataKitProvider {
         stream: true,
       };
 
-      const response = await apiClient.stream('/ai/chat/completions', requestBody, {
-        headers: this.getApiHeaders(),
-      });
+      const response = await apiClient.stream(
+        "/ai/chat/completions",
+        requestBody,
+        {
+          headers: this.getApiHeaders(),
+        }
+      );
 
       const reader = response.body?.getReader();
       if (!reader) {
@@ -169,11 +182,11 @@ export class DataKitProvider {
           const { done, value } = await reader.read();
 
           if (done) {
-            onChunk({ 
-              content, 
-              done: true, 
-              usage, 
-              _datakit: datakitMetadata 
+            onChunk({
+              content,
+              done: true,
+              usage,
+              _datakit: datakitMetadata,
             });
             break;
           }
@@ -185,13 +198,13 @@ export class DataKitProvider {
 
           for (const line of lines) {
             const data = line.replace("data: ", "");
-            
+
             if (data.trim() === "[DONE]") {
-              onChunk({ 
-                content, 
-                done: true, 
-                usage, 
-                _datakit: datakitMetadata 
+              onChunk({
+                content,
+                done: true,
+                usage,
+                _datakit: datakitMetadata,
               });
               return;
             }
@@ -414,10 +427,13 @@ export class DataKitProvider {
   // Get remaining credits for the current user
   async getRemainingCredits(): Promise<number> {
     try {
-      const data = await apiClient.get<{ creditsRemaining: number }>('/credits/remaining', {
-        headers: this.getApiHeaders(),
-      });
-      
+      const data = await apiClient.get<{ creditsRemaining: number }>(
+        "/credits/remaining",
+        {
+          headers: this.getApiHeaders(),
+        }
+      );
+
       return data.creditsRemaining;
     } catch (error) {
       console.error("Failed to get remaining credits:", error);
@@ -428,7 +444,7 @@ export class DataKitProvider {
   // Get credit usage statistics
   async getCreditStats(): Promise<any> {
     try {
-      return await apiClient.get('/credits/stats', {
+      return await apiClient.get("/credits/stats", {
         headers: this.getApiHeaders(),
       });
     } catch (error) {

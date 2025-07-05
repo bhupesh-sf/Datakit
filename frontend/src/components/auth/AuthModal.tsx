@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { PasswordValidator } from "@/lib/utils/passwordValidator";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -66,6 +67,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     useState<PasswordRequirements | null>(null);
 
   const { login, signup, isLoading, error, clearError } = useAuth();
+  const { showSuccess } = useNotifications();
 
   // Load password requirements from frontend validator (no API call needed)
   useEffect(() => {
@@ -88,7 +90,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     });
 
     setPasswordStrength(result);
-  }, [formData.email, formData.name]);
+  }, [formData.email, formData.name, formData.password]);
 
   useEffect(() => {
     if (mode === "signup" && formData.password) {
@@ -118,6 +120,17 @@ const AuthModal: React.FC<AuthModalProps> = ({
           email: formData.email,
           password: formData.password,
         });
+        
+        // Show success notification for login
+        showSuccess(
+          "Welcome back!",
+          "You've successfully signed in to DataKit.",
+          { 
+            icon: 'shield',
+            duration: 3000
+          }
+        );
+        
         onLoginSuccess?.();
       } else {
         await signup({
@@ -125,6 +138,16 @@ const AuthModal: React.FC<AuthModalProps> = ({
           password: formData.password,
           name: formData.name,
         });
+        
+        // Show success notification for signup
+        showSuccess(
+          "Welcome to DataKit!",
+          `Your account has been created successfully. You now have access to DataKit models with 3$ to get started.`,
+          { 
+            icon: 'user',
+            duration: 6000
+          }
+        );
       }
       onClose();
     } catch (error) {

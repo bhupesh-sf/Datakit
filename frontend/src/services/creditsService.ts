@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api/apiClient';
+import { apiClient } from "@/lib/api/apiClient";
 
 export interface CreditUsage {
   id: string;
@@ -33,12 +33,16 @@ export interface CreditCheck {
 
 class CreditsService {
   async getRemainingCredits(): Promise<{ creditsRemaining: number }> {
-    const response = await apiClient.get('/credits/remaining');
+    const response = await apiClient.get("/credits/remaining");
     return response;
   }
 
-  async estimateCredits(modelId: string, inputTokens: number, outputTokens?: number): Promise<CreditEstimate> {
-    const response = await apiClient.post('/credits/estimate', {
+  async estimateCredits(
+    modelId: string,
+    inputTokens: number,
+    outputTokens?: number
+  ): Promise<CreditEstimate> {
+    const response = await apiClient.post("/credits/estimate", {
       modelId,
       inputTokens,
       outputTokens,
@@ -46,37 +50,46 @@ class CreditsService {
     return response;
   }
 
-  async checkCredits(estimatedCredits: number): Promise<{ hasCredits: boolean }> {
-    const response = await apiClient.post('/credits/check', {
+  async checkCredits(
+    estimatedCredits: number
+  ): Promise<{ hasCredits: boolean }> {
+    const response = await apiClient.post("/credits/check", {
       estimatedCredits,
     });
     return response;
   }
 
-  async getUsageHistory(limit = 50, offset = 0): Promise<{
+  async getUsageHistory(
+    limit = 50,
+    offset = 0
+  ): Promise<{
     usages: CreditUsage[];
     total: number;
     limit: number;
     offset: number;
   }> {
-    const response = await apiClient.get(`/credits/usage?limit=${limit}&offset=${offset}`);
+    const response = await apiClient.get(
+      `/credits/usage?limit=${limit}&offset=${offset}`
+    );
     return response;
   }
 
   async getUsageStats(): Promise<CreditStats> {
-    const response = await apiClient.get('/credits/stats');
+    const response = await apiClient.get("/credits/stats");
     return response;
   }
 
-  async checkAIRequest(model: string, messages: any[], provider: string): Promise<CreditCheck> {
-    const response = await apiClient.post('/ai/chat/completions/check', {
-      model,
-      messages,
-    }, {
-      headers: {
-        'x-ai-provider': provider,
+  async checkAIRequest(model: string, messages: any[]): Promise<CreditCheck> {
+    const response = await apiClient.post(
+      "/ai/chat/completions/check",
+      {
+        model,
+        messages,
       },
-    });
+      {
+        headers: {},
+      }
+    );
     return response;
   }
 }

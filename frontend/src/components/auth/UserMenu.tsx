@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User, Settings, LogOut, CreditCard, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/Button';
+
+import { useAIStore } from '@/store/aiStore';
 import { useAuth } from '@/hooks/auth/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
+
+import { Button } from '@/components/ui/Button';
 import AuthModal from './AuthModal';
 
 interface UserMenuProps {
@@ -15,6 +19,9 @@ const UserMenu: React.FC<UserMenuProps> = ({
   className = '' 
 }) => {
   const { user, isAuthenticated, logout } = useAuth();
+  const {  setActiveProvider } = useAIStore();
+  const { showSuccess } = useNotifications();
+
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -34,6 +41,16 @@ const UserMenu: React.FC<UserMenuProps> = ({
   const handleLogout = async () => {
     await logout();
     setShowDropdown(false);
+    
+    // Show success notification for signout
+    showSuccess(
+      "Signed out successfully",
+      "You've been securely signed out of DataKit.",
+      { 
+        icon: 'shield',
+        duration: 3000
+      }
+    );
   };
 
   const goToSettings = () => {
@@ -79,6 +96,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
           defaultMode="login"
+          onLoginSuccess={() => setActiveProvider('datakit')}
         />
       </>
     );

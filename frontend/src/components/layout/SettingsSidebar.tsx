@@ -15,6 +15,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/auth/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 import { Button } from "@components/ui/Button";
 
 interface SettingsSidebarProps {
@@ -28,12 +29,23 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { showSuccess } = useNotifications();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleLogout = async () => {
     try {
       await logout();
       navigate('/');
+      
+      // Show success notification for signout
+      showSuccess(
+        "Signed out successfully",
+        "You've been securely signed out of DataKit.",
+        { 
+          icon: 'shield',
+          duration: 3000
+        }
+      );
     } catch (error) {
       console.error('Logout failed:', error);
     }
