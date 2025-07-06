@@ -9,6 +9,8 @@ import { NotificationProvider } from "@/hooks/useNotifications";
 import Home from "@/pages/Home";
 import Privacy from "@/pages/Privacy";
 import Settings from "@/pages/Settings";
+import Info from "@/pages/Info";
+import NotFound from "@/pages/NotFound";
 import { Button } from "@/components/ui/Button";
 import { SEO } from "@/components/common/SEO";
 
@@ -113,6 +115,8 @@ const AppContent = () => {
         />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/info" element={<Info />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
