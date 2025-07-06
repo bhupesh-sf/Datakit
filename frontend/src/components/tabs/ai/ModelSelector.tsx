@@ -225,7 +225,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
                       <span className="ml-2 capitalize">{provider === 'datakit' ? 'DataKit' : provider}</span>
                       {provider === 'datakit' && (
                         <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
-                          Recommended
+                         Claude Models
                         </span>
                       )}
                       {!hasApiKey(provider) && provider !== 'local' && provider !== 'datakit' && (
