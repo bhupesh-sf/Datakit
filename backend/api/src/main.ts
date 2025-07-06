@@ -18,17 +18,19 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Enable CORS for frontend
-  const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    : [process.env.FRONTEND_URL || 'http://localhost:5173'];
+  // const allowedOrigins = process.env.ALLOWED_ORIGINS
+  //   ? process.env.ALLOWED_ORIGINS.split(',')
+  //   : [process.env.FRONTEND_URL || 'http://localhost:5173'];
 
-  app.enableCors({
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control'],
-    exposedHeaders: ['Content-Type'],
-    credentials: true, // Required for cookies
-  });
+  // TODO: Disabling the CORS for preview: https://feature-user-settings.datakit-v0.pages.dev/
+  //
+  // app.enableCors({
+  //   origin: allowedOrigins,
+  //   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  //   allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control'],
+  //   exposedHeaders: ['Content-Type'],
+  //   credentials: true, // Required for cookies
+  // });
 
   // Enable global validation
   app.useGlobalPipes(
