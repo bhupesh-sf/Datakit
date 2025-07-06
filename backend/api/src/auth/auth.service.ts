@@ -85,7 +85,7 @@ export class AuthService {
     const user = await this.usersService.create(email, password, name);
 
     // Create free subscription for new user
-    await this.subscriptionsService.createFreeSubscription(user.id);
+    // await this.subscriptionsService.createFreeSubscription(user.id);
 
     // Create personal workspace for new user
     await this.workspacesService.createPersonalWorkspace(user);

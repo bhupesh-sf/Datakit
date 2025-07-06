@@ -16,7 +16,7 @@ class AuthService {
           skipAuth: true,
         }
       );
-      return response.authenticated;
+      return response?.authenticated;
     } catch (error) {
       return false;
     }
