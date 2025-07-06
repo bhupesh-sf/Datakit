@@ -12,7 +12,7 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "postbuild": "ls -la dist/",
+    "postbuild": "./scripts/run-migrations.sh && ls -la dist/",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -30,6 +30,7 @@
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:generate": "npm run typeorm -- migration:generate -d src/migration-data-source.ts",
     "migration:run": "npm run typeorm -- migration:run -d src/migration-data-source.ts",
+    "migration:run:prod": "NODE_ENV=production npm run migration:run",
     "migration:revert": "npm run typeorm -- migration:revert -d src/migration-data-source.ts",
     "migration:show": "npm run typeorm -- migration:show -d src/migration-data-source.ts",
     "migration:create": "npm run typeorm -- migration:create"
