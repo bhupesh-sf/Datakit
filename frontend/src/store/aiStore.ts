@@ -39,6 +39,7 @@ interface AIState {
   currentResponse: string | null;
   streamingResponse: string;
   currentTokenUsage: { input: number; output: number } | null;
+  currentError: string | null;
   
   // Conversation State
   currentConversation: AIMessage[];
@@ -77,6 +78,7 @@ interface AIState {
   setCurrentResponse: (response: string | null) => void;
   setStreamingResponse: (response: string) => void;
   setCurrentTokenUsage: (usage: { input: number; output: number } | null) => void;
+  setCurrentError: (error: string | null) => void;
   
   // Conversation Actions
   addMessageToConversation: (message: AIMessage) => void;
@@ -226,6 +228,7 @@ export const useAIStore = create<AIState>()(
       currentResponse: null,
       streamingResponse: '',
       currentTokenUsage: null,
+      currentError: null,
       
       currentConversation: [],
       conversationId: null,
@@ -292,6 +295,8 @@ export const useAIStore = create<AIState>()(
       
       setCurrentTokenUsage: (usage) => set({ currentTokenUsage: usage }),
       
+      setCurrentError: (error) => set({ currentError: error }),
+      
       addMessageToConversation: (message) => {
         set((state) => {
           const newConversation = [...state.currentConversation, message];
@@ -309,6 +314,7 @@ export const useAIStore = create<AIState>()(
           conversationId: null,
           currentResponse: null,
           streamingResponse: '',
+          currentError: null,
         });
       },
       
@@ -319,6 +325,7 @@ export const useAIStore = create<AIState>()(
           conversationId: newConversationId,
           currentResponse: null,
           streamingResponse: '',
+          currentError: null,
         });
       },
       

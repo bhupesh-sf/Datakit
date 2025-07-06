@@ -26,6 +26,7 @@ export const useAIOperations = () => {
     setCurrentResponse,
     setStreamingResponse,
     setCurrentTokenUsage,
+    setCurrentError,
   } = useAIStore();
 
   const { executeQuery, executePaginatedQuery } = useDuckDBStore();
@@ -214,6 +215,7 @@ export const useAIOperations = () => {
     setProcessing(true);
     setStreamingResponse("");
     setCurrentTokenUsage(null);
+    setCurrentError(null);
 
     const startTime = Date.now();
     
@@ -321,6 +323,7 @@ export const useAIOperations = () => {
       };
 
       addQueryToHistory(errorQuery);
+      setCurrentError(errorMessage);
       throw error;
       
     } finally {
@@ -454,6 +457,7 @@ export const useAIOperations = () => {
     clearResponse: () => {
       setCurrentResponse(null);
       setStreamingResponse("");
+      setCurrentError(null);
     },
   };
 };

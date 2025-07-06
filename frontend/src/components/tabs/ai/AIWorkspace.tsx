@@ -85,8 +85,6 @@ const AIWorkspace: React.FC = () => {
     return apiKeys.has(activeProvider) && !!apiKeys.get(activeProvider);
   };
 
-  
-
   const showSetupPrompt = !isProviderReady();
   
   return (
