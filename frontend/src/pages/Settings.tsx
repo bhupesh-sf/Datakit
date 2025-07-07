@@ -1,16 +1,7 @@
 import React, { useState, useEffect } from "react";
-import {
-  User,
-  Mail,
-  Lock,
-  Bell,
-  Palette,
-  Database,
-  CreditCard,
-  Shield,
-  Crown,
-  Settings as SettingsIcon,
-} from "lucide-react";
+
+import { useLocation, useNavigate } from "react-router-dom";
+
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useAuthStore } from "@/store/authStore";
@@ -19,8 +10,8 @@ import SettingsSidebar from "@/components/layout/SettingsSidebar";
 import WorkspaceSettings from "@/components/settings/WorkspaceSettings";
 import AISettings from "@/components/settings/AISettings";
 import AppearanceSettings from "@/components/settings/AppearanceSettings";
+import SubscriptionSettings from "@/components/settings/SubscriptionSettings";
 import { SEO } from "@/components/common/SEO";
-import { useLocation, useNavigate } from "react-router-dom";
 
 const Settings: React.FC = () => {
   const { user, updateProfile, updateSettings, settings, isLoading } =
@@ -28,14 +19,21 @@ const Settings: React.FC = () => {
   const { currentWorkspace } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Get initial tab from URL hash or default to "profile"
   const getInitialTab = () => {
-    const hash = location.hash.replace('#', '');
-    const validTabs = ['profile', 'workspace', 'ai', 'appearance', 'notifications', 'subscription'];
-    return validTabs.includes(hash) ? hash : 'profile';
+    const hash = location.hash.replace("#", "");
+    const validTabs = [
+      "profile",
+      "workspace",
+      "ai",
+      "appearance",
+      "notifications",
+      "subscription",
+    ];
+    return validTabs.includes(hash) ? hash : "profile";
   };
-  
+
   const [activeTab, setActiveTab] = useState(getInitialTab());
   const [profileData, setProfileData] = useState({
     name: user?.name || "",
@@ -56,9 +54,9 @@ const Settings: React.FC = () => {
       const newTab = getInitialTab();
       setActiveTab(newTab);
     };
-    
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
   // Update URL when tab changes
@@ -226,133 +224,7 @@ const Settings: React.FC = () => {
         );
 
       case "subscription":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium text-white mb-4">
-                Subscription & Usage
-              </h3>
-
-              {/* Current Plan Overview */}
-              <div className="bg-background/10 border border-white/10 rounded-lg p-4 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="text-sm font-medium text-white">
-                      Current Plan
-                    </div>
-                    <div className="text-2xl font-bold text-primary">
-                      {user?.subscription?.tier ||
-                        user?.subscription?.planType?.toUpperCase() ||
-                        "FREE"}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-white/60">
-                      Credits Remaining
-                    </div>
-                    <div className="text-lg font-semibold text-white">
-                      {user?.subscription?.creditsRemaining === -1
-                        ? "Unlimited"
-                        : user?.subscription?.creditsRemaining ||
-                          user?.credits?.remaining ||
-                          0}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-xs text-white/60 mb-4">
-                  {user?.subscription?.creditsResetAt &&
-                    `Credits reset on ${new Date(
-                      user.subscription.creditsResetAt
-                    ).toLocaleDateString()}`}
-                </div>
-
-                <div className="space-y-2">
-                  <Button variant="primary" className="w-full">
-                    {user?.subscription?.planType === "free" ||
-                    !user?.subscription?.planType
-                      ? "Upgrade to Pro or Team"
-                      : "Manage Subscription"}
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    View Usage History
-                  </Button>
-                </div>
-              </div>
-
-              {/* Plan Comparison */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Free Plan */}
-                <div
-                  className={`bg-white/5 border rounded-lg p-4 ${
-                    user?.subscription?.planType === "free" ||
-                    !user?.subscription?.planType
-                      ? "border-primary ring-1 ring-primary"
-                      : "border-white/10"
-                  }`}
-                >
-                  <div className="text-center mb-4">
-                    <h4 className="text-lg font-semibold text-white">Free</h4>
-                    <p className="text-2xl font-bold text-primary">$0</p>
-                    <p className="text-xs text-white/60">Personal use</p>
-                  </div>
-                  <ul className="space-y-2 text-sm text-white/80">
-                    <li>• 100 credits/month</li>
-                    <li>• Personal workspace</li>
-                    <li>• Basic data analysis</li>
-                    <li>• Community support</li>
-                  </ul>
-                </div>
-
-                {/* Pro Plan */}
-                <div
-                  className={`bg-white/5 border rounded-lg p-4 ${
-                    user?.subscription?.planType === "pro"
-                      ? "border-primary ring-1 ring-primary"
-                      : "border-white/10"
-                  }`}
-                >
-                  <div className="text-center mb-4">
-                    <h4 className="text-lg font-semibold text-white">Pro</h4>
-                    <p className="text-2xl font-bold text-primary">$19</p>
-                    <p className="text-xs text-white/60">per month</p>
-                  </div>
-                  <ul className="space-y-2 text-sm text-white/80">
-                    <li>• 10,000 credits/month</li>
-                    <li>• DataKit AI access</li>
-                    <li>• Advanced analytics</li>
-                    <li>• Priority support</li>
-                  </ul>
-                </div>
-
-                {/* Team Plan */}
-                <div
-                  className={`bg-white/5 border rounded-lg p-4 relative opacity-60 ${
-                    user?.subscription?.planType === "team"
-                      ? "border-primary ring-1 ring-primary"
-                      : "border-white/10"
-                  }`}
-                >
-                  {/* Coming Soon Badge */}
-                  <div className="absolute -top-2 -right-2 bg-gradient-to-r from-sky-800 to-green-800 text-white text-xs font-medium px-3 py-1 rounded-full">
-                    Coming Soon
-                  </div>
-                  <div className="text-center mb-4">
-                    <h4 className="text-lg font-semibold text-white/70">Team</h4>
-                    <p className="text-2xl font-bold text-white/50">$-</p>
-                    <p className="text-xs text-white/40">per month</p>
-                  </div>
-                  <ul className="space-y-2 text-sm text-white/50">
-                    <li>• Unlimited credits</li>
-                    <li>• Team collaboration</li>
-                    <li>• Member management</li>
-                    <li>• Premium support</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
+        return <SubscriptionSettings />;
 
       default:
         return null;
@@ -370,7 +242,10 @@ const Settings: React.FC = () => {
 
         <div className="flex h-screen bg-background overflow-hidden">
           {/* Settings Sidebar */}
-          <SettingsSidebar activeTab={activeTab} onTabChange={handleTabChange} />
+          <SettingsSidebar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
 
           {/* Main Content Area */}
           <div className="flex-1 h-full overflow-hidden flex items-center justify-center">
