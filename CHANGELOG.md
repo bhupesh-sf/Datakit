@@ -1,5 +1,8 @@
-# 0.2.0
+# 0.3.0
 DataKit cloud is up. Get free credits on Anthropic claude models.
+
+# 0.2.0
+DataKit assitant tab with different models.
 
 # 0.1.6
 MotherDuck Cloud Support
