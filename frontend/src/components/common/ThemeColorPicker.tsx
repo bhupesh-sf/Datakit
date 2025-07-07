@@ -80,7 +80,7 @@ export const ThemeColorPicker = ({
             className="fixed p-4 bg-darkNav/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl z-50 w-56"
             style={{
               top: variant === 'sidebar' && buttonRect 
-                ? buttonRect.top - 280 // Position above the button
+                ? buttonRect.top - 200 // Position above the button
                 : undefined,
               left: variant === 'sidebar' && buttonRect 
                 ? Math.min(buttonRect.left - 100, window.innerWidth - 240) // Ensure it stays on screen
@@ -93,8 +93,9 @@ export const ThemeColorPicker = ({
                   <span className="text-sm font-medium text-white">Theme Color</span>
                 </div>
                 
+                {/* TODO: Decision on having this for future or not */}
                 {/* Custom Color Picker */}
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <label className="text-xs text-white/60">Custom Color</label>
                   <input
                     type="color"
@@ -102,7 +103,7 @@ export const ThemeColorPicker = ({
                     onChange={handleColorChange}
                     className="w-full h-10 cursor-pointer border border-white/20 rounded-lg overflow-hidden bg-white/5"
                   />
-                </div>
+                </div> */}
 
                 {/* Preset Colors */}
                 <div className="space-y-2">
