@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -13,6 +13,7 @@ import { CreditsModule } from './credits/credits.module';
 import { AIModule } from './ai/ai.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { getDatabaseConfig } from './config/database.config';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 
 @Module({
   imports: [
@@ -26,27 +27,35 @@ import { getDatabaseConfig } from './config/database.config';
       useFactory: getDatabaseConfig,
       inject: [ConfigService],
     }),
-    // TODO:
-    //
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => [
-        // {
-        //   name: 'default',
-        //   ttl: 60000, // 1 minute
-        //   limit: 10, // 10 requests per minute by default
-        // },
-        // {
-        //   name: 'auth',
-        //   ttl: 900000, // 15 minutes
-        //   limit: 20, // 5 authentication attempts per 15 minutes
-        // },
-        {
-          name: 'signup',
-          ttl: 3600000, // 1 hour
-          limit: 60, // 9 signup attempts per hour
-        },
-      ],
+      useFactory: (configService: ConfigService) => {
+        // Disable throttling in test environment
+        if (
+          process.env.NODE_ENV === 'development' ||
+          process.env.NODE_ENV === 'test'
+        ) {
+          return [];
+        }
+
+        return [
+          // {
+          //   name: 'default',
+          //   ttl: 60000, // 1 minute
+          //   limit: 100, // 100 requests per minute by default
+          // },
+          // {
+          //   name: 'auth',
+          //   ttl: 900000, // 15 minutes
+          //   limit: 20, // 20 authentication attempts per 15 minutes
+          // },
+          {
+            name: 'signup',
+            ttl: 3600000, // 1 hour
+            limit: 60, // 60 signup attempts per hour
+          },
+        ];
+      },
       inject: [ConfigService],
     }),
     ScheduleModule.forRoot(),
@@ -62,7 +71,7 @@ import { getDatabaseConfig } from './config/database.config';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
     },
   ],
 })

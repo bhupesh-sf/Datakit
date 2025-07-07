@@ -66,7 +66,7 @@ module.exports = async function globalSetup() {
       NODE_OPTIONS: '--experimental-global-webcrypto', // Enable crypto API
     };
 
-    serverProcess = spawn('node', ['dist/src/main.js'], {
+    serverProcess = spawn('node', ['dist/main.js'], {
       cwd: '../api',
       env: serverEnv,
       stdio: 'pipe'

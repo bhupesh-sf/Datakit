@@ -12,7 +12,7 @@ export class UserFixtures {
   static async createUserData(overrides: Partial<CreateUserData> = {}): Promise<CreateUserData> {
     const defaults: CreateUserData = {
       email: `test${Date.now()}@example.com`,
-      password: 'TestPassword123!',
+      password: 'SecurePass2023!@',
       name: 'Test User',
       isEmailVerified: true,
     };
@@ -20,7 +20,7 @@ export class UserFixtures {
     return { ...defaults, ...overrides };
   }
 
-  static async createHashedPassword(plainPassword: string = 'TestPassword123!'): Promise<string> {
+  static async createHashedPassword(plainPassword: string = 'SecurePass2023!@'): Promise<string> {
     return bcrypt.hash(plainPassword, 10);
   }
 

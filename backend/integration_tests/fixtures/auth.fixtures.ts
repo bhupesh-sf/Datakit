@@ -130,12 +130,12 @@ export class AuthFixtures {
   // Predefined auth scenarios
   static readonly VALID_CREDENTIALS = {
     email: 'test@example.com',
-    password: 'TestPassword123!',
+    password: 'SecurePass2023!@',
   };
 
   static readonly INVALID_EMAIL_CREDENTIALS = {
     email: 'nonexistent@example.com',
-    password: 'TestPassword123!',
+    password: 'SecurePass2023!@',
   };
 
   static readonly INVALID_PASSWORD_CREDENTIALS = {
@@ -150,7 +150,7 @@ export class AuthFixtures {
 
   static readonly MALFORMED_EMAIL_CREDENTIALS = {
     email: 'not-an-email',
-    password: 'TestPassword123!',
+    password: 'SecurePass2023!@',
   };
 
   static readonly WEAK_PASSWORD_CREDENTIALS = {

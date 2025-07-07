@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Comprehensive integration tests for Datakit API",
   "main": "index.js",
+  "engines": {
+    "node": ">=18.20.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
@@ -35,7 +39,7 @@
     "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": ["ts-jest", { "useESM": false }]
+      "^.+\\.ts$": ["ts-jest", { "useESM": false }]
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
