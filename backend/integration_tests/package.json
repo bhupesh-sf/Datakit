@@ -1,10 +1,10 @@
 {
   "name": "@datakit/integration-tests",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Comprehensive integration tests for Datakit API",
   "main": "index.js",
   "engines": {
-    "node": ">=18.20.0",
+    "node": ">=20.15.1",
     "npm": ">=9.0.0"
   },
   "scripts": {
