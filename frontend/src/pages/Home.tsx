@@ -10,7 +10,7 @@ import AITab from "@/components/tabs/AITab";
 import { DataLoadWithDuckDBResult } from "@/components/layout/Sidebar";
 import ActionButtons from "@/components/common/ActionButtons";
 
-import { Table, BarChart, Database, Trees } from "lucide-react";
+import { Table, BarChart, Database, UserPen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useAppStore } from "@/store/appStore";
@@ -56,7 +56,7 @@ const Home = () => {
     { id: "preview", label: "Data Preview", icon: <Table size={16} /> },
     { id: "query", label: "Query", icon: <Database size={16} /> },
     { id: "visualization", label: "Visualize", icon: <BarChart size={16} /> },
-    { id: "ai", label: "Assistant", icon: <Trees size={16} /> }, 
+    { id: "ai", label: "Assistant", icon: <UserPen size={16} /> }, 
   ];
 
   /**

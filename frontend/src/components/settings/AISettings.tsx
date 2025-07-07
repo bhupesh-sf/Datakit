@@ -7,7 +7,6 @@ import {
   Settings as SettingsIcon,
   CreditCard,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/store/authStore";
 import { useAIStore } from "@/store/aiStore";
 import { AIProvider } from "@/types/ai";
@@ -44,9 +43,9 @@ const PROVIDER_CONFIG = {
     color: "green",
     bgGradient: "from-green-500/20 to-emerald-500/20",
     borderGradient: "from-green-500/40 to-emerald-500/40",
-    description: "GPT-4o and GPT-4o Mini models",
+    description: "Industry-leading GPT models",
     helpText:
-      "Most capable models for complex reasoning and analysis. New users get $5 free credits.",
+      "Most capable models for complex reasoning and analysis. Perfect for sophisticated data insights and advanced analytics.",
     keyFormat: "sk-...",
     websiteUrl: "https://platform.openai.com/api-keys",
     models: ["GPT-4o", "GPT-4o Mini"],
@@ -58,9 +57,9 @@ const PROVIDER_CONFIG = {
     color: "orange",
     bgGradient: "from-orange-500/20 to-amber-500/20",
     borderGradient: "from-orange-500/40 to-amber-500/40",
-    description: "Claude 3.5 Sonnet and Haiku models",
+    description: "Claude models for thoughtful analysis",
     helpText:
-      "Excellent for detailed analysis and explanations. Free credits for new users.",
+      "Excellent for detailed explanations and careful analysis. Known for producing well-structured, comprehensive responses.",
     keyFormat: "sk-ant-...",
     websiteUrl: "https://console.anthropic.com/",
     models: ["Claude 3.5 Sonnet", "Claude 3.5 Haiku"],
@@ -72,9 +71,9 @@ const PROVIDER_CONFIG = {
     color: "purple",
     bgGradient: "from-purple-500/20 to-violet-500/20",
     borderGradient: "from-purple-500/40 to-violet-500/40",
-    description: "Ultra-fast Llama 3.1 models",
+    description: "Lightning-fast open source models",
     helpText:
-      "Fastest inference speed, perfect for trying AI features. Completely free to start.",
+      "Blazing fast inference with Llama models. Ideal for rapid prototyping and real-time data exploration.",
     keyFormat: "gsk_...",
     websiteUrl: "https://console.groq.com/keys",
     models: ["Llama 3.1 70B", "Llama 3.1 8B"],
@@ -212,274 +211,346 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h3 className="text-lg font-medium text-white mb-2">
-          AI Configuration
-        </h3>
-        <p className="text-sm text-white/60">
-          Configure your AI providers and manage API keys for data analysis
-        </p>
+    <div className="h-full flex flex-col">
+      {/* Compact Header */}
+      <div className="mb-5">
+        <h3 className="text-lg font-medium text-white">AI Configuration</h3>
+        <p className="text-sm text-white/60">Choose how DataKit processes your data with AI</p>
       </div>
 
-      {/* DataKit AI Status Card */}
-      <div
-        className={`relative overflow-hidden rounded-xl border ${
-          isProOrTeam
-            ? "bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/30"
-            : "bg-gradient-to-br from-gray-500/10 to-gray-600/10 border-gray-500/30"
-        }`}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
-        <div className="relative px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div>
-                <h4 className="text-lg font-semibold text-white flex items-center gap-2">
-                  DataKit AI
-                  {isProOrTeam && (
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
-                      Available
-                    </span>
-                  )}
+      {/* Split View - Main Content */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-0">
+        {/* Left Column: DataKit AI Highlight */}
+        <div className="flex flex-col gap-4">
+          {/* DataKit AI Premium Card - More Compact */}
+          <div
+            className={`relative overflow-hidden rounded-lg border-2 transition-all duration-300 flex-1 ${
+              isProOrTeam
+                ? "bg-gradient-to-br from-primary/20 to-primary/10 border-primary/50 shadow-lg shadow-primary/20"
+                : "bg-gradient-to-br from-white/10 to-white/5 border-white/20 hover:border-primary/40 hover:shadow-lg cursor-pointer"
+            }`}
+            onClick={!isProOrTeam ? handleUpgrade : undefined}
+          >
+            {!isProOrTeam && (
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 animate-pulse"></div>
+            )}
+            
+            <div className="relative p-5">
+              {!isProOrTeam && (
+                <div className="absolute top-3 right-3">
+                  <span className="text-xs border border-primary text-white px-3 py-1 rounded-full font-medium">
+                    Upgrade to Unlock
+                  </span>
+                </div>
+              )}
+              
+              <div className="mb-3">
+                <h4 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                
+                  DataKit Models
                 </h4>
-                <p className="text-sm text-white/60">
-                  {isProOrTeam
-                    ? "Optimized AI models with curated prompts for data analysis"
-                    : "Upgrade to Pro or Team to access DataKit AI"}
+                <p className="text-xs text-white/70 leading-relaxed">
+                  Premium AI models optimized for data analysis. No API keys needed.
                 </p>
               </div>
-            </div>
-            {!isProOrTeam && (
-              <Button variant="primary" size="sm" onClick={handleUpgrade}>
-                Upgrade Plan
-              </Button>
-            )}
-          </div>
 
-          {/* Simple Credits Display */}
-          <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <CreditCard className="h-4 w-4 text-blue-400" />
-                <div>
-                  <div className="text-sm font-medium text-white">
-                    Credits Remaining
-                  </div>
-                  <div className="text-xs text-white/60">
-                    {!isProOrTeam
-                      ? "Free: 315 credits/month"
-                      : isProOrTeam &&
-                        currentWorkspace?.subscription?.planType === "team"
-                      ? "Team: Unlimited"
-                      : "Pro: 1,575 credits/month"}
-                  </div>
+              {/* Compact Features */}
+              <div className="space-y-1.5 mb-4">
+                <div className="flex items-center gap-2 text-xs text-white/70">
+                  <CheckCircle className="h-3.5 w-3.5 text-primary" />
+                  <span>Pre-tuned for SQL & data transformation</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-white/70">
+                  <CheckCircle className="h-3.5 w-3.5 text-primary" />
+                  <span>Claude 3.5 Sonnet & Haiku included</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-white/70">
+                  <CheckCircle className="h-3.5 w-3.5 text-primary" />
+                  <span>Zero configuration required</span>
                 </div>
               </div>
-              <div className="text-right">
-                <div className={`text-lg font-semibold ${creditStatus.color}`}>
-                  {creditsLoading ? (
-                    <div className="w-16 h-6 bg-white/10 rounded animate-pulse"></div>
-                  ) : (
-                    formatCredits(creditsRemaining)
-                  )}
-                </div>
-                {creditsRemaining !== -1 && creditsRemaining <= 10 && (
-                  <div className="text-xs text-yellow-400">Low credits</div>
-                )}
-              </div>
-            </div>
 
-            {/* Credits Explanation */}
-            <div className="text-xs text-white/50 leading-relaxed">
-              Each AI request consumes credits based on the model and response length. 
-              DataKit Smart uses ~1.8 credits per typical query, DataKit Fast uses ~0.5 credits.
-              {!isProOrTeam && (
-                <span className="text-primary">
-                  {" "}
-                  Upgrade to get more credits.
-                </span>
+              {/* Compact Status/CTA */}
+              {isProOrTeam ? (
+                <div className="bg-primary/10 border border-primary/30 rounded p-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                      <span className="text-xs text-white">Active</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="bg-white/5 rounded p-2 border border-white/10 flex items-center justify-between">
+                    <span className="text-xs text-white/70">Pro Plan</span>
+                    <span className="text-xs text-white font-medium">$19/mo</span>
+                  </div>
+                  <button 
+                    onClick={handleUpgrade}
+                    className="w-full  text-white py-2 px-3 rounded-lg font-medium text-sm transition-colors cursor-pointer"
+                  >
+                    View All Plans →
+                  </button>
+                </div>
               )}
             </div>
           </div>
+
+          {/* Compact Credits */}
+          <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-3 w-3 text-blue-400" />
+                <span className="text-xs text-white">Credits</span>
+              </div>
+              <div className="text-right">
+                <span className={`text-sm font-bold ${creditStatus.color}`}>
+                  {formatCredits(creditsRemaining)}
+                </span>
+                <span className="text-xs text-white/50">/{!isProOrTeam ? "315" : "1,575"}</span>
+              </div>
+            </div>
+            
+            {creditsRemaining !== -1 && (
+              <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-500 ${
+                    creditsRemaining > 50 ? 'bg-green-400' : 
+                    creditsRemaining > 10 ? 'bg-yellow-400' : 'bg-red-400'
+                  }`}
+                  style={{
+                    width: `${Math.min(100, (creditsRemaining / (isProOrTeam ? 1575 : 315)) * 100)}%`
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Provider Cards Grid */}
-      <div>
-        <h4 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
-          <Key className="h-4 w-4" />
-          Third-Party Providers
-        </h4>
-        <div className="space-y-2">
-          {(["openai", "anthropic", "groq"] as AIProvider[]).map((provider) => {
-            const config = PROVIDER_CONFIG[provider];
-            const status = getProviderStatus(provider);
-            const isActive = activeProvider === provider;
-            const hasKey = apiKeys.has(provider) && !!apiKeys.get(provider);
-            const isEditing = editingProvider === provider;
+        {/* Right Column: Alternative Providers */}
+        <div className="flex flex-col">
+          <div className="mb-3">
+            <h4 className="text-sm font-medium text-white/80">Alternative Providers</h4>
+            <p className="text-xs text-white/60">Use your own API keys for these providers</p>
+          </div>
 
-            const handleUpdateKey = () => {
-              setEditingProvider(provider);
-              setKeyInputs(
-                new Map(keyInputs.set(provider, apiKeys.get(provider) || ""))
-              );
-            };
+          <div className="flex-1 space-y-2.5 overflow-y-auto pr-2">
+            {(["openai", "anthropic", "groq"] as AIProvider[]).map((provider) => {
+              const config = PROVIDER_CONFIG[provider];
+              const status = getProviderStatus(provider);
+              const isActive = activeProvider === provider;
+              const hasKey = apiKeys.has(provider) && !!apiKeys.get(provider);
+              const isEditing = editingProvider === provider;
 
-            const handleSaveUpdate = () => {
-              const key = keyInputs.get(provider);
-              if (key?.trim()) {
-                setApiKey(provider, key.trim());
-                setActiveProviderToStore(provider);
-              }
-              setEditingProvider(null);
-            };
+              const handleUpdateKey = () => {
+                setEditingProvider(provider);
+                setKeyInputs(
+                  new Map(keyInputs.set(provider, apiKeys.get(provider) || ""))
+                );
+              };
 
-            const handleCancelUpdate = () => {
-              setKeyInputs(
-                new Map(keyInputs.set(provider, apiKeys.get(provider) || ""))
-              );
-              setEditingProvider(null);
-            };
+              const handleSaveUpdate = () => {
+                const key = keyInputs.get(provider);
+                if (key?.trim()) {
+                  setApiKey(provider, key.trim());
+                  setActiveProviderToStore(provider);
+                }
+                setEditingProvider(null);
+              };
 
-            return (
-              <div
-                key={provider}
-                className={`rounded-lg border p-3 transition-all duration-200 ${
-                  isActive
-                    ? "bg-white/10 border-primary/50"
-                    : "bg-white/5 border-white/10 hover:border-white/20"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  {/* Provider Info */}
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="h-6 w-6 rounded flex items-center justify-center flex-shrink-0 bg-white/10">
-                      {config.icon}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h5 className="text-sm font-medium text-white truncate">
-                          {config.name}
-                        </h5>
-                        {getStatusIcon(status)}
+              const handleCancelUpdate = () => {
+                setKeyInputs(
+                  new Map(keyInputs.set(provider, apiKeys.get(provider) || ""))
+                );
+                setEditingProvider(null);
+              };
+
+              const handleSelectProvider = () => {
+                if (hasKey) {
+                  setActiveProviderToStore(provider);
+                }
+              };
+
+              return (
+                <div
+                  key={provider}
+                  className={`rounded-lg border p-3 transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? "bg-white/10 border-primary/50"
+                      : "bg-white/5 border-white/10 hover:border-white/20"
+                  }`}
+                  onClick={handleSelectProvider}
+                >
+                  {/* Ultra Compact Header */}
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-5 w-5 rounded flex items-center justify-center flex-shrink-0 bg-white/10">
+                        {config.icon}
                       </div>
-                      {hasKey && !isEditing && (
-                        <div className="text-xs font-mono text-white/60 mt-1">
-                          {maskApiKey(apiKeys.get(provider) || "")}
-                        </div>
-                      )}
-                      {isEditing && (
-                        <div className="flex gap-2 mt-2">
-                          <input
-                            type="password"
-                            value={keyInputs.get(provider) || ""}
-                            onChange={(e) =>
-                              handleKeyChange(provider, e.target.value)
-                            }
-                            placeholder={`Enter ${config.name} API key`}
-                            className="flex-1 px-2 py-1 text-xs bg-white/5 border border-white/10 rounded text-white placeholder-white/40 focus:outline-none focus:border-primary/50"
-                            autoFocus
-                          />
-                          <button
-                            onClick={handleSaveUpdate}
-                            className="px-2 py-1 text-xs bg-primary/20 text-primary border border-primary/30 rounded hover:bg-primary/30"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={handleCancelUpdate}
-                            className="px-2 py-1 text-xs text-white/60 hover:text-white/80"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                      {!hasKey && !isEditing && (
-                        <div className="flex gap-2 mt-2">
-                          <input
-                            type="password"
-                            value={keyInputs.get(provider) || ""}
-                            onChange={(e) =>
-                              handleKeyChange(provider, e.target.value)
-                            }
-                            placeholder={`Enter ${config.name} API key`}
-                            className="flex-1 px-2 py-1 text-xs bg-white/5 border border-white/10 rounded text-white placeholder-white/40 focus:outline-none focus:border-primary/50"
-                          />
-                          <button
-                            onClick={() => handleSaveKey(provider)}
-                            disabled={!keyInputs.get(provider)?.trim()}
-                            className="px-2 py-1 text-xs bg-primary/20 text-primary border border-primary/30 rounded hover:bg-primary/30 disabled:opacity-50"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      )}
+                      <h5 className="text-xs font-medium text-white">
+                        {config.name}
+                      </h5>
+                      {hasKey && <CheckCircle className="h-3 w-3 text-green-400" />}
                     </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {hasKey && !isEditing && (
-                      <button
-                        onClick={handleUpdateKey}
-                        className="px-2 py-1 text-xs text-white/60 hover:text-white/90 hover:bg-white/5 rounded transition-colors"
-                      >
-                        Update
-                      </button>
-                    )}
                     {config.websiteUrl && (
                       <button
-                        onClick={() =>
-                          window.open(config.websiteUrl!, "_blank")
-                        }
-                        className="p-1 text-white/40 hover:text-white/80 rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(config.websiteUrl!, "_blank");
+                        }}
+                        className="p-0.5 text-white/40 hover:text-white/80 rounded transition-colors"
                         title="Get API key"
                       >
                         <ExternalLink className="h-3 w-3" />
                       </button>
                     )}
                   </div>
+
+                  {/* Ultra Compact API Key Section */}
+                  {hasKey && !isEditing && (
+                    <div className="flex items-center gap-1">
+                      <div className="text-xs font-mono text-white/40 bg-white/5 px-1.5 py-0.5 rounded flex-1 truncate">
+                        {maskApiKey(apiKeys.get(provider) || "")}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUpdateKey();
+                        }}
+                        className="text-xs text-white/50 hover:text-white/80 px-1"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  )}
+                  {isEditing && (
+                    <div className="space-y-1">
+                      <input
+                        type="password"
+                        value={keyInputs.get(provider) || ""}
+                        onChange={(e) =>
+                          handleKeyChange(provider, e.target.value)
+                        }
+                        placeholder={`${config.keyFormat || 'API key'}`}
+                        className="w-full px-2 py-0.5 text-xs bg-white/5 border border-white/10 rounded text-white placeholder-white/40 focus:outline-none focus:border-primary/50"
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSaveUpdate();
+                          }}
+                          className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded hover:bg-primary/30 flex-1"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCancelUpdate();
+                          }}
+                          className="px-2 py-0.5 text-xs text-white/60 hover:text-white/80"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {!hasKey && !isEditing && (
+                    <div className="space-y-1">
+                      <input
+                        type="password"
+                        value={keyInputs.get(provider) || ""}
+                        onChange={(e) =>
+                          handleKeyChange(provider, e.target.value)
+                        }
+                        placeholder={`${config.keyFormat || 'API key'}`}
+                        className="w-full px-2 py-0.5 text-xs bg-white/5 border border-white/10 rounded text-white placeholder-white/40 focus:outline-none focus:border-primary/50"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSaveKey(provider);
+                        }}
+                        disabled={!keyInputs.get(provider)?.trim()}
+                        className="w-full px-2 py-0.5 text-xs text-white/50 rounded hover:border border-primary/30 disabled:opacity-50 transition-colors"
+                      >
+                        Activate
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Active Indicator */}
+                  {isActive && (
+                    <div className="mt-1 flex items-center gap-1 text-xs text-primary">
+                      <div className="w-1 h-1 bg-primary rounded-full"></div>
+                      Active
+                    </div>
+                  )}
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+          
+          {/* Why DataKit AI */}
+          {!isProOrTeam && (
+            <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-3 mt-3">
+              <h5 className="text-xs font-medium text-white mb-1.5">Why DataKit Models?</h5>
+              <ul className="space-y-1 text-xs text-white/70">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>No API keys to manage</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Credits monthly</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Optimized for data tasks</span>
+                </li>
+              </ul>
+              <button 
+                onClick={handleUpgrade}
+                className="mt-2 text-xs text-primary hover:text-primary/80 font-medium"
+              >
+                Learn More →
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* General Settings */}
-      <div className="border-t border-white/10 pt-6">
-        <h4 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
-          <SettingsIcon className="h-4 w-4" />
-          General Settings
-        </h4>
-
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-lg">
+      {/* Compact Settings Footer */}
+      <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg">
+          <div className="flex items-center gap-2">
+            <SettingsIcon className="h-3 w-3 text-white/60" />
             <div>
-              <label className="text-sm text-white/80 font-medium">
-                Auto-execute generated SQL
+              <label className="text-xs text-white/80 font-medium">
+                Auto-execute SQL
               </label>
-              <p className="text-xs text-white/60 mt-1">
-                Automatically run SQL queries generated by AI
-              </p>
+              <p className="text-xs text-white/50">Run AI queries automatically</p>
             </div>
-            <button
-              onClick={() =>
-                updateSettings({ autoExecuteSQL: !autoExecuteSQL })
-              }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                autoExecuteSQL ? "bg-primary" : "bg-white/20"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  autoExecuteSQL ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
           </div>
+          <button
+            onClick={() =>
+              updateSettings({ autoExecuteSQL: !autoExecuteSQL })
+            }
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+              autoExecuteSQL ? "bg-primary" : "bg-white/20"
+            }`}
+          >
+            <span
+              className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                autoExecuteSQL ? "translate-x-5" : "translate-x-1"
+              }`}
+            />
+          </button>
         </div>
       </div>
     </div>
