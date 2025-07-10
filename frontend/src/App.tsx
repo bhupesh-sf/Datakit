@@ -5,6 +5,7 @@ import { useDuckDBStore } from "@/store/duckDBStore";
 import { useAuthStore } from "@/store/authStore";
 import { useConsentManager } from "@/components/common/ConsentPopup";
 import { NotificationProvider } from "@/hooks/useNotifications";
+import { useSignupPrompt } from "@/hooks/useSignupPrompt";
 
 import Home from "@/pages/Home";
 import Privacy from "@/pages/Privacy";
@@ -62,6 +63,7 @@ const AppContent = () => {
   const { checkAuth } = useAuthStore();
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const { ConsentPopup } = useConsentManager();
+  const { SignupPrompt } = useSignupPrompt();
 
   useEffect(() => {
     initialize();
@@ -109,7 +111,9 @@ const AppContent = () => {
           path="/"
           element={
             <>
-              <Home /> <ConsentPopup />{" "}
+              <Home /> 
+              <ConsentPopup />
+              <SignupPrompt />
             </>
           }
         />
