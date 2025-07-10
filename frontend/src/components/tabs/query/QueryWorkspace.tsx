@@ -16,6 +16,7 @@ import {
   Clock,
   AlertTriangle,
   Zap,
+  Command,
 } from "lucide-react";
 
 import {
@@ -207,28 +208,36 @@ const QueryWorkspace: React.FC = () => {
   };
 
   // Memoized event handlers to prevent unnecessary re-renders
+  const handleExecuteQuery = useCallback(() => {
+    if (canExecuteQueries && query.trim()) {
+      executeQuery();
+    }
+  }, [canExecuteQueries, query, executeQuery]);
+
   const keyboardHandlers = useMemo(
     () => ({
-      executeQuery: () => {
-        if (canExecuteQueries && query.trim()) {
-          executeQuery();
-        }
-      },
+      executeQuery: handleExecuteQuery,
       saveQuery: handleSaveQuery,
       exitFullScreen: () => setFullScreenMode("none"),
     }),
-    [canExecuteQueries, query, executeQuery, handleSaveQuery]
+    [handleExecuteQuery, handleSaveQuery]
   );
 
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + Enter to execute query
+      // Ctrl/Cmd + Enter to execute query (fallback if Monaco doesn't catch it)
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-        e.preventDefault();
-        keyboardHandlers.executeQuery();
+        const target = e.target as HTMLElement;
+        const isInMonacoEditor = target.closest('.monaco-editor');
+        
+        // Only handle if we're in the Monaco editor but the event bubbled up
+        if (isInMonacoEditor) {
+          e.preventDefault();
+          keyboardHandlers.executeQuery();
+        }
       }
-
+      
       // Ctrl/Cmd + S to save query
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
@@ -242,8 +251,8 @@ const QueryWorkspace: React.FC = () => {
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, true); // Use capture phase
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [keyboardHandlers, fullScreenMode]);
 
   // Show getting started state
@@ -500,9 +509,6 @@ const QueryWorkspace: React.FC = () => {
 
               <h3 className="text-sm font-medium">SQL Editor</h3>
 
-              <div className="text-xs text-white/50">
-                Press Ctrl+Enter to execute
-              </div>
 
               {hasWarnings && (
                 <button
@@ -543,10 +549,17 @@ const QueryWorkspace: React.FC = () => {
                   !query.trim() ||
                   !canExecuteQueries
                 }
-                className="h-8"
+                className="h-8 gap-2"
+                title="Execute query (⌘+Enter)"
               >
-                <Play size={14} className="mr-1" />
-                <span>Execute</span>
+                <div className="flex items-center">
+                  <Play size={14} className="mr-1" />
+                  <span>Execute</span>
+                </div>
+                <div className="flex items-center text-[11px] opacity-60 bg-white/10 px-1.5 py-0.5 rounded">
+                  <Command size={11} className="mr-0.5" />
+                  <span className="leading-none">↵</span>
+                </div>
               </Button>
 
               <Button

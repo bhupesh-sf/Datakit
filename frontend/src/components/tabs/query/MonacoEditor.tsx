@@ -497,12 +497,16 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
       editorRef.current = editor;
 
       // Add keyboard shortcut for query execution
-      editor.addCommand(
-        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter,
-        () => {
+      editor.addAction({
+        id: 'execute-query',
+        label: 'Execute Query',
+        keybindings: [
+          monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter
+        ],
+        run: () => {
           if (onExecute) onExecute();
         }
-      );
+      });
 
       // Add keyboard shortcut for SQL formatting
       editor.addCommand(
