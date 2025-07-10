@@ -1,8 +1,10 @@
-import React from 'react';
-import { Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { Check, Bell } from 'lucide-react';
 import GlareHover from '@/components/ui/GlareHover';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { useCredits } from '@/hooks/useCredits';
+import { useNotifications } from '@/hooks/useNotifications';
+import userService from '@/lib/api/userService';
 import AnthropicLogo from '@/assets/anthropic.webp';
 
 interface PricingCardProps {
@@ -65,16 +67,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
         </ul>
 
         {/* Free Plan Anthropic Message */}
-        {title === 'Free' && (
-          <div className="mt-3 p-2 bg-white/5 border border-white/10 rounded-lg">
-            <div className="flex items-center gap-2">
-              <img src={AnthropicLogo} className="h-3 w-3" alt="Anthropic" />
-              <p className="text-xs text-white/70 leading-relaxed">
-                Powered by Anthropic models for reliable data analysis
-              </p>
-            </div>
-          </div>
-        )}
+        
       </div>
     </div>
   );
@@ -146,6 +139,10 @@ const PricingCard: React.FC<PricingCardProps> = ({
 const SubscriptionSettings: React.FC = () => {
   const { user } = useAuth();
   const { creditsRemaining } = useCredits();
+  const { showSuccess } = useNotifications();
+  const [isWaitlistLoading, setIsWaitlistLoading] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   const currentPlan = user?.subscription?.planType || 'free';
 
@@ -157,6 +154,7 @@ const SubscriptionSettings: React.FC = () => {
       description: 'Perfect for getting started',
       features: [
         '315 credits per month',
+        'Powered by Anthropic models',
         'Personal workspace',
         'Basic data analysis',
         'Community support',
@@ -173,7 +171,7 @@ const SubscriptionSettings: React.FC = () => {
         '1500 credits per month',
         'Advanced analytics',
         'Priority support',
-        'Export capabilities',
+        'More export capabilities',
         'Advanced integrations',
       ],
       isCurrentPlan: currentPlan === 'pro',
@@ -204,6 +202,40 @@ const SubscriptionSettings: React.FC = () => {
   const handlePlanSelect = (planTitle: string) => {
     // Handle plan selection logic here
     console.log(`Selected plan: ${planTitle}`);
+  };
+
+  const handleWaitlistSignup = async (featureName: string) => {
+    if (!user?.email && !waitlistEmail) {
+      setShowEmailModal(true);
+      return;
+    }
+
+    setIsWaitlistLoading(true);
+    try {
+      const email = user?.email || waitlistEmail;
+      await userService.joinWaitlist(email, featureName);
+      
+      // Show success notification
+      showSuccess(
+        "You're on the waitlist!",
+        `We'll let you know at ${email} when ${featureName} features roll out.`
+      );
+      
+      // Reset modal state
+      setShowEmailModal(false);
+      setWaitlistEmail('');
+    } catch (error) {
+      console.error('Waitlist signup failed:', error);
+      alert('Something went wrong. Please try again.');
+    } finally {
+      setIsWaitlistLoading(false);
+    }
+  };
+
+  const handleEmailSubmit = () => {
+    if (waitlistEmail) {
+      handleWaitlistSignup('Pro');
+    }
   };
 
   return (
@@ -260,24 +292,75 @@ const SubscriptionSettings: React.FC = () => {
         <div className="lg:col-span-3">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
             {plans.map((plan, index) => (
-              <PricingCard
-                key={index}
-                title={plan.title}
-                price={plan.price}
-                period={plan.period}
-                description={plan.description}
-                features={plan.features}
-                isCurrentPlan={plan.isCurrentPlan}
-                isPopular={plan.isPopular}
-                isComingSoon={plan.isComingSoon}
-                isEarlyAdopter={plan.isEarlyAdopter}
-                icon={plan.icon}
-                onSelect={() => handlePlanSelect(plan.title)}
-              />
+              <div key={index} className="flex flex-col">
+                <PricingCard
+                  title={plan.title}
+                  price={plan.price}
+                  period={plan.period}
+                  description={plan.description}
+                  features={plan.features}
+                  isCurrentPlan={plan.isCurrentPlan}
+                  isPopular={plan.isPopular}
+                  isComingSoon={plan.isComingSoon}
+                  isEarlyAdopter={plan.isEarlyAdopter}
+                  icon={plan.icon}
+                  onSelect={() => handlePlanSelect(plan.title)}
+                />
+                
+                {/* Waitlist Button */}
+                <div className="flex justify-center mt-4 pb-1">
+                  {plan.isComingSoon ? (
+                    <button
+                      onClick={() => handleWaitlistSignup(plan.title)}
+                      disabled={isWaitlistLoading}
+                      className="group flex items-center gap-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 text-primary font-medium text-sm px-4 py-2 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 shadow-sm hover:shadow-md"
+                    >
+                      <Bell className="h-4 w-4 group-hover:animate-pulse" />
+                      {isWaitlistLoading ? 'Joining...' : 'Get notified'}
+                    </button>
+                  ) : (
+                    <div className="h-10"></div>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </div>
+
+      {/* Email Modal for Anonymous Users */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-gray-900 border border-white/10 rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-white mb-4">Join Waitlist</h3>
+            <p className="text-white/70 text-sm mb-4">
+              Enter your email to get notified when Pro features are released.
+            </p>
+            <input
+              type="email"
+              value={waitlistEmail}
+              onChange={(e) => setWaitlistEmail(e.target.value)}
+              placeholder="your.email@example.com"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm mb-4 focus:outline-none focus:border-primary"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="flex-1 bg-white/5 border border-white/10 text-white text-sm py-2 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEmailSubmit}
+                disabled={!waitlistEmail || isWaitlistLoading}
+                className="flex-1 bg-primary text-white text-sm py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {isWaitlistLoading ? 'Joining...' : 'Join Waitlist'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

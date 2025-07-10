@@ -30,7 +30,10 @@ class UserService {
     return apiClient.patch<User>('/users/profile', data);
   }
 
-  async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+  async changePassword(
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
     return apiClient.post<{ message: string }>('/users/change-password', {
       currentPassword,
       newPassword,
@@ -64,14 +67,19 @@ class UserService {
     if (limit) params.append('limit', limit.toString());
 
     const queryString = params.toString();
-    return apiClient.get<CreditUsage[]>(`/credits/usage${queryString ? `?${queryString}` : ''}`);
+    return apiClient.get<CreditUsage[]>(
+      `/credits/usage${queryString ? `?${queryString}` : ''}`
+    );
   }
 
   async getCreditStats(): Promise<CreditStats> {
     return apiClient.get<CreditStats>('/credits/stats');
   }
 
-  async checkCredits(model: string, estimatedTokens: number): Promise<{
+  async checkCredits(
+    model: string,
+    estimatedTokens: number
+  ): Promise<{
     hasEnoughCredits: boolean;
     creditsNeeded: number;
     creditsAvailable: number;
@@ -99,6 +107,20 @@ class UserService {
 
   async cancelSubscription(): Promise<any> {
     return apiClient.post('/subscriptions/cancel');
+  }
+
+  async joinWaitlist(
+    email: string,
+    featureName: string
+  ): Promise<{ message: string }> {
+    return apiClient.post('/waitlist/signup', {
+      email,
+      featureName,
+    });
+  }
+
+  async getMyWaitlistEntries(): Promise<any[]> {
+    return apiClient.get('/waitlist/my-entries');
   }
 }
 
