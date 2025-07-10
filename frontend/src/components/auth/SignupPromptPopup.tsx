@@ -30,16 +30,18 @@ const SignupPromptPopup: React.FC<SignupPromptPopupProps> = ({ onClose }) => {
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: -50, x: 20 }}
-        animate={{ opacity: 1, y: 0, x: 0 }}
-        exit={{ opacity: 0, y: -50, x: 20 }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 400, 
-          damping: 25,
-          opacity: { duration: 0.3 }
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.96 }}
+        transition={{
+          duration: 0.2,
+          ease: [0.23, 1, 0.32, 1],
         }}
-        className="fixed top-4 right-4 z-40 max-w-sm"
+        className="fixed top-4 right-4 z-40 max-w-sm will-change-transform"
+        style={{
+          transform: 'translate3d(0, 0, 0)',
+          contain: 'layout style paint',
+        }}
       >
         <div className="bg-black border border-white/10 rounded-lg shadow-2xl p-5">
           {/* Header */}
@@ -60,13 +62,17 @@ const SignupPromptPopup: React.FC<SignupPromptPopupProps> = ({ onClose }) => {
           {/* Content */}
           <div className="mb-4">
             <p className="text-white/80 text-sm leading-relaxed mb-3">
-              We'd love to know what you think about our Assistant tab! Give it a try with <span className="font-semibold text-primary">free credits</span>.
+              We'd love to know what you think about our Assistant tab! Give it
+              a try with{' '}
+              <span className="font-semibold text-primary">free credits</span>.
             </p>
-            
+
             <div className="bg-white/5 rounded-md p-3 mb-3 border border-white/10">
               <div className="flex items-center gap-2 mb-2">
                 <Gift className="w-4 h-4 text-primary" />
-                <span className="text-xs font-medium text-white/90">What you'll get:</span>
+                <span className="text-xs font-medium text-white/90">
+                  What you'll get:
+                </span>
               </div>
               <ul className="text-xs text-white/70 space-y-1 pl-1">
                 <li>• $3 in free credits to explore AI models</li>

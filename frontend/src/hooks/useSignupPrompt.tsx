@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
 import SignupPromptPopup from '@/components/auth/SignupPromptPopup';
@@ -33,20 +33,24 @@ export const useSignupPrompt = () => {
     return () => clearTimeout(timer);
   }, [isAuthenticated]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setShowPrompt(false);
     // Mark as dismissed for this session
     sessionStorage.setItem(PROMPT_DISMISSED_KEY, 'true');
-  };
+  }, []);
 
-  return {
-    showPrompt,
-    SignupPrompt: () => (
+  const SignupPrompt = useMemo(() => {
+    return () => (
       <AnimatePresence>
         {showPrompt && (
           <SignupPromptPopup onClose={handleClose} />
         )}
       </AnimatePresence>
-    )
-  };
+    );
+  }, [showPrompt, handleClose]);
+
+  return useMemo(() => ({
+    showPrompt,
+    SignupPrompt
+  }), [showPrompt, SignupPrompt]);
 };

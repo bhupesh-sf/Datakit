@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronDown, ChevronUp, Heart } from 'lucide-react';
+import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import Plausible from 'plausible-tracker';
 
 interface ConsentPopupProps {
@@ -33,7 +33,8 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
         damping: 25,
         opacity: { duration: 0.3 }
       }}
-      className="fixed bottom-4 right-4 z-50 max-w-xs"
+      className="fixed bottom-4 right-4 z-50 max-w-xs will-change-transform"
+      style={{ transform: 'translate3d(0, 0, 0)' }}
     >
       <div className="bg-black border border-white/10 rounded-lg shadow-2xl p-4">
         <AnimatePresence mode="wait">
