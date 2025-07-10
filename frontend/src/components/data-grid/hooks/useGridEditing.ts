@@ -12,15 +12,9 @@ export const useGridEditing = (
   });
 
   const handleCellClick = useCallback((row: number, col: number) => {
-    // Don't allow editing header row or row number column
-    if (row === 0 || col === 0) return;
-    
-    const cellValue = data[row]?.[col] || '';
-    setEditingState({
-      cell: { row, col },
-      value: cellValue
-    });
-  }, [data]);
+    // Disable all editing - cells are now read-only
+    return;
+  }, []);
 
   const handleCellEdit = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setEditingState(prev => ({

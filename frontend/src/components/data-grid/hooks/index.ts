@@ -28,6 +28,8 @@ export interface WelcomeAnimationHookResult {
 }
 
 export { useFileUpload } from "./useFileUpload";
+export { useColumnSorting } from "./useColumnSorting";
+export { useCellInteraction } from "./useCellInteraction";
 
 /**
  * Custom hook to generate an empty grid

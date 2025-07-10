@@ -10,9 +10,12 @@ import {
 
 import Grid from "./Grid";
 import InspectorPanel from "@/components/tabs/preview/inspector/InspectorPanel";
+import CellContextMenu from "./CellContextMenu";
 
 import { useGridEditing } from "./hooks/useGridEditing";
 import { useCellFormatting } from "./hooks/useCellFormatting";
+import { useColumnSorting } from "./hooks/useColumnSorting";
+import { useCellInteraction } from "./hooks/useCellInteraction";
 import { useEmptyGrid, useWelcomeAnimation } from "./hooks";
 import { Button } from "../ui/Button";
 
@@ -51,7 +54,13 @@ const CSVGrid: React.FC = () => {
   const { activeWordIndex, animationMessage, animationActive } =
     useWelcomeAnimation(emptyGrid, setGridData, hasDataToDisplay);
 
-  // Editing functionality
+  // Column sorting functionality
+  const { sortedData, sortState, sortData, clearSort } = useColumnSorting(gridData);
+
+  // Cell interaction functionality
+  const { contextMenu, handleCellClick: handleCellContextMenu, handleCopyCell, closeContextMenu } = useCellInteraction();
+
+  // Editing functionality (now disabled)
   const {
     editingCell,
     editValue,
@@ -59,7 +68,7 @@ const CSVGrid: React.FC = () => {
     handleCellEdit,
     handleCellBlur,
     handleKeyDown,
-  } = useGridEditing(gridData, setGridData);
+  } = useGridEditing(sortedData, setGridData);
 
   // Cell formatting
   const { formatCellValue, getCellClass } = useCellFormatting(
@@ -67,7 +76,7 @@ const CSVGrid: React.FC = () => {
     isDataMode,
     {
       animationActive,
-      gridData,
+      gridData: sortedData,
       animationMessage,
       activeWordIndex,
     }
@@ -86,12 +95,15 @@ const CSVGrid: React.FC = () => {
       setGridData(withRowNumbers);
       setIsDataMode(true);
       setTotalRows(storeData.length - 1);
+      // Clear any existing sort when new data is loaded
+      clearSort();
     } else if (!animationActive) {
       setIsDataMode(false);
       setGridData(emptyGrid);
       setTotalRows(0);
+      clearSort();
     }
-  }, [storeData, emptyGrid, animationActive]);
+  }, [storeData, emptyGrid, animationActive, clearSort]);
 
   // Handle context menu
   const handleContextMenu = useCallback(
@@ -192,7 +204,7 @@ const CSVGrid: React.FC = () => {
         {/* Performance Grid */}
         <div className="flex-1 h-full">
           <Grid
-            data={gridData}
+            data={sortedData}
             columnTypes={columnTypes}
             isDataMode={isDataMode}
             onContextMenu={handleContextMenu}
@@ -206,9 +218,27 @@ const CSVGrid: React.FC = () => {
             onKeyDown={handleKeyDown}
             formatCellValue={formatCellValue}
             getCellClass={getCellClass}
+            onCellContextMenu={handleCellContextMenu}
+            onSort={sortData}
+            sortState={sortState}
           />
         </div>
       </div>
+
+      {/* Cell Context Menu */}
+      <CellContextMenu
+        isOpen={contextMenu.isOpen}
+        position={contextMenu.position}
+        onClose={closeContextMenu}
+        onCopy={handleCopyCell}
+        isHeader={contextMenu.isHeader}
+        onSort={(direction) => {
+          if (contextMenu.columnIndex > 0) { // Don't sort row number column
+            sortData(contextMenu.columnIndex, direction);
+          }
+        }}
+        cellValue={contextMenu.cellValue}
+      />
 
       {/* Inspector Panel */}
       <InspectorPanel />

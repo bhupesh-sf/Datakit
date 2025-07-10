@@ -20,6 +20,17 @@ interface IGrid extends GridProps {
     colIndex: number
   ) => string;
   getCellClass?: (rowIndex: number, colIndex: number) => string;
+  onCellContextMenu?: (
+    e: React.MouseEvent,
+    rowIndex: number,
+    columnIndex: number,
+    cellValue: string
+  ) => void;
+  onSort?: (columnIndex: number, direction: 'asc' | 'desc') => void;
+  sortState?: {
+    columnIndex: number | null;
+    direction: 'asc' | 'desc' | null;
+  };
 }
 
 const Grid: React.FC<IGrid> = ({
@@ -39,6 +50,9 @@ const Grid: React.FC<IGrid> = ({
   onKeyDown = () => {},
   formatCellValue = (value) => value,
   getCellClass = () => "",
+  onCellContextMenu,
+  onSort,
+  sortState,
 }) => {
   // Calculate dimensions
   const rowCount = data.length;
@@ -87,6 +101,8 @@ const Grid: React.FC<IGrid> = ({
       onKeyDown,
       formatCellValue,
       getCellClass,
+      onCellContextMenu,
+      sortState,
     }),
     [
       data,
@@ -100,6 +116,8 @@ const Grid: React.FC<IGrid> = ({
       onKeyDown,
       formatCellValue,
       getCellClass,
+      onCellContextMenu,
+      sortState,
     ]
   );
 

@@ -29,6 +29,16 @@ export interface GridData {
   onKeyDown: (e: React.KeyboardEvent) => void;
   formatCellValue: (value: string, rowIndex: number, colIndex: number) => string;
   getCellClass: (rowIndex: number, colIndex: number) => string;
+  onCellContextMenu?: (
+    e: React.MouseEvent,
+    rowIndex: number,
+    columnIndex: number,
+    cellValue: string
+  ) => void;
+  sortState?: {
+    columnIndex: number | null;
+    direction: 'asc' | 'desc' | null;
+  };
 }
 
 export interface EditingState {

@@ -236,13 +236,7 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
             )}
             
             <div className="relative p-5">
-              {!isProOrTeam && (
-                <div className="absolute top-3 right-3">
-                  <span className="text-xs border border-primary text-white px-3 py-1 rounded-full font-medium">
-                    Upgrade to Unlock
-                  </span>
-                </div>
-              )}
+             
               
               <div className="mb-3">
                 <h4 className="text-lg font-bold text-white mb-1 flex items-center gap-2">

@@ -68,6 +68,10 @@ export const useCellFormatting = (
 
       if (rowIndex === 0) {
         baseClass = "csv-grid-header";
+        // Add extra padding for sort icon on non-row-number columns
+        if (colIndex > 0) {
+          baseClass += " pr-8";
+        }
       } else if (colIndex === 0) {
         baseClass = "csv-grid-row-number";
       } else {
