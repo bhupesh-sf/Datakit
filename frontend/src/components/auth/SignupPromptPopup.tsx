@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { X, Gift } from 'lucide-react';
 import AuthModal from './AuthModal';
 import { Button } from '../ui/Button';
+import { useAIStore } from '@/store/aiStore';
 
 interface SignupPromptPopupProps {
   onClose: () => void;
@@ -11,6 +12,8 @@ interface SignupPromptPopupProps {
 const SignupPromptPopup: React.FC<SignupPromptPopupProps> = ({ onClose }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
+
+  const { setActiveProvider } = useAIStore();
 
   const handleSignupClick = () => {
     setAuthMode('signup');
@@ -24,6 +27,7 @@ const SignupPromptPopup: React.FC<SignupPromptPopupProps> = ({ onClose }) => {
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
+    setActiveProvider('datakit');
     onClose();
   };
 

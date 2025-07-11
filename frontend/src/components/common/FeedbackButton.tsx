@@ -8,8 +8,6 @@ import useFeedback from '@/hooks/feedback/useFeedback';
 interface FeedbackButtonProps {
   /** Context to include with feedback */
   context?: string;
-  /** Custom API endpoint for feedback submission */
-  apiEndpoint?: string;
   /** Custom size for the button (defaults to 'sm') */
   size?: 'sm' | 'md' | 'lg';
   /** Custom variant for the button (defaults to 'ghost') */
@@ -26,7 +24,6 @@ interface FeedbackButtonProps {
  */
 const FeedbackButton: FC<FeedbackButtonProps> = ({
   context,
-  apiEndpoint,
   size = 'sm',
   variant = 'primary',
   text = 'Share Feedback?',
@@ -45,8 +42,7 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
     setFeedbackMessage,
     handleSubmitFeedback,
   } = useFeedback({
-    context,
-    apiEndpoint,
+    context
   });
 
   return (

@@ -46,7 +46,6 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
-  const { recentFiles } = useFileAccess();
   const {
     sidebarCollapsed,
     toggleSidebar,
