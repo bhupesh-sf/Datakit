@@ -12,6 +12,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
+import { SlackModule } from '../slack/slack.module';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 @Module({
@@ -20,6 +21,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
     forwardRef(() => UsersModule),
     SubscriptionsModule,
     forwardRef(() => WorkspacesModule),
+    SlackModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -31,7 +33,13 @@ import { RefreshToken } from './entities/refresh-token.entity';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, RefreshTokenService, PasswordService, LocalStrategy, JwtStrategy],
+  providers: [
+    AuthService,
+    RefreshTokenService,
+    PasswordService,
+    LocalStrategy,
+    JwtStrategy,
+  ],
   exports: [AuthService, RefreshTokenService, PasswordService],
 })
 export class AuthModule {}

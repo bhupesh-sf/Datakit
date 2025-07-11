@@ -7,12 +7,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Waitlist, WaitlistStatus } from './entities/waitlist.entity';
 import { CreateWaitlistDto } from './dto/create-waitlist.dto';
+import { SlackService } from '../slack/slack.service';
 
 @Injectable()
 export class WaitlistService {
   constructor(
     @InjectRepository(Waitlist)
     private waitlistRepository: Repository<Waitlist>,
+    private slackService: SlackService,
   ) {}
 
   async create(createWaitlistDto: CreateWaitlistDto): Promise<Waitlist> {
@@ -36,7 +38,25 @@ export class WaitlistService {
       status: WaitlistStatus.PENDING,
     });
 
-    return this.waitlistRepository.save(waitlistEntry);
+    const savedEntry = await this.waitlistRepository.save(waitlistEntry);
+
+    // Send Slack notification for new waitlist signup
+    try {
+      await this.slackService.notifyWaitlistSignup({
+        id: savedEntry.id,
+        email: savedEntry.email,
+        featureName: savedEntry.featureName,
+        userId: savedEntry.userId,
+      });
+    } catch (error) {
+      // Log but don't fail waitlist signup if Slack notification fails
+      console.warn(
+        'Failed to send Slack notification for waitlist signup:',
+        error,
+      );
+    }
+
+    return savedEntry;
   }
 
   async findAll(): Promise<Waitlist[]> {

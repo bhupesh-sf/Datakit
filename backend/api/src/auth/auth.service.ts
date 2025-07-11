@@ -10,6 +10,7 @@ import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { WorkspacesService } from '../workspaces/workspaces.service';
 import { RefreshTokenService } from './refresh-token.service';
 import { PasswordService } from './services/password.service';
+import { SlackService } from '../slack/slack.service';
 import * as bcrypt from 'bcryptjs';
 import { SignupDto } from './dto/signup.dto';
 
@@ -23,6 +24,7 @@ export class AuthService {
     private workspacesService: WorkspacesService,
     private refreshTokenService: RefreshTokenService,
     private passwordService: PasswordService,
+    private slackService: SlackService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -92,6 +94,18 @@ export class AuthService {
 
     // Get user with subscription and workspace
     const userWithSubscription = await this.usersService.findOne(user.id);
+
+    // Send Slack notification for new user signup
+    try {
+      await this.slackService.notifyNewUser({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      });
+    } catch (error) {
+      // Log but don't fail signup if Slack notification fails
+      console.warn('Failed to send Slack notification for new user:', error);
+    }
 
     // Use the same login logic for consistent token generation
     return this.login(userWithSubscription, ipAddress, userAgent);
