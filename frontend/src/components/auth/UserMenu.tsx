@@ -97,7 +97,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             <User size={14} className="mr-0.5" />
           )}
           <span className="text-xs">
-            {isLoading ? "Signing in" : "Sign In"}
+            {isLoading ? "" : "Sign In"}
           </span>
         </Button>
         
