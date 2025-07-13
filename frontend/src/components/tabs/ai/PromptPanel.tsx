@@ -1,5 +1,5 @@
 import React, { useState, useEffect, RefObject } from "react";
-import { Send, ChevronRight, RefreshCw } from "lucide-react";
+import { Send, ChevronRight, ChevronLeft, RefreshCw, Command } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useAIStore } from "@/store/aiStore";
@@ -64,8 +64,30 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
     setCurrentError,
     activeProvider,
     activeModel,
+    currentMessageIndex,
+    navigateToNextMessage,
+    navigateToPreviousMessage,
   } = useAIStore();
   const { executeAIQueryStream, canExecute } = useAIOperations();
+
+  // Get user messages for navigation
+  const userMessages = currentConversation.filter(msg => msg.role === 'user');
+
+  // Update prompt when navigating to a different message
+  useEffect(() => {
+    if (currentMessageIndex >= 0 && currentMessageIndex < userMessages.length) {
+      // Navigate to an existing message
+      const selectedMessage = userMessages[currentMessageIndex];
+      if (selectedMessage && selectedMessage.content !== prompt) {
+        setPrompt(selectedMessage.content);
+      }
+    } else if (currentMessageIndex === userMessages.length) {
+      // Navigate to the virtual "unsent" message (clear input for new message)
+      if (prompt !== '') {
+        setPrompt('');
+      }
+    }
+  }, [currentMessageIndex, userMessages.length]);
 
   // Hide suggestions when user starts typing
   useEffect(() => {
@@ -246,22 +268,27 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/10">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          {/* Left side - Schema toggle */}
+          <div className="flex items-center gap-3">
             {onToggleSchema && (
-              <button
-                onClick={onToggleSchema}
-                className="p-1 hover:bg-white/10 border rounded transition-colors"
-                title={schemaBrowserOpen ? "Hide Schema" : "Show Schema"}
-              >
-                <ChevronRight
-                  className={`h-4 w-4 text-white/70 transition-transform ${
-                    schemaBrowserOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-2 py-1">
+                <button
+                  onClick={onToggleSchema}
+                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                  title={schemaBrowserOpen ? "Hide Schema" : "Show Schema"}
+                >
+                  <ChevronRight
+                    className={`h-4 w-4 text-white/70 transition-transform ${
+                      schemaBrowserOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                <h3 className="text-sm font-medium text-white">Schemas</h3>
+              </div>
             )}
-            <h3 className="text-sm font-medium text-white">Schemas</h3>
           </div>
+
+          {/* Right side - Controls group */}
           <div className="flex items-center gap-2">
             <div
               className={
@@ -270,6 +297,35 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
             >
               <ModelSelector compact />
             </div>
+            
+            {/* Message Navigation */}
+            {userMessages.length > 0 && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={navigateToPreviousMessage}
+                  disabled={currentMessageIndex <= 0}
+                  className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  title="Previous message"
+                >
+                  <ChevronLeft className="h-4 w-4 text-white/70" />
+                </button>
+                
+                <span className="text-xs text-white/60 px-2">
+                  {currentMessageIndex + 1} / {userMessages.length + 1}
+                </span>
+                
+                <button
+                  onClick={navigateToNextMessage}
+                  disabled={currentMessageIndex >= userMessages.length}
+                  className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  title="Next message"
+                >
+                  <ChevronRight className="h-4 w-4 text-white/70" />
+                </button>
+              </div>
+            )}
+            
+            {/* Refresh Button */}
             <Tooltip content="Start a new chat" placement="bottom">
               <button
                 onClick={handleRefreshChat}
@@ -300,30 +356,38 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={getPlaceholderText()}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
-                rows={2}
+                className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
+                rows={3}
                 disabled={isProcessing || showSetupPrompt}
               />
 
-              <button
-                type="submit"
-                disabled={
-                  !prompt.trim() ||
-                  !canExecute ||
-                  isProcessing ||
-                  showSetupPrompt
-                }
-                className={`absolute bottom-3 right-3 p-2 rounded-md transition-all ${
-                  prompt.trim() &&
-                  canExecute &&
-                  !isProcessing &&
-                  !showSetupPrompt
-                    ? "bg-primary text-white hover:bg-primary/80"
-                    : "bg-white/10 text-white/30 cursor-not-allowed"
-                }`}
-              >
-                <Send className="h-4 w-4" />
-              </button>
+              <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                {/* Keyboard shortcut hint */}
+                <div className="flex items-center gap-1 text-xs text-white/40 bg-black/30 px-2 py-1 rounded border border-white/10">
+                  <Command className="h-3 w-3" />
+                  <span>K</span>
+                </div>
+                
+                <button
+                  type="submit"
+                  disabled={
+                    !prompt.trim() ||
+                    !canExecute ||
+                    isProcessing ||
+                    showSetupPrompt
+                  }
+                  className={`p-2 rounded-md transition-all ${
+                    prompt.trim() &&
+                    canExecute &&
+                    !isProcessing &&
+                    !showSetupPrompt
+                      ? "bg-primary text-white hover:bg-primary/80"
+                      : "bg-white/10 text-white/30 cursor-not-allowed"
+                  }`}
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Error Display */}

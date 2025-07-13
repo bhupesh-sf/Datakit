@@ -45,6 +45,7 @@ interface AIState {
   // Conversation State
   currentConversation: AIMessage[];
   conversationId: string | null;
+  currentMessageIndex: number;
   
   // Data Context
   context: {
@@ -98,6 +99,9 @@ interface AIState {
   addMessageToConversation: (message: AIMessage) => void;
   clearConversation: () => void;
   startNewConversation: () => void;
+  navigateToMessage: (index: number) => void;
+  navigateToNextMessage: () => void;
+  navigateToPreviousMessage: () => void;
   
   // Model Actions
   downloadLocalModel: (modelId: string) => Promise<void>;
@@ -247,6 +251,7 @@ export const useAIStore = create<AIState>()(
       
       currentConversation: [],
       conversationId: null,
+      currentMessageIndex: -1,
       
       context: null,
       
@@ -324,7 +329,18 @@ export const useAIStore = create<AIState>()(
           if (newConversation.length > 20) {
             newConversation.splice(0, newConversation.length - 20);
           }
-          return { currentConversation: newConversation };
+          
+          // If this is a user message, update the current message index to point to the virtual "new message" index
+          let newMessageIndex = state.currentMessageIndex;
+          if (message.role === 'user') {
+            const userMessages = newConversation.filter(msg => msg.role === 'user');
+            newMessageIndex = userMessages.length; // Point to virtual index for new message
+          }
+          
+          return { 
+            currentConversation: newConversation,
+            currentMessageIndex: newMessageIndex
+          };
         });
       },
       
@@ -335,6 +351,7 @@ export const useAIStore = create<AIState>()(
           currentResponse: null,
           streamingResponse: '',
           currentError: null,
+          currentMessageIndex: -1,
         });
       },
       
@@ -346,6 +363,31 @@ export const useAIStore = create<AIState>()(
           currentResponse: null,
           streamingResponse: '',
           currentError: null,
+          currentMessageIndex: -1,
+        });
+      },
+      
+      navigateToMessage: (index) => {
+        set({ currentMessageIndex: index });
+      },
+      
+      navigateToNextMessage: () => {
+        set((state) => {
+          const userMessages = state.currentConversation.filter(msg => msg.role === 'user');
+          const maxIndex = userMessages.length; // Include virtual index for unsent message
+          if (state.currentMessageIndex < maxIndex) {
+            return { currentMessageIndex: state.currentMessageIndex + 1 };
+          }
+          return state;
+        });
+      },
+      
+      navigateToPreviousMessage: () => {
+        set((state) => {
+          if (state.currentMessageIndex > 0) {
+            return { currentMessageIndex: state.currentMessageIndex - 1 };
+          }
+          return state;
         });
       },
       

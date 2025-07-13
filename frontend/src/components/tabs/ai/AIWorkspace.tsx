@@ -63,6 +63,20 @@ const AIWorkspace: React.FC = () => {
     promptInputRef.current?.focus();
   }, []);
 
+  // Global keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        promptInputRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Handle results panel resize
   const handleResultsResize = (e: React.MouseEvent) => {
     const startY = e.clientY;
