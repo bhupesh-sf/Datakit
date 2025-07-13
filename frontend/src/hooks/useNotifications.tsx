@@ -1,16 +1,19 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import SuccessSnackbar from '@/components/common/SuccessSnackbar';
+import ErrorSnackbar from '@/components/common/ErrorSnackbar';
 
 interface Notification {
   id: string;
+  type: 'success' | 'error';
   title: string;
   message: string;
-  icon?: 'check' | 'user' | 'shield';
+  icon?: 'check' | 'user' | 'shield' | 'alert-triangle' | 'alert-circle' | 'x-circle';
   duration?: number;
 }
 
 interface NotificationContextType {
-  showSuccess: (title: string, message: string, options?: Partial<Notification>) => void;
+  showSuccess: (title: string, message: string, options?: Partial<Omit<Notification, 'type'>>) => void;
+  showError: (title: string, message: string, options?: Partial<Omit<Notification, 'type'>>) => void;
   removeNotification: (id: string) => void;
 }
 
@@ -22,15 +25,34 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const showSuccess = useCallback((
     title: string, 
     message: string, 
-    options: Partial<Notification> = {}
+    options: Partial<Omit<Notification, 'type'>> = {}
   ) => {
     const id = Math.random().toString(36).substr(2, 9);
     const notification: Notification = {
       id,
+      type: 'success',
       title,
       message,
       icon: options.icon || 'check',
       duration: options.duration || 5000,
+    };
+
+    setNotifications(prev => [...prev, notification]);
+  }, []);
+
+  const showError = useCallback((
+    title: string, 
+    message: string, 
+    options: Partial<Omit<Notification, 'type'>> = {}
+  ) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    const notification: Notification = {
+      id,
+      type: 'error',
+      title,
+      message,
+      icon: options.icon || 'alert-triangle',
+      duration: options.duration || 8000,
     };
 
     setNotifications(prev => [...prev, notification]);
@@ -41,7 +63,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   return (
-    <NotificationContext.Provider value={{ showSuccess, removeNotification }}>
+    <NotificationContext.Provider value={{ showSuccess, showError, removeNotification }}>
       {children}
       
       {/* Render notifications */}
@@ -55,14 +77,25 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             zIndex: 50 + index // Ensure proper stacking
           }}
         >
-          <SuccessSnackbar
-            isVisible={true}
-            onClose={() => removeNotification(notification.id)}
-            title={notification.title}
-            message={notification.message}
-            icon={notification.icon}
-            duration={notification.duration}
-          />
+          {notification.type === 'success' ? (
+            <SuccessSnackbar
+              isVisible={true}
+              onClose={() => removeNotification(notification.id)}
+              title={notification.title}
+              message={notification.message}
+              icon={notification.icon as 'check' | 'user' | 'shield'}
+              duration={notification.duration}
+            />
+          ) : (
+            <ErrorSnackbar
+              isVisible={true}
+              onClose={() => removeNotification(notification.id)}
+              title={notification.title}
+              message={notification.message}
+              icon={notification.icon as 'alert-triangle' | 'alert-circle' | 'x-circle'}
+              duration={notification.duration}
+            />
+          )}
         </div>
       ))}
     </NotificationContext.Provider>

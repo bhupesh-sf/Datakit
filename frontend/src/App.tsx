@@ -12,6 +12,7 @@ import Privacy from "@/pages/Privacy";
 import Settings from "@/pages/Settings";
 import Info from "@/pages/Info";
 import NotFound from "@/pages/NotFound";
+import DatasetImport from "@/pages/DatasetImport";
 import { Button } from "@/components/ui/Button";
 import { SEO } from "@/components/common/SEO";
 
@@ -117,6 +118,7 @@ const AppContent = () => {
             </>
           }
         />
+        <Route path="/datasets/:organization/:dataset" element={<DatasetImport />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/info" element={<Info />} />
