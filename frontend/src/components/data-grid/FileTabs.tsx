@@ -595,17 +595,16 @@ const FileTabs: React.FC<FileTabsProps> = ({
                 tab.splitView?.partnerId === nextTab?.id;
 
               return (
-                <React.Fragment key={tab.id}>
-                  <FileTabItem
-                    tab={tab}
-                    onTabClick={onTabClick}
-                    onTabClose={onTabClose}
-                    onContextMenu={handleContextMenu}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    isOverflowing={hiddenTabs.length > 0}
-                  />
-                </React.Fragment>
+                <FileTabItem
+                  key={tab.id}
+                  tab={tab}
+                  onTabClick={onTabClick}
+                  onTabClose={onTabClose}
+                  onContextMenu={handleContextMenu}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  isOverflowing={hiddenTabs.length > 0}
+                />
               );
             })}
           </AnimatePresence>

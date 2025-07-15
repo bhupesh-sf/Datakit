@@ -56,6 +56,11 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
     gridData || []
   );
 
+  // Clear sort state when switching between files to prevent column highlighting issues
+  useEffect(() => {
+    clearSort();
+  }, [targetFileId, clearSort]);
+
   // Cell interaction functionality
   const {
     contextMenu,
@@ -64,9 +69,14 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
     closeContextMenu,
   } = useCellInteraction();
 
+  // Get target file for proper column types
+  const targetFile = targetFileId 
+    ? useAppStore.getState().files.find(f => f.id === targetFileId)
+    : activeFile;
+
   // Cell formatting with skeleton support
   const { formatCellValue: originalFormatCellValue, getCellClass } =
-    useCellFormatting(activeFile?.columnTypes || [], true, {
+    useCellFormatting(targetFile?.columnTypes || [], true, {
       animationActive: false,
       gridData: sortedData,
       animationMessage: [],
@@ -270,7 +280,7 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
           >
             <Grid
               data={displayData}
-              columnTypes={activeFile?.columnTypes || []}
+              columnTypes={targetFile?.columnTypes || []}
               isDataMode={
                 !isLoading && !isChangingPage && displayData.length > 0
               }
