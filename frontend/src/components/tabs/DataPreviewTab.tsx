@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react';
 
-import { useAppStore } from "@/store/appStore";
+import { useAppStore } from '@/store/appStore';
 import {
   selectActiveFile,
   selectFileTabs,
@@ -12,32 +12,26 @@ import {
   selectRemoteURL,
   selectRemoteProvider,
   selectGoogleSheets,
-} from "@/store/selectors/appSelectors";
+} from '@/store/selectors/appSelectors';
 
-import CSVGrid from "@/components/data-grid/CSVGrid";
-import JSONGrid from "@/components/data-grid/JSONGrid";
-import FileTabs from "@/components/data-grid/FileTabs";
-import EmptyDataState from "@/components/data-grid/EmptyDataState";
-import GoogleSheetsMetadata from "@/components/common/GoogleSheetsMetadata";
+import DataPreviewGrid from '@/components/data-grid/DataPreviewGrid';
+import FileTabs from '@/components/data-grid/FileTabs';
+import EmptyDataState from '@/components/data-grid/EmptyDataState';
+import GoogleSheetsMetadata from '@/components/common/GoogleSheetsMetadata';
 
-import { DataSourceType } from "@/types/json";
-import { ImportProvider } from "@/types/remoteImport";
+
+import { ImportProvider } from '@/types/remoteImport';
 
 const DataPreviewTab: React.FC = () => {
   const { setIsRemoteModalOpen, setActiveProviderRemoteModal } = useAppStore();
   const hasFiles = useAppStore(selectHasFiles);
   const activeFile = useAppStore(selectActiveFile);
   const fileTabs = useAppStore(selectFileTabs);
-  const data = useAppStore(selectData);
-  const sourceType = useAppStore(selectSourceType);
-  const rawData = useAppStore(selectRawData);
-  const jsonSchema = useAppStore(selectJsonSchema);
   const remoteURL = useAppStore(selectRemoteURL);
   const remoteProvider = useAppStore(selectRemoteProvider);
   const googleSheets = useAppStore(selectGoogleSheets);
 
   const {
-    jsonViewMode,
     setActiveFile,
     removeFile,
     closeAllFiles,
@@ -61,18 +55,9 @@ const DataPreviewTab: React.FC = () => {
   };
 
   const handleImportOptionClick = (val: ImportProvider) => {
-      setIsRemoteModalOpen(true);
-      setActiveProviderRemoteModal(val)
+    setIsRemoteModalOpen(true);
+    setActiveProviderRemoteModal(val);
   };
-
-  // Debug logging
-  console.log("DataPreviewTab state:", {
-    hasFiles,
-    activeFile,
-    fileTabs,
-    data: data?.length || 0,
-    sourceType,
-  });
 
   // Show empty state if no files are loaded
   if (!hasFiles) {
@@ -93,11 +78,11 @@ const DataPreviewTab: React.FC = () => {
 
       {/* Active File Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {activeFile && remoteProvider === "google_sheets" && googleSheets && (
+        {activeFile && remoteProvider === 'google_sheets' && googleSheets && (
           <div className="px-3 pt-3">
             <GoogleSheetsMetadata
               metadata={googleSheets}
-              url={remoteURL || ""}
+              url={remoteURL || ''}
               className="mb-0"
               compact={true}
             />
@@ -107,13 +92,7 @@ const DataPreviewTab: React.FC = () => {
         {/* Data grid component based on source type */}
         <div className="flex-1 overflow-hidden">
           {activeFile ? (
-            sourceType === DataSourceType.JSON &&
-            jsonViewMode === "tree" &&
-            rawData ? (
-              <JSONGrid data={rawData} schema={jsonSchema} />
-            ) : (
-              <CSVGrid />
-            )
+            <DataPreviewGrid />
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center text-white/70">

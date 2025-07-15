@@ -1,3 +1,15 @@
+# 0.3.3
+Lightning-fast paginated data preview with QueryWorkspace-inspired performance
+Progressive loading: instant 1k rows, background counting for exact totals
+Per-file state preservation for seamless tab switching
+Side by side files preview
+
+# 0.3.2
+Split the datasets page
+
+# 0.3.1
+Bring the HF dataset from the base URL
+
 # 0.3.0
 DataKit cloud is up. Get free credits on Anthropic claude models.
 

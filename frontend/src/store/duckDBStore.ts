@@ -111,7 +111,9 @@ interface DuckDBState {
   executePaginatedQuery: (
     sql: string,
     page: number,
-    pageSize: number
+    pageSize: number,
+    applyPagination?: boolean,
+    countTotalRows?: boolean
   ) => Promise<PaginatedQueryResult | null>;
   executeChartQuery: (
     tableName: string,
@@ -1972,7 +1974,9 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
   executePaginatedQuery: async (
     sql: string,
     page: number,
-    pageSize: number
+    pageSize: number,
+    applyPagination: boolean = true,
+    countTotalRows: boolean = true
   ) => {
     const {
       connection,
@@ -2185,8 +2189,8 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
             sql,
             page,
             pageSize,
-            applyPagination: true,
-            countTotalRows: true,
+            applyPagination,
+            countTotalRows,
           },
           connection,
           registeredTables
