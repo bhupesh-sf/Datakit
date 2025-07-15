@@ -1,3 +1,10 @@
+# 0.3.2
+Split the datasets page
+Navigation on the viewer
+
+# 0.3.1
+Bring the HF dataset from the base URL
+
 # 0.3.0
 DataKit cloud is up. Get free credits on Anthropic claude models.
 

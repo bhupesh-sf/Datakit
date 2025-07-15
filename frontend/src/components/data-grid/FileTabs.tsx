@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  XCircle, 
+import {
+  X,
+  XCircle,
   Users,
   FileText,
   Table,
@@ -10,12 +10,15 @@ import {
   Plus,
   ChevronLeft,
   MoreHorizontal,
-  Database
+  Database,
+  SplitSquareVertical,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import GoogleSheetsIcon from '@/components/icons/GoogleSheetsIcon';
 import { FileTab } from '@/types/multiFile';
 import { DataSourceType } from '@/types/json';
+import { useAppStore } from '@/store/appStore';
+import DropZonesOverlay from './DropZonesOverlay';
 
 interface FileTabsProps {
   tabs: FileTab[];
@@ -37,26 +40,30 @@ interface ContextMenuState {
 /**
  * Get the appropriate icon for a file type with better visual hierarchy
  */
-const getFileIcon = (sourceType: DataSourceType, remoteProvider?: string, isActive: boolean = false) => {
+const getFileIcon = (
+  sourceType: DataSourceType,
+  remoteProvider?: string,
+  isActive: boolean = false
+) => {
   const iconClass = cn(
-    "h-4 w-4 mr-2 flex-shrink-0 transition-colors duration-200",
-    isActive ? "opacity-100" : "opacity-70"
+    'h-4 w-4 mr-2 flex-shrink-0 transition-colors duration-200',
+    isActive ? 'opacity-100' : 'opacity-70'
   );
-  
+
   if (remoteProvider === 'google_sheets') {
     return <GoogleSheetsIcon className={iconClass} />;
   }
-  
+
   switch (sourceType) {
     case DataSourceType.JSON:
-      return <BarChart3 className={cn(iconClass, "text-amber-400")} />;
+      return <BarChart3 className={cn(iconClass, 'text-amber-400')} />;
     case DataSourceType.XLSX:
-      return <Table className={cn(iconClass, "text-emerald-400")} />;
+      return <Table className={cn(iconClass, 'text-emerald-400')} />;
     case DataSourceType.PARQUET:
-      return <Database className={cn(iconClass, "text-violet-400")} />;
+      return <Database className={cn(iconClass, 'text-violet-400')} />;
     case DataSourceType.CSV:
     default:
-      return <FileText className={cn(iconClass, "text-blue-400")} />;
+      return <FileText className={cn(iconClass, 'text-blue-400')} />;
   }
 };
 
@@ -68,81 +75,119 @@ const FileTabItem: React.FC<{
   onTabClick: (fileId: string) => void;
   onTabClose: (fileId: string) => void;
   onContextMenu: (e: React.MouseEvent, fileId: string) => void;
+  onDragStart: (fileId: string) => void;
+  onDragEnd: () => void;
   isOverflowing?: boolean;
-}> = ({ tab, onTabClick, onTabClose, onContextMenu, isOverflowing = false }) => {
+}> = ({
+  tab,
+  onTabClick,
+  onTabClose,
+  onContextMenu,
+  onDragStart,
+  onDragEnd,
+  isOverflowing = false,
+}) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   // Enhanced visual feedback for different states
   const getTabStyles = () => {
     if (tab.isActive) {
-      return "border-primary bg-primary/10 text-white shadow-lg";
+      return 'border-primary bg-primary/10 text-white shadow-lg';
     }
     if (isHovered) {
-      return "border-white/20 bg-white/8 text-white/95";
+      return 'border-white/20 bg-white/8 text-white/95';
     }
-    return "border-transparent text-white/70 hover:text-white/90";
+    return 'border-transparent text-white/70 hover:text-white/90';
   };
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.95, y: -5 }}
-      animate={{ 
-        opacity: 1, 
-        scale: isDragging ? 1.05 : 1, 
+      animate={{
+        opacity: 1,
+        scale: isDragging ? 1.05 : 1,
         y: 0,
-        rotateX: isDragging ? 5 : 0
+        rotateX: isDragging ? 5 : 0,
       }}
       exit={{ opacity: 0, scale: 0.9, y: -10 }}
-      transition={{ 
-        duration: 0.2, 
-        type: "spring", 
-        stiffness: 300, 
-        damping: 30 
+      transition={{
+        duration: 0.2,
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
       }}
       className={cn(
-        "group relative flex items-center h-11 px-3 py-2 border-b-2 transition-all duration-200 cursor-pointer select-none",
-        "hover:bg-white/5 min-w-0 rounded-t-lg mx-0.5",
-        isOverflowing ? "max-w-32" : "max-w-64",
+        'group relative flex items-center h-11 px-3 py-2 border-b-2 transition-all duration-200 cursor-pointer select-none',
+        'hover:bg-white/5 min-w-0 rounded-t-lg mx-0.5',
+        isOverflowing ? 'max-w-32' : 'max-w-64',
         getTabStyles()
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onTabClick(tab.id)}
       onContextMenu={(e) => onContextMenu(e, tab.id)}
-      // Drag and drop could be added here
-      draggable
-      onDragStart={() => setIsDragging(true)}
-      onDragEnd={() => setIsDragging(false)}
+      // Drag and drop for split view
+      draggable={!tab.isActive}
+      onDragStart={(e) => {
+        if (!tab.isActive) {
+          setIsDragging(true);
+          onDragStart(tab.id);
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', tab.id);
+        } else {
+          e.preventDefault();
+        }
+      }}
+      onDragEnd={() => {
+        setIsDragging(false);
+        onDragEnd();
+      }}
     >
       {/* File Icon with enhanced styling */}
       {getFileIcon(tab.sourceType, tab.remoteProvider, tab.isActive)}
-      
+
       {/* File Name with better typography */}
       <div className="flex flex-col flex-1 min-w-0">
-        <span className={cn(
-          "truncate text-sm font-medium transition-colors",
-          tab.isActive ? "text-white" : "text-white/80"
-        )}>
-          {tab.fileName}
-        </span>
-        
+        <div className="flex items-center gap-1">
+          <span
+            className={cn(
+              'truncate text-sm font-medium transition-colors',
+              tab.isActive ? 'text-white' : 'text-white/80'
+            )}
+          >
+            {tab.fileName}
+          </span>
+          {/* Split view indicator */}
+          {tab.splitView?.isActive && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              className="flex-shrink-0"
+              title={`Split with ${tab.splitView.partnerId}`}
+            >
+              <SplitSquareVertical className="h-3 w-3 text-primary" />
+            </motion.div>
+          )}
+        </div>
+
         {/* Subtle file info - only show on hover or when active */}
         <AnimatePresence>
           {(isHovered || tab.isActive) && !isOverflowing && (
             <motion.span
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
+              animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               className="text-xs text-white/50 truncate"
             >
-            {tab.sourceType}
+              {tab.sourceType}
             </motion.span>
           )}
         </AnimatePresence>
       </div>
-      
+
       {/* Status indicators */}
       <div className="flex items-center gap-1 ml-1">
         {/* Google Sheets Indicator */}
@@ -150,11 +195,11 @@ const FileTabItem: React.FC<{
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="w-2 h-2 rounded-full bg-green-400 shadow-lg" 
+            className="w-2 h-2 rounded-full bg-green-400 shadow-lg"
             title="Google Sheets"
           />
         )}
-        
+
         {/* Processing indicator (could show loading state) */}
         {/* <motion.div
           animate={{ rotate: 360 }}
@@ -162,16 +207,16 @@ const FileTabItem: React.FC<{
           className="w-2 h-2 rounded-full bg-blue-400"
         /> */}
       </div>
-      
+
       {/* Enhanced Close Button */}
       <motion.button
         initial={false}
-        animate={{ 
+        animate={{
           opacity: isHovered || tab.isActive ? 1 : 0,
           scale: isHovered || tab.isActive ? 1 : 0.8,
-          rotate: isHovered ? 90 : 0
+          rotate: isHovered ? 90 : 0,
         }}
-        whileHover={{ scale: 1.1, backgroundColor: "rgba(239, 68, 68, 0.2)" }}
+        whileHover={{ scale: 1.1, backgroundColor: 'rgba(239, 68, 68, 0.2)' }}
         whileTap={{ scale: 0.95 }}
         transition={{ duration: 0.15 }}
         onClick={(e) => {
@@ -183,13 +228,23 @@ const FileTabItem: React.FC<{
       >
         <X className="h-3 w-3" />
       </motion.button>
-      
+
       {/* Active tab indicator */}
       {tab.isActive && (
         <motion.div
           layoutId="activeTabIndicator"
           className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full"
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        />
+      )}
+
+      {/* Split view connection line */}
+      {tab.splitView?.isActive && tab.splitView.partnerId && (
+        <motion.div
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          className="absolute -bottom-[3px] left-0 right-0 h-[2px] bg-primary/30"
+          style={{ originX: tab.splitView.partnerId > tab.id ? 1 : 0 }}
         />
       )}
     </motion.div>
@@ -208,52 +263,62 @@ const ContextMenu: React.FC<{
   onCloseOthers: () => void;
   onDuplicate?: (fileId: string) => void;
   onRename?: (fileId: string) => void;
-}> = ({ isOpen, position, tab, onClose, onCloseAll, onCloseOthers, onDuplicate, onRename }) => {
+}> = ({
+  isOpen,
+  position,
+  tab,
+  onClose,
+  onCloseAll,
+  onCloseOthers,
+  onDuplicate,
+  onRename,
+}) => {
   const menuRef = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         onClose();
       }
     };
-    
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      return () =>
+        document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isOpen, onClose]);
-  
+
   if (!isOpen || !tab) return null;
-  
+
   const menuItems = [
     {
-      label: "Rename",
+      label: 'Rename',
       icon: FileText,
       action: () => onRename?.(tab.id),
-      disabled: true
+      disabled: true,
     },
     {
-      label: "Duplicate",
+      label: 'Duplicate',
       icon: Plus,
       action: () => onDuplicate?.(tab.id),
-      disabled: true
+      disabled: true,
     },
-    { type: "separator" },
+    { type: 'separator' },
     {
-      label: "Close Others",
+      label: 'Close Others',
       icon: Users,
       action: onCloseOthers,
-      disabled: false
+      disabled: false,
     },
     {
-      label: "Close All",
+      label: 'Close All',
       icon: XCircle,
       action: onCloseAll,
-      disabled: false
-    }
+      disabled: false,
+    },
   ];
-  
+
   return (
     <motion.div
       ref={menuRef}
@@ -276,17 +341,17 @@ const ContextMenu: React.FC<{
           </span>
         </div>
       </div>
-      
+
       {menuItems.map((item, index) => {
-        if (item.type === "separator") {
+        if (item.type === 'separator') {
           return <div key={index} className="my-1 border-t border-white/10" />;
         }
-        
+
         const Icon = item.icon;
         return (
           <motion.button
             key={item.label}
-            whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+            whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
             onClick={() => {
               item.action();
               onClose();
@@ -313,24 +378,25 @@ const OverflowMenu: React.FC<{
   onToggle: () => void;
 }> = ({ hiddenTabs, onTabClick, isOpen, onToggle }) => {
   const menuRef = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         onToggle();
       }
     };
-    
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      return () =>
+        document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isOpen, onToggle]);
-  
+
   return (
     <div className="relative" ref={menuRef}>
       <motion.button
-        whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+        whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
         whileTap={{ scale: 0.95 }}
         onClick={onToggle}
         className="flex items-center h-11 px-2 text-white/70 hover:text-white rounded-lg"
@@ -339,7 +405,7 @@ const OverflowMenu: React.FC<{
         <MoreHorizontal className="h-4 w-4" />
         <span className="ml-1 text-xs">{hiddenTabs.length}</span>
       </motion.button>
-      
+
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -351,7 +417,7 @@ const OverflowMenu: React.FC<{
             {hiddenTabs.map((tab) => (
               <motion.button
                 key={tab.id}
-                whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                 onClick={() => {
                   onTabClick(tab.id);
                   onToggle();
@@ -385,6 +451,7 @@ const FileTabs: React.FC<FileTabsProps> = ({
   className = '',
   maxVisibleTabs = 8,
 }) => {
+  const { setSplitView } = useAppStore();
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     isOpen: false,
     position: { x: 0, y: 0 },
@@ -392,12 +459,38 @@ const FileTabs: React.FC<FileTabsProps> = ({
   });
   const [overflowMenuOpen, setOverflowMenuOpen] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  
+
+  // Group tabs with split partners together
+  const groupedTabs = React.useMemo(() => {
+    const grouped: FileTab[] = [];
+    const processed = new Set<string>();
+
+    tabs.forEach((tab) => {
+      if (processed.has(tab.id)) return;
+
+      grouped.push(tab);
+      processed.add(tab.id);
+
+      // If this tab has a split partner, add it next
+      if (tab.splitView?.partnerId) {
+        const partner = tabs.find((t) => t.id === tab.splitView?.partnerId);
+        if (partner && !processed.has(partner.id)) {
+          grouped.push(partner);
+          processed.add(partner.id);
+        }
+      }
+    });
+
+    return grouped;
+  }, [tabs]);
+
   // Split tabs into visible and hidden
-  const visibleTabs = tabs.slice(0, maxVisibleTabs);
-  const hiddenTabs = tabs.slice(maxVisibleTabs);
-  
+  const visibleTabs = groupedTabs.slice(0, maxVisibleTabs);
+  const hiddenTabs = groupedTabs.slice(maxVisibleTabs);
+
   const handleContextMenu = (e: React.MouseEvent, fileId: string) => {
     e.preventDefault();
     setContextMenu({
@@ -406,41 +499,74 @@ const FileTabs: React.FC<FileTabsProps> = ({
       fileId,
     });
   };
-  
+
   const closeContextMenu = () => {
     setContextMenu({ isOpen: false, position: { x: 0, y: 0 }, fileId: null });
   };
-  
+
   const handleCloseOthers = () => {
     if (contextMenu.fileId) {
       onCloseOthers(contextMenu.fileId);
     }
   };
-  
+
   const handleScroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
       const scrollAmount = 200;
-      const newPosition = direction === 'left' 
-        ? Math.max(0, scrollPosition - scrollAmount)
-        : scrollPosition + scrollAmount;
-      
+      const newPosition =
+        direction === 'left'
+          ? Math.max(0, scrollPosition - scrollAmount)
+          : scrollPosition + scrollAmount;
+
       scrollRef.current.scrollTo({ left: newPosition, behavior: 'smooth' });
       setScrollPosition(newPosition);
     }
   };
-  
+
+  const handleDragStart = (fileId: string) => {
+    setIsDragging(true);
+    setDraggedTabId(fileId);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    setDraggedTabId(null);
+  };
+
+  const handleDropLeft = () => {
+    if (draggedTabId) {
+      const activeTab = tabs.find((tab) => tab.isActive);
+      if (activeTab && activeTab.id !== draggedTabId) {
+        setSplitView(draggedTabId, activeTab.id);
+      }
+    }
+    handleDragEnd();
+  };
+
+  const handleDropRight = () => {
+    if (draggedTabId) {
+      const activeTab = tabs.find((tab) => tab.isActive);
+      if (activeTab && activeTab.id !== draggedTabId) {
+        setSplitView(activeTab.id, draggedTabId);
+      }
+    }
+    handleDragEnd();
+  };
+
   if (tabs.length === 0) {
     return null;
   }
-  
-  const contextTab = tabs.find(tab => tab.id === contextMenu.fileId) || null;
-  
+
+  const contextTab = tabs.find((tab) => tab.id === contextMenu.fileId) || null;
+
   return (
     <>
-      <div className={cn(
-        "flex items-center from-gray-900/50 to-gray-800/50 backdrop-blur-sm border-b border-white/10",
-        className
-      )}>
+      <div
+        className={cn(
+          'relative flex items-center from-gray-900/50 to-gray-800/50 backdrop-blur-sm border-b border-white/10',
+          className
+        )}
+      >
         {/* Scroll left button */}
         {scrollPosition > 0 && (
           <motion.button
@@ -452,7 +578,7 @@ const FileTabs: React.FC<FileTabsProps> = ({
             <ChevronLeft className="h-4 w-4" />
           </motion.button>
         )}
-        
+
         {/* Tabs container */}
         <div
           ref={scrollRef}
@@ -460,19 +586,30 @@ const FileTabs: React.FC<FileTabsProps> = ({
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           <AnimatePresence mode="popLayout">
-            {visibleTabs.map((tab) => (
-              <FileTabItem
-                key={tab.id}
-                tab={tab}
-                onTabClick={onTabClick}
-                onTabClose={onTabClose}
-                onContextMenu={handleContextMenu}
-                isOverflowing={hiddenTabs.length > 0}
-              />
-            ))}
+            {visibleTabs.map((tab, index) => {
+              const prevTab = index > 0 ? visibleTabs[index - 1] : null;
+              const nextTab =
+                index < visibleTabs.length - 1 ? visibleTabs[index + 1] : null;
+              const isPartOfSplitGroup =
+                prevTab?.splitView?.partnerId === tab.id ||
+                tab.splitView?.partnerId === nextTab?.id;
+
+              return (
+                <FileTabItem
+                  key={tab.id}
+                  tab={tab}
+                  onTabClick={onTabClick}
+                  onTabClose={onTabClose}
+                  onContextMenu={handleContextMenu}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  isOverflowing={hiddenTabs.length > 0}
+                />
+              );
+            })}
           </AnimatePresence>
         </div>
-        
+
         {/* Overflow menu */}
         {hiddenTabs.length > 0 && (
           <OverflowMenu
@@ -482,7 +619,7 @@ const FileTabs: React.FC<FileTabsProps> = ({
             onToggle={() => setOverflowMenuOpen(!overflowMenuOpen)}
           />
         )}
-        
+
         {/* New file button */}
         {onNewFile && (
           <motion.button
@@ -496,7 +633,15 @@ const FileTabs: React.FC<FileTabsProps> = ({
           </motion.button>
         )}
       </div>
-      
+
+      {/* Drop Zones Overlay for Split View */}
+      <DropZonesOverlay
+        isDragging={isDragging}
+        draggedTabId={draggedTabId || undefined}
+        onDropLeft={handleDropLeft}
+        onDropRight={handleDropRight}
+      />
+
       {/* Enhanced Context Menu */}
       <AnimatePresence>
         <ContextMenu

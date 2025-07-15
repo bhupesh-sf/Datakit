@@ -5,6 +5,12 @@ import { DataFile, FileTab } from "@/types/multiFile";
 export interface AppState {
   files: any[];
   activeFileId: string | null;
+  splitView?: {
+    isActive: boolean;
+    leftFileId: string | null;
+    rightFileId: string | null;
+    splitRatio: number;
+  };
   activeTab: string;
   jsonViewMode: "table" | "tree";
   sidebarCollapsed: boolean;
@@ -36,6 +42,10 @@ export const selectFileTabs = (state: AppState): FileTab[] => {
       isActive: file?.id === state?.activeFileId,
       remoteProvider: file?.remoteProvider,
       hasGoogleSheetsMetadata: !!file.googleSheets,
+      splitView: file?.splitView ? {
+        isActive: file.splitView.isActive,
+        partnerId: file.splitView.partnerId
+      } : undefined,
     }));
 
     // Update cache keys
@@ -130,3 +140,22 @@ export const selectStatusText = (state: AppState) => {
 
   return baseText + interactionText;
 };
+
+// Split view selectors
+export const selectSplitView = (state: AppState) => state.splitView;
+
+export const selectIsSplitViewActive = (state: AppState) => state.splitView?.isActive || false;
+
+export const selectSplitViewLeftFile = (state: AppState): DataFile | null => {
+  const splitView = state.splitView;
+  if (!splitView?.leftFileId) return null;
+  return state.files.find((f) => f.id === splitView.leftFileId) || null;
+};
+
+export const selectSplitViewRightFile = (state: AppState): DataFile | null => {
+  const splitView = state.splitView;
+  if (!splitView?.rightFileId) return null;
+  return state.files.find((f) => f.id === splitView.rightFileId) || null;
+};
+
+export const selectSplitViewRatio = (state: AppState) => state.splitView?.splitRatio || 0.5;

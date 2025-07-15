@@ -73,6 +73,14 @@ export interface DataFile {
   importedAt: number;
   /** When the file was last accessed/viewed */
   lastAccessedAt: number;
+  
+  // Split view configuration
+  /** Split view configuration for this file */
+  splitView?: {
+    isActive: boolean;
+    partnerId: string | null;
+    position: 'left' | 'right';
+  };
 }
 
 /**
@@ -86,6 +94,10 @@ export interface FileTab {
   isDirty?: boolean; // For future unsaved changes
   remoteProvider?: RemoteSourceProvider;
   hasGoogleSheetsMetadata?: boolean;
+  splitView?: {
+    isActive: boolean;
+    partnerId: string | null;
+  };
 }
 
 /**

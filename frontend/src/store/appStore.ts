@@ -27,6 +27,20 @@ export interface SavedQuery {
 }
 
 /**
+ * Interface for split view state
+ */
+interface SplitViewState {
+  /** Whether split view is currently active */
+  isActive: boolean;
+  /** ID of the file in the left panel */
+  leftFileId: string | null;
+  /** ID of the file in the right panel */
+  rightFileId: string | null;
+  /** Split ratio (0.5 = 50/50 split) */
+  splitRatio: number;
+}
+
+/**
  * Interface for application state managed by Zustand
  */
 interface AppState {
@@ -35,6 +49,10 @@ interface AppState {
   files: DataFile[];
   /** ID of the currently active/viewed file */
   activeFileId: string | null;
+
+  // Split view state
+  /** Side-by-side file comparison state */
+  splitView: SplitViewState;
 
   // UI state
   /** Currently active tab ID */
@@ -65,6 +83,20 @@ interface AppState {
   closeOthersFiles: (keepFileId: string) => void;
   /** Update a file's data */
   updateFile: (fileId: string, updates: Partial<DataFile>) => void;
+
+  // Split view actions
+  /** Enable split view with two files */
+  setSplitView: (leftFileId: string, rightFileId: string) => void;
+  /** Close split view and return to single file view */
+  closeSplitView: () => void;
+  /** Update the split ratio */
+  updateSplitRatio: (ratio: number) => void;
+  /** Swap the left and right files */
+  swapSplitFiles: () => void;
+  /** Set split view for a specific file */
+  setFileSplitView: (fileId: string, partnerId: string | null, position?: 'left' | 'right') => void;
+  /** Clear split view for a specific file */
+  clearFileSplitView: (fileId: string) => void;
 
   // UI actions
   /** Change the active tab */
@@ -105,6 +137,14 @@ const initialState = {
   // Multi-file state
   files: [],
   activeFileId: null,
+
+  // Split view state
+  splitView: {
+    isActive: false,
+    leftFileId: null,
+    rightFileId: null,
+    splitRatio: 0.5,
+  },
 
   // UI state
   activeTab: "preview",
@@ -206,13 +246,24 @@ export const useAppStore = create<AppState>((set, get) => ({
       const newFiles = state.files.filter((f) => f.id !== fileId);
       let newActiveFileId = state.activeFileId;
 
+      // Clear split view references to this file
+      const updatedFiles = newFiles.map(file => {
+        if (file.splitView?.partnerId === fileId) {
+          return {
+            ...file,
+            splitView: undefined
+          };
+        }
+        return file;
+      });
+
       // If we're removing the active file, switch to another file
       if (state.activeFileId === fileId) {
-        if (newFiles.length > 0) {
+        if (updatedFiles.length > 0) {
           // Try to find the next file, or fallback to the first
           const currentIndex = state.files.findIndex((f) => f.id === fileId);
           const nextFile =
-            newFiles[Math.min(currentIndex, newFiles.length - 1)];
+            updatedFiles[Math.min(currentIndex, updatedFiles.length - 1)];
           newActiveFileId = nextFile.id;
         } else {
           newActiveFileId = null;
@@ -220,7 +271,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
 
       return {
-        files: newFiles,
+        files: updatedFiles,
         activeFileId: newActiveFileId,
       };
     });
@@ -275,6 +326,153 @@ export const useAppStore = create<AppState>((set, get) => ({
   setSidebarCollapsed: (collapsed) => {
     localStorage.setItem("sidebar-collapsed", String(collapsed));
     set({ sidebarCollapsed: collapsed });
+  },
+
+  // Split view actions
+  setSplitView: (leftFileId: string, rightFileId: string) => {
+    set((state) => {
+      // Update files with split view info
+      const updatedFiles = state.files.map(file => {
+        if (file.id === leftFileId) {
+          return {
+            ...file,
+            splitView: {
+              isActive: true,
+              partnerId: rightFileId,
+              position: 'left' as const
+            }
+          };
+        } else if (file.id === rightFileId) {
+          return {
+            ...file,
+            splitView: {
+              isActive: true,
+              partnerId: leftFileId,
+              position: 'right' as const
+            }
+          };
+        }
+        return file;
+      });
+
+      return {
+        files: updatedFiles,
+        splitView: {
+          isActive: true,
+          leftFileId,
+          rightFileId,
+          splitRatio: 0.5,
+        }
+      };
+    });
+  },
+
+  closeSplitView: () => {
+    set((state) => {
+      // Clear split view from files that were in split mode
+      const updatedFiles = state.files.map(file => {
+        if (file.splitView?.isActive) {
+          return {
+            ...file,
+            splitView: undefined
+          };
+        }
+        return file;
+      });
+
+      return {
+        files: updatedFiles,
+        splitView: {
+          isActive: false,
+          leftFileId: null,
+          rightFileId: null,
+          splitRatio: 0.5,
+        }
+      };
+    });
+  },
+
+  updateSplitRatio: (ratio: number) => {
+    set((state) => ({
+      splitView: {
+        ...state.splitView,
+        splitRatio: Math.max(0.1, Math.min(0.9, ratio)), // Clamp between 10% and 90%
+      }
+    }));
+  },
+
+  swapSplitFiles: () => {
+    set((state) => {
+      // Swap files in split view
+      const leftId = state.splitView.leftFileId;
+      const rightId = state.splitView.rightFileId;
+      
+      const updatedFiles = state.files.map(file => {
+        if (file.id === leftId && file.splitView) {
+          return {
+            ...file,
+            splitView: {
+              ...file.splitView,
+              position: 'right' as const
+            }
+          };
+        } else if (file.id === rightId && file.splitView) {
+          return {
+            ...file,
+            splitView: {
+              ...file.splitView,
+              position: 'left' as const
+            }
+          };
+        }
+        return file;
+      });
+
+      return {
+        files: updatedFiles,
+        splitView: {
+          ...state.splitView,
+          leftFileId: state.splitView.rightFileId,
+          rightFileId: state.splitView.leftFileId,
+        }
+      };
+    });
+  },
+
+  setFileSplitView: (fileId: string, partnerId: string | null, position: 'left' | 'right' = 'left') => {
+    set((state) => {
+      const updatedFiles = state.files.map(file => {
+        if (file.id === fileId) {
+          return {
+            ...file,
+            splitView: partnerId ? {
+              isActive: true,
+              partnerId,
+              position
+            } : undefined
+          };
+        }
+        return file;
+      });
+
+      return { files: updatedFiles };
+    });
+  },
+
+  clearFileSplitView: (fileId: string) => {
+    set((state) => {
+      const updatedFiles = state.files.map(file => {
+        if (file.id === fileId || file.splitView?.partnerId === fileId) {
+          return {
+            ...file,
+            splitView: undefined
+          };
+        }
+        return file;
+      });
+
+      return { files: updatedFiles };
+    });
   },
 
   // Legacy actions
