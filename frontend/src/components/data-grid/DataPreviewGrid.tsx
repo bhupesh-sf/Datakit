@@ -72,8 +72,8 @@ const DataPreviewGrid: React.FC = () => {
   const formatCellValue = (row: number, col: number): React.ReactNode => {
     const originalValue = originalFormatCellValue(row, col);
     
-    // Show skeleton for empty cells during loading/changing pages
-    if ((isLoading || isChangingPage) && row > 0 && col > 0 && (!originalValue || originalValue === "")) {
+    // Show skeleton during any loading state (initial load or page changes)
+    if ((isLoading || isChangingPage) && row > 0 && col > 0) {
       // Create consistent but varied skeleton widths based on row/col position
       const seedValue = (row * 31 + col * 17) % 100;
       let widthClass = 'w-3/4';
@@ -83,19 +83,8 @@ const DataPreviewGrid: React.FC = () => {
       else if (seedValue < 75) widthClass = 'w-3/4';
       else widthClass = 'w-5/6';
       
-      // Add staggered animation delay for wave effect
-      const delay = `${(row + col) * 25}ms`;
-      
       return (
-        <div 
-          className={`h-3.5 skeleton-base rounded relative overflow-hidden ${widthClass}`}
-          style={{ animationDelay: delay }}
-        >
-          <div 
-            className="absolute inset-0 skeleton-shimmer"
-            style={{ animationDelay: delay }}
-          />
-        </div>
+        <div className={`h-3 bg-white/10 rounded animate-pulse ${widthClass}`} />
       );
     }
     
@@ -227,39 +216,11 @@ const DataPreviewGrid: React.FC = () => {
     );
   }
 
-  const displayData = sortedData.length > 0 ? sortedData : (isLoading ? getLoadingData() : []);
+  // Show skeleton data during page changes, otherwise show real data
+  const displayData = (isChangingPage || isLoading) ? getLoadingData() : (sortedData.length > 0 ? sortedData : getLoadingData());
 
   return (
     <>
-      <style>{`
-        @keyframes skeleton-shimmer {
-          0% {
-            background-position: -200% 0;
-          }
-          100% {
-            background-position: 200% 0;
-          }
-        }
-        
-        .skeleton-shimmer {
-          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
-          background-size: 200% 100%;
-          animation: skeleton-shimmer 1.5s ease-in-out infinite;
-        }
-        
-        .skeleton-base {
-          animation: skeleton-pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes skeleton-pulse {
-          0%, 100% {
-            background-color: rgba(255,255,255,0.08);
-          }
-          50% {
-            background-color: rgba(255,255,255,0.12);
-          }
-        }
-      `}</style>
       <div className="csv-grid-container relative h-full flex flex-col">
         {renderHeader()}
 
@@ -268,7 +229,7 @@ const DataPreviewGrid: React.FC = () => {
             <Grid
               data={displayData}
               columnTypes={activeFile?.columnTypes || []}
-              isDataMode={!isLoading && displayData.length > 0}
+              isDataMode={!isLoading && !isChangingPage && displayData.length > 0}
               onContextMenu={handleContextMenu}
               rowHeight={32}
               estimatedColumnWidth={120}
