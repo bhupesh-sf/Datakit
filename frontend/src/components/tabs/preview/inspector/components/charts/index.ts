@@ -1,4 +1,3 @@
-export { ChartContainer } from "./ChartContainer";
-export { NumericHistogram } from "./NumericHistogram";
-export { CategoricalBarChart } from "./CategoricalBarChart";
-export { MiniChart } from "./MiniChart";
+export { default as NivoHistogram } from "./NivoHistogram";
+export { default as NivoCategoricalChart } from "./NivoCategoricalChart";
+export { default as EnhancedMiniChart } from "./MiniChart";

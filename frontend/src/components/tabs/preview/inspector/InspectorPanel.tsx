@@ -1,331 +1,35 @@
-import React, { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  X,
-  Download,
-  Hash,
-  Type,
-  Calendar,
-  FileText,
-  ChevronDown,
-  ChevronRight,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, FileText, ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-// Store imports
-import { useInspectorStore, InspectorMetrics } from "@/store/inspectorStore";
-import { useAppStore } from "@/store/appStore";
+import { useInspectorStore } from '@/store/inspectorStore';
+import { useAppStore } from '@/store/appStore';
 import {
   selectFileTabs,
   selectActiveFile,
-} from "@/store/selectors/appSelectors";
+} from '@/store/selectors/appSelectors';
+import { useAuth } from '@/hooks/auth/useAuth';
 
-import { useAutoAnalysis, QuickPreviewCard } from "./hooks/useAutoAnalysis";
-import { LoadingState } from "./components/LoadingStates";
-import {
-  NoColumnsEmptyState,
-  ErrorEmptyState,
-} from "./components/EmptyStates";
+import { useAutoAnalysis, QuickPreviewCard } from './hooks/useAutoAnalysis';
+import { LoadingState } from './components/LoadingStates';
+import { NoColumnsEmptyState, ErrorEmptyState } from './components/EmptyStates';
+import { ColumnSearch, FilterType } from './components/ColumnSearch';
+import { useColumnFilter } from './hooks/useColumnFilter';
+import { useInitialQuery } from '@/hooks/query/useQueryInitialization';
 
-import { MiniChart } from "./components/charts";
-import { ColumnSearch, FilterType } from "./components/ColumnSearch";
-import { useColumnFilter } from "./hooks/useColumnFilter";
-import { useInitialQuery } from "@/hooks/query/useQueryInitialization";
+import QuickActionsBar from './components/QuickActionsBar';
+import ViewSwitcher, { ViewType } from './components/ViewSwitcher';
+import Overview from './components/Overview';
+import ColumnRow from './components/ColumnRow';
+import ProblemsView from './components/ProblemsView';
+import ExportPanel from './components/ExportPanel';
+import RowDetailsModal from './components/RowDetailsModal';
+import AuthModal from '@/components/auth/AuthModal';
 
 interface InspectorPanelProps {
   className?: string;
 }
-
-const QuickOverview: React.FC<{ metrics: InspectorMetrics }> = ({
-  metrics,
-}) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="p-4 border-b border-white/10"
-    >
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="text-center p-3 bg-card/20 rounded-lg"
-        >
-          <div className="text-2xl font-bold text-white mb-1">
-            {metrics.totalRows.toLocaleString()}
-          </div>
-          <div className="text-xs text-white/60">Rows</div>
-        </motion.div>
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="text-center p-3 bg-card/20 rounded-lg"
-        >
-          <div className="text-2xl font-bold text-white mb-1">
-            {metrics.totalColumns}
-          </div>
-          <div className="text-xs text-white/60">Columns</div>
-        </motion.div>
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="text-center p-3 bg-card/20 rounded-lg"
-        >
-          <div className="text-2xl font-bold text-red-400 mb-1">
-            {metrics.duplicateRows}
-          </div>
-          <div className="text-xs text-white/60">Duplicates</div>
-        </motion.div>
-      </div>
-
-      {/* Top recommendations */}
-      {/* {metrics.recommendations && metrics.recommendations.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="bg-primary/5 border border-primary/20 rounded-lg p-3"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Key Insights</span>
-          </div>
-          <div className="text-xs text-white/80">
-            {metrics.recommendations[0]}
-          </div>
-          {metrics.recommendations.length > 1 && (
-            <div className="text-xs text-white/60 mt-1">
-              +{metrics.recommendations.length - 1} more recommendations
-            </div>
-          )}
-        </motion.div>
-      )} */}
-    </motion.div>
-  );
-};
-
-const ColumnRow: React.FC<{
-  column: InspectorMetrics["columnMetrics"][0];
-  metrics: InspectorMetrics;
-  isExpanded: boolean;
-  onToggle: () => void;
-  onGenerateQuery: (query: string, description: string) => void;
-}> = ({ column, metrics, isExpanded, onToggle, onGenerateQuery }) => {
-  const getColumnIcon = (type: string) => {
-    const lowerType = type.toLowerCase();
-    if (
-      lowerType.includes("int") ||
-      lowerType.includes("double") ||
-      lowerType.includes("numeric")
-    ) {
-      return <Hash className="h-4 w-4 text-tertiary" />;
-    }
-    if (lowerType.includes("varchar") || lowerType.includes("text")) {
-      return <Type className="h-4 w-4 text-blue-400" />;
-    }
-    if (lowerType.includes("date") || lowerType.includes("time")) {
-      return <Calendar className="h-4 w-4 text-purple-400" />;
-    }
-    return <FileText className="h-4 w-4 text-white/50" />;
-  };
-
-  const getQuickStat = () => {
-    if (column.numericStats) {
-      return `${column.numericStats.min} - ${column.numericStats.max}`;
-    }
-    if (column.nullCount > 0) {
-      return `${column.nullCount} nulls`;
-    }
-    return `${column.uniqueCount} distinct`;
-  };
-
-  const generateSuggestedQueries = () => {
-    const tableName = "table_name"; // You might want to get this from metrics
-    const queries = [];
-
-    // Smart query suggestions based on column characteristics
-    if (column.uniqueCount <= 10 && column.uniqueCount > 1) {
-      queries.push({
-        query: `SELECT DISTINCT "${column.name}" FROM ${tableName} ORDER BY "${column.name}"`,
-        description: `Show all ${column.uniqueCount} distinct values`,
-      });
-    }
-
-    if (column.nullCount > 0) {
-      queries.push({
-        query: `SELECT * FROM ${tableName} WHERE "${column.name}" IS NOT NULL`,
-        description: `Filter out ${column.nullCount} null values`,
-      });
-    }
-
-    if (column.numericStats) {
-      const { mean, std } = column.numericStats;
-      if (std > 0) {
-        const threshold = mean + 2 * std;
-        queries.push({
-          query: `SELECT * FROM ${tableName} WHERE "${
-            column.name
-          }" > ${threshold.toFixed(2)}`,
-          description: `Find outliers (>${threshold.toFixed(2)})`,
-        });
-      }
-    }
-
-    if (column.textStats) {
-      queries.push({
-        query: `SELECT "${column.name}", LENGTH("${column.name}") as text_length FROM ${tableName} ORDER BY text_length DESC LIMIT 10`,
-        description: `Find longest text values`,
-      });
-    }
-
-    // General exploration query
-    queries.push({
-      query: `SELECT "${column.name}", COUNT(*) as frequency FROM ${tableName} GROUP BY "${column.name}" ORDER BY frequency DESC LIMIT 20`,
-      description: `Explore value frequencies`,
-    });
-
-    return queries;
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="border-b border-white/5"
-    >
-      <motion.button
-        whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.02)" }}
-        onClick={onToggle}
-        className="w-full p-3 transition-colors flex items-center justify-between text-left"
-      >
-        <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
-          {getColumnIcon(column.type)}
-          <div className="flex-1 min-w-0">
-            <div className="font-medium text-white truncate flex items-center gap-2">
-              {column.name}
-            </div>
-            <div className="text-xs text-white/60">{column.type}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-white font-mono">{getQuickStat()}</div>
-            <div className="text-xs text-white/50">
-              {column.uniqueCount} distinct
-            </div>
-          </div>
-        </div>
-        <motion.div
-          animate={{ rotate: isExpanded ? 90 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <ChevronRight className="h-4 w-4 text-white/50 ml-2" />
-        </motion.div>
-      </motion.button>
-
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-3">
-              {/* Chart */}
-              <MiniChart column={column} metrics={metrics} />
-
-              {/* TODO: Next phase */}
-              {/* Suggested Queries */}
-              {/*   <div className="mt-3">
-                <div className="text-xs text-white/60 mb-2">
-                  Suggested Queries
-                </div>
-                
-              <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {generateSuggestedQueries().map((item, i) => (
-                    <motion.button
-                      key={i}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() =>
-                        onGenerateQuery(item.query, item.description)
-                      }
-                      className="flex items-center gap-2 w-full p-2 bg-primary/5 hover:bg-primary/10 rounded text-xs text-left transition-colors"
-                    >
-                      <Play className="h-3 w-3 text-primary flex-shrink-0" />
-                      <span className="text-white/80">{item.description}</span>
-                    </motion.button>
-                  ))}
-                </div> 
-              </div>
-              */}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-};
-
-const FileSelector: React.FC<{
-  currentFileId: string | null;
-  onFileChange: (fileId: string) => void;
-}> = ({ currentFileId, onFileChange }) => {
-  const fileTabs = useAppStore(selectFileTabs);
-  const [isOpen, setIsOpen] = useState(false);
-
-  const currentFile = fileTabs.find((tab) => tab.id === currentFileId);
-
-  if (fileTabs.length <= 1) return null;
-
-  return (
-    <div className="relative p-4 border-b border-white/10">
-      <motion.button
-        whileHover={{ scale: 1.01 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 bg-card/30 hover:bg-card/50 rounded-lg border border-white/10 transition-colors"
-      >
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <FileText className="h-4 w-4 text-white/60" />
-          <span className="text-sm text-white truncate">
-            {currentFile?.fileName || "Select file..."}
-          </span>
-        </div>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <ChevronDown className="h-4 w-4 text-white/60" />
-        </motion.div>
-      </motion.button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-4 right-4 mt-1 bg-card backdrop-blur-sm border border-white/20 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto"
-          >
-            {fileTabs.map((tab) => (
-              <motion.button
-                key={tab.id}
-                whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                onClick={() => {
-                  onFileChange(tab.id);
-                  setIsOpen(false);
-                }}
-                className={cn(
-                  "w-full flex items-center gap-2 p-3 text-left transition-colors cursor-pointer",
-                  tab.id === currentFileId && "bg-primary/20 text-primary"
-                )}
-              >
-                <FileText className="h-3 w-3 flex-shrink-0" />
-                <span className="text-sm truncate">{tab.fileName}</span>
-              </motion.button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
 
 const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
   // Store states
@@ -340,13 +44,44 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
     switchAnalysisTarget,
     exportResults,
     resetError,
+    fetchDuplicateRows,
+    fetchNullRows,
+    fetchOutlierRows,
   } = useInspectorStore();
 
   const activeFile = useAppStore(selectActiveFile);
   const fileTabs = useAppStore(selectFileTabs);
   const { setActiveTab } = useAppStore();
-
   const { setQuery } = useInitialQuery();
+  const { isAuthenticated } = useAuth();
+
+
+  // UI state
+  const panelRef = useRef<HTMLDivElement>(null);
+  const resizeHandleRef = useRef<HTMLDivElement>(null);
+  const [isResizing, setIsResizing] = useState(false);
+  const [expandedColumns, setExpandedColumns] = useState<Set<string>>(
+    new Set()
+  );
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<FilterType>('all');
+  const [analysisStartTime] = useState(Date.now());
+
+  // New state for enhanced UI
+  const [currentView, setCurrentView] = useState<ViewType>('overview');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [rowDetailsModal, setRowDetailsModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    type: 'duplicates' | 'nulls' | 'outliers' | 'type_issues';
+    columnName?: string;
+    data: unknown[];
+  }>({
+    isOpen: false,
+    title: '',
+    type: 'nulls',
+    data: [],
+  });
 
   const {
     quickPreview,
@@ -362,17 +97,6 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
     showQuickPreview: true,
   });
 
-  // UI state
-  const panelRef = useRef<HTMLDivElement>(null);
-  const resizeHandleRef = useRef<HTMLDivElement>(null);
-  const [isResizing, setIsResizing] = useState(false);
-  const [expandedColumns, setExpandedColumns] = useState<Set<string>>(
-    new Set()
-  );
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<FilterType>("all");
-  const [analysisStartTime] = useState(Date.now());
-
   // Get current analysis results
   const currentResults = activeFileId ? results.get(activeFileId) : null;
 
@@ -382,6 +106,13 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
     searchTerm,
     filterType
   );
+
+  // Calculate problem count
+  const problemCount = currentResults
+    ? (currentResults.duplicateRows > 0 ? 1 : 0) +
+      currentResults.columnMetrics.filter((col) => col.nullCount > 0).length +
+      currentResults.typeIssues.length
+    : 0;
 
   // Handlers
   const toggleColumn = (columnName: string) => {
@@ -394,9 +125,11 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
     setExpandedColumns(newExpanded);
   };
 
+  // TODO: The query init in the workspace should also be integrated
+  // with what we arw currently making here
   const handleGenerateQuery = (query: string, description: string) => {
     navigator.clipboard.writeText(query);
-    setActiveTab("query");
+    setActiveTab('query');
     setQuery(query);
     closePanel();
   };
@@ -406,20 +139,95 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
     if (file && file.fileName) {
       const appFile = useAppStore.getState().files.find((f) => f.id === fileId);
       const tableName = appFile?.tableName;
-
       if (tableName) {
         switchAnalysisTarget(fileId, tableName);
       }
     }
   };
 
-  const handleExport = async () => {
+  const handleExport = async (format: string, options?: any) => {
+    if (!isAuthenticated && ['pdf', 'excel', 'charts'].includes(format)) {
+      setShowAuthModal(true);
+      return;
+    }
+
     if (!activeFileId) return;
     try {
       await exportResults(activeFileId);
     } catch (err) {
-      console.error("Export failed:", err);
+      console.error('Export failed:', err);
     }
+  };
+
+  const handleExportColumn = async (format: string, columnName: string) => {
+    if (!isAuthenticated && ['excel', 'chart'].includes(format)) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    // TODO: Implement column-specific export
+    console.log('Export column:', columnName, 'format:', format);
+  };
+
+  const handleViewDetails = async (
+    columnName: string,
+    type: 'nulls' | 'outliers' | 'duplicates'
+  ) => {
+    if (!activeFileId) return;
+
+    try {
+      let data: any[] = [];
+
+      // Fetch actual row data based on type
+      switch (type) {
+        case 'duplicates':
+          data = await fetchDuplicateRows(activeFileId, 100);
+          break;
+        case 'nulls':
+          data = await fetchNullRows(activeFileId, columnName, 100);
+          break;
+        case 'outliers':
+          data = await fetchOutlierRows(activeFileId, columnName, 100);
+          break;
+      }
+
+      setRowDetailsModal({
+        isOpen: true,
+        title: `${columnName} - ${type}`,
+        type:
+          type === 'duplicates'
+            ? 'duplicates'
+            : type === 'outliers'
+            ? 'outliers'
+            : 'nulls',
+        columnName,
+        data,
+      });
+    } catch (error) {
+      console.error('Error fetching row details:', error);
+
+      // Fall back to empty data on error
+      setRowDetailsModal({
+        isOpen: true,
+        title: `${columnName} - ${type}`,
+        type:
+          type === 'duplicates'
+            ? 'duplicates'
+            : type === 'outliers'
+            ? 'outliers'
+            : 'nulls',
+        columnName,
+        data: [],
+      });
+    }
+  };
+
+  const handleViewProblems = () => {
+    setCurrentView('problems');
+  };
+
+  const handleViewRecommendations = () => {
+    setCurrentView('problems');
   };
 
   const handleRetry = () => {
@@ -429,18 +237,19 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
   };
 
   const handleClearFilters = () => {
-    setSearchTerm("");
-    setFilterType("all");
+    setSearchTerm('');
+    setFilterType('all');
   };
 
   // Reset search when results change
   useEffect(() => {
-    setSearchTerm("");
-    setFilterType("all");
+    setSearchTerm('');
+    setFilterType('all');
     setExpandedColumns(new Set());
+    setCurrentView('overview');
   }, [activeFileId]);
 
-  // Resize handling (same as before)
+  // Resize handling
   useEffect(() => {
     let startX = 0;
     let startWidth = 0;
@@ -450,10 +259,10 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
       setIsResizing(true);
       startX = e.clientX;
       startWidth = width;
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "col-resize";
-      document.body.style.userSelect = "none";
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -464,19 +273,19 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
 
     const handleMouseUp = () => {
       setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
     };
 
     const resizeHandle = resizeHandleRef.current;
     if (resizeHandle) {
-      resizeHandle.addEventListener("mousedown", handleMouseDown);
+      resizeHandle.addEventListener('mousedown', handleMouseDown);
       return () => {
-        resizeHandle.removeEventListener("mousedown", handleMouseDown);
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
+        resizeHandle.removeEventListener('mousedown', handleMouseDown);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
       };
     }
   }, [width, setWidth]);
@@ -491,7 +300,7 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
         !resizeHandleRef.current?.contains(event.target as Node)
       ) {
         const target = event.target as HTMLElement;
-        if (target.closest("[data-inspector-trigger]")) {
+        if (target.closest('[data-inspector-trigger]')) {
           return;
         }
         closePanel();
@@ -500,11 +309,11 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
 
     if (isOpen) {
       const timer = setTimeout(() => {
-        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener('mousedown', handleClickOutside);
       }, 100);
       return () => {
         clearTimeout(timer);
-        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener('mousedown', handleClickOutside);
       };
     }
   }, [isOpen, closePanel]);
@@ -512,18 +321,80 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && isOpen) {
+      if (event.key === 'Escape' && isOpen) {
         closePanel();
       }
     };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, closePanel]);
 
   if (!isOpen) return null;
 
+  const FileSelector: React.FC<{
+    currentFileId: string | null;
+    onFileChange: (fileId: string) => void;
+  }> = ({ currentFileId, onFileChange }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const currentFile = fileTabs.find((tab) => tab.id === currentFileId);
+
+    if (fileTabs.length <= 1) return null;
+
+    return (
+      <div className="relative p-4 border-b border-white/10">
+        <motion.button
+          whileHover={{ scale: 1.01 }}
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-between p-3 bg-card/30 hover:bg-card/50 rounded-lg border border-white/10 transition-colors"
+        >
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <FileText className="h-4 w-4 text-white/60" />
+            <span className="text-sm text-white truncate">
+              {currentFile?.fileName || 'Select file...'}
+            </span>
+          </div>
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDown className="h-4 w-4 text-white/60" />
+          </motion.div>
+        </motion.button>
+
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-full left-4 right-4 mt-1 bg-card backdrop-blur-sm border border-white/20 rounded-lg shadow-xl z-51 max-h-48 overflow-y-auto"
+            >
+              {fileTabs.map((tab) => (
+                <motion.button
+                  key={tab.id}
+                  whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                  onClick={() => {
+                    onFileChange(tab.id);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    'w-full flex items-center gap-2 p-3 text-left transition-colors cursor-pointer',
+                    tab.id === currentFileId && 'bg-primary/20 text-primary'
+                  )}
+                >
+                  <FileText className="h-3 w-3 flex-shrink-0" />
+                  <span className="text-sm truncate">{tab.fileName}</span>
+                </motion.button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
   return (
-    <div className={cn("fixed inset-y-0 right-0 z-50", className)}>
+    <div className={cn('fixed inset-y-0 right-0 z-50', className)}>
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -537,11 +408,11 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
       <motion.div
         ref={panelRef}
         className="relative h-full bg-background/95 backdrop-blur-md border-l border-white/10 shadow-2xl flex"
-        style={{ width: `${Math.max(500, width)}px` }}
-        initial={{ x: "100%" }}
+        style={{ width: `${Math.max(600, width)}px` }}
+        initial={{ x: '100%' }}
         animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        exit={{ x: '100%' }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
         {/* Resize Handle */}
         <div
@@ -549,7 +420,7 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
           className="absolute left-0 top-0 bottom-0 w-1 hover:bg-primary/50 cursor-col-resize transition-colors"
           style={{
             opacity: isResizing ? 1 : 0,
-            transition: isResizing ? "none" : "opacity 0.2s ease",
+            transition: isResizing ? 'none' : 'opacity 0.2s ease',
           }}
         />
 
@@ -566,36 +437,42 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
                 Data Inspector
               </h2>
             </div>
-            <div className="flex items-center gap-2">
-              {/* TODO: To be revisited if this is needed? */}
-              {/* {currentResults && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleExport}
-                  className="p-2 hover:bg-white/10 rounded-lg text-white/70 hover:text-white transition-colors"
-                  title="Export results to CSV"
-                >
-                  <Download className="h-4 w-4" />
-                </motion.button>
-              )} */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={closePanel}
-                className="p-2 hover:bg-white/10 rounded-lg text-white/70 hover:text-white transition-colors cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </motion.button>
-            </div>
+            <button
+              onClick={closePanel}
+              className="p-2 hover:bg-white/10 rounded-lg text-white/70 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </motion.div>
 
+          {/* TODO: There's an issue here with file change */}
           {/* File Selector */}
           {fileTabs.length > 1 && (
             <FileSelector
               currentFileId={activeFileId}
               onFileChange={handleFileChange}
             />
+          )}
+
+          {/* Quick Actions Bar */}
+          {currentResults && !isAnalyzing && !error && (
+            <QuickActionsBar
+              fileName={activeFile?.fileName || 'Unknown'}
+              lastAnalyzed={new Date(currentResults.analysisTimestamp)}
+            />
+          )}
+
+          {/* View Switcher */}
+          {currentResults && !isAnalyzing && !error && (
+            <div className="p-4 border-b border-white/10">
+              <ViewSwitcher
+                currentView={currentView}
+                onViewChange={setCurrentView}
+                problemCount={problemCount}
+                columnCount={currentResults.columnMetrics.length}
+                rowCount={currentResults.totalRows}
+              />
+            </div>
           )}
 
           {/* Content */}
@@ -616,11 +493,11 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
                 status={analysisStatus}
                 startTime={analysisStartTime}
                 preview={quickPreview}
-                estimatedTimeLeft={0} // Could calculate this based on progress
+                estimatedTimeLeft={0}
               />
             )}
 
-            {/* Quick Preview (while getting preview or analyzing) */}
+            {/* Quick Preview */}
             {shouldShowPreview && quickPreview && !currentResults && !error && (
               <div className="p-4">
                 <QuickPreviewCard
@@ -630,56 +507,117 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
               </div>
             )}
 
-            {/* Analysis Results */}
+            {/* Main Content - Analysis Results */}
             {currentResults && !isAnalyzing && !error && (
               <>
-                <QuickOverview metrics={currentResults} />
-                <ColumnSearch
-                  searchTerm={searchTerm}
-                  onSearchChange={setSearchTerm}
-                  filterType={filterType}
-                  onFilterChange={setFilterType}
-                  totalColumns={currentResults.columnMetrics.length}
-                  filteredCount={filteredColumns.length}
-                />
+                {/* Overview */}
+                {currentView === 'overview' && (
+                  <Overview
+                    metrics={currentResults}
+                  />
+                )}
 
-                <div className="flex-1">
-                  {filteredColumns.length > 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      {filteredColumns.map((column, index) => (
-                        <motion.div
-                          key={column.name}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                        >
-                          <ColumnRow
-                            column={column}
-                            metrics={currentResults}
-                            isExpanded={expandedColumns.has(column.name)}
-                            onToggle={() => toggleColumn(column.name)}
-                            onGenerateQuery={handleGenerateQuery}
-                          />
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  ) : (
-                    <NoColumnsEmptyState
+                {/* Columns View */}
+                {currentView === 'columns' && (
+                  <>
+                    <ColumnSearch
                       searchTerm={searchTerm}
+                      onSearchChange={setSearchTerm}
                       filterType={filterType}
-                      onClearFilters={handleClearFilters}
+                      onFilterChange={setFilterType}
                       totalColumns={currentResults.columnMetrics.length}
+                      filteredCount={filteredColumns.length}
                     />
-                  )}
-                </div>
+
+                    <div className="flex-1">
+                      {filteredColumns.length > 0 ? (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                        >
+                          {filteredColumns.map((column, index) => (
+                            <motion.div
+                              key={column.name}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                            >
+                              <ColumnRow
+                                column={column}
+                                metrics={currentResults}
+                                isExpanded={expandedColumns.has(column.name)}
+                                onToggle={() => toggleColumn(column.name)}
+                                onGenerateQuery={handleGenerateQuery}
+                                onViewDetails={handleViewDetails}
+                                onExportColumn={handleExportColumn}
+                                onAuthRequired={() => setShowAuthModal(true)}
+                              />
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      ) : (
+                        <NoColumnsEmptyState
+                          searchTerm={searchTerm}
+                          filterType={filterType}
+                          onClearFilters={handleClearFilters}
+                          totalColumns={currentResults.columnMetrics.length}
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* Problems View */}
+                {currentView === 'problems' && (
+                  <ProblemsView
+                    metrics={currentResults}
+                    onViewDuplicates={() => handleViewDetails('', 'duplicates')}
+                    onViewNulls={(columnName) =>
+                      handleViewDetails(columnName, 'nulls')
+                    }
+                    onViewIssues={(columnName) =>
+                      handleViewDetails(columnName, 'nulls')
+                    }
+                    onExportProblems={handleExport}
+                  />
+                )}
+
+        
+
+                {/* Export Panel */}
+                {currentView === 'export' && (
+                  <ExportPanel
+                    fileName={activeFile?.fileName || 'Unknown'}
+                    onExport={handleExport}
+                    onAuthRequired={() => setShowAuthModal(true)}
+                  />
+                )}
               </>
             )}
           </div>
         </div>
       </motion.div>
+
+      {/* Row Details Modal */}
+      <RowDetailsModal
+        isOpen={rowDetailsModal.isOpen}
+        onClose={() =>
+          setRowDetailsModal({ ...rowDetailsModal, isOpen: false })
+        }
+        title={rowDetailsModal.title}
+        type={rowDetailsModal.type}
+        columnName={rowDetailsModal.columnName}
+        data={rowDetailsModal.data}
+        onExport={handleExport}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        defaultMode="login"
+        onLoginSuccess={() => setShowAuthModal(false)}
+      />
     </div>
   );
 };

@@ -192,10 +192,14 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
             variant="outline"
             onClick={handleInspectorClick}
             data-inspector-trigger
-            className="flex items-center gap-1.5 px-2 py-1 text-xs hover:text-white hover:bg-white/5 rounded transition-all duration-150"
+            className="group relative flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 to-secondary/10 hover:from-primary/20 hover:to-secondary/20 transition-all duration-300 hover:scale-105"
           >
-            <CheckCircle className="h-3 w-3" />
-            <span>Inspect data quality</span>
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-full blur-sm group-hover:blur-md transition-all duration-300" />
+              <CheckCircle className="h-4 w-4 text-primary relative z-10 group-hover:text-primary-foreground transition-colors" />
+            </div>
+            <span className="text-white/90 group-hover:text-white font-medium">Inspect Quality</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-secondary/0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </Button>
 
           <div className="w-px h-3 bg-white/20" />

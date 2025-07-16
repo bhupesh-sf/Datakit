@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  FileText,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -8,7 +7,6 @@ import {
 } from "lucide-react";
 import { FileUploadButton } from "@/components/common/FileUploadButton";
 import { ThemeColorPicker } from "@/components/common/ThemeColorPicker";
-import useFileAccess from "@/hooks/useFileAccess";
 import { useDuckDBStore } from "@/store/duckDBStore";
 import useDirectFileImport from "@/hooks/useDirectFileImport";
 import { useAppStore } from "@/store/appStore";
@@ -323,27 +321,26 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   return (
     <>
       <motion.div
-        className="bg-darkNav flex flex-col h-full border-r border-white border-opacity-10 overflow-hidden"
+        className="relative bg-darkNav flex flex-col h-full border-r border-white border-opacity-10 overflow-hidden"
         initial={sidebarCollapsed ? "collapsed" : "expanded"}
         animate={sidebarCollapsed ? "collapsed" : "expanded"}
         variants={sidebarVariants}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         {sidebarCollapsed ? renderCollapsedContent() : renderExpandedContent()}
+        
+        <button
+          onClick={toggleSidebar}
+          className="absolute top-5 right-3 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white hover:border-white/10 transition-colors shadow-lg"
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {sidebarCollapsed ? (
+            <ChevronRight size={16} />
+          ) : (
+            <ChevronLeft size={16} />
+          )}
+        </button>
       </motion.div>
-
-      {/* Collapse/Expand Toggle Button on Border */}
-      <button
-        onClick={toggleSidebar}
-        className="absolute top-7 -right-3 w-6 h-6 bg-black border border-white/100 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:border/10 transition-colors z-11 shadow-lg"
-        aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        {sidebarCollapsed ? (
-          <ChevronRight size={14} />
-        ) : (
-          <ChevronLeft size={14} />
-        )}
-      </button>
 
       {/* Remote Data Import Modal */}
       <RemoteDataImportModal

@@ -119,12 +119,18 @@ interface InspectorState {
   // Utility actions
   resetError: () => void;
   getResultsForFile: (fileId: string) => InspectorMetrics | null;
+  
+  // Data retrieval actions
+  fetchDuplicateRows: (fileId: string, limit?: number) => Promise<any[]>;
+  fetchNullRows: (fileId: string, columnName: string, limit?: number) => Promise<any[]>;
+  fetchOutlierRows: (fileId: string, columnName: string, limit?: number) => Promise<any[]>;
+  fetchTypeIssueRows: (fileId: string, columnName: string, limit?: number) => Promise<any[]>;
 }
 
 // Panel configuration
-const INITIAL_PANEL_WIDTH = 550;
-const MIN_PANEL_WIDTH = 500;
-const MAX_PANEL_WIDTH = 800;
+const INITIAL_PANEL_WIDTH = 800;
+const MIN_PANEL_WIDTH = 600;
+const MAX_PANEL_WIDTH = 1200;
 
 // Analysis cancellation
 let analysisAbortController: AbortController | null = null;
@@ -535,5 +541,133 @@ export const useInspectorStore = create<InspectorState>((set, get) => {
     resetError: () => set({ error: null }),
     
     getResultsForFile: (fileId: string) => get().results.get(fileId) || null,
+
+    // Data retrieval functions
+    fetchDuplicateRows: async (fileId: string, limit = 100) => {
+      const state = get();
+      if (!state.activeTableName) {
+        throw new Error("No active table");
+      }
+
+      const duckDBStore = useDuckDBStore.getState();
+      const escapedTableName = duckDBStore.registeredTables.get(state.activeTableName);
+      if (!escapedTableName) {
+        throw new Error(`Table "${state.activeTableName}" not found`);
+      }
+
+      // Get duplicate rows using DuckDB window functions
+      const query = `
+        WITH duplicate_finder AS (
+          SELECT *, ROW_NUMBER() OVER (PARTITION BY ${
+            // Get all column names to create a proper duplicate check
+            (await duckDBStore.getTableSchema(state.activeTableName))
+              ?.map(col => `"${col.name}"`)
+              .join(', ') || '*'
+          }) as rn
+          FROM ${escapedTableName}
+        )
+        SELECT *
+        FROM duplicate_finder
+        WHERE rn > 1
+        ORDER BY rn
+        LIMIT ${limit}
+      `;
+
+      const result = await duckDBStore.executePaginatedQuery(query, 1, limit, false, false);
+      return result?.data || [];
+    },
+
+    fetchNullRows: async (fileId: string, columnName: string, limit = 100) => {
+      const state = get();
+      if (!state.activeTableName) {
+        throw new Error("No active table");
+      }
+
+      const duckDBStore = useDuckDBStore.getState();
+      const escapedTableName = duckDBStore.registeredTables.get(state.activeTableName);
+      if (!escapedTableName) {
+        throw new Error(`Table "${state.activeTableName}" not found`);
+      }
+
+      const query = `
+        SELECT *
+        FROM ${escapedTableName}
+        WHERE "${columnName}" IS NULL
+        LIMIT ${limit}
+      `;
+
+      const result = await duckDBStore.executePaginatedQuery(query, 1, limit, false, false);
+      return result?.data || [];
+    },
+
+    fetchOutlierRows: async (fileId: string, columnName: string, limit = 100) => {
+      const state = get();
+      if (!state.activeTableName) {
+        throw new Error("No active table");
+      }
+
+      const duckDBStore = useDuckDBStore.getState();
+      const escapedTableName = duckDBStore.registeredTables.get(state.activeTableName);
+      if (!escapedTableName) {
+        throw new Error(`Table "${state.activeTableName}" not found`);
+      }
+
+      // Get column statistics from current results
+      const currentResults = state.results.get(fileId);
+      const columnMetrics = currentResults?.columnMetrics.find(col => col.name === columnName);
+      
+      if (!columnMetrics?.numericStats) {
+        throw new Error(`Column "${columnName}" is not numeric or has no statistics`);
+      }
+
+      const { mean, std } = columnMetrics.numericStats;
+      const outlierThreshold = mean + 2 * std;
+
+      const query = `
+        SELECT *
+        FROM ${escapedTableName}
+        WHERE "${columnName}" > ${outlierThreshold} OR "${columnName}" < ${mean - 2 * std}
+        ORDER BY ABS("${columnName}" - ${mean}) DESC
+        LIMIT ${limit}
+      `;
+
+      const result = await duckDBStore.executePaginatedQuery(query, 1, limit, false, false);
+      return result?.data || [];
+    },
+
+    fetchTypeIssueRows: async (fileId: string, columnName: string, limit = 100) => {
+      const state = get();
+      if (!state.activeTableName) {
+        throw new Error("No active table");
+      }
+
+      const duckDBStore = useDuckDBStore.getState();
+      const escapedTableName = duckDBStore.registeredTables.get(state.activeTableName);
+      if (!escapedTableName) {
+        throw new Error(`Table "${state.activeTableName}" not found`);
+      }
+
+      // Get type issues from current results
+      const currentResults = state.results.get(fileId);
+      const typeIssues = currentResults?.typeIssues.filter(issue => issue.column === columnName) || [];
+      
+      if (typeIssues.length === 0) {
+        return [];
+      }
+
+      // For demonstration, we'll show rows with potential type issues
+      // This is a simplified approach - in reality, you might want more sophisticated detection
+      const query = `
+        SELECT *
+        FROM ${escapedTableName}
+        WHERE "${columnName}" IS NOT NULL
+        AND TRY_CAST("${columnName}" AS DOUBLE) IS NULL
+        AND "${columnName}" != ''
+        LIMIT ${limit}
+      `;
+
+      const result = await duckDBStore.executePaginatedQuery(query, 1, limit, false, false);
+      return result?.data || [];
+    },
   };
 });

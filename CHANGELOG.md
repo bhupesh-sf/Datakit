@@ -1,3 +1,6 @@
+# 0.3.3
+Inspector improvements
+
 # 0.3.2
 Split the datasets page
 Navigation on the viewer
