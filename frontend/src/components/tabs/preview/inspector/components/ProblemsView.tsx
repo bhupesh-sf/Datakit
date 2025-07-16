@@ -7,10 +7,12 @@ import {
   Eye,
   Download,
   ChevronRight,
-  X
+  X,
+  Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { InspectorMetrics } from '@/store/inspectorStore';
+import { useAuth } from '@/hooks/auth/useAuth';
 
 interface ProblemsViewProps {
   metrics: InspectorMetrics;
@@ -18,6 +20,7 @@ interface ProblemsViewProps {
   onViewNulls?: (columnName: string) => void;
   onViewIssues?: (columnName: string, issueType: string) => void;
   onExportProblems?: (type: string, columnName?: string) => void;
+  onAuthRequired?: () => void;
 }
 
 type ProblemSeverity = 'critical' | 'warning' | 'info';
@@ -40,8 +43,10 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
   onViewDuplicates,
   onViewNulls,
   onViewIssues,
-  onExportProblems
+  onExportProblems,
+  onAuthRequired
 }) => {
+  const { isAuthenticated } = useAuth();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<ProblemFilter>('all');
 
@@ -146,6 +151,12 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
   };
 
   const handleExportAction = (item: ProblemItem) => {
+    // Check authentication before allowing export
+    if (!isAuthenticated) {
+      onAuthRequired?.();
+      return;
+    }
+
     switch (item.type) {
       case 'duplicates':
         onExportProblems?.('duplicates');
@@ -277,12 +288,10 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
               getSeverityColor(item.severity)
             )}
           >
-            <div className="flex items-center justify-between p-4">
+            <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => toggleExpanded(item.id)}>
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <button
-                  onClick={() => toggleExpanded(item.id)}
-                  className="flex items-center gap-2 hover:bg-white/10 p-1 rounded transition-colors"
-                >
+                <div className="flex items-center gap-2 p-1">
+                  
                   <motion.div
                     animate={{ rotate: expandedItems.has(item.id) ? 90 : 0 }}
                     transition={{ duration: 0.2 }}
@@ -290,7 +299,7 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
                     <ChevronRight className="h-4 w-4 text-white/60" />
                   </motion.div>
                   {getSeverityIcon(item.severity)}
-                </button>
+                </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-white text-sm truncate">
@@ -302,7 +311,7 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => handleViewAction(item)}
                   className="p-1 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors"
@@ -312,10 +321,19 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
                 </button>
                 <button
                   onClick={() => handleExportAction(item)}
-                  className="p-1 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors"
-                  title="Export data"
+                  className={cn(
+                    "p-1 rounded transition-colors",
+                    isAuthenticated
+                      ? "hover:bg-white/10 text-white/60 hover:text-white"
+                      : "hover:bg-yellow-500/10 text-yellow-400/70 hover:text-yellow-400"
+                  )}
+                  title={isAuthenticated ? "Export data" : "Sign in to export data"}
                 >
-                  <Download className="h-4 w-4" />
+                  {isAuthenticated ? (
+                    <Download className="h-4 w-4" />
+                  ) : (
+                    <Lock className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>

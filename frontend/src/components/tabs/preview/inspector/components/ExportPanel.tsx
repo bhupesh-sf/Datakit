@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/auth/useAuth';
+import { Button } from '@/components/ui/Button';
 
 interface ExportOption {
   id: string;
@@ -277,23 +278,23 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
 
       {/* Authentication Notice */}
       {!isAuthenticated && (
-        <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+        <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
-            <Lock className="h-4 w-4 text-yellow-400" />
-            <span className="text-sm font-medium text-yellow-400">
+            <Lock className="h-4 w-4 text-blue-400" />
+            <span className="text-sm font-medium text-blue-400">
               Premium Features
             </span>
           </div>
           <p className="text-xs text-white/70 mb-3">
-            Sign in to unlock advanced export formats, scheduling, and API
-            integrations
+            Sign in to unlock export downloading.
           </p>
-          <button
+          <Button
+            variant="ghost"
             onClick={onAuthRequired}
-            className="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors"
+            className="px-4 py-2 text-white rounded-lg border border-blue-500/20 text-sm transition-colors"
           >
             Sign In to Unlock
-          </button>
+          </Button>
         </div>
       )}
     </div>

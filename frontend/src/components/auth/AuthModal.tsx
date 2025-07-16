@@ -450,6 +450,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     </li>
                     <li className="flex items-center gap-2">
                       <div className="w-1 h-1 bg-primary rounded-full"></div>
+                      Export reports from data inspector
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1 h-1 bg-primary rounded-full"></div>
                       Sync your settings and data across devices
                     </li>
                     <li className="flex items-center gap-2">

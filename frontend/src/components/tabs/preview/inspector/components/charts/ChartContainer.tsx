@@ -10,7 +10,7 @@ interface ChartContainerProps {
  export const ChartContainer: React.FC<ChartContainerProps> = ({ 
   title, 
   children, 
-  height = 140 
+  height = 170 
 }) => {
   return (
     <div className="mt-3 p-3 bg-card/20 rounded-lg">

@@ -17,7 +17,6 @@ const MiniChart: React.FC<MiniChartProps> = ({
   column, 
   metrics, 
   onExport,
-  onViewDetails 
 }) => {
   console.log(`[EnhancedChart] Analyzing ${column.name}:`, {
     type: column.type,
@@ -90,27 +89,11 @@ const MiniChart: React.FC<MiniChartProps> = ({
             <span className="text-xs text-white/60">Distribution</span>
           </div>
           <div className="flex items-center gap-1">
-            {onViewDetails && (
-              <button
-                onClick={onViewDetails}
-                className="text-xs text-primary hover:text-primary/80 transition-colors"
-              >
-                Details
-              </button>
-            )}
-            {onExport && (
-              <button
-                onClick={() => onExport('png')}
-                className="p-1 hover:bg-white/10 rounded text-white/50 hover:text-white/80 transition-colors"
-                title="Export chart"
-              >
-                <Download className="h-3 w-3" />
-              </button>
-            )}
+           
           </div>
         </div>
         
-        <ChartContainer title="" height={140}>
+        <ChartContainer title="" height={170}>
           <NivoHistogram 
             data={column.histogramData}
             color="hsl(175, 100%, 36%)"
@@ -149,27 +132,12 @@ const MiniChart: React.FC<MiniChartProps> = ({
             <span className="text-xs text-white/60">Top Values</span>
           </div>
           <div className="flex items-center gap-1">
-            {onViewDetails && (
-              <button
-                onClick={onViewDetails}
-                className="text-xs text-primary hover:text-primary/80 transition-colors"
-              >
-                Details
-              </button>
-            )}
-            {onExport && (
-              <button
-                onClick={() => onExport('png')}
-                className="p-1 hover:bg-white/10 rounded text-white/50 hover:text-white/80 transition-colors"
-                title="Export chart"
-              >
-                <Download className="h-3 w-3" />
-              </button>
-            )}
+           
+         
           </div>
         </div>
         
-        <ChartContainer title="" height={140}>
+        <ChartContainer title="" height={170}>
           <NivoCategoricalChart 
             data={frequentValues.values.slice(0, 7)}
             exportable={!!onExport}
@@ -206,14 +174,7 @@ const MiniChart: React.FC<MiniChartProps> = ({
             {getChartTypeIcon()}
             <span className="text-xs text-white/60">Statistics</span>
           </div>
-          {onViewDetails && (
-            <button
-              onClick={onViewDetails}
-              className="text-xs text-primary hover:text-primary/80 transition-colors"
-            >
-              Details
-            </button>
-          )}
+        
         </div>
         
         <div className="p-3 bg-card/20 rounded-lg">
@@ -253,14 +214,7 @@ const MiniChart: React.FC<MiniChartProps> = ({
             {getChartTypeIcon()}
             <span className="text-xs text-white/60">Text Statistics</span>
           </div>
-          {onViewDetails && (
-            <button
-              onClick={onViewDetails}
-              className="text-xs text-primary hover:text-primary/80 transition-colors"
-            >
-              Details
-            </button>
-          )}
+         
         </div>
         
         <div className="p-3 bg-card/20 rounded-lg">
@@ -314,14 +268,7 @@ const MiniChart: React.FC<MiniChartProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-xs text-yellow-400">⚠️ No Chart Available</span>
           </div>
-          {onViewDetails && (
-            <button
-              onClick={onViewDetails}
-              className="text-xs text-primary hover:text-primary/80 transition-colors"
-            >
-              View Data
-            </button>
-          )}
+        
         </div>
         <div className="text-xs text-white/70 mb-2">
           {reason.message}

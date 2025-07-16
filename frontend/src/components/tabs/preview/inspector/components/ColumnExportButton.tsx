@@ -39,6 +39,7 @@ const exportFormats: ExportFormat[] = [
     description: 'Column data as CSV',
     icon: <Table className="h-4 w-4" />,
     extension: '.csv',
+     requiresAuth: true
   },
   {
     id: 'json',
@@ -46,6 +47,7 @@ const exportFormats: ExportFormat[] = [
     description: 'Column data as JSON',
     icon: <Code className="h-4 w-4" />,
     extension: '.json',
+    requiresAuth: true,
   },
   {
     id: 'txt',
@@ -245,7 +247,7 @@ const ColumnExportButton: React.FC<ColumnExportButtonProps> = ({
                 <div className="mt-3 pt-3 border-t border-white/10">
                   <div className="flex items-center gap-2 text-xs text-yellow-400">
                     <Lock className="h-3 w-3" />
-                    <span>Some formats require sign-in</span>
+                    <span>Downloading requires sign-in</span>
                   </div>
                 </div>
               )}

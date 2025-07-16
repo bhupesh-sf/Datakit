@@ -126,14 +126,13 @@ const ColumnRow: React.FC<ColumnRowProps> = ({
     >
       <motion.div
         whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.02)" }}
-        className="p-4 transition-colors"
+        className="p-4 transition-colors cursor-pointer"
+        onClick={onToggle}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <button
-              onClick={onToggle}
-              className="flex items-center gap-2 hover:bg-white/10 p-1 rounded transition-colors"
-            >
+            <div className="flex items-center gap-2 p-1">
+              
               <motion.div
                 animate={{ rotate: isExpanded ? 90 : 0 }}
                 transition={{ duration: 0.2 }}
@@ -141,7 +140,7 @@ const ColumnRow: React.FC<ColumnRowProps> = ({
                 <ChevronRight className="h-4 w-4 text-white/50" />
               </motion.div>
               {getColumnIcon(column.type)}
-            </button>
+            </div>
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
@@ -160,7 +159,7 @@ const ColumnRow: React.FC<ColumnRowProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
             <ColumnExportButton
               columnName={column.name}
               columnType={column.type}
@@ -217,7 +216,7 @@ const ColumnRow: React.FC<ColumnRowProps> = ({
               </div>
 
               {/* Suggested Queries */}
-              <div className="mt-4">
+              {/* <div className="mt-4">
                 <div className="text-xs text-white/60 mb-2">Suggested Queries</div>
                 <div className="space-y-1 max-h-32 overflow-y-auto">
                   {generateSuggestedQueries().slice(0, 3).map((item, i) => (
@@ -232,7 +231,7 @@ const ColumnRow: React.FC<ColumnRowProps> = ({
                     </motion.button>
                   ))}
                 </div>
-              </div>
+              </div> */}
             </div>
           </motion.div>
         )}

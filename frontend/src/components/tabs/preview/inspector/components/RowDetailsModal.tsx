@@ -25,7 +25,6 @@ interface RowDetailsModalProps {
   data: RowData[];
   isLoading?: boolean;
   onRefresh?: () => void;
-  onExport?: (format: string) => void;
 }
 
 const RowDetailsModal: React.FC<RowDetailsModalProps> = ({
@@ -36,8 +35,7 @@ const RowDetailsModal: React.FC<RowDetailsModalProps> = ({
   columnName,
   data,
   isLoading = false,
-  onRefresh,
-  onExport
+  onRefresh
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set());
@@ -122,7 +120,7 @@ const RowDetailsModal: React.FC<RowDetailsModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
@@ -156,22 +154,7 @@ const RowDetailsModal: React.FC<RowDetailsModalProps> = ({
                 </button>
               )}
               
-              {onExport && (
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => onExport('csv')}
-                    className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-sm text-white/80 hover:text-white transition-colors"
-                  >
-                    CSV
-                  </button>
-                  <button
-                    onClick={() => onExport('excel')}
-                    className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-sm text-white/80 hover:text-white transition-colors"
-                  >
-                    Excel
-                  </button>
-                </div>
-              )}
+             
               
               <button
                 onClick={onClose}

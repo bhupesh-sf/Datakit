@@ -29,8 +29,8 @@ const NivoHistogram: React.FC<NivoHistogramProps> = ({
   const theme = {
     background: 'transparent',
     text: {
-      fontSize: 11,
-      fill: 'rgba(255, 255, 255, 0.8)',
+      fontSize: 12,
+      fill: 'rgba(255, 255, 255, 0.9)',
     },
     axis: {
       domain: {
@@ -51,8 +51,8 @@ const NivoHistogram: React.FC<NivoHistogramProps> = ({
           strokeWidth: 1,
         },
         text: {
-          fontSize: 10,
-          fill: 'rgba(255, 255, 255, 0.6)',
+          fontSize: 11,
+          fill: 'rgba(255, 255, 255, 0.8)',
         },
       },
     },
@@ -88,18 +88,86 @@ const NivoHistogram: React.FC<NivoHistogramProps> = ({
     </div>
   );
 
+  const handleSVGExport = () => {
+    // Always export as SVG directly
+    exportChartAsSVG(data, 'histogram');
+  };
+
+  const handlePNGExport = () => {
+    // For PNG, export as SVG (could be enhanced with html2canvas later)
+    exportChartAsSVG(data, 'histogram');
+  };
+
+  const exportChartAsSVG = (chartData: HistogramData[], type: string) => {
+    const width = 600;
+    const height = 400;
+    const margin = { top: 30, right: 30, bottom: 60, left: 80 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+
+    const maxCount = Math.max(...chartData.map(d => d.count));
+    const barWidth = chartWidth / chartData.length;
+
+    const bars = chartData.map((bin, i) => {
+      const barHeight = (bin.count / maxCount) * chartHeight;
+      const x = i * barWidth;
+      const y = chartHeight - barHeight;
+      
+      return `<rect x="${x}" y="${y}" width="${barWidth - 2}" height="${barHeight}" fill="#2dd4bf" opacity="0.8" stroke="#2dd4bf" stroke-width="1"/>`;
+    }).join('');
+
+    const svgContent = `
+      <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" style="background: #1a1a1a;">
+        <defs>
+          <style>
+            text { font-family: Arial, sans-serif; }
+          </style>
+        </defs>
+        
+        <g transform="translate(${margin.left}, ${margin.top})">
+          ${bars}
+          
+          <!-- Axes -->
+          <line x1="0" y1="${chartHeight}" x2="${chartWidth}" y2="${chartHeight}" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+          <line x1="0" y1="0" x2="0" y2="${chartHeight}" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+          
+          <!-- Title -->
+          <text x="${chartWidth/2}" y="-10" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+            Data Distribution
+          </text>
+          
+          <!-- Axis labels -->
+          <text x="${chartWidth/2}" y="${chartHeight + 45}" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="14">
+            Value Range
+          </text>
+          <text x="-60" y="${chartHeight/2}" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="14" transform="rotate(-90, -60, ${chartHeight/2})">
+            Count
+          </text>
+        </g>
+      </svg>
+    `;
+
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `histogram_${Date.now()}.svg`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="relative w-full" style={{ height }}>
       {exportable && (
         <div className="absolute top-2 right-2 z-10 flex gap-1">
           <button
-            onClick={() => onExport?.('png')}
+            onClick={handlePNGExport}
             className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-xs text-white/70 hover:text-white transition-colors"
           >
             PNG
           </button>
           <button
-            onClick={() => onExport?.('svg')}
+            onClick={handleSVGExport}
             className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-xs text-white/70 hover:text-white transition-colors"
           >
             SVG
@@ -111,7 +179,7 @@ const NivoHistogram: React.FC<NivoHistogramProps> = ({
         data={data}
         keys={['count']}
         indexBy="bin"
-        margin={{ top: 10, right: 10, bottom: 30, left: 40 }}
+        margin={{ top: 15, right: 15, bottom: 45, left: 50 }}
         padding={0.1}
         valueScale={{ type: 'linear' }}
         indexScale={{ type: 'band', round: true }}
@@ -123,17 +191,16 @@ const NivoHistogram: React.FC<NivoHistogramProps> = ({
         axisRight={null}
         axisBottom={{
           tickSize: 5,
-          tickPadding: 5,
+          tickPadding: 8,
           tickRotation: 0,
-          legend: null,
+          legend: 'Value Range',
           legendPosition: 'middle',
-          legendOffset: 32,
+          legendOffset: 35,
         }}
         axisLeft={{
           tickSize: 5,
-          tickPadding: 5,
+          tickPadding: 8,
           tickRotation: 0,
-          legend: null,
           legendPosition: 'middle',
           legendOffset: -40,
         }}
