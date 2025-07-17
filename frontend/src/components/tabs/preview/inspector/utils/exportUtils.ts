@@ -1,5 +1,3 @@
-import { InspectorMetrics } from '@/store/inspectorStore';
-
 export interface ExportOptions {
   fileName?: string;
   includeMetadata?: boolean;
@@ -33,22 +31,6 @@ export const exportAsCSV = (data: any[], columnName: string, fileName: string) =
 };
 
 /**
- * Exports data as JSON format
- */
-export const exportAsJSON = (data: any[], columnName: string, fileName: string) => {
-  const jsonData = {
-    column: columnName,
-    values: data,
-    metadata: {
-      exportDate: new Date().toISOString(),
-      totalValues: data.length
-    }
-  };
-  
-  downloadFile(JSON.stringify(jsonData, null, 2), `${fileName}.json`, 'application/json');
-};
-
-/**
  * Exports data as plain text format
  */
 export const exportAsText = (data: any[], fileName: string) => {
@@ -56,21 +38,32 @@ export const exportAsText = (data: any[], fileName: string) => {
   downloadFile(textContent, `${fileName}.txt`, 'text/plain');
 };
 
-/**
- * Exports data as Excel format (fallback to CSV)
- */
-export const exportAsExcel = async (data: any[], columnName: string, fileName: string) => {
-  // This would require a library like xlsx
-  // For now, fall back to CSV
-  exportAsCSV(data, columnName, fileName);
-};
 
 /**
  * Converts problem data to CSV format
  */
-export const convertToCSV = (data: any[]): string => {
+export const convertToCSV = (data: any[], columns?: string[]): string => {
   if (data.length === 0) return '';
   
+  // If columns are provided separately (for array-based data), use them
+  if (columns && Array.isArray(data[0])) {
+    const csvContent = [
+      columns.join(','),
+      ...data.map(row => 
+        row.map((value: any) => {
+          const stringValue = value === null || value === undefined ? '' : String(value);
+          // Escape quotes and wrap in quotes if contains comma, quote, or newline
+          return stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')
+            ? `"${stringValue.replace(/"/g, '""')}"`
+            : stringValue;
+        }).join(',')
+      )
+    ].join('\n');
+    
+    return csvContent;
+  }
+  
+  // Otherwise, assume object-based data and extract headers from first object
   const headers = Object.keys(data[0]);
   const csvContent = [
     headers.join(','),

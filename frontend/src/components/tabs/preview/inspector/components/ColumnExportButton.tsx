@@ -35,7 +35,7 @@ const exportFormats: ExportFormat[] = [
   {
     id: 'csv',
     name: 'CSV',
-    description: 'Column data as CSV',
+    description: 'Unique values',
     icon: <Table className="h-4 w-4" />,
     extension: '.csv',
      requiresAuth: true
@@ -43,7 +43,7 @@ const exportFormats: ExportFormat[] = [
   {
     id: 'json',
     name: 'JSON',
-    description: 'Column data as JSON',
+    description: 'Unique values',
     icon: <Code className="h-4 w-4" />,
     extension: '.json',
     requiresAuth: true,
@@ -51,7 +51,7 @@ const exportFormats: ExportFormat[] = [
   {
     id: 'txt',
     name: 'Text',
-    description: 'Plain text values',
+    description: 'Unique values',
     icon: <FileText className="h-4 w-4" />,
     extension: '.txt',
   },

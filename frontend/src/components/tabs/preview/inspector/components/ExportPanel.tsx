@@ -48,7 +48,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       name: 'Analysis Reports',
       description: 'Complete analysis with charts and insights',
       icon: <FileText className="h-6 w-6" />,
-      formats: ['PDF', 'HTML', 'Word'],
+      formats: ['PDF', 'HTML'],
       features: [
         'Complete data analysis',
         'Quality recommendations'
@@ -79,7 +79,13 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
     setExportStatus({
       format,
       status: 'loading',
-      message: `Preparing ${format} export...`,
+      message: format === 'PDF' 
+        ? `Generating print-ready HTML report...`
+        : format === 'Parquet'
+        ? `Preparing data files for Parquet conversion...`
+        : format === 'Excel'
+        ? `Creating Excel-compatible CSV file...`
+        : `Preparing ${format} export...`,
     });
 
     try {
@@ -87,16 +93,31 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
       setExportStatus({
         format,
         status: 'success',
-        message: `${format} export completed successfully`,
+        message: format === 'PDF' 
+          ? `HTML report ready - use browser print for PDF`
+          : format === 'Parquet'
+          ? `JSON + CSV files downloaded for Parquet conversion`
+          : format === 'Excel'
+          ? `CSV file downloaded (Excel compatible)`
+          : `${format} export completed successfully`,
       });
     } catch (error) {
-      setExportStatus({
-        format,
-        status: 'error',
-        message: `Export failed: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Check if it's actually a success message disguised as an error
+      if (errorMessage.includes('completed') || errorMessage.includes('ready')) {
+        setExportStatus({
+          format,
+          status: 'success',
+          message: errorMessage,
+        });
+      } else {
+        setExportStatus({
+          format,
+          status: 'error',
+          message: `Export failed: ${errorMessage}`,
+        });
+      }
     }
 
     // Clear status after 5 seconds
@@ -254,15 +275,14 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
                           {format}
                         </div>
                         <div className="text-xs text-white/60 mt-1">
-                          {format === 'PDF' && 'Portable document'}
-                          {format === 'CSV' && 'Comma-separated'}
-                          {format === 'Excel' && 'Microsoft Excel'}
-                          {format === 'JSON' && 'JavaScript Object'}
-                          {format === 'PNG' && 'High-res image'}
+                          {format === 'PDF' && 'Print-ready HTML report'}
+                          {format === 'CSV' && 'Comma-separated values'}
+                          {format === 'Excel' && 'CSV format (Excel compatible)'}
+                          {format === 'JSON' && 'JavaScript Object Notation'}
+                          {format === 'PNG' && 'High-resolution image'}
                           {format === 'SVG' && 'Vector graphics'}
-                          {format === 'HTML' && 'Web format'}
-                          {format === 'Word' && 'Microsoft Word'}
-                          {format === 'Parquet' && 'Columnar storage'}
+                          {format === 'HTML' && 'Interactive web report'}
+                          {format === 'Parquet' && 'JSON + CSV for conversion'}
                           {format === 'JSON API' && 'REST endpoint'}
                           {format === 'Webhook' && 'HTTP callbacks'}
                         </div>
@@ -282,18 +302,18 @@ const ExportPanel: React.FC<ExportPanelProps> = ({
           <div className="flex items-center gap-2 mb-2">
             <Lock className="h-4 w-4 text-blue-400" />
             <span className="text-sm font-medium text-blue-400">
-              Premium Features
+              Export Features
             </span>
           </div>
           <p className="text-xs text-white/70 mb-3">
-            Sign in to unlock export downloading.
+            Sign in to unlock downloading.
           </p>
           <Button
             variant="ghost"
             onClick={onAuthRequired}
             className="px-4 py-2 text-white rounded-lg border border-blue-500/20 text-sm transition-colors"
           >
-            Sign In to Unlock
+            Sign In
           </Button>
         </div>
       )}

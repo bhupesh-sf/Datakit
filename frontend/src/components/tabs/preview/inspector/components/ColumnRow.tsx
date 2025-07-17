@@ -19,10 +19,10 @@ interface ColumnRowProps {
   metrics: InspectorMetrics;
   isExpanded: boolean;
   onToggle: () => void;
-  onGenerateQuery: (query: string, description: string) => void;
   onViewDetails: (columnName: string, type: 'nulls' | 'outliers' | 'duplicates') => void;
   onExportColumn: (format: string, columnName: string) => Promise<void>;
   onAuthRequired?: () => void;
+  // onGenerateQuery: (query: string, description: string) => void;
 }
 
 const ColumnRow: React.FC<ColumnRowProps> = ({

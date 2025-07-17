@@ -8,7 +8,6 @@ import {
   Download,
   ChevronRight,
   X,
-  Lock,
   Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -376,9 +375,9 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
                   ) : exportedItems.has(item.id) ? (
                     <Check className="h-4 w-4 text-emerald-400" />
                   ) : isAuthenticated ? (
-                    <Download className="h-4 w-4" />
+                    <Download className="text-white/60 h-4 w-4" />
                   ) : (
-                    <Lock className="h-4 w-4" />
+                    <Download className="text-white/60 h-4 w-4" />
                   )}
                 </button>
               </div>
