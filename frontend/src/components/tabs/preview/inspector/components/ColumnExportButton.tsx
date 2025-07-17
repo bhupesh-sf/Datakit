@@ -4,8 +4,7 @@ import {
   Download, 
   FileText, 
   Table, 
-  Code, 
-  Image,
+  Code,
   ChevronDown,
   Lock,
   CheckCircle,
@@ -56,22 +55,14 @@ const exportFormats: ExportFormat[] = [
     icon: <FileText className="h-4 w-4" />,
     extension: '.txt',
   },
-  {
-    id: 'excel',
-    name: 'Excel',
-    description: 'Excel spreadsheet',
-    icon: <Table className="h-4 w-4" />,
-    extension: '.xlsx',
-    requiresAuth: true,
-  },
-  {
-    id: 'chart',
-    name: 'Chart',
-    description: 'Export as PNG chart',
-    icon: <Image className="h-4 w-4" />,
-    extension: '.png',
-    requiresAuth: true,
-  },
+  // {
+  //   id: 'excel',
+  //   name: 'Excel',
+  //   description: 'Excel spreadsheet',
+  //   icon: <Table className="h-4 w-4" />,
+  //   extension: '.xlsx',
+  //   requiresAuth: true,
+  // },
 ];
 
 const ColumnExportButton: React.FC<ColumnExportButtonProps> = ({

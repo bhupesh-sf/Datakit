@@ -30,7 +30,6 @@ const ColumnRow: React.FC<ColumnRowProps> = ({
   metrics,
   isExpanded,
   onToggle,
-  onGenerateQuery,
   onViewDetails,
   onExportColumn,
   onAuthRequired
@@ -70,50 +69,6 @@ const ColumnRow: React.FC<ColumnRowProps> = ({
       return { icon: <AlertTriangle className="h-4 w-4 text-yellow-400" />, level: 'warning' };
     }
     return { icon: <CheckCircle className="h-4 w-4 text-emerald-400" />, level: 'good' };
-  };
-
-  const generateSuggestedQueries = () => {
-    const tableName = "table_name";
-    const queries = [];
-
-    if (column.uniqueCount <= 10 && column.uniqueCount > 1) {
-      queries.push({
-        query: `SELECT DISTINCT "${column.name}" FROM ${tableName} ORDER BY "${column.name}"`,
-        description: `Show all ${column.uniqueCount} distinct values`,
-      });
-    }
-
-    if (column.nullCount > 0) {
-      queries.push({
-        query: `SELECT * FROM ${tableName} WHERE "${column.name}" IS NOT NULL`,
-        description: `Filter out ${column.nullCount} null values`,
-      });
-    }
-
-    if (column.numericStats) {
-      const { mean, std } = column.numericStats;
-      if (std > 0) {
-        const threshold = mean + 2 * std;
-        queries.push({
-          query: `SELECT * FROM ${tableName} WHERE "${column.name}" > ${threshold.toFixed(2)}`,
-          description: `Find outliers (>${threshold.toFixed(2)})`,
-        });
-      }
-    }
-
-    if (column.textStats) {
-      queries.push({
-        query: `SELECT "${column.name}", LENGTH("${column.name}") as text_length FROM ${tableName} ORDER BY text_length DESC LIMIT 10`,
-        description: `Find longest text values`,
-      });
-    }
-
-    queries.push({
-      query: `SELECT "${column.name}", COUNT(*) as frequency FROM ${tableName} GROUP BY "${column.name}" ORDER BY frequency DESC LIMIT 20`,
-      description: `Explore value frequencies`,
-    });
-
-    return queries;
   };
 
   const qualityIndicator = getQualityIndicator();

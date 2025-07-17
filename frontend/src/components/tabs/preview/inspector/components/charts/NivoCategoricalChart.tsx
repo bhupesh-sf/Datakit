@@ -116,8 +116,91 @@ const NivoCategoricalChart: React.FC<NivoCategoricalChartProps> = ({
   };
 
   const handlePNGExport = () => {
-    // For PNG, export as SVG (could be enhanced with html2canvas later)
-    exportChartAsSVG(limitedData, 'categorical');
+    // Create PNG from SVG using canvas
+    exportChartAsPNG(limitedData, 'categorical');
+  };
+
+  const exportChartAsPNG = (chartData: CategoricalData[], type: string) => {
+    const width = 600;
+    const height = 400;
+    const margin = { top: 30, right: 30, bottom: 60, left: 120 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+
+    const maxCount = Math.max(...chartData.map(d => d.count));
+    const barHeight = chartHeight / chartData.length;
+
+    const bars = chartData.map((item, i) => {
+      const barWidth = (item.count / maxCount) * chartWidth;
+      const y = i * barHeight;
+      const color = getColor(i);
+      
+      return `
+        <rect x="0" y="${y}" width="${barWidth}" height="${barHeight - 5}" fill="${color}" opacity="0.8"/>
+        <text x="-10" y="${y + barHeight/2 + 5}" text-anchor="end" fill="rgba(255,255,255,0.8)" font-size="12">
+          ${item.value.length > 15 ? item.value.substring(0, 15) + '...' : item.value}
+        </text>
+        <text x="${barWidth + 10}" y="${y + barHeight/2 + 5}" fill="rgba(255,255,255,0.8)" font-size="12">
+          ${item.count} (${item.percentage.toFixed(1)}%)
+        </text>
+      `;
+    }).join('');
+
+    const svgContent = `
+      <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" style="background: #1a1a1a;">
+        <defs>
+          <style>
+            text { font-family: Arial, sans-serif; }
+          </style>
+        </defs>
+        
+        <g transform="translate(${margin.left}, ${margin.top})">
+          ${bars}
+          
+          <!-- Axes -->
+          <line x1="0" y1="0" x2="0" y2="${chartHeight}" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+          <line x1="0" y1="${chartHeight}" x2="${chartWidth}" y2="${chartHeight}" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+          
+          <!-- Title -->
+          <text x="${chartWidth/2}" y="-10" text-anchor="middle" fill="white" font-size="16" font-weight="bold">
+            Value Distribution
+          </text>
+          
+          <!-- Axis labels -->
+          <text x="${chartWidth/2}" y="${chartHeight + 45}" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="14">
+            Count
+          </text>
+        </g>
+      </svg>
+    `;
+
+    // Convert SVG to PNG using canvas
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = width;
+    canvas.height = height;
+
+    img.onload = () => {
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `categorical_chart_${Date.now()}.png`;
+            link.click();
+            URL.revokeObjectURL(url);
+          }
+        }, 'image/png');
+      }
+    };
+
+    const svgBlob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    img.src = url;
   };
 
   const exportChartAsSVG = (chartData: CategoricalData[], type: string) => {
@@ -206,7 +289,7 @@ const NivoCategoricalChart: React.FC<NivoCategoricalChartProps> = ({
         data={limitedData}
         keys={['count']}
         indexBy="value"
-        margin={{ top: 15, right: 25, bottom: 15, left: 90 }}
+        margin={{ top: 20, right: 35, bottom: 25, left: 120 }}
         padding={0.2}
         layout="horizontal"
         valueScale={{ type: 'linear' }}
@@ -219,21 +302,21 @@ const NivoCategoricalChart: React.FC<NivoCategoricalChartProps> = ({
         axisRight={null}
         axisBottom={{
           tickSize: 5,
-          tickPadding: 5,
-          tickRotation: 0,
-          legend: null,
-          legendPosition: 'middle',
-          legendOffset: 32,
-          format: (value) => value.toLocaleString(),
-        }}
-        axisLeft={{
-          tickSize: 5,
           tickPadding: 8,
           tickRotation: 0,
           legend: null,
           legendPosition: 'middle',
-          legendOffset: -40,
-          format: (value: string) => value.length > 15 ? value.slice(0, 15) + '...' : value,
+          legendOffset: 20,
+          format: (value) => value.toLocaleString(),
+        }}
+        axisLeft={{
+          tickSize: 5,
+          tickPadding: 12,
+          tickRotation: 0,
+          legend: null,
+          legendPosition: 'middle',
+          legendOffset: -90,
+          format: (value: string) => value.length > 12 ? value.slice(0, 12) + '...' : value,
         }}
         enableGridY={false}
         enableGridX={true}
