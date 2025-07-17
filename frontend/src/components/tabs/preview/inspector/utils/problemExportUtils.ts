@@ -23,7 +23,7 @@ export const handleProblemExport = async (
   },
   options: ProblemExportOptions = {}
 ) => {
-  const { limit = 1000 } = options;
+  const { limit = 1000000 } = options;
 
   try {
     let data: any[] = [];

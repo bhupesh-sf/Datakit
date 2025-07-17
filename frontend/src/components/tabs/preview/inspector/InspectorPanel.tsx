@@ -215,7 +215,7 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
     if (!escapedTableName) throw new Error('Table not found');
 
     const query = `SELECT * FROM ${escapedTableName}`;
-    const result = await duckDBStore.executePaginatedQuery(query, 1, 10000, false, false);
+    const result = await duckDBStore.executePaginatedQuery(query, 1, 100000, false, false);
     
     if (!result?.data) throw new Error('No data found');
 
@@ -967,7 +967,9 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
                     onViewIssues={(columnName) =>
                       handleViewDetails(columnName, 'nulls')
                     }
-                    onExportProblems={handleExport}
+                    onExportProblems={(type, columnName) => 
+                      handleExport(type, columnName ? { columnName } : undefined)
+                    }
                     onAuthRequired={() => setShowAuthModal(true)}
                   />
                 )}

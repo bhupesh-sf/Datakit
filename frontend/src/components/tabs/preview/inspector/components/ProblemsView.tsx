@@ -8,7 +8,8 @@ import {
   Download,
   ChevronRight,
   X,
-  Lock
+  Lock,
+  Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { InspectorMetrics } from '@/store/inspectorStore';
@@ -49,6 +50,8 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
   const { isAuthenticated } = useAuth();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<ProblemFilter>('all');
+  const [exportingItems, setExportingItems] = useState<Set<string>>(new Set());
+  const [exportedItems, setExportedItems] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (id: string) => {
     const newExpanded = new Set(expandedItems);
@@ -150,23 +153,49 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
     }
   };
 
-  const handleExportAction = (item: ProblemItem) => {
+  const handleExportAction = async (item: ProblemItem) => {
     // Check authentication before allowing export
     if (!isAuthenticated) {
       onAuthRequired?.();
       return;
     }
 
-    switch (item.type) {
-      case 'duplicates':
-        onExportProblems?.('duplicates');
-        break;
-      case 'nulls':
-        if (item.column) onExportProblems?.('nulls', item.column);
-        break;
-      case 'type_issue':
-        if (item.column) onExportProblems?.('type_issues', item.column);
-        break;
+    // Add item to exporting set
+    setExportingItems(prev => new Set(prev).add(item.id));
+
+    try {
+      switch (item.type) {
+        case 'duplicates':
+          await onExportProblems?.('duplicates');
+          break;
+        case 'nulls':
+          if (item.column) await onExportProblems?.('nulls', item.column);
+          break;
+        case 'type_issue':
+          if (item.column) await onExportProblems?.('type_issues', item.column);
+          break;
+      }
+      
+      // Add to exported items for success feedback
+      setExportedItems(prev => new Set(prev).add(item.id));
+      
+      // Remove success indicator after 3 seconds
+      setTimeout(() => {
+        setExportedItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(item.id);
+          return newSet;
+        });
+      }, 3000);
+    } catch (error) {
+      console.error('Export failed:', error);
+    } finally {
+      // Remove item from exporting set
+      setExportingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(item.id);
+        return newSet;
+      });
     }
   };
 
@@ -321,15 +350,32 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
                 </button>
                 <button
                   onClick={() => handleExportAction(item)}
+                  disabled={exportingItems.has(item.id) || exportedItems.has(item.id)}
                   className={cn(
                     "p-1 rounded transition-colors",
-                    isAuthenticated
+                    exportingItems.has(item.id)
+                      ? "cursor-not-allowed opacity-50"
+                      : exportedItems.has(item.id)
+                      ? "text-emerald-400"
+                      : isAuthenticated
                       ? "hover:bg-white/10 text-white/60 hover:text-white"
                       : "hover:bg-yellow-500/10 text-yellow-400/70 hover:text-yellow-400"
                   )}
-                  title={isAuthenticated ? "Export data" : "Sign in to export data"}
+                  title={
+                    exportingItems.has(item.id)
+                      ? "Exporting..."
+                      : exportedItems.has(item.id)
+                      ? "Export completed!"
+                      : isAuthenticated 
+                      ? "Export data" 
+                      : "Sign in to export data"
+                  }
                 >
-                  {isAuthenticated ? (
+                  {exportingItems.has(item.id) ? (
+                    <div className="h-4 w-4 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                  ) : exportedItems.has(item.id) ? (
+                    <Check className="h-4 w-4 text-emerald-400" />
+                  ) : isAuthenticated ? (
                     <Download className="h-4 w-4" />
                   ) : (
                     <Lock className="h-4 w-4" />
