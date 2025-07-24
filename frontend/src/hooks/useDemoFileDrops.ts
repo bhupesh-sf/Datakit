@@ -17,9 +17,7 @@ export const useDemoFileDrops = ({ processFile, addFile, analytics }: UseDemoFil
       // Security: only accept from your demo domains
       const allowedOrigins = [
         'https://datakit.studio',
-        'http://localhost:5174',
-        'http://localhost:5173',
-        'https://*.datakit.page'
+        'http://localhost:5174'
       ]
 
       const isOriginAllowed = allowedOrigins.some(origin => {

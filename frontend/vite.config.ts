@@ -48,6 +48,9 @@ export default defineConfig({
       // Required headers for MotherDuck WASM client (SharedArrayBuffer support)
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',
+      // Allow iframe embedding from demo domains
+      'X-Frame-Options': 'ALLOWALL',
+      'Content-Security-Policy': 'frame-ancestors \'self\' https://datakit.studio https://*.datakit.studio',
     },
     fs: {
       allow: ['..'], // Allow serving files from parent directories if needed
@@ -101,6 +104,9 @@ export default defineConfig({
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',
+      // Allow iframe embedding from demo domains
+      'X-Frame-Options': 'ALLOWALL',
+      'Content-Security-Policy': 'frame-ancestors \'self\' https://datakit.studio http://localhost:5174 https://*.datakit.studio',
     }
   }
 })
