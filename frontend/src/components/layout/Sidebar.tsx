@@ -209,8 +209,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       {/* Introduction text */}
       <div className="px-5 py-4">
         <p className="text-sm text-white text-opacity-70">
-          DataKit leverages WebAssembly to process large datasets directly in
-          your browser.
+          DataKit leverages WebAssembly to process large datasets.
         </p>
       </div>
 

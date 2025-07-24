@@ -78,6 +78,23 @@ export default defineConfig({
           'Origin': 'https://api.groq.com',
         },
       },
+      '/video': {
+        target: 'https://assets.datakit.page',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/video/, ''),
+        configure: (proxy, _options) => {
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            // Add CORP headers for COEP compatibility
+            proxyRes.headers['Cross-Origin-Resource-Policy'] = 'cross-origin';
+            proxyRes.headers['Cross-Origin-Embedder-Policy'] = 'require-corp';
+            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+            // Ensure proper content type for video
+            if (req.url?.includes('.mp4')) {
+              proxyRes.headers['Content-Type'] = 'video/mp4';
+            }
+          });
+        },
+      },
     },
   },
   preview: {
