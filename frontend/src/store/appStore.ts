@@ -61,6 +61,8 @@ interface AppState {
   jsonViewMode: "table" | "tree";
   /** Sidebar collapsed state */
   sidebarCollapsed: boolean;
+  /** Whether the app is running inside an iframe */
+  isInIframe: boolean;
 
   // Query history state
   /** Array of recent queries */
@@ -107,6 +109,8 @@ interface AppState {
   toggleSidebar: () => void;
   /** Set sidebar collapsed state */
   setSidebarCollapsed: (collapsed: boolean) => void;
+  /** Set iframe state */
+  setIsInIframe: (isInIframe: boolean) => void;
   isRemoteModalOpen: boolean;
   activeProviderRemoteModal: ImportProvider;
 
@@ -150,6 +154,7 @@ const initialState = {
   activeTab: "preview",
   jsonViewMode: "table" as const,
   sidebarCollapsed: false,
+  isInIframe: false,
 
   // Query history state
   recentQueries: [],
@@ -185,9 +190,25 @@ const generateTableName = (fileName: string, fileId: string): string => {
   return `${safeName}_${shortId}`;
 };
 
+// Detect if running inside an iframe
+const detectIframe = () => {
+  try {
+    return window.self !== window.top;
+  } catch (e) {
+    // If we can't access window.top due to cross-origin restrictions,
+    // we're likely in an iframe
+    return true;
+  }
+};
+
 // Load sidebar collapsed state from localStorage on initialization
 const getSavedSidebarState = () => {
   try {
+    // If we're in an iframe, always collapse the sidebar initially
+    if (detectIframe()) {
+      return true;
+    }
+    
     const savedState = localStorage.getItem("sidebar-collapsed");
     return savedState === "true"; // Convert string to boolean
   } catch (e) {
@@ -201,6 +222,7 @@ const getSavedSidebarState = () => {
 export const useAppStore = create<AppState>((set, get) => ({
   ...initialState,
   sidebarCollapsed: getSavedSidebarState(),
+  isInIframe: detectIframe(),
 
   // Multi-file actions
   addFile: (fileData: DataLoadWithDuckDBResult): string => {
@@ -326,6 +348,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   setSidebarCollapsed: (collapsed) => {
     localStorage.setItem("sidebar-collapsed", String(collapsed));
     set({ sidebarCollapsed: collapsed });
+  },
+
+  setIsInIframe: (isInIframe) => {
+    set({ isInIframe });
   },
 
   // Split view actions

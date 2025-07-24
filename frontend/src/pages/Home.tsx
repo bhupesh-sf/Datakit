@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { Table, BarChart, Database, UserPen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -8,47 +7,36 @@ import DataPreviewTab from "@/components/tabs/DataPreviewTab";
 import QueryTab from "@/components/tabs/QueryTab";
 import VisualizationTab from "@/components/tabs/VisualizationTab";
 import AITab from "@/components/tabs/AITab";
-
-import { DataLoadWithDuckDBResult } from "@/components/layout/Sidebar";
 import ActionButtons from "@/components/common/ActionButtons";
-
-import { useAppStore } from "@/store/appStore";
-import {
-  selectActiveFileInfo,
-  selectStatusText,
-  selectFileName,
-  selectSourceType,
-  selectJsonSchema,
-} from "@/store/selectors/appSelectors";
-import { DataSourceType } from "@/types/json";
 import { SEO } from "@/components/common/SEO";
-import { useAnalytics } from "@/hooks/useAnalytics";
+
+import { DataSourceType } from "@/types/json";
+import { useHomePageLogic } from "@/hooks/useHomePageLogic";
 
 /**
  * Main application home page component
  */
 const Home = () => {
-  const analytics = useAnalytics();
-  const previousTabRef = useRef<string>("");
+  const {
+    // Store data
+    statusText,
+    fileName,
+    sourceType,
+    jsonSchema,
+    activeTab,
+    jsonViewMode,
+    
+    // Store actions
+    setActiveTab,
+    setJsonViewMode,
+    
+    // Computed values
+    feedbackContext,
+    
+    // Handlers
+    handleDataLoad,
+  } = useHomePageLogic();
 
-  // Use selectors for reactive data access
-  const activeFileInfo = useAppStore(selectActiveFileInfo);
-  const statusText = useAppStore(selectStatusText);
-  const fileName = useAppStore(selectFileName);
-  const sourceType = useAppStore(selectSourceType);
-  const jsonSchema = useAppStore(selectJsonSchema);
-
-  // Get UI state and actions
-  const { activeTab, jsonViewMode, setActiveTab, setJsonViewMode, addFile } =
-    useAppStore();
-
-  // Track tab changes
-  useEffect(() => {
-    if (previousTabRef.current && previousTabRef.current !== activeTab) {
-      analytics.trackTabChange(previousTabRef.current, activeTab);
-    }
-    previousTabRef.current = activeTab;
-  }, [activeTab, analytics]);
 
   // Define available tabs
   const tabs: Tab[] = [
@@ -58,24 +46,6 @@ const Home = () => {
     { id: "ai", label: "Assistant", icon: <UserPen size={16} /> }, 
   ];
 
-  /**
-   * Handle data load from sidebar
-   * @param result - Parsed data result including DuckDB information
-   */
-  const handleDataLoad = (result: DataLoadWithDuckDBResult) => {
-    addFile(result);
-    analytics.trackFileUpload(result);
-
-    // Track specific file type
-    // analytics.trackFeatureUsage('File Upload', sourceType);
-  };
-
-  // Prepare feedback context
-  const feedbackContext = fileName
-    ? `Feedback provided while working with: ${fileName} (${
-        sourceType === DataSourceType.JSON ? "JSON" : "CSV"
-      }, ${activeFileInfo?.rowCount || 0} rows)`
-    : undefined;
 
   // Animation variants for tab content
   const tabContentVariants = {

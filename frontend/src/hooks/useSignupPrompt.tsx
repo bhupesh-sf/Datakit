@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
+import { useAppStore } from '@/store/appStore';
 import SignupPromptPopup from '@/components/auth/SignupPromptPopup';
 
 const PROMPT_DELAY_MS = 50000; // 50 seconds
@@ -9,10 +10,11 @@ const PROMPT_DISMISSED_KEY = 'datakit-signup-prompt-dismissed';
 export const useSignupPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
   const { isAuthenticated } = useAuthStore();
+  const { isInIframe } = useAppStore();
 
   useEffect(() => {
-    // Don't show if user is authenticated
-    if (isAuthenticated) {
+    // Don't show if user is authenticated or we're in an iframe
+    if (isAuthenticated || isInIframe) {
       setShowPrompt(false);
       return;
     }
@@ -25,13 +27,13 @@ export const useSignupPrompt = () => {
 
     // Set timer to show prompt after delay
     const timer = setTimeout(() => {
-      if (!isAuthenticated) {
+      if (!isAuthenticated && !isInIframe) {
         setShowPrompt(true);
       }
     }, PROMPT_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isInIframe]);
 
   const handleClose = useCallback(() => {
     setShowPrompt(false);
