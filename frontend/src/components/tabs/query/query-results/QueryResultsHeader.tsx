@@ -1,6 +1,7 @@
 import React from 'react';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useQueryColumnFormatting } from './useQueryColumnFormatting';
 
 interface QueryResultsHeaderProps {
   totalRows: number;
@@ -19,21 +20,32 @@ const QueryResultsHeader: React.FC<QueryResultsHeaderProps> = ({
   results,
   columns
 }) => {
+  const { formatCellValue } = useQueryColumnFormatting({
+    results,
+    columns,
+  });
 
-  // Download results as CSV
+
   const downloadCSV = () => {
     if (!results || !columns) return;
     
     const csvContent = [
       columns.join(','),
-      ...results.map(row => 
-        columns.map(col => {
-          const value = row[col];
-          if (value === null || value === undefined) return '';
-          if (typeof value === 'string' && value.includes(',')) {
-            return `"${value.replace(/"/g, '""')}"`;
+      ...results.map((row, rowIndex) => 
+        columns.map((col, colIndex) => {
+          const rawValue = row[col];
+          const formattedValue = formatCellValue(String(rawValue || ''), rowIndex + 1, colIndex + 1);
+          
+          if (formattedValue === null || formattedValue === undefined || formattedValue === '') {
+            return '';
           }
-          return value;
+          
+          // Handle CSV escaping for formatted values
+          const valueStr = String(formattedValue);
+          if (valueStr.includes(',') || valueStr.includes('"') || valueStr.includes('\n')) {
+            return `"${valueStr.replace(/"/g, '""')}"`;
+          }
+          return valueStr;
         }).join(',')
       )
     ].join('\n');
