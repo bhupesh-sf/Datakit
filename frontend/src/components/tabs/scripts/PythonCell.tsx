@@ -12,7 +12,17 @@ import {
   AlertCircle,
   Table,
   Clock,
+  Edit3,
+  Eye,
+  Code2,
+  Bold,
+  Italic,
+  List,
+  Link,
+  Quote,
 } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 import { usePythonStore } from "@/store/pythonStore";
 import { Button } from "@/components/ui/Button";
@@ -43,6 +53,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
     executeCell,
     moveCell,
     clearCell,
+    toggleCellEditMode,
     isExecuting: globalExecuting,
   } = usePythonStore();
 
@@ -72,6 +83,30 @@ const PythonCell: React.FC<PythonCellProps> = ({
   const handleCopyCell = () => {
     navigator.clipboard.writeText(cell.code);
     setShowMenu(false);
+  };
+
+  const handleToggleEdit = () => {
+    if (cell.type === 'markdown') {
+      toggleCellEditMode(cell.id);
+    }
+  };
+
+  const insertMarkdownFormat = (format: string) => {
+    const formats = {
+      bold: '**text**',
+      italic: '*text*',
+      h1: '# ',
+      h2: '## ',
+      h3: '### ',
+      list: '- ',
+      quote: '> ',
+      link: '[text](url)',
+      code: '`code`',
+    };
+    
+    const insertion = formats[format as keyof typeof formats] || format;
+    const newCode = cell.code + insertion;
+    updateCell(cell.id, newCode);
   };
 
   // Debounced update to prevent rapid Monaco Editor re-renders
@@ -252,24 +287,46 @@ const PythonCell: React.FC<PythonCellProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Execute Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleExecute();
-            }}
-            disabled={cell.isExecuting || globalExecuting || !cell.code.trim()}
-            title="Execute Cell (⌘+Enter)"
-          >
-            {cell.isExecuting ? (
-              <Square size={14} />
-            ) : (
-              <Play size={14} />
-            )}
-          </Button>
+          {/* Execute Button (only for code cells) */}
+          {cell.type === 'code' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleExecute();
+              }}
+              disabled={cell.isExecuting || globalExecuting || !cell.code.trim()}
+              title="Execute Cell (⌘+Enter)"
+            >
+              {cell.isExecuting ? (
+                <Square size={14} />
+              ) : (
+                <Play size={14} />
+              )}
+            </Button>
+          )}
+
+          {/* Edit/View Button (only for markdown cells) */}
+          {cell.type === 'markdown' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleEdit();
+              }}
+              title={cell.isEditing ? "Preview Markdown" : "Edit Markdown"}
+            >
+              {cell.isEditing ? (
+                <Eye size={14} />
+              ) : (
+                <Edit3 size={14} />
+              )}
+            </Button>
+          )}
 
           {/* Menu Button */}
           <div className="relative" ref={menuRef}>
@@ -347,24 +404,132 @@ const PythonCell: React.FC<PythonCellProps> = ({
         </div>
       </div>
 
-      {/* Code Editor */}
+      {/* Markdown Toolbar (for markdown cells in edit mode) */}
+      {cell.type === 'markdown' && cell.isEditing && (
+        <div className="px-3 py-2 bg-darkNav/30 border-b border-white/10">
+          <div className="flex items-center gap-1 text-xs">
+            <button
+              onClick={() => insertMarkdownFormat('bold')}
+              className="p-1 hover:bg-white/10 rounded transition-colors"
+              title="Bold"
+            >
+              <Bold size={12} />
+            </button>
+            <button
+              onClick={() => insertMarkdownFormat('italic')}
+              className="p-1 hover:bg-white/10 rounded transition-colors"
+              title="Italic"
+            >
+              <Italic size={12} />
+            </button>
+            <div className="w-px h-4 bg-white/20 mx-1" />
+            <button
+              onClick={() => insertMarkdownFormat('h1')}
+              className="px-2 py-1 hover:bg-white/10 rounded transition-colors font-mono"
+              title="Header 1"
+            >
+              H1
+            </button>
+            <button
+              onClick={() => insertMarkdownFormat('h2')}
+              className="px-2 py-1 hover:bg-white/10 rounded transition-colors font-mono"
+              title="Header 2"
+            >
+              H2
+            </button>
+            <button
+              onClick={() => insertMarkdownFormat('h3')}
+              className="px-2 py-1 hover:bg-white/10 rounded transition-colors font-mono"
+              title="Header 3"
+            >
+              H3
+            </button>
+            <div className="w-px h-4 bg-white/20 mx-1" />
+            <button
+              onClick={() => insertMarkdownFormat('list')}
+              className="p-1 hover:bg-white/10 rounded transition-colors"
+              title="List"
+            >
+              <List size={12} />
+            </button>
+            <button
+              onClick={() => insertMarkdownFormat('quote')}
+              className="p-1 hover:bg-white/10 rounded transition-colors"
+              title="Quote"
+            >
+              <Quote size={12} />
+            </button>
+            <button
+              onClick={() => insertMarkdownFormat('link')}
+              className="p-1 hover:bg-white/10 rounded transition-colors"
+              title="Link"
+            >
+              <Link size={12} />
+            </button>
+            <button
+              onClick={() => insertMarkdownFormat('code')}
+              className="p-1 hover:bg-white/10 rounded transition-colors"
+              title="Inline Code"
+            >
+              <Code2 size={12} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Code Editor or Markdown Content */}
       <div className="border-b border-white/10">
-        <MonacoErrorBoundary cellId={cell.id}>
-          <MonacoEditor
-            key={`monaco-${cell.id}`}
-            value={cell.code}
-            onChange={(value) => debouncedUpdateCell(cell.id, value || "")}
-            onExecute={() => handleExecute()}
-            language="python"
-            height={150}
-            minHeight={100}
-            maxHeight={400}
-          />
-        </MonacoErrorBoundary>
+        {cell.type === 'code' || (cell.type === 'markdown' && cell.isEditing) ? (
+          <MonacoErrorBoundary cellId={cell.id}>
+            <MonacoEditor
+              key={`monaco-${cell.id}`}
+              value={cell.code}
+              onChange={(value) => debouncedUpdateCell(cell.id, value || "")}
+              onExecute={() => handleExecute()}
+              language={cell.type === 'code' ? 'python' : 'markdown'}
+              height={150}
+              minHeight={100}
+              maxHeight={400}
+            />
+          </MonacoErrorBoundary>
+        ) : (
+          <div 
+            className="p-4 min-h-[100px] cursor-text" 
+            onClick={handleToggleEdit}
+          >
+            {cell.code.trim() ? (
+              <div className="markdown-content">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({children}) => <h1 className="text-2xl font-bold text-white font-heading mb-4">{children}</h1>,
+                    h2: ({children}) => <h2 className="text-xl font-semibold text-white font-heading mb-3">{children}</h2>,
+                    h3: ({children}) => <h3 className="text-lg font-medium text-white font-heading mb-2">{children}</h3>,
+                    p: ({children}) => <p className="text-white/90 leading-relaxed mb-3">{children}</p>,
+                    strong: ({children}) => <strong className="text-white font-semibold">{children}</strong>,
+                    em: ({children}) => <em className="text-white/80 italic">{children}</em>,
+                    ul: ({children}) => <ul className="text-white/90 list-disc list-inside mb-3 space-y-1">{children}</ul>,
+                    ol: ({children}) => <ol className="text-white/90 list-decimal list-inside mb-3 space-y-1">{children}</ol>,
+                    li: ({children}) => <li className="text-white/90">{children}</li>,
+                    code: ({children}) => <code className="text-green-400 bg-white/10 px-1 py-0.5 rounded text-sm font-mono">{children}</code>,
+                    blockquote: ({children}) => <blockquote className="border-l-4 border-primary bg-white/5 p-3 rounded-r mb-3">{children}</blockquote>,
+                    a: ({children, href}) => <a href={href} className="text-primary underline decoration-primary/50 hover:decoration-primary">{children}</a>,
+                  }}
+                >
+                  {cell.code}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <div className="text-white/50 italic">
+                Click to edit markdown...
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Output Area */}
-      {cell.output.length > 0 && (
+      {/* Output Area (only for code cells) */}
+      {cell.type === 'code' && cell.output.length > 0 && (
         <div className="p-3 space-y-3">
           {cell.output.map((output) => (
             <div key={output.id}>

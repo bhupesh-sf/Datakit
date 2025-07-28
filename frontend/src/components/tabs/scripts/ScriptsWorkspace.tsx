@@ -4,7 +4,7 @@ import React, {
   useMemo,
   useState,
   useCallback,
-} from "react";
+} from 'react';
 import {
   Play,
   ChevronLeft,
@@ -20,20 +20,21 @@ import {
   Code2,
   Plus,
   Command,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { usePythonStore } from "@/store/pythonStore";
-import { useDuckDBStore } from "@/store/duckDBStore";
-import { useResizable } from "@/hooks/useResizable";
-import { Button } from "@/components/ui/Button";
-import { Tooltip } from "@/components/ui/Tooltip";
+import { usePythonStore } from '@/store/pythonStore';
+import { useDuckDBStore } from '@/store/duckDBStore';
+import { useResizable } from '@/hooks/useResizable';
+import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
 
-import PythonCell from "./PythonCell";
-import ScriptHistory from "./ScriptHistory";
-import PackageManager from "./PackageManager";
-import ScriptTemplates from "./ScriptTemplates";
-import VariableInspector from "./VariableInspector";
-import SchemaBrowser from "../query/SchemaBrowser";
+import PythonCell from './PythonCell';
+import CellDivider from './CellDivider';
+import ScriptHistory from './ScriptHistory';
+import PackageManager from './PackageManager';
+import ScriptTemplates from './ScriptTemplates';
+import VariableInspector from './VariableInspector';
+import SchemaBrowser from '../query/SchemaBrowser';
 
 // Constants for panel dimensions
 const DEFAULT_PANEL_WIDTH = 260;
@@ -71,19 +72,21 @@ const ScriptsWorkspace: React.FC = () => {
 
   // UI State
   const [showSchemaBrowser, setShowSchemaBrowser] = useState(false);
-  const [fullScreenMode, setFullScreenMode] = useState<"none" | "editor" | "results">("none");
+  const [fullScreenMode, setFullScreenMode] = useState<
+    'none' | 'editor' | 'results'
+  >('none');
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [scriptName, setScriptName] = useState("");
+  const [scriptName, setScriptName] = useState('');
   const [editorHeight, setEditorHeight] = useState(DEFAULT_EDITOR_HEIGHT);
 
   // Panel width states
   const [leftPanelWidth, setLeftPanelWidth] = useState(() => {
-    const saved = localStorage.getItem("datakit-scripts-left-panel-width");
+    const saved = localStorage.getItem('datakit-scripts-left-panel-width');
     return saved ? parseInt(saved, 10) : DEFAULT_PANEL_WIDTH;
   });
 
   const [rightPanelWidth, setRightPanelWidth] = useState(() => {
-    const saved = localStorage.getItem("datakit-scripts-right-panel-width");
+    const saved = localStorage.getItem('datakit-scripts-right-panel-width');
     return saved ? parseInt(saved, 10) : DEFAULT_PANEL_WIDTH;
   });
 
@@ -108,11 +111,11 @@ const ScriptsWorkspace: React.FC = () => {
 
   // Setup resizable editor
   const { startResize: startEditorResize } = useResizable(editorRef, {
-    direction: "vertical",
+    direction: 'vertical',
     initialSize: editorHeight,
     minSize: 200,
     maxSize: 600,
-    storageKey: "datakit-scripts-editor-height",
+    storageKey: 'datakit-scripts-editor-height',
     onResize: setEditorHeight,
   });
 
@@ -139,7 +142,10 @@ const ScriptsWorkspace: React.FC = () => {
   const stopLeftPanelResize = useCallback(() => {
     if (isResizingLeft) {
       setIsResizingLeft(false);
-      localStorage.setItem("datakit-scripts-left-panel-width", leftPanelWidth.toString());
+      localStorage.setItem(
+        'datakit-scripts-left-panel-width',
+        leftPanelWidth.toString()
+      );
     }
   }, [isResizingLeft, leftPanelWidth]);
 
@@ -166,39 +172,42 @@ const ScriptsWorkspace: React.FC = () => {
   const stopRightPanelResize = useCallback(() => {
     if (isResizingRight) {
       setIsResizingRight(false);
-      localStorage.setItem("datakit-scripts-right-panel-width", rightPanelWidth.toString());
+      localStorage.setItem(
+        'datakit-scripts-right-panel-width',
+        rightPanelWidth.toString()
+      );
     }
   }, [isResizingRight, rightPanelWidth]);
 
   // Mouse event handlers for resizing
   useEffect(() => {
     if (isResizingLeft) {
-      document.addEventListener("mousemove", handleLeftPanelResize);
-      document.addEventListener("mouseup", stopLeftPanelResize);
-      document.body.style.cursor = "col-resize";
-      document.body.style.userSelect = "none";
+      document.addEventListener('mousemove', handleLeftPanelResize);
+      document.addEventListener('mouseup', stopLeftPanelResize);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
 
       return () => {
-        document.removeEventListener("mousemove", handleLeftPanelResize);
-        document.removeEventListener("mouseup", stopLeftPanelResize);
-        document.body.style.cursor = "";
-        document.body.style.userSelect = "";
+        document.removeEventListener('mousemove', handleLeftPanelResize);
+        document.removeEventListener('mouseup', stopLeftPanelResize);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
       };
     }
   }, [isResizingLeft, handleLeftPanelResize, stopLeftPanelResize]);
 
   useEffect(() => {
     if (isResizingRight) {
-      document.addEventListener("mousemove", handleRightPanelResize);
-      document.addEventListener("mouseup", stopRightPanelResize);
-      document.body.style.cursor = "col-resize";
-      document.body.style.userSelect = "none";
+      document.addEventListener('mousemove', handleRightPanelResize);
+      document.addEventListener('mouseup', stopRightPanelResize);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
 
       return () => {
-        document.removeEventListener("mousemove", handleRightPanelResize);
-        document.removeEventListener("mouseup", stopRightPanelResize);
-        document.body.style.cursor = "";
-        document.body.style.userSelect = "";
+        document.removeEventListener('mousemove', handleRightPanelResize);
+        document.removeEventListener('mouseup', stopRightPanelResize);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
       };
     }
   }, [isResizingRight, handleRightPanelResize, stopRightPanelResize]);
@@ -207,32 +216,32 @@ const ScriptsWorkspace: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl/Cmd + Enter to execute current cell
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && activeCellId) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && activeCellId) {
         e.preventDefault();
         executeCell(activeCellId);
       }
 
       // Ctrl/Cmd + Shift + Enter to execute all cells
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Enter") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Enter') {
         e.preventDefault();
         executeAllCells();
       }
 
       // Ctrl/Cmd + S to save script
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         handleSaveScript();
       }
 
       // Escape to exit full screen
-      if (e.key === "Escape" && fullScreenMode !== "none") {
+      if (e.key === 'Escape' && fullScreenMode !== 'none') {
         e.preventDefault();
-        setFullScreenMode("none");
+        setFullScreenMode('none');
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeCellId, executeCell, executeAllCells, fullScreenMode]);
 
   // Handle save script
@@ -240,10 +249,11 @@ const ScriptsWorkspace: React.FC = () => {
     if (!currentScript && !scriptName.trim()) {
       setSaveDialogOpen(true);
     } else {
-      const name = scriptName.trim() || currentScript?.name || `Script ${Date.now()}`;
+      const name =
+        scriptName.trim() || currentScript?.name || `Script ${Date.now()}`;
       saveScript(name);
       setSaveDialogOpen(false);
-      setScriptName("");
+      setScriptName('');
     }
   };
 
@@ -274,12 +284,14 @@ const ScriptsWorkspace: React.FC = () => {
       <div className="h-full flex items-center justify-center">
         <div className="text-center p-8 max-w-md">
           <h3 className="text-lg font-heading font-medium text-white mb-2">
-            {pyodide.isInitializing ? "Initializing Python" : "Python Not Ready"}
+            {pyodide.isInitializing
+              ? 'Initializing Python'
+              : 'Python Not Ready'}
           </h3>
           <p className="text-white/70 mb-4">
             {pyodide.isInitializing
-              ? ""
-              : "Preparing your Python data analysis environment..."}
+              ? ''
+              : 'Preparing your Python data analysis environment...'}
           </p>
           <div className="text-sm text-white/60">
             <div className="flex items-center justify-center gap-2">
@@ -314,22 +326,29 @@ const ScriptsWorkspace: React.FC = () => {
     return <VariableInspector />;
   };
 
-  const showLeftPanel = showTemplates || showPackageManager || showScriptHistory || showSchemaBrowser || showVariableInspector;
+  const showLeftPanel =
+    showTemplates ||
+    showPackageManager ||
+    showScriptHistory ||
+    showSchemaBrowser ||
+    showVariableInspector;
   const showRightPanel = showVariableInspector;
 
   // Full screen mode
-  if (fullScreenMode !== "none") {
+  if (fullScreenMode !== 'none') {
     return (
       <div className="w-full h-full flex flex-col">
         <div className="flex items-center justify-between p-2 bg-darkNav border-b border-white/10">
           <h3 className="text-sm font-medium">
-            {fullScreenMode === "editor" ? "Python Editor (Fullscreen)" : "Results (Fullscreen)"}
+            {fullScreenMode === 'editor'
+              ? 'Python Editor (Fullscreen)'
+              : 'Results (Fullscreen)'}
           </h3>
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => setFullScreenMode("none")}
+            onClick={() => setFullScreenMode('none')}
             title="Exit Full Screen"
           >
             <Minimize size={16} />
@@ -352,7 +371,7 @@ const ScriptsWorkspace: React.FC = () => {
       {(isResizingLeft || isResizingRight) && (
         <div
           className="absolute inset-0 z-50"
-          style={{ cursor: "col-resize" }}
+          style={{ cursor: 'col-resize' }}
         />
       )}
 
@@ -360,28 +379,26 @@ const ScriptsWorkspace: React.FC = () => {
       <div
         ref={leftPanelRef}
         className={`flex-shrink-0 overflow-hidden bg-darkNav border-r border-white/10 relative ${
-          isResizingLeft ? "" : "transition-all duration-200"
+          isResizingLeft ? '' : 'transition-all duration-200'
         }`}
         style={{
-          width: showLeftPanel ? `${leftPanelWidth}px` : "0px",
+          width: showLeftPanel ? `${leftPanelWidth}px` : '0px',
         }}
       >
-        <div className="h-full w-full">
-          {renderLeftPanel()}
-        </div>
+        <div className="h-full w-full">{renderLeftPanel()}</div>
 
         {/* Left Resize Handle */}
         {showLeftPanel && (
           <div
             className={`absolute top-0 right-0 w-1 h-full cursor-col-resize bg-transparent ${
               isResizingLeft
-                ? "bg-primary/50"
-                : "hover:bg-primary/30 transition-colors"
+                ? 'bg-primary/50'
+                : 'hover:bg-primary/30 transition-colors'
             }`}
             onMouseDown={startLeftPanelResize}
             style={{
-              width: "5px",
-              right: "-2px",
+              width: '5px',
+              right: '-2px',
             }}
           >
             {isResizingLeft && (
@@ -443,19 +460,32 @@ const ScriptsWorkspace: React.FC = () => {
 
             <div className="w-px h-6 bg-white/10" />
 
-            <h3 className="text-sm font-medium">Python Notebook</h3>
+            {/* TODO: On the next iteration with saving mode for notebook this name should get editable */}
+            <h3 className="text-sm font-medium">Notebook</h3>
           </div>
 
           <div className="flex items-center space-x-2">
-            <Tooltip content="Add New Cell" placement="bottom">
+            <Tooltip content="Add New Code Cell" placement="bottom">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => createCell()}
+                onClick={() => createCell('code')}
                 className="h-8"
               >
                 <Plus size={14} className="mr-1" />
-                <span>Cell</span>
+                <span>Code</span>
+              </Button>
+            </Tooltip>
+
+            <Tooltip content="Add New Text Cell" placement="bottom">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => createCell('markdown')}
+                className="h-8"
+              >
+                <Plus size={14} className="mr-1" />
+                <span>Text</span>
               </Button>
             </Tooltip>
 
@@ -472,7 +502,10 @@ const ScriptsWorkspace: React.FC = () => {
               </Button>
             </Tooltip>
 
-            <Tooltip content="Execute All Cells (⌘+Shift+Enter)" placement="bottom">
+            <Tooltip
+              content="Execute All Cells (⌘+Shift+Enter)"
+              placement="bottom"
+            >
               <Button
                 variant="primary"
                 size="sm"
@@ -491,31 +524,41 @@ const ScriptsWorkspace: React.FC = () => {
               </Button>
             </Tooltip>
 
-            <Tooltip content="Full Screen Editor" placement="left">
+            {/* <Tooltip content="Full Screen Editor" placement="left">
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => setFullScreenMode("editor")}
+                onClick={() => setFullScreenMode('editor')}
               >
                 <Maximize size={16} />
               </Button>
-            </Tooltip>
+            </Tooltip> */}
           </div>
         </div>
 
         {/* Cells Area */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <div className="flex-1 overflow-y-auto overflow-x-visible p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto overflow-x-visible p-4">
             {cells.map((cell, index) => (
-              <PythonCell
-                key={cell.id}
-                cell={cell}
-                isActive={cell.id === activeCellId}
-                onActivate={() => setActiveCellId(cell.id)}
-                cellNumber={index + 1}
-              />
+              <React.Fragment key={cell.id}>
+                <PythonCell
+                  cell={cell}
+                  isActive={cell.id === activeCellId}
+                  onActivate={() => setActiveCellId(cell.id)}
+                  cellNumber={index + 1}
+                />
+                {/* Cell Divider - always show after each cell */}
+                <CellDivider
+                  insertIndex={index + 1}
+                  isLastCell={index === cells.length - 1}
+                />
+              </React.Fragment>
             ))}
+            {/* If no cells, show a divider to create the first one */}
+            {cells.length === 0 && (
+              <CellDivider insertIndex={0} isLastCell={true} />
+            )}
           </div>
         </div>
       </div>
@@ -524,28 +567,26 @@ const ScriptsWorkspace: React.FC = () => {
       <div
         ref={rightPanelRef}
         className={`flex-shrink-0 overflow-hidden bg-darkNav border-l border-white/10 relative ${
-          isResizingRight ? "" : "transition-all duration-200"
+          isResizingRight ? '' : 'transition-all duration-200'
         }`}
         style={{
-          width: showRightPanel ? `${rightPanelWidth}px` : "0px",
+          width: showRightPanel ? `${rightPanelWidth}px` : '0px',
         }}
       >
-        <div className="h-full w-full">
-          {renderRightPanel()}
-        </div>
+        <div className="h-full w-full">{renderRightPanel()}</div>
 
         {/* Right Resize Handle */}
         {showRightPanel && (
           <div
             className={`absolute top-0 left-0 w-1 h-full cursor-col-resize bg-transparent ${
               isResizingRight
-                ? "bg-primary/50"
-                : "hover:bg-primary/30 transition-colors"
+                ? 'bg-primary/50'
+                : 'hover:bg-primary/30 transition-colors'
             }`}
             onMouseDown={startRightPanelResize}
             style={{
-              width: "5px",
-              left: "-2px",
+              width: '5px',
+              left: '-2px',
             }}
           >
             {isResizingRight && (
@@ -573,7 +614,7 @@ const ScriptsWorkspace: React.FC = () => {
                 variant="ghost"
                 onClick={() => {
                   setSaveDialogOpen(false);
-                  setScriptName("");
+                  setScriptName('');
                 }}
               >
                 Cancel
@@ -584,7 +625,7 @@ const ScriptsWorkspace: React.FC = () => {
                   if (scriptName.trim()) {
                     saveScript(scriptName);
                     setSaveDialogOpen(false);
-                    setScriptName("");
+                    setScriptName('');
                   }
                 }}
                 disabled={!scriptName.trim()}

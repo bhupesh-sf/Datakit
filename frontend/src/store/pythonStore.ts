@@ -70,6 +70,7 @@ interface PythonState {
   createCell: (type?: CellType, code?: string, index?: number) => string;
   updateCell: (cellId: string, code: string) => void;
   toggleCellEditMode: (cellId: string) => void;
+  convertCellType: (cellId: string, newType: CellType) => void;
   deleteCell: (cellId: string) => void;
   moveCell: (cellId: string, direction: 'up' | 'down') => void;
   clearCell: (cellId: string) => void;
@@ -113,18 +114,62 @@ interface PythonState {
 // Create a unique ID generator
 const createId = () => crypto.randomUUID();
 
-// Create initial cell
-const createInitialCell = (type: CellType = 'code'): PythonCell => ({
-  id: createId(),
-  type,
-  code: "",
-  output: [],
-  executionCount: null,
-  isExecuting: false,
-  isEditing: type === 'markdown', // Markdown cells start in edit mode
-  createdAt: new Date(),
-  updatedAt: new Date(),
-});
+// Create initial cells with welcome content
+const createInitialCells = (): PythonCell[] => [
+  // Welcome markdown cell
+  {
+    id: createId(),
+    type: 'markdown',
+    code: `# Welcome to DataKit Notebooks
+
+DataKit Notebooks provide a environment for data analysis and visualization right in your browser. Here's what you can do:
+
+### Features
+- **Python Code Cells**: Execute Python code with numpy, pandas, matplotlib, and more
+- **Markdown Text Cells**: Create rich documentation with formatted text
+- **Data Integration**: Seamlessly work with your DuckDB data
+- **Interactive Visualizations**: Create plots and charts that update in real-time
+
+### Getting Started
+1. Use the buttons below cells to add new **Code** or **Text** cells
+3. Press **⌘+Enter** (Mac) or **Ctrl+Enter** (Windows) to execute code cells
+4. Access your data through the integrated SQL interface
+`,
+    output: [],
+    executionCount: null,
+    isExecuting: false,
+    isEditing: false, // Start in preview mode to show the rendered content
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  // Initial code cell
+  {
+    id: createId(),
+    type: 'code',
+    code: `# Welcome to DataKit Python environment!
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Your data analysis starts here
+print("DataKit Notebooks ready!")
+print(f"Python environment loaded with pandas {pd.__version__}")
+
+# Example: Create a simple dataset
+data = {
+    'x': range(1, 11),
+    'y': [i**2 for i in range(1, 11)]
+}
+df = pd.DataFrame(data)
+print("\\nSample data created:")
+df.head()`,
+    output: [],
+    executionCount: null,
+    isExecuting: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+];
 
 export const usePythonStore = create<PythonState>()(
   persist(
@@ -140,7 +185,7 @@ export const usePythonStore = create<PythonState>()(
       },
       
       currentScript: null,
-      cells: [createInitialCell()],
+      cells: createInitialCells(),
       activeCellId: null,
       
       savedScripts: [],
@@ -299,13 +344,34 @@ export const usePythonStore = create<PythonState>()(
         }));
       },
       
+      convertCellType: (cellId: string, newType: CellType) => {
+        set(state => ({
+          cells: state.cells.map(cell =>
+            cell.id === cellId
+              ? { 
+                  ...cell, 
+                  type: newType, 
+                  isEditing: newType === 'markdown',
+                  output: newType === 'markdown' ? [] : cell.output,
+                  executionCount: newType === 'markdown' ? null : cell.executionCount,
+                  updatedAt: new Date() 
+                }
+              : cell
+          )
+        }));
+      },
+      
       deleteCell: (cellId) => {
         set(state => {
           const cells = state.cells.filter(cell => cell.id !== cellId);
           
           // Ensure at least one cell exists
           if (cells.length === 0) {
-            cells.push(createInitialCell());
+            const initialCells = createInitialCells();
+            return {
+              cells: initialCells,
+              activeCellId: initialCells[0]?.id || null,
+            };
           }
           
           // Update active cell if deleted
@@ -446,10 +512,11 @@ export const usePythonStore = create<PythonState>()(
       
       // Script Management
       createNewScript: (name) => {
+        const initialCells = createInitialCells();
         const newScript: PythonScript = {
           id: createId(),
           name: name || `Script ${Date.now()}`,
-          cells: [createInitialCell()],
+          cells: initialCells,
           createdAt: new Date(),
           updatedAt: new Date(),
         };
@@ -570,6 +637,7 @@ export const usePythonStore = create<PythonState>()(
             // Treat as plain Python file
             const cell: PythonCell = {
               id: createId(),
+              type: 'code',
               code: content,
               output: [],
               executionCount: null,
