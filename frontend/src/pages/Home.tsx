@@ -1,4 +1,4 @@
-import { Table, BarChart, Database, UserPen } from "lucide-react";
+import { Table, BarChart, Database, UserPen, Code2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import MainLayout from "@/components/layout/MainLayout";
@@ -7,6 +7,7 @@ import DataPreviewTab from "@/components/tabs/DataPreviewTab";
 import QueryTab from "@/components/tabs/QueryTab";
 import VisualizationTab from "@/components/tabs/VisualizationTab";
 import AITab from "@/components/tabs/AITab";
+import ScriptsTab from "@/components/tabs/ScriptsTab";
 import ActionButtons from "@/components/common/ActionButtons";
 import { SEO } from "@/components/common/SEO";
 
@@ -42,6 +43,7 @@ const Home = () => {
   const tabs: Tab[] = [
     { id: "preview", label: "Data Preview", icon: <Table size={16} /> },
     { id: "query", label: "Query", icon: <Database size={16} /> },
+    { id: "scripts", label: "Scripts", icon: <Code2 size={16} /> },
     { id: "visualization", label: "Visualize", icon: <BarChart size={16} /> },
     { id: "ai", label: "Assistant", icon: <UserPen size={16} /> }, 
   ];
@@ -124,6 +126,7 @@ const Home = () => {
               >
                 {activeTab === "preview" && <DataPreviewTab />}
                 {activeTab === "query" && <QueryTab />}
+                {activeTab === "scripts" && <ScriptsTab />}
                 {activeTab === "visualization" && <VisualizationTab />}
                 {activeTab === "ai" && <AITab />}
               </motion.div>

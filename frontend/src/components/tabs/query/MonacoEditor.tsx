@@ -14,12 +14,20 @@ interface DatabaseObject {
 }
 
 interface MonacoEditorProps {
-  /** Current SQL query value */
+  /** Current query/code value */
   value: string;
-  /** Callback when the query changes */
+  /** Callback when the content changes */
   onChange: (value: string) => void;
-  /** Callback to execute the query */
+  /** Callback to execute the query/code */
   onExecute?: () => void;
+  /** Editor language (default: 'sql') */
+  language?: string;
+  /** Editor height (default: '100%') */
+  height?: string | number;
+  /** Minimum height in pixels */
+  minHeight?: number;
+  /** Maximum height in pixels */
+  maxHeight?: number;
   /** Additional class names */
   className?: string;
 }
@@ -28,6 +36,10 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
   value,
   onChange,
   onExecute,
+  language = "sql",
+  height = "100%",
+  minHeight,
+  maxHeight,
   className = "",
 }) => {
   const {
@@ -476,9 +488,9 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
     [monaco]
   );
 
-  // Only load schema and register providers when dependencies actually change
+  // Only load schema and register providers when dependencies actually change and language is SQL
   useEffect(() => {
-    if (!monaco || schemaDependencyKey === schemaLoadedRef.current) {
+    if (!monaco || schemaDependencyKey === schemaLoadedRef.current || language !== "sql") {
       return;
     }
 
@@ -489,17 +501,18 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
         registerLanguageProviders(schema);
       }
     });
-  }, [schemaDependencyKey, monaco, loadSchemaData, registerLanguageProviders]);
+  }, [schemaDependencyKey, monaco, language, loadSchemaData, registerLanguageProviders]);
 
   // Handle editor mount
   const handleEditorDidMount: OnMount = useCallback(
     (editor, monacoInstance) => {
       editorRef.current = editor;
 
-      // Add keyboard shortcut for query execution
+      // Add keyboard shortcut for execution (works for both SQL and Python)
+      const executionLabel = language === "sql" ? "Execute Query" : "Execute Code";
       editor.addAction({
-        id: 'execute-query',
-        label: 'Execute Query',
+        id: 'execute-code',
+        label: executionLabel,
         keybindings: [
           monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter
         ],
@@ -508,31 +521,43 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
         }
       });
 
-      // Add keyboard shortcut for SQL formatting
-      editor.addCommand(
-        monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF,
-        () => {
-          formatSql();
-        }
-      );
+      // Add SQL-specific shortcuts only for SQL language
+      if (language === "sql") {
+        // Add keyboard shortcut for SQL formatting
+        editor.addCommand(
+          monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF,
+          () => {
+            formatSql();
+          }
+        );
 
-      // Add context menu for formatting
-      editor.addAction({
-        id: "format-sql",
-        label: "Format SQL",
-        keybindings: [monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF],
-        contextMenuGroupId: "modification",
-        run: formatSql,
-      });
+        // Add context menu for formatting
+        editor.addAction({
+          id: "format-sql",
+          label: "Format SQL",
+          keybindings: [monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF],
+          contextMenuGroupId: "modification",
+          run: formatSql,
+        });
+      }
     },
-    [onExecute, formatSql]
+    [onExecute, formatSql, language]
   );
 
+  // Calculate effective height
+  const effectiveHeight = height === "auto" ? undefined : height;
+  
+  // Container styles for auto height
+  const containerStyle = height === "auto" && (minHeight || maxHeight) ? {
+    minHeight: minHeight ? `${minHeight}px` : undefined,
+    maxHeight: maxHeight ? `${maxHeight}px` : undefined,
+  } : {};
+
   return (
-    <div className={`h-full ${className}`}>
+    <div className={`${height === "auto" ? "" : "h-full"} ${className}`} style={containerStyle}>
       <Editor
-        height="100%"
-        defaultLanguage="sql"
+        height={effectiveHeight || (minHeight ? `${minHeight}px` : "150px")}
+        defaultLanguage={language}
         defaultValue={value}
         value={value}
         onChange={(value) => onChange(value || "")}
