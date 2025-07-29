@@ -15,36 +15,50 @@ import {
   FilePlus,
 } from 'lucide-react';
 
-import { usePythonStore } from '@/store/pythonStore';
+
+import { useNotebooksActions } from '@/hooks/notebooks/useNotebooksActions';
+import { useNotebookManagement } from '@/hooks/notebooks/useNotebookManagement';
 import { Button } from '@/components/ui/Button';
 import { SaveDialog } from '@/components/ui/SaveDialog';
-import type { PythonScript } from '@/lib/python/types';
+import { UnsavedChangesDialog } from '@/components/ui/UnsavedChangesDialog';
 
 /**
  * Script history component for managing saved Python scripts
  */
 const ScriptHistory: React.FC = () => {
-  const {
-    savedScripts,
-    currentScript,
-    cells,
-    loadScript,
-    deleteScript,
-    duplicateScript,
-    importScript,
-    exportScript,
-    createNewScript,
-    saveScript,
-  } = usePythonStore();
-
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedScript, setSelectedScript] = useState<string | null>(null);
-  const [showMenu, setShowMenu] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState<string | null>(null);
-  const [newName, setNewName] = useState('');
-  
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [showNewNotebookConfirm, setShowNewNotebookConfirm] = useState(false);
+
+  // Use notebook actions hook
+  const {
+    showSaveDialog,
+    showSaveConfirm: showNewNotebookConfirm,
+    handleCreateNewNotebook,
+    handleSaveDialogComplete,
+    handleCloseSaveDialog,
+    handleSaveAndContinue,
+    handleDiscardAndContinue,
+    handleCloseSaveConfirm,
+  } = useNotebooksActions();
+
+  // Use script management hook
+  const {
+    editingName,
+    newName,
+    showMenu,
+    setNewName,
+    setShowMenu,
+    handleLoadScript,
+    handleDeleteScript,
+    handleDuplicateScript,
+    handleExportScript,
+    handleImportScript,
+    startRenaming,
+    saveRename,
+    cancelRename,
+    savedScripts,
+    currentScript,
+  } = useNotebookManagement();
 
   // Filter scripts based on search query
   const filteredScripts = savedScripts.filter(
@@ -53,54 +67,6 @@ const ScriptHistory: React.FC = () => {
       (script.description &&
         script.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
-
-  const handleLoadScript = (script: PythonScript) => {
-    loadScript(script.id);
-    setShowMenu(null);
-  };
-
-  const handleDeleteScript = (scriptId: string) => {
-    if (confirm('Are you sure you want to delete this script?')) {
-      deleteScript(scriptId);
-    }
-    setShowMenu(null);
-  };
-
-  const handleDuplicateScript = (scriptId: string) => {
-    duplicateScript(scriptId);
-    setShowMenu(null);
-  };
-
-  const handleExportScript = (script: PythonScript) => {
-    try {
-      const exportData = exportScript(script.id);
-      const blob = new Blob([exportData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${script.name.replace(/[^a-z0-9]/gi, '_')}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Export failed:', error);
-    }
-    setShowMenu(null);
-  };
-
-  const handleImportScript = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    importScript(file).catch((error) => {
-      console.error('Import failed:', error);
-      alert('Failed to import script: ' + error.message);
-    });
-
-    // Reset file input
-    event.target.value = '';
-  };
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -129,68 +95,6 @@ const ScriptHistory: React.FC = () => {
     }
   };
 
-  const startRenaming = (script: PythonScript) => {
-    setEditingName(script.id);
-    setNewName(script.name);
-    setShowMenu(null);
-  };
-
-  const saveRename = (scriptId: string) => {
-    // Note: This would require adding a rename function to the store
-    // For now, we'll just cancel the edit
-    setEditingName(null);
-    setNewName('');
-  };
-
-  const cancelRename = () => {
-    setEditingName(null);
-    setNewName('');
-  };
-
-  const hasUnsavedChanges = () => {
-    if (!cells || cells.length === 0) return false;
-    
-    // Check if this is a new unsaved notebook or has changes
-    if (!currentScript) {
-      return cells.length > 0 && cells.some(cell => cell.code.trim() !== '');
-    }
-    
-    // Compare current cells with saved script cells
-    const currentCellsJson = JSON.stringify(cells);
-    const savedCellsJson = JSON.stringify(currentScript.cells);
-    return currentCellsJson !== savedCellsJson;
-  };
-
-  const handleNewNotebook = () => {
-    if (hasUnsavedChanges()) {
-      setShowNewNotebookConfirm(true);
-    } else {
-      createNewScript();
-    }
-  };
-
-  const handleConfirmNewNotebook = () => {
-    setShowNewNotebookConfirm(false);
-    createNewScript();
-  };
-
-  const handleSaveAndCreateNew = () => {
-    setShowNewNotebookConfirm(false);
-    if (currentScript) {
-      // Save existing script
-      saveScript(currentScript.name);
-      setTimeout(() => createNewScript(), 100);
-    } else {
-      // Show save dialog for new script
-      setShowSaveDialog(true);
-    }
-  };
-
-  const handleSaveScript = (name: string) => {
-    saveScript(name);
-    setShowSaveDialog(false);
-    setTimeout(() => createNewScript(), 100);
-  };
 
   return (
     <div className="h-full flex flex-col">
@@ -217,7 +121,7 @@ const ScriptHistory: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={handleNewNotebook}
+          onClick={handleCreateNewNotebook}
           className="w-full mb-3 h-8 border-white/30 text-white/80 hover:bg-white/10 hover:border-white/30"
           title="Create New Notebook"
         >
@@ -426,54 +330,21 @@ const ScriptHistory: React.FC = () => {
       )}
 
       {/* New Notebook Confirmation Dialog */}
-      {showNewNotebookConfirm && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-darkNav p-6 rounded-lg shadow-lg w-96 max-w-[90vw]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-6 h-6 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                <span className="text-yellow-400 text-sm">!</span>
-              </div>
-              <h3 className="text-lg font-medium text-white">Unsaved Changes</h3>
-            </div>
-            
-            <p className="text-white/70 mb-6 leading-relaxed">
-              You have unsaved changes in your current notebook. What would you like to do?
-            </p>
-            
-            <div className="flex flex-col gap-2">
-              <Button
-                variant="outline"
-                className="border border-primary hover:bg-primary/20 justify-center"
-                onClick={handleSaveAndCreateNew}
-              >
-                Save and Create New
-              </Button>
-              <Button
-                variant="outline"
-                className="justify-center"
-                onClick={handleConfirmNewNotebook}
-              >
-                Discard Changes
-              </Button>
-              <Button
-                variant="ghost"
-                className="justify-center"
-                onClick={() => setShowNewNotebookConfirm(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <UnsavedChangesDialog
+        isOpen={showNewNotebookConfirm}
+        onClose={handleCloseSaveConfirm}
+        onSave={handleSaveAndContinue}
+        onDiscard={handleDiscardAndContinue}
+        saveButtonText="Save and Create New"
+      />
 
       {/* Save Dialog */}
       <SaveDialog
         isOpen={showSaveDialog}
         title="Save Notebook"
         placeholder="Enter notebook name"
-        onSave={handleSaveScript}
-        onClose={() => setShowSaveDialog(false)}
+        onSave={handleSaveDialogComplete}
+        onClose={handleCloseSaveDialog}
       />
     </div>
   );

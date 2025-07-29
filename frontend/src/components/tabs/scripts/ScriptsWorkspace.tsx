@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from 'react';
 import {
   Play,
   Minimize,
-  Save,
   Database,
   FileText,
   AlertTriangle,
@@ -11,6 +10,11 @@ import {
   Command,
   Download,
   Notebook,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  Clock,
+  AlertCircle,
 } from 'lucide-react';
 
 import { usePythonStore } from '@/store/pythonStore';
@@ -18,9 +22,12 @@ import { useDuckDBStore } from '@/store/duckDBStore';
 import { useResizablePanels } from '@/hooks/useResizablePanels';
 import { useWorkspaceShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { usePanelNavigation } from '@/hooks/notebooks/usePanelNavigation';
+import { useNotebooksActions } from '@/hooks/notebooks/useNotebooksActions';
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { SaveDialog } from '@/components/ui/SaveDialog';
+import { UnsavedChangesDialog } from '@/components/ui/UnsavedChangesDialog';
+import { NotebookEditor } from '@/components/ui/NotebookEditor';
 import {
   exportAsJupyterNotebook,
   exportNotebookAsPDF,
@@ -50,6 +57,7 @@ const ScriptsWorkspace: React.FC = () => {
     activeCellId,
     isExecuting,
     currentScript,
+    savedScripts,
     showScriptHistory,
     showPackageManager,
     showVariableInspector,
@@ -63,6 +71,8 @@ const ScriptsWorkspace: React.FC = () => {
     togglePackageManager,
     toggleTemplates,
     saveScript,
+    loadScript,
+    createNewScript,
     toggleVariableInspector,
   } = usePythonStore();
 
@@ -73,9 +83,12 @@ const ScriptsWorkspace: React.FC = () => {
   const [fullScreenMode, setFullScreenMode] = useState<
     'none' | 'editor' | 'results'
   >('none');
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [showNotebookSelector, setShowNotebookSelector] = useState(false);
+  const [showNotebookEditor, setShowNotebookEditor] = useState(false);
   const downloadMenuRef = useRef<HTMLDivElement>(null);
+  const notebookSelectorRef = useRef<HTMLDivElement>(null);
+  const notebookEditorRef = useRef<HTMLDivElement>(null);
 
   // Element refs
   const leftPanelRef = useRef<HTMLDivElement>(null);
@@ -105,6 +118,28 @@ const ScriptsWorkspace: React.FC = () => {
     },
   });
 
+  // Use notebook actions hook
+  const {
+    showSaveDialog,
+    showSaveConfirm,
+    hasUnsavedChanges,
+    saveStatus,
+    handleSaveScript,
+    handleCreateNewNotebook,
+    handleNotebookSwitch,
+    handleSaveAndContinue,
+    handleDiscardAndContinue,
+    handleSaveDialogComplete,
+    handleCloseSaveDialog,
+    handleCloseSaveConfirm,
+    handleUpdateNotebook,
+  } = useNotebooksActions({
+    closeMenus: () => {
+      setShowNotebookSelector(false);
+      setShowNotebookEditor(false);
+    },
+  });
+
   // Initialize Python on mount (only once)
   useEffect(() => {
     if (!pyodide.isInitialized && !pyodide.isInitializing && !pyodide.error) {
@@ -114,25 +149,20 @@ const ScriptsWorkspace: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Show welcome cells when app opens with no cells
+  // Initialize with welcome notebook when app opens
   useEffect(() => {
     if (cells.length === 0 && !currentScript) {
-      // Set welcome cells directly
-      const welcomeCells = createWelcomeCells();
-      usePythonStore.setState({ cells: welcomeCells });
+      // Create a proper initial notebook instead of just setting cells
+      createNewScript('Untitled Notebook');
+      // Then add welcome cells after the script is created
+      setTimeout(() => {
+        const welcomeCells = createWelcomeCells();
+        usePythonStore.setState({ cells: welcomeCells });
+        // Update the last saved state to include the welcome cells
+        usePythonStore.getState().updateLastSavedState();
+      }, 50);
     }
-  }, []);
-
-  // Handle save script
-  const handleSaveScript = () => {
-    if (!currentScript) {
-      // No existing script, show dialog to get name
-      setSaveDialogOpen(true);
-    } else {
-      // Existing script, save directly
-      saveScript(currentScript.name);
-    }
-  };
+  }, [createNewScript, cells.length, currentScript]);
 
   // Use panel navigation hook for exclusive panel behavior
   const { handlePanelToggle } = usePanelNavigation({
@@ -152,7 +182,7 @@ const ScriptsWorkspace: React.FC = () => {
     },
   });
 
-  // Close download menu when clicking outside
+  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -161,11 +191,53 @@ const ScriptsWorkspace: React.FC = () => {
       ) {
         setShowDownloadMenu(false);
       }
+
+      if (
+        notebookSelectorRef.current &&
+        !notebookSelectorRef.current.contains(event.target as Node)
+      ) {
+        setShowNotebookSelector(false);
+      }
+
+      if (
+        notebookEditorRef.current &&
+        !notebookEditorRef.current.contains(event.target as Node)
+      ) {
+        setShowNotebookEditor(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Render save status indicator
+  const renderSaveStatus = () => {
+    switch (saveStatus) {
+      case 'saving':
+        return (
+          <div className="flex items-center gap-1 text-xs text-blue-400">
+            <Clock size={12} className="animate-spin" />
+            <span>Saving...</span>
+          </div>
+        );
+      case 'saved':
+        return (
+          <div className="flex items-center gap-1 text-xs text-green-400">
+            <span>Saved</span>
+          </div>
+        );
+      case 'unsaved':
+        return (
+          <div className="flex items-center gap-1 text-xs text-yellow-400">
+            <AlertCircle size={12} />
+            <span>Unsaved</span>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   // Use workspace shortcuts hook
   useWorkspaceShortcuts({
@@ -412,8 +484,99 @@ const ScriptsWorkspace: React.FC = () => {
 
             <div className="w-px h-6 bg-white/10" />
 
-            {/* TODO: On the next iteration with saving mode for notebook this name should get editable */}
-            <h3 className="text-sm font-medium">Notebook</h3>
+            {/* Notebook Selector */}
+            <div className="relative" ref={notebookSelectorRef}>
+              <div className="flex items-center gap-2 px-2 py-1">
+                <button
+                  className="text-sm font-medium text-white max-w-42 truncate hover:bg-white/10 rounded px-2 py-1 transition-colors cursor-pointer"
+                  onClick={() => setShowNotebookEditor(!showNotebookEditor)}
+                  title="Edit notebook details"
+                >
+                  {currentScript?.name || 'Untitled Notebook'}
+                </button>
+                
+                {/* Save Status Indicator with Save Button */}
+                <div className="ml-1 flex items-center gap-1">
+                  {renderSaveStatus()}
+                  
+                  {/* Subtle Save Button */}
+                  <button
+                    className="opacity-50 hover:opacity-100 transition-opacity p-1.5 hover:bg-white/10 rounded"
+                    onClick={handleSaveScript}
+                    disabled={saveStatus === 'saving'}
+                    title="Save notebook"
+                  >
+                    <Check size={14} />
+                  </button>
+                </div>
+                
+                <button
+                  className="flex flex-col items-center hover:bg-white/10 rounded p-1 transition-colors cursor-pointer"
+                  onClick={() => setShowNotebookSelector(!showNotebookSelector)}
+                  title="Notebook selector"
+                >
+                  <ChevronUp className="w-4 h-3 text-white/50 -mb-0.5" />
+                  <ChevronDown className="w-4 h-3 text-white/50" />
+                </button>
+              </div>
+
+              {/* Notebook Dropdown */}
+              {showNotebookSelector && (
+                <div className="absolute left-0 top-full mt-1 bg-black border border-white/10 rounded shadow-xl z-50 min-w-64 max-h-80 overflow-y-auto">
+                  {/* New Notebook Option */}
+                  <button
+                    className="w-full px-3 py-2 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2 border-b border-white/10"
+                    onClick={handleCreateNewNotebook}
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Notebook
+                  </button>
+
+                  {/* Saved Notebooks */}
+                  {savedScripts.length > 0 ? (
+                    savedScripts.map((script) => (
+                      <button
+                        key={script.id}
+                        className={`w-full px-3 py-2 text-left text-sm hover:bg-white/10 flex items-center justify-between ${
+                          currentScript?.id === script.id
+                            ? 'bg-primary/20 text-primary'
+                            : 'text-white/80'
+                        }`}
+                        onClick={() => handleNotebookSwitch(script.id)}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="truncate">{script.name}</span>
+                        </div>
+                        {currentScript?.id === script.id && (
+                          <span className="text-xs bg-primary/30 px-1.5 py-0.5 rounded flex-shrink-0">
+                            Current
+                          </span>
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-3 py-4 text-center text-sm text-white/50">
+                      No saved notebooks
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Notebook Editor Details */}
+              {showNotebookEditor && (
+                <div
+                  ref={notebookEditorRef}
+                  className="absolute left-0 top-full mt-1 z-50"
+                >
+                  <NotebookEditor
+                    isOpen={showNotebookEditor}
+                    onClose={() => setShowNotebookEditor(false)}
+                    script={currentScript}
+                    onUpdate={handleUpdateNotebook}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -438,19 +601,6 @@ const ScriptsWorkspace: React.FC = () => {
               >
                 <Plus size={14} className="mr-1" />
                 <span>Text</span>
-              </Button>
-            </Tooltip>
-
-            <Tooltip content="Save Notebook" placement="bottom">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSaveScript}
-                className="h-8"
-                disabled={cells.length === 0}
-              >
-                <Save size={14} className="mr-1" />
-                <span>Save</span>
               </Button>
             </Tooltip>
 
@@ -586,17 +736,21 @@ const ScriptsWorkspace: React.FC = () => {
 
       {/* Save Script Dialog */}
       <SaveDialog
-        isOpen={saveDialogOpen}
+        isOpen={showSaveDialog}
         title="Save Notebook"
         placeholder="Enter Notebook name"
         initialValue={currentScript?.name || ''}
-        onSave={(name) => {
-          saveScript(name);
-          setSaveDialogOpen(false);
-        }}
-        onClose={() => {
-          setSaveDialogOpen(false);
-        }}
+        onSave={handleSaveDialogComplete}
+        onClose={handleCloseSaveDialog}
+      />
+
+      {/* Save Confirmation Dialog */}
+      <UnsavedChangesDialog
+        isOpen={showSaveConfirm}
+        onClose={handleCloseSaveConfirm}
+        onSave={handleSaveAndContinue}
+        onDiscard={handleDiscardAndContinue}
+        saveButtonText="Save and Switch"
       />
     </div>
   );

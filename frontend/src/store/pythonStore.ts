@@ -32,6 +32,13 @@ interface PythonState {
   currentScript: PythonScript | null;
   cells: PythonCell[];
   activeCellId: string | null;
+  
+  // Change tracking
+  saveStatus: 'saved' | 'saving' | 'unsaved';
+  lastSavedState: {
+    script: PythonScript | null;
+    cells: PythonCell[];
+  } | null;
 
   // Script management
   savedScripts: PythonScript[];
@@ -102,6 +109,13 @@ interface PythonState {
   toggleVariableInspector: () => void;
   toggleTemplates: () => void;
 
+  // Actions - Change Tracking
+  hasUnsavedChanges: () => boolean;
+  markAsUnsaved: () => void;
+  markAsSaving: () => void;
+  markAsSaved: () => void;
+  updateLastSavedState: () => void;
+
   // Actions - Settings
   updateSettings: (
     settings: Partial<{
@@ -132,6 +146,10 @@ export const usePythonStore = create<PythonState>()(
       currentScript: null,
       cells: [], // Start with empty cells, will be populated on initialization
       activeCellId: null,
+      
+      // Change tracking
+      saveStatus: 'saved',
+      lastSavedState: null,
 
       savedScripts: [],
       scriptHistory: [],
@@ -267,6 +285,9 @@ export const usePythonStore = create<PythonState>()(
           };
         });
 
+        // Mark as unsaved since we added a cell
+        get().markAsUnsaved();
+
         return newCell.id;
       },
 
@@ -276,6 +297,9 @@ export const usePythonStore = create<PythonState>()(
             cell.id === cellId ? { ...cell, code, updatedAt: new Date() } : cell
           ),
         }));
+
+        // Mark as unsaved since content changed
+        get().markAsUnsaved();
 
         // Auto-save if enabled
         if (get().autoSave && get().currentScript) {
@@ -323,6 +347,9 @@ export const usePythonStore = create<PythonState>()(
 
           return { cells, activeCellId };
         });
+
+        // Mark as unsaved since we deleted a cell
+        get().markAsUnsaved();
       },
 
       moveCell: (cellId, direction) => {
@@ -471,10 +498,17 @@ export const usePythonStore = create<PythonState>()(
           cells: [],
           activeCellId: null,
         });
+
+        // Reset change tracking for new script
+        get().updateLastSavedState();
+        set({ saveStatus: 'saved' });
       },
 
       saveScript: (name, description) => {
         const state = get();
+
+        // Mark as saving
+        get().markAsSaving();
 
         const script: PythonScript = {
           id: state.currentScript?.id || createId(),
@@ -500,6 +534,9 @@ export const usePythonStore = create<PythonState>()(
           };
         });
 
+        // Mark as saved and update baseline
+        get().markAsSaved();
+
         console.log(`[PythonStore] Script saved: ${name}`);
       },
 
@@ -517,6 +554,9 @@ export const usePythonStore = create<PythonState>()(
           cells: script.cells,
           activeCellId: script.cells[0]?.id || null,
         });
+
+        // Mark as saved and set baseline since we just loaded a saved script
+        get().markAsSaved();
 
         console.log(`[PythonStore] Script loaded: ${script.name}`);
       },
@@ -790,6 +830,55 @@ export const usePythonStore = create<PythonState>()(
 
       toggleTemplates: () => {
         set((state) => ({ showTemplates: !state.showTemplates }));
+      },
+
+      // Change Tracking
+      hasUnsavedChanges: () => {
+        const state = get();
+        
+        if (!state.lastSavedState) {
+          // No baseline - consider unsaved if we have any content
+          return state.cells.length > 0 || (state.currentScript?.name && state.currentScript.name.trim() !== '');
+        }
+        
+        // Compare current state with last saved state
+        const currentStateJson = JSON.stringify({
+          script: state.currentScript,
+          cells: state.cells,
+        });
+        
+        const lastSavedStateJson = JSON.stringify(state.lastSavedState);
+        
+        return currentStateJson !== lastSavedStateJson;
+      },
+
+      markAsUnsaved: () => {
+        set({ saveStatus: 'unsaved' });
+      },
+
+      markAsSaving: () => {
+        set({ saveStatus: 'saving' });
+      },
+
+      markAsSaved: () => {
+        const state = get();
+        set({ 
+          saveStatus: 'saved',
+          lastSavedState: {
+            script: state.currentScript,
+            cells: [...state.cells],
+          },
+        });
+      },
+
+      updateLastSavedState: () => {
+        const state = get();
+        set({
+          lastSavedState: {
+            script: state.currentScript,
+            cells: [...state.cells],
+          },
+        });
       },
 
       // Settings
