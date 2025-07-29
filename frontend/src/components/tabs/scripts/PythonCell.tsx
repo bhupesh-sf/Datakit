@@ -60,18 +60,26 @@ const PythonCell: React.FC<PythonCellProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const [executionTime, setExecutionTime] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const cellRef = useRef<HTMLDivElement>(null);
 
-  // Close menu when clicking outside
+  // Close menu when clicking outside and exit markdown edit mode when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Close dropdown menu if clicking outside
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowMenu(false);
+      }
+      
+      // Exit markdown edit mode if clicking outside the cell
+      if (cell.type === 'markdown' && cell.isEditing && 
+          cellRef.current && !cellRef.current.contains(event.target as Node)) {
+        toggleCellEditMode(cell.id);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [cell.type, cell.isEditing, cell.id, toggleCellEditMode]);
 
   const handleExecute = async () => {
     const startTime = performance.now();
@@ -252,6 +260,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
 
   return (
     <div
+      ref={cellRef}
       className={`border rounded-lg overflow-visible transition-colors ${
         isActive
           ? "border-primary/50 bg-primary/5"
@@ -260,7 +269,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
       onClick={onActivate}
     >
       {/* Cell Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-darkNav/50 border-b border-white/10 relative">
+      <div className="flex items-center justify-between px-2.5 py-1.5 bg-darkNav/50 border-b border-white/10 relative">
         <div className="flex items-center gap-3">
           {/* Cell Number */}
           <div className="flex items-center gap-2">
