@@ -1,3 +1,6 @@
+# 0.3.5
+Adding nootebooks
+
 # 0.3.3
 Inspector improvements
 

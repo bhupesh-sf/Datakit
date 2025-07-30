@@ -1,4 +1,4 @@
-import { Table, BarChart, Database, UserPen } from "lucide-react";
+import { Table, BarChart, Database, UserPen, Notebook } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import MainLayout from "@/components/layout/MainLayout";
@@ -7,6 +7,7 @@ import DataPreviewTab from "@/components/tabs/DataPreviewTab";
 import QueryTab from "@/components/tabs/QueryTab";
 import VisualizationTab from "@/components/tabs/VisualizationTab";
 import AITab from "@/components/tabs/AITab";
+import NotebooksTab from "@/components/tabs/NotebooksTab";
 import ActionButtons from "@/components/common/ActionButtons";
 import { SEO } from "@/components/common/SEO";
 
@@ -42,6 +43,7 @@ const Home = () => {
   const tabs: Tab[] = [
     { id: "preview", label: "Data Preview", icon: <Table size={16} /> },
     { id: "query", label: "Query", icon: <Database size={16} /> },
+    { id: "scripts", label: "Notebook", icon: <Notebook size={16} /> },
     { id: "visualization", label: "Visualize", icon: <BarChart size={16} /> },
     { id: "ai", label: "Assistant", icon: <UserPen size={16} /> }, 
   ];
@@ -65,11 +67,14 @@ const Home = () => {
       <MainLayout onDataLoad={handleDataLoad}>
         <div className="p-6 h-full flex flex-col bg-background">
           <div className="mb-4 flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-heading font-semibold">
+            <div className="flex items-baseline gap-2">
+              <h2 className="text-xl font-heading font-semibold text-white">
                 {fileName ? `Viewing: ${fileName}` : "Welcome"}
               </h2>
-              <p className="text-white text-opacity-70 text-sm">{statusText}</p>
+              <span className="text-primary">•</span>
+              <p className="text-white text-opacity-60 text-sm font-medium">
+                {statusText}
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -124,6 +129,7 @@ const Home = () => {
               >
                 {activeTab === "preview" && <DataPreviewTab />}
                 {activeTab === "query" && <QueryTab />}
+                {activeTab === "scripts" && <NotebooksTab />}
                 {activeTab === "visualization" && <VisualizationTab />}
                 {activeTab === "ai" && <AITab />}
               </motion.div>

@@ -275,7 +275,7 @@ export const FileUploadButton = ({
                     <p className="text-xs text-white/80 mb-1">
                       Click to open or drag files here
                     </p>
-                    <p className="text-[10px] text-white/50">{maxSizeText}</p>
+                    {/* <p className="text-[10px] text-white/50">{maxSizeText}</p> */}
                   </div>
                 </>
               )}

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface TooltipProps {
   children: React.ReactNode;
   content: string;
-  placement?: 'top' | 'right' | 'bottom' | 'left';
+  placement?: 'top' | 'right' | 'bottom' | 'left' | 'bottom-left';
   delay?: number;
   color?: 'primary' | 'secondary' | 'default';
 }
@@ -32,6 +32,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
     right: 'left-full top-1/2 -translate-y-1/2 ml-2',
     bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
+    'bottom-left': 'top-full right-0 mt-2',
     left: 'right-full top-1/2 -translate-y-1/2 mr-2',
   };
 
@@ -56,6 +57,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
       default: 'left-full top-1/2 -translate-y-1/2 border-l-black/90 border-t-transparent border-b-transparent border-r-transparent',
       primary: 'left-full top-1/2 -translate-y-1/2 border-l-primary/90 border-t-transparent border-b-transparent border-r-transparent',
       secondary: 'left-full top-1/2 -translate-y-1/2 border-l-secondary/90 border-t-transparent border-b-transparent border-r-transparent',
+    },
+    'bottom-left': {
+      default: 'bottom-full right-2 border-b-black/90 border-l-transparent border-r-transparent border-t-transparent',
+      primary: 'bottom-full right-2 border-b-primary/90 border-l-transparent border-r-transparent border-t-transparent',
+      secondary: 'bottom-full right-2 border-b-secondary/90 border-l-transparent border-r-transparent border-t-transparent',
     },
   };
 
