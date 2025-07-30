@@ -815,11 +815,11 @@ print("\\nExport complete! Use the outputs above as needed.")`,
   // Hugging Face Template 1: Sentiment Analysis with Data Integration
   {
     id: "hf_sentiment_analysis",
-    name: "🎭 Sentiment Analysis + Data",
+    name: "Sentiment Analysis + Data",
     description: "Analyze sentiment of text data from your database using DistilBERT",
     category: "hf",
     tags: ["huggingface", "sentiment", "nlp", "data-analysis"],
-    code: `# 🎭 Sentiment Analysis with Database Integration
+    code: `# Sentiment Analysis with Database Integration
 # Using Xenova/distilbert-base-uncased-finetuned-sst-2-english
 
 print("🎭 Sentiment Analysis Demo")
@@ -879,11 +879,11 @@ df`,
   // Hugging Face Template 2: Text Generation Stories
   {
     id: "hf_text_generation",
-    name: "📝 AI Story Generator",
+    name: "AI Story Generator",
     description: "Generate creative stories and text using Llama2.c tiny model",
     category: "hf",
     tags: ["huggingface", "text-generation", "creative", "stories"],
-    code: `# 📝 AI Story Generator using Llama2.c
+    code: `# AI Story Generator using Llama2.c
 # Using Xenova/llama2.c-stories42M - lightweight story generation model
 
 print("📝 AI Story Generator")
@@ -955,11 +955,11 @@ df[['prompt', 'word_count']]`,
   // Hugging Face Template 3: Zero-Shot Classification
   {
     id: "hf_zero_shot_classification",
-    name: "🏷️ Smart Text Classifier",
+    name: "Smart Text Classifier",
     description: "Classify any text into custom categories without training data",
     category: "hf",
     tags: ["huggingface", "classification", "zero-shot", "categories"],
-    code: `# 🏷️ Zero-Shot Text Classification
+    code: `# Zero-Shot Text Classification
 # Using Xenova/distilbert-base-uncased-mnli for flexible classification
 
 print("🏷️ Smart Text Classifier")
@@ -1052,11 +1052,11 @@ df[['text', 'main_category', 'confidence']]`,
   // Hugging Face Template 4: Question Answering with Context
   {
     id: "hf_question_answering",
-    name: "🤔 Smart Q&A System",
+    name: "Smart Q&A System",
     description: "Answer questions based on your document content using BERT",
     category: "hf",
     tags: ["huggingface", "question-answering", "information-extraction"],
-    code: `# 🤔 Smart Question Answering System
+    code: `# Smart Question Answering System
 # Using Xenova/distilbert-base-cased-distilled-squad for document Q&A
 
 print("🤔 Smart Question Answering System")
@@ -1151,7 +1151,7 @@ df[['question', 'answer', 'confidence_level']]`,
   // Hugging Face Template 5: Feature Extraction + Data Analysis
   {
     id: "hf_feature_extraction",
-    name: "🧠 Text Feature Extraction",
+    name: " Text Feature Extraction",
     description: "Extract semantic features from text and perform similarity analysis",
     category: "hf",
     tags: ["huggingface", "feature-extraction", "embeddings", "similarity"],
@@ -1191,7 +1191,11 @@ for i, description in enumerate(product_descriptions):
     embedding = await feature_extractor(description)
     # Extract the pooled embedding (mean pooling)
     import numpy as np
-    pooled_embedding = np.array(embedding[0]).mean(axis=0)
+    embedding_array = np.array(embedding[0])
+    # Ensure numeric type and handle nested arrays
+    if embedding_array.ndim > 2:
+        embedding_array = embedding_array[0]
+    pooled_embedding = np.mean(embedding_array.astype(float), axis=0)
     embeddings.append(pooled_embedding)
 
 embeddings = np.array(embeddings)
@@ -1231,7 +1235,10 @@ print(f"Query: '{query}'")
 
 # Get query embedding
 query_embedding = await feature_extractor(query)
-query_pooled = np.array(query_embedding[0]).mean(axis=0).reshape(1, -1)
+query_array = np.array(query_embedding[0])
+if query_array.ndim > 2:
+    query_array = query_array[0]
+query_pooled = np.mean(query_array.astype(float), axis=0).reshape(1, -1)
 
 # Calculate similarities to query
 query_similarities = cosine_similarity(query_pooled, embeddings)[0]
@@ -1282,6 +1289,340 @@ similarity_df = pd.DataFrame(
 )
 similarity_df.round(3)`,
     requiredPackages: ["transformers-js-py", "pandas", "numpy", "scikit-learn"]
+  },
+
+  // Advanced Hugging Face Template: ML Pipeline with Web Data
+  {
+    id: "hf_advanced_ml_pipeline",
+    name: "ML Pipeline",
+    description: "Fetch web data, analyze with HuggingFace models, and build ML classifiers with scikit-learn",
+    category: "hf",
+    tags: ["huggingface", "scikit-learn", "requests", "web-scraping", "machine-learning", "pipeline"],
+    code: `# ML Pipeline: Web Data + HuggingFace + Scikit-Learn
+# Demonstrates fetching data, NLP analysis, and traditional ML integration
+
+print(" Advanced ML Pipeline Demo")
+print("=" * 50)
+
+# Step 1: Install required packages and setup
+print(" Setting up packages...")
+try:
+    # Check if requests is available, install if needed
+    import requests
+    print("✅ requests available")
+except ImportError:
+    print("📥 Installing requests...")
+    await micropip.install('requests')
+    import requests
+    print("✅ requests installed")
+
+try:
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import classification_report, accuracy_score
+    from sklearn.preprocessing import StandardScaler
+    print("✅ scikit-learn available")
+except ImportError:
+    print("📥 Installing scikit-learn...")
+    await micropip.install('scikit-learn')
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import classification_report, accuracy_score
+    from sklearn.preprocessing import StandardScaler
+    print("✅ scikit-learn installed")
+
+import pandas as pd
+import numpy as np
+import json
+
+# Step 2: Simulate fetching news articles (replace with real API)
+print("\\n📰 Fetching sample news data...")
+
+# Sample news articles (in real scenario, you'd fetch from news API)
+sample_news = [
+    # Business articles
+    {
+        "title": "Stock Market Reaches New Highs Amid Economic Recovery",
+        "content": "The stock market surged today as investors showed confidence in the economic recovery. Tech stocks led the gains with Apple and Microsoft posting strong quarterly results.",
+        "category": "business"
+    },
+    {
+        "title": "Federal Reserve Announces Interest Rate Decision",
+        "content": "The Federal Reserve maintained interest rates at current levels, citing steady economic growth. Markets responded positively to the announcement with moderate gains across sectors.",
+        "category": "business"
+    },
+    {
+        "title": "Major Merger Creates Banking Giant",
+        "content": "Two of the nation's largest banks announced a merger worth $50 billion. The combined entity will become the second-largest financial institution in the country.",
+        "category": "business"
+    },
+    # Science articles
+    {
+        "title": "Scientists Discover New Species in Amazon Rainforest", 
+        "content": "Researchers have identified a new species of colorful frog in the Amazon basin. The discovery highlights the rich biodiversity of the rainforest and the urgent need for conservation.",
+        "category": "science"
+    },
+    {
+        "title": "Breakthrough in Quantum Computing Achieved",
+        "content": "Scientists have successfully demonstrated quantum supremacy with a new quantum processor. This achievement could revolutionize computing and solve complex problems impossible for classical computers.",
+        "category": "science"
+    },
+    {
+        "title": "Mars Rover Finds Evidence of Ancient Water",
+        "content": "NASA's latest Mars rover has discovered mineral deposits that could only form in the presence of water. This finding supports theories about Mars having a wet past billions of years ago.",
+        "category": "science"
+    },
+    # Sports articles
+    {
+        "title": "Championship Game Breaks Viewership Records",
+        "content": "Last night's championship game attracted over 100 million viewers, making it the most-watched sporting event of the year. The thrilling overtime finish kept fans on the edge of their seats.",
+        "category": "sports"
+    },
+    {
+        "title": "Olympic Athlete Sets New World Record",
+        "content": "In a stunning performance, the young athlete shattered the previous world record by over two seconds. This achievement marks a new era in the sport.",
+        "category": "sports"
+    },
+    {
+        "title": "Team Wins First Championship in 50 Years",
+        "content": "The underdog team completed their miracle season by winning their first championship in five decades. Fans celebrated in the streets as history was made.",
+        "category": "sports"
+    },
+    # Technology articles
+    {
+        "title": "New AI Model Revolutionizes Medical Diagnosis",
+        "content": "A groundbreaking artificial intelligence model developed by researchers can now diagnose rare diseases with 95% accuracy. This breakthrough could transform healthcare delivery worldwide.",
+        "category": "technology"
+    },
+    {
+        "title": "Major Tech Company Unveils Revolutionary Smartphone",
+        "content": "The new smartphone features breakthrough battery technology that lasts up to a week on a single charge. Industry experts predict this could change mobile computing forever.",
+        "category": "technology"
+    },
+    {
+        "title": "Cybersecurity Firm Discovers Major Vulnerability",
+        "content": "Security researchers have uncovered a critical vulnerability affecting millions of devices worldwide. Companies are rushing to patch their systems before hackers can exploit the flaw.",
+        "category": "technology"
+    },
+    # Politics articles
+    {
+        "title": "Climate Summit Reaches Historic Agreement",
+        "content": "World leaders at the climate summit have agreed to ambitious new targets for carbon reduction. The agreement includes binding commitments and substantial funding for renewable energy projects.",
+        "category": "politics"
+    },
+    {
+        "title": "New Healthcare Bill Passes Congress",
+        "content": "After months of debate, Congress has passed comprehensive healthcare reform. The bill promises to expand coverage to millions of uninsured Americans.",
+        "category": "politics"
+    },
+    {
+        "title": "International Trade Deal Signed",
+        "content": "Representatives from multiple nations signed a historic trade agreement today. The deal is expected to boost economic growth and create thousands of new jobs.",
+        "category": "politics"
+    },
+    # Entertainment articles
+    {
+        "title": "Hollywood Blockbuster Breaks Box Office Records",
+        "content": "The latest superhero movie has shattered opening weekend records, earning over $300 million globally. Critics praise the film's stunning visual effects and compelling storyline.",
+        "category": "entertainment"
+    },
+    {
+        "title": "Music Festival Announces Star-Studded Lineup",
+        "content": "The annual music festival revealed its lineup featuring top artists from around the world. Tickets sold out within minutes of going on sale.",
+        "category": "entertainment"
+    },
+    {
+        "title": "Streaming Service Wins Multiple Awards",
+        "content": "The popular streaming platform dominated the awards ceremony, taking home prizes in multiple categories. Their original content continues to reshape the entertainment industry.",
+        "category": "entertainment"
+    }
+]
+
+print(f"Loaded {len(sample_news)} sample articles")
+
+# Step 3: Use HuggingFace for NLP analysis
+print("\\n🤗 Analyzing articles with HuggingFace models...")
+
+# Load multiple HF pipelines
+pipeline = transformers.pipeline
+
+# Sentiment analysis
+print("  Loading sentiment analysis...")
+sentiment_pipe = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english')
+
+# Feature extraction - skip for now due to format issues
+# We'll use other features instead
+print("  Skipping embeddings (using text features instead)...")
+
+# Zero-shot classification
+print("  Loading zero-shot classifier...")
+classifier_pipe = await pipeline('zero-shot-classification', 'Xenova/distilbert-base-uncased-mnli')
+
+# Categories for classification
+hf_categories = ["finance", "science", "sports", "technology", "politics", "entertainment"]
+
+print("All HuggingFace models loaded!")
+
+# Step 4: Process articles with HF models
+print("\\n🔄 Processing articles...")
+processed_articles = []
+
+for i, article in enumerate(sample_news):
+    print(f"  Processing article {i+1}/{len(sample_news)}: '{article['title'][:50]}...'")
+    
+    text = f"{article['title']} {article['content']}"
+    
+    # Sentiment analysis
+    sentiment_result = await sentiment_pipe(text)
+    sentiment = sentiment_result[0]
+    
+    # Calculate text-based features instead of embeddings
+    # Count words by category keywords
+    tech_words = ['tech', 'technology', 'AI', 'software', 'digital', 'computer', 'data']
+    business_words = ['market', 'stock', 'finance', 'economy', 'investor', 'company', 'business']
+    science_words = ['research', 'scientist', 'study', 'discovery', 'species', 'medical']
+    
+    text_lower = text.lower()
+    tech_score = sum(1 for word in tech_words if word.lower() in text_lower)
+    business_score = sum(1 for word in business_words if word.lower() in text_lower)
+    science_score = sum(1 for word in science_words if word.lower() in text_lower)
+    
+    # Zero-shot classification
+    classification_result = await classifier_pipe(text, hf_categories)
+    predicted_category = classification_result['labels'][0]
+    category_confidence = classification_result['scores'][0]
+    
+    processed_articles.append({
+        'title': article['title'],
+        'content': article['content'][:100] + "..." if len(article['content']) > 100 else article['content'],
+        'true_category': article['category'],
+        'predicted_category': predicted_category,
+        'category_confidence': category_confidence,
+        'sentiment_label': sentiment['label'],
+        'sentiment_score': sentiment['score'],
+        'tech_score': tech_score,
+        'business_score': business_score,
+        'science_score': science_score,
+        'text_length': len(text),
+        'word_count': len(text.split())
+    })
+
+print("✅ All articles processed!")
+
+# Step 5: Create dataset for machine learning
+print("\\nCreating ML dataset...")
+
+# Create DataFrame
+df = pd.DataFrame(processed_articles)
+
+# Extract features for ML
+features_df = pd.DataFrame({
+    'sentiment_score': df['sentiment_score'],
+    'category_confidence': df['category_confidence'], 
+    'text_length': df['text_length'],
+    'word_count': df['word_count'],
+    'sentiment_positive': (df['sentiment_label'] == 'POSITIVE').astype(int),
+    'tech_score': df['tech_score'],
+    'business_score': df['business_score'],
+    'science_score': df['science_score']
+})
+
+print(f" Created feature matrix: {features_df.shape}")
+
+# Step 6: Train ML classifier to predict true category
+print("\\n Training scikit-learn classifier...")
+
+# Prepare data
+X = features_df.values
+y = df['true_category'].values
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+
+# Scale features
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Train Random Forest
+rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_classifier.fit(X_train_scaled, y_train)
+
+# Make predictions
+y_pred = rf_classifier.predict(X_test_scaled)
+
+# Evaluate
+accuracy = accuracy_score(y_test, y_pred)
+print(f" Random Forest Accuracy: {accuracy:.2%}")
+
+# Step 7: Compare HuggingFace vs Scikit-Learn predictions
+print("\\n Model Comparison Analysis:")
+
+# Create comparison DataFrame
+comparison_df = df[['title', 'true_category', 'predicted_category', 'category_confidence']].copy()
+
+# Add scikit-learn predictions for full dataset
+X_full_scaled = scaler.transform(features_df.values)
+sklearn_predictions = rf_classifier.predict(X_full_scaled)
+sklearn_probabilities = rf_classifier.predict_proba(X_full_scaled)
+
+comparison_df['sklearn_category'] = sklearn_predictions
+comparison_df['sklearn_confidence'] = np.max(sklearn_probabilities, axis=1)
+
+# Calculate accuracies
+hf_accuracy = (comparison_df['predicted_category'] == comparison_df['true_category']).mean()
+sklearn_accuracy = (comparison_df['sklearn_category'] == comparison_df['true_category']).mean()
+
+print(f"HuggingFace Zero-Shot Accuracy: {hf_accuracy:.2%}")
+print(f"Scikit-Learn RF Accuracy: {sklearn_accuracy:.2%}")
+
+# Step 8: Feature importance analysis
+print("\\n🔍 Feature Importance Analysis:")
+feature_names = features_df.columns.tolist()
+importances = rf_classifier.feature_importances_
+
+feature_importance_df = pd.DataFrame({
+    'feature': feature_names,
+    'importance': importances
+}).sort_values('importance', ascending=False)
+
+print("Top 5 most important features:")
+for idx, row in feature_importance_df.head().iterrows():
+    print(f"  {row['feature']}: {row['importance']:.3f}")
+
+# Step 9: Final results and insights
+print("\\n Pipeline Results Summary:")
+print("=" * 40)
+print(f" Articles processed: {len(sample_news)}")
+print(f" Sentiment distribution:")
+sentiment_counts = df['sentiment_label'].value_counts()
+for sentiment, count in sentiment_counts.items():
+    print(f"   {sentiment}: {count} ({count/len(df)*100:.1f}%)")
+
+print(f"\\nCategory prediction comparison:")
+print(f"   HuggingFace accuracy: {hf_accuracy:.1%}")
+print(f"   Scikit-Learn accuracy: {sklearn_accuracy:.1%}")
+
+print(f"\\n ML Model Performance:")
+print(f"   Features used: {features_df.shape[1]}")
+print(f"   Training samples: {len(X_train)}")
+print(f"   Test accuracy: {accuracy:.1%}")
+
+# Display detailed results
+print("\\n Detailed Article Analysis:")
+display_df = comparison_df[['title', 'true_category', 'predicted_category', 'sklearn_category']].copy()
+display_df.columns = ['Article Title', 'True Category', 'HF Prediction', 'SKLearn Prediction']
+
+print("\\n Use Cases for this Pipeline:")
+print("  • News article classification and routing")
+print("  • Content recommendation systems") 
+print("  • Automated content tagging")
+print("  • Market sentiment analysis")
+print("  • Research paper categorization")
+print("  • Social media content analysis")
+
+display_df`,
+    requiredPackages: ["transformers-js-py", "pandas", "numpy", "scikit-learn", "requests"]
   }
 ];
 

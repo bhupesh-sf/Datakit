@@ -161,7 +161,6 @@ const PythonCell: React.FC<PythonCellProps> = ({
               src={output.content}
               alt="Python plot output"
               className="max-w-full h-auto rounded border border-white/10"
-              style={{ maxHeight: '500px' }}
             />
           </div>
         );
@@ -501,7 +500,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
               language={cell.type === 'code' ? 'python' : 'markdown'}
               height="auto"
               minHeight={80}
-              maxHeight={600}
+              maxHeight={2000}
             />
           </MonacoErrorBoundary>
         ) : (
@@ -544,7 +543,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
       {cell.type === 'code' && cell.output.length > 0 && (
         <div className="p-3 space-y-3">
           {cell.output.map((output) => (
-            <div key={output.id}>
+            <div key={output.id} className="overflow-x-auto">
               {renderOutput(output)}
             </div>
           ))}

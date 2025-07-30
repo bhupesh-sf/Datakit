@@ -443,7 +443,7 @@ const NotebooksWorkspace: React.FC = () => {
               </Button>
             </Tooltip>
 
-            <Tooltip content="Notebooks Templates" placement="bottom">
+            <Tooltip content="Templates" placement="bottom">
               <Button
                 variant="ghost"
                 size="icon"
@@ -664,7 +664,7 @@ const NotebooksWorkspace: React.FC = () => {
 
         {/* Cells Area */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <div className="flex-1 overflow-y-auto overflow-x-visible p-8">
+          <div className="flex-1 overflow-y-auto overflow-x-visible p-8 space-y-0">
             {cells.map((cell, index) => (
               <React.Fragment key={cell.id}>
                 <PythonCell
