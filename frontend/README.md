@@ -2,7 +2,8 @@
 
 ## 1. Introduction
 
-DataKit is a modern web-based data analysis tool that leverages WebAssembly and DuckDB to process large datasets (multi GBs) directly in the browser without requiring server-side processing. It provides a powerful, client-side SQL engine with visualization capabilities and data inspection panel, enabling users to work with CSV, XLSX, PARQUET JSON files efficiently. Users could have chat with your files through chat panel and have the generated queries from ai panel ran over their queies.
+DataKit is a modern web-based data analysis tool that leverages WebAssembly and DuckDB to process large datasets (multi GBs) directly in the browser without requiring server-side processing. It provides a powerful, client-side SQL engine with visualization capabilities and data inspection panel, enabling users to work with CSV, XLSX, PARQUET JSON files efficiently. Users could have chat with your files through chat panel and have the generated queries from ai panel ran over their queies. There's also notebooks. You can bridge to your DuckDB from your notebook and write the sql, make plots, etc. Additionally, transformers from Hugging Face are loaded by default in the environment.
+For now the supported models are from: https://huggingface.co/Xenova/models
 
 ## 2. Architecture Overview
 

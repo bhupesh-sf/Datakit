@@ -1,3 +1,6 @@
+# 0.3.6
+Resolving the issue with white blank screen
+
 # 0.3.5
 Adding nootebooks
 
