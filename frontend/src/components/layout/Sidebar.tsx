@@ -277,7 +277,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       <div className="px-5 py-3 flex-1 overflow-auto"></div>
 
       {/* Footer area with UserMenu */}
-      <div className="border-t border-white border-opacity-10">
+      <div>
         <div className="p-4">
           <UserMenu variant="sidebar" />
         </div>
