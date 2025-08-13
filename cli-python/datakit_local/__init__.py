@@ -15,7 +15,7 @@ Features:
 
 __version__ = "0.1.5"
 __author__ = "DataKit Team"
-__email__ = "amin@wavequery.com"
+__email__ = "amin@datakit.page"
 __license__ = "AGPL-3.0"
 
 from .server import create_app, find_free_port

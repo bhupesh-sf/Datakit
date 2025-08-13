@@ -1,9 +1,9 @@
 # Use official nginx alpine image (lightweight)
 FROM nginx:alpine
 
-LABEL maintainer="DataKit Team <amin@wavequery.com>"
+LABEL maintainer="DataKit Team <amin@datakit.page>"
 LABEL description="DataKit - Modern web-based data analysis tool"
-LABEL version="0.1.1"
+LABEL version="0.3.8"
 
 RUN rm -rf /usr/share/nginx/html/*
 

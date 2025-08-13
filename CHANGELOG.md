@@ -1,3 +1,6 @@
+# 0.3.8
+Added the parallel false for view importFileDirectlyStreaming
+
 # 0.3.7
 Connecting to ollama from assistant
 

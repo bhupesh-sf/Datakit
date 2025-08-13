@@ -4,6 +4,10 @@ import * as cookieParser from 'cookie-parser';
 import * as compression from 'compression';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import {
+  createCorsOriginChecker,
+  parseAllowedOrigins,
+} from './utils/cors.utils';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,12 +22,12 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Enable CORS for frontend
-  const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    : [process.env.FRONTEND_URL || 'http://localhost:5173'];
+  const allowedOrigins = parseAllowedOrigins(process.env.ALLOWED_ORIGINS, [
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+  ]);
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: createCorsOriginChecker(allowedOrigins),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control'],
     exposedHeaders: ['Content-Type'],

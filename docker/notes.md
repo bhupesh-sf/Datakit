@@ -1,4 +1,7 @@
 # Run
+
+move dist folder of /frontend here
+
 ./build-docker.sh
 
 

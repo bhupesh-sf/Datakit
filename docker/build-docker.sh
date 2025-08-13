@@ -10,7 +10,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 IMAGE_NAME="datakit/app"
-VERSION="0.1.5"
+VERSION="0.3.8"
 LATEST_TAG="datakit/app:latest"
 VERSION_TAG="datakit/app:$VERSION"
 
@@ -35,7 +35,8 @@ echo -e "${GREEN}✅ Found dist/ folder with built React app${NC}"
 
 # Build the Docker image
 echo -e "${BLUE}🔨 Building Docker image...${NC}"
-docker buildx build --platform linux/amd64,linux/arm64 -t $VERSION_TAG -t $LATEST_TAG .
+# For local use, build for current platform and load into Docker
+docker buildx build --load -t $VERSION_TAG -t $LATEST_TAG .
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Docker image built successfully!${NC}"

@@ -18,7 +18,7 @@ setup(
     name="datakit-local",
     version=get_version(),
     author="DataKit Team",
-    author_email="amin@wavequery.com",
+    author_email="amin@datakit.page",
     description="Modern web-based data analysis tool - process CSV/JSON/EXCEL/PARQUET files locally with SQL",
     long_description=long_description,
     long_description_content_type="text/markdown",
