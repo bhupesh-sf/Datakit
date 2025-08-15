@@ -33,6 +33,8 @@ export interface DataLoadWithDuckDBResult {
   isStreamingImport?: boolean;
   remoteProvider?: ImportProvider;
   convertedFromExcel?: boolean;
+  isDatabaseAttachment?: boolean;
+  attachedTables?: string[];
 }
 
 interface SidebarProps {
@@ -235,7 +237,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
         >
           <div className="flex items-center justify-center py-1">
             <Cloud className="h-4.5 w-4.5 mr-2 text-blue-500 group-hover:text-blue-400" />
-            <span className="text-sm font-medium">Import Remote File</span>
+            <span className="text-sm font-medium">Import Remote Sources</span>
           </div>
         </Button>
 

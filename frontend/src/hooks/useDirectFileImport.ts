@@ -113,6 +113,37 @@ export function useDirectFileImport() {
             importResult = await importFileDirectly(file);
           }
 
+          // Check if this is a DuckDB database attachment
+          if (importResult?.isDatabaseFile) {
+            // Handle attached database differently
+            setLoadingStatus(
+              `Successfully attached database '${importResult.tableName}' with ${importResult.rowCount} table(s)`
+            );
+            
+            // For attached databases, we don't load a specific table
+            // Instead, we just notify that tables are available
+            const result: DataLoadWithDuckDBResult = {
+              data: [],
+              columnTypes: [],
+              fileName: file.name,
+              rowCount: importResult.rowCount, // This is actually the number of tables
+              columnCount: 0,
+              sourceType,
+              loadedToDuckDB: true,
+              tableName: importResult.tableName,
+              isDatabaseAttachment: true,
+              attachedTables: importResult.attachedTables,
+              isStreamingImport: shouldUseStreaming,
+            };
+            
+            if (onDataLoad) {
+              onDataLoad(result);
+            }
+            
+            console.log("[DirectImport] Database attached successfully:", importResult);
+            return result;
+          }
+          
           // Success message with proper formatting
           if (isExcelConversion && importResult.convertedToCsv) {
             setLoadingStatus(

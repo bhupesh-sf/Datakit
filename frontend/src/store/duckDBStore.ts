@@ -104,10 +104,11 @@ interface DuckDBState {
     tableName: string;
     rowCount: number | boolean;
     convertedToCsv?: boolean;
+    isDatabaseFile?: boolean;
   }>;
   importFileDirectly: (
     file: File
-  ) => Promise<{ tableName: string; rowCount: number }>;
+  ) => Promise<{ tableName: string; rowCount: number; isDatabaseFile?: boolean }>;
   executePaginatedQuery: (
     sql: string,
     page: number,
@@ -138,6 +139,7 @@ interface DuckDBState {
   extractTableReferences: (
     sql: string
   ) => Array<{ name: string; database?: string }>;
+  transformQueryForExecution: (sql: string) => string;
   isMotherDuckQuery: (sql: string) => {
     isMotherDuck: boolean;
     targetDatabase?: string;
@@ -145,6 +147,8 @@ interface DuckDBState {
     motherDuckTables: Array<{ name: string; database: string }>;
     isHybrid: boolean;
   };
+  listAttachedDatabases: () => Promise<Array<{ name: string; tables: number }>>;
+  detachDatabase: (databaseName: string) => Promise<void>;
 }
 
 export const useDuckDBStore = create<DuckDBState>((set, get) => ({
@@ -806,6 +810,117 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         processingProgress: 0.2,
       });
 
+      // DuckDB database files - attach directly
+      if (fileExt === "duckdb" || fileExt === "db") {
+        set({ processingStatus: "Attaching DuckDB database file..." });
+
+        const baseName = fileName.replace(/\.[^/.]+$/, "");
+        let attachName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
+        
+        // Check if database with this name already exists and generate unique name if needed
+        const existingTables = Array.from(get().registeredTables.keys());
+        const attachedDatabases = new Set(
+          existingTables
+            .filter(name => name.includes('.'))
+            .map(name => name.split('.')[0])
+        );
+        
+        if (attachedDatabases.has(attachName)) {
+          // Add timestamp to make it unique
+          attachName = `${attachName}_${Date.now()}`;
+          console.log(`[DuckDBStore] Database name conflict, using unique name: ${attachName}`);
+        }
+
+        const conn = await get().db!.connect();
+
+        try {
+          // Register the file with DuckDB
+          const registeredFileName = `attach_${Date.now()}.${fileExt}`;
+          await get().db!.registerFileHandle(
+            registeredFileName,
+            file,
+            duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
+            true
+          );
+
+          set({
+            processingStatus: `Attaching database as '${attachName}'...`,
+            processingProgress: 0.4,
+          });
+
+          // Try to detach if it already exists (shouldn't happen with unique names, but just in case)
+          try {
+            await conn.query(`DETACH ${attachName}`);
+            console.log(`[DuckDBStore] Detached existing database: ${attachName}`);
+          } catch (e) {
+            // Database doesn't exist, which is expected
+          }
+          
+          // Attach the database file
+          const attachQuery = `ATTACH '${registeredFileName}' AS ${attachName} (READ_ONLY)`;
+          console.log(`[DuckDBStore] Attaching database: ${attachQuery}`);
+          await conn.query(attachQuery);
+
+          set({
+            processingStatus: "Discovering tables in attached database...",
+            processingProgress: 0.6,
+          });
+
+          // List all tables in the attached database
+          const tablesQuery = `
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_catalog = '${attachName}'
+            AND table_type = 'BASE TABLE'
+          `;
+          const tablesResult = await conn.query(tablesQuery);
+          const tables = tablesResult.toArray();
+
+          console.log(`[DuckDBStore] Found ${tables.length} tables in attached database:`, tables);
+
+          // Register each table from the attached database
+          const newTables = new Map(get().registeredTables);
+          const originalBaseName = fileName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_]/g, "_");
+          
+          for (const table of tables) {
+            const tableName = table.table_name;
+            // Register with the actual attached database name
+            const qualifiedName = `${attachName}.${tableName}`;
+            newTables.set(qualifiedName, `"${attachName}"."${tableName}"`);
+            console.log(`[DuckDBStore] Registered table: ${qualifiedName}`);
+            
+            // Also register with the original base name for user convenience
+            if (attachName !== originalBaseName) {
+              const originalQualifiedName = `${originalBaseName}.${tableName}`;
+              newTables.set(originalQualifiedName, `"${attachName}"."${tableName}"`);
+              console.log(`[DuckDBStore] Registered table alias: ${originalQualifiedName} -> ${attachName}.${tableName}`);
+            }
+          }
+
+          await conn.close();
+
+          set({
+            registeredTables: newTables,
+            isLoading: false,
+            processingStatus: `Attached database: ${tables.length} table(s) available`,
+            processingProgress: 1.0,
+          });
+
+          await get().refreshSchemaCache();
+
+          return {
+            tableName: attachName,
+            rowCount: tables.length,
+            isDatabaseFile: true,
+            attachedTables: tables.map(t => t.table_name),
+            fileSizeMB: fileSizeMB,
+          };
+        } catch (err) {
+          await conn.close();
+          throw err;
+        }
+      }
+
       // TXT files - analyze and convert to CSV
       if (fileExt === "txt") {
         set({ processingStatus: "Analyzing TXT file structure..." });
@@ -1402,7 +1517,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         ) {
           errorMessage =
             `File format not supported or file may be corrupted. ` +
-            `Supported formats: CSV, JSON, Parquet, Excel (.xlsx/.xls), TXT.`;
+            `Supported formats: CSV, JSON, Parquet, Excel (.xlsx/.xls), TXT, DuckDB (.duckdb/.db).`;
         }
       }
 
@@ -1443,6 +1558,117 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       console.log(
         `[DuckDBStore] Importing file: ${file.name} (${fileSize.toFixed(2)} MB)`
       );
+
+      // DuckDB database files - attach directly
+      if (fileExt === "duckdb" || fileExt === "db") {
+        set({ processingStatus: "Attaching DuckDB database file..." });
+
+        const baseName = fileName.replace(/\.[^/.]+$/, "");
+        let attachName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
+        
+        // Check if database with this name already exists and generate unique name if needed
+        const existingTables = Array.from(get().registeredTables.keys());
+        const attachedDatabases = new Set(
+          existingTables
+            .filter(name => name.includes('.'))
+            .map(name => name.split('.')[0])
+        );
+        
+        if (attachedDatabases.has(attachName)) {
+          // Add timestamp to make it unique
+          attachName = `${attachName}_${Date.now()}`;
+          console.log(`[DuckDBStore] Database name conflict, using unique name: ${attachName}`);
+        }
+
+        const conn = await get().db!.connect();
+
+        try {
+          // Register the file with DuckDB
+          const registeredFileName = `attach_${Date.now()}.${fileExt}`;
+          await get().db!.registerFileHandle(
+            registeredFileName,
+            file,
+            duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
+            true
+          );
+
+          set({
+            processingStatus: `Attaching database as '${attachName}'...`,
+            processingProgress: 0.4,
+          });
+
+          // Try to detach if it already exists (shouldn't happen with unique names, but just in case)
+          try {
+            await conn.query(`DETACH ${attachName}`);
+            console.log(`[DuckDBStore] Detached existing database: ${attachName}`);
+          } catch (e) {
+            // Database doesn't exist, which is expected
+          }
+          
+          // Attach the database file
+          const attachQuery = `ATTACH '${registeredFileName}' AS ${attachName} (READ_ONLY)`;
+          console.log(`[DuckDBStore] Attaching database: ${attachQuery}`);
+          await conn.query(attachQuery);
+
+          set({
+            processingStatus: "Discovering tables in attached database...",
+            processingProgress: 0.6,
+          });
+
+          // List all tables in the attached database
+          const tablesQuery = `
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_catalog = '${attachName}'
+            AND table_type = 'BASE TABLE'
+          `;
+          const tablesResult = await conn.query(tablesQuery);
+          const tables = tablesResult.toArray();
+
+          console.log(`[DuckDBStore] Found ${tables.length} tables in attached database:`, tables);
+
+          // Register each table from the attached database
+          const newTables = new Map(get().registeredTables);
+          const originalBaseName = fileName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_]/g, "_");
+          
+          for (const table of tables) {
+            const tableName = table.table_name;
+            // Register with the actual attached database name
+            const qualifiedName = `${attachName}.${tableName}`;
+            newTables.set(qualifiedName, `"${attachName}"."${tableName}"`);
+            console.log(`[DuckDBStore] Registered table: ${qualifiedName}`);
+            
+            // Also register with the original base name for user convenience
+            if (attachName !== originalBaseName) {
+              const originalQualifiedName = `${originalBaseName}.${tableName}`;
+              newTables.set(originalQualifiedName, `"${attachName}"."${tableName}"`);
+              console.log(`[DuckDBStore] Registered table alias: ${originalQualifiedName} -> ${attachName}.${tableName}`);
+            }
+          }
+
+          await conn.close();
+
+          set({
+            registeredTables: newTables,
+            isLoading: false,
+            processingStatus: `Attached database: ${tables.length} table(s) available`,
+            processingProgress: 1.0,
+          });
+
+          await get().refreshSchemaCache();
+
+          return {
+            tableName: attachName,
+            rowCount: tables.length,
+            isDatabaseFile: true,
+            attachedTables: tables.map(t => t.table_name),
+            fileSizeMB: fileSize,
+          };
+        } catch (err) {
+          await conn.close();
+          throw err;
+        }
+      }
 
       if (fileExt === "txt") {
         set({ processingStatus: "Analyzing TXT file structure..." });
@@ -2002,9 +2228,11 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
     try {
       set({ isLoading: true, error: null });
+      
+      const transformedSql = get().transformQueryForExecution(sql);
 
       // SMART DETECTION: Analyze the query to determine execution target
-      const queryAnalysis = get().isMotherDuckQuery(sql);
+      const queryAnalysis = get().isMotherDuckQuery(transformedSql);
 
       console.log("[DuckDBStore] Query analysis:", {
         isMotherDuck: queryAnalysis.isMotherDuck,
@@ -2039,9 +2267,10 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
           `[DuckDBStore] Executing in MotherDuck (database: ${queryAnalysis.targetDatabase})`
         );
         console.log(`[DuckDBStore] Original SQL: "${sql}"`);
+        console.log(`[DuckDBStore] Executing SQL: "${transformedSql}"`);
 
         // Check if this is a DDL statement (CREATE/DROP/ALTER)
-        const isDDL = /^\s*(CREATE|DROP|ALTER)\s+/i.test(sql);
+        const isDDL = /^\s*(CREATE|DROP|ALTER)\s+/i.test(transformedSql);
 
         if (isDDL) {
           console.log(
@@ -2050,7 +2279,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
           const startTime = Date.now();
           const result = await get().executeMotherDuckQuery(
-            sql,
+            transformedSql,
             queryAnalysis.targetDatabase
           );
           const queryTime = Date.now() - startTime;
@@ -2077,7 +2306,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         }
 
         // For non-DDL queries, continue with pagination logic
-        const userHasLimit = hasLimitClause(sql);
+        const userHasLimit = hasLimitClause(transformedSql);
         console.log(`[DuckDBStore] hasLimitClause() returned: ${userHasLimit}`);
         console.log(
           `[DuckDBStore] Current page: ${page}, pageSize: ${pageSize}`
@@ -2088,7 +2317,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
 
           const startTime = Date.now();
           const result = await get().executeMotherDuckQuery(
-            sql,
+            transformedSql,
             queryAnalysis.targetDatabase
           );
           const queryTime = Date.now() - startTime;
@@ -2112,7 +2341,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
             `[DuckDBStore] BRANCH: No LIMIT found - applying pagination`
           );
 
-          const paginatedSql = addLimitIfMissing(sql, page, pageSize);
+          const paginatedSql = addLimitIfMissing(transformedSql, page, pageSize);
           console.log(
             `[DuckDBStore] addLimitIfMissing() returned: "${paginatedSql}"`
           );
@@ -2192,7 +2421,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         console.log("[DuckDBStore] Executing locally");
         const result = await executePaginatedQuery(
           {
-            sql,
+            sql: transformedSql,
             page,
             pageSize,
             applyPagination,
@@ -2251,10 +2480,49 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         const tableName = quotedTable || unquotedTable;
 
         if (tableName) {
-          references.push({
-            name: tableName,
-            database: database || undefined,
-          });
+          // Handle case where table name contains a dot (e.g., "store.products")
+          // This could be interpreted as database.table format
+          if (!database && tableName.includes('.')) {
+            const [possibleDb, ...tableNameParts] = tableName.split('.');
+            const possibleTableName = tableNameParts.join('.');
+            
+            // Only consider dot-splitting if we have exactly one dot and both parts are meaningful
+            if (tableNameParts.length === 1 && possibleDb && possibleTableName) {
+              // Check if the first part might be a database name by looking at registered tables
+              const state = get();
+              const attachedDatabases = new Set<string>();
+              state.registeredTables.forEach((value, key) => {
+                if (key.includes('.')) {
+                  const [dbName] = key.split('.');
+                  attachedDatabases.add(dbName);
+                }
+              });
+              
+              if (attachedDatabases.has(possibleDb)) {
+                references.push({
+                  name: possibleTableName,
+                  database: possibleDb,
+                });
+              } else {
+                // Treat as a single table name
+                references.push({
+                  name: tableName,
+                  database: database || undefined,
+                });
+              }
+            } else {
+              // Multiple dots or empty parts - treat as single table name
+              references.push({
+                name: tableName,
+                database: database || undefined,
+              });
+            }
+          } else {
+            references.push({
+              name: tableName,
+              database: database || undefined,
+            });
+          }
         }
       }
     });
@@ -2269,6 +2537,44 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     );
 
     return unique;
+  },
+
+  transformQueryForExecution: (sql: string): string => {
+    const state = get();
+    const { registeredTables } = state;
+    
+    // Get list of attached databases
+    const attachedDatabases = new Set<string>();
+    registeredTables.forEach((value, key) => {
+      if (key.includes('.')) {
+        const [dbName] = key.split('.');
+        attachedDatabases.add(dbName);
+      }
+    });
+
+    console.log('[DuckDBStore] transformQueryForExecution - Attached databases:', Array.from(attachedDatabases));
+    
+    if (attachedDatabases.size === 0) {
+      return sql; // No transformations needed if no attached databases
+    }
+
+    // Transform "database.table" format to "database"."table" format
+    // This regex matches quoted identifiers that contain exactly one dot and the first part is an attached database
+    let transformedSql = sql;
+    
+    // Pattern to match "database.table" where database is attached
+    const quotedDotPattern = /"([^"]+)\.([^"]+)"/g;
+    
+    transformedSql = sql.replace(quotedDotPattern, (match, possibleDb, tableName) => {
+      if (attachedDatabases.has(possibleDb) && tableName) {
+        const replacement = `"${possibleDb}"."${tableName}"`;
+        console.log(`[DuckDBStore] transformQueryForExecution - Transforming: ${match} -> ${replacement}`);
+        return replacement;
+      }
+      return match; // Keep original if not an attached database
+    });
+    
+    return transformedSql;
   },
 
   isMotherDuckQuery: (sql: string) => {
@@ -2293,20 +2599,50 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     // Check if this is a DDL operation (CREATE/DROP/ALTER)
     const isDDL = /^\s*(CREATE|DROP|ALTER)\s+/i.test(sql);
 
+    // Get list of attached databases (not MotherDuck)
+    const attachedDatabases = new Set<string>();
+    registeredTables.forEach((value, key) => {
+      if (key.includes('.')) {
+        const [dbName] = key.split('.');
+        attachedDatabases.add(dbName);
+      }
+    });
+
+
     // Check each table reference
     tableRefs.forEach((ref) => {
-      // If database is specified, it's ALWAYS a MotherDuck reference
-      // Don't check if table exists for DDL operations!
+      // If database is specified, check if it's an attached database or MotherDuck
       if (ref.database) {
-        // For DDL operations, just check if the database exists
-        if (isDDL) {
-          // Even if the database doesn't exist yet, treat it as MotherDuck
-          // (user might be creating a new database)
-          motherDuckTables.push({ name: ref.name, database: ref.database });
+        console.log(`[DuckDBStore] isMotherDuckQuery - Checking database: ${ref.database}`);
+        // First check if it's an attached local database
+        if (attachedDatabases.has(ref.database)) {
+          // This is an attached database table, treat as local
+          const fullTableName = `${ref.database}.${ref.name}`;
+          // Check if this specific table exists
+          if (registeredTables.has(fullTableName)) {
+            localTables.push(fullTableName);
+          } else {
+            // Table might not exist yet but database is attached, still treat as local
+            localTables.push(fullTableName);
+          }
           return;
         }
 
-        // For non-DDL operations, check if the database exists
+        // For DDL operations, check if it's targeting MotherDuck
+        if (isDDL) {
+          // Check if it's a known MotherDuck database
+          const hasSchemas = motherDuckSchemas.has(ref.database);
+          if (hasSchemas || state.motherDuckConnected) {
+            // It's either a known MotherDuck database or MotherDuck is connected (could be creating new)
+            motherDuckTables.push({ name: ref.name, database: ref.database });
+          } else {
+            // Not a MotherDuck database and MotherDuck not connected, treat as local
+            localTables.push(`${ref.database}.${ref.name}`);
+          }
+          return;
+        }
+
+        // For non-DDL operations, check if the database exists in MotherDuck
         const hasSchemas = motherDuckSchemas.has(ref.database);
         if (hasSchemas) {
           const schemas = motherDuckSchemas.get(ref.database) || [];
@@ -2317,28 +2653,33 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
             motherDuckTables.push({ name: ref.name, database: ref.database });
             return;
           }
-          // If database exists but table doesn't, still treat as MotherDuck
+          // If database exists in MotherDuck but table doesn't, still treat as MotherDuck
           // (might be a typo or the table was just dropped)
           motherDuckTables.push({ name: ref.name, database: ref.database });
           return;
         } else {
-          // Database not in schema - but if it has database prefix, it's still MotherDuck
-          motherDuckTables.push({ name: ref.name, database: ref.database });
+          // Database not in MotherDuck schema and not attached - treat as local
+          // (could be a local database that's not attached yet)
+          localTables.push(`${ref.database}.${ref.name}`);
           return;
         }
       }
 
       // No database specified - check if it's a local table
+      
       if (registeredTables.has(ref.name)) {
         localTables.push(ref.name);
         return;
       }
 
+      
       // If no database specified, check all MotherDuck databases for this table
       let foundInMotherDuck = false;
       motherDuckSchemas.forEach((schemas, databaseName) => {
         const tableExists = schemas.some((schema) => schema.name === ref.name);
+        console.log(`[DuckDBStore] isMotherDuckQuery - Checking database ${databaseName} for table ${ref.name}: ${tableExists}`);
         if (tableExists && !foundInMotherDuck) {
+          console.log(`[DuckDBStore] isMotherDuckQuery - Found ${ref.name} in MotherDuck database ${databaseName}`);
           motherDuckTables.push({ name: ref.name, database: databaseName });
           foundInMotherDuck = true;
         }
@@ -2895,5 +3236,82 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     });
 
     return tables;
+  },
+
+  listAttachedDatabases: async () => {
+    const { connection, isInitialized } = get();
+    
+    if (!connection || !isInitialized) {
+      return [];
+    }
+    
+    try {
+      // Query DuckDB for attached databases
+      const result = await connection.query(`
+        SELECT DISTINCT table_catalog as database_name
+        FROM information_schema.tables
+        WHERE table_catalog NOT IN ('memory', 'system', 'temp')
+      `);
+      
+      const databases = result.toArray();
+      const dbList = [];
+      
+      for (const db of databases) {
+        const dbName = db.database_name;
+        
+        // Count tables in each database
+        const tableCountResult = await connection.query(`
+          SELECT COUNT(*) as count
+          FROM information_schema.tables
+          WHERE table_catalog = '${dbName}'
+          AND table_type = 'BASE TABLE'
+        `);
+        
+        const tableCount = tableCountResult.toArray()[0].count;
+        dbList.push({ name: dbName, tables: tableCount });
+      }
+      
+      return dbList;
+    } catch (err) {
+      console.error('[DuckDBStore] Error listing attached databases:', err);
+      return [];
+    }
+  },
+
+  // Detach a database
+  detachDatabase: async (databaseName: string) => {
+    const { connection, isInitialized } = get();
+    
+    if (!connection || !isInitialized) {
+      throw new Error("DuckDB is not initialized");
+    }
+    
+    try {
+      // Detach the database
+      await connection.query(`DETACH ${databaseName}`);
+      console.log(`[DuckDBStore] Detached database: ${databaseName}`);
+      
+      // Remove tables from registered tables
+      const newTables = new Map(get().registeredTables);
+      const keysToRemove = [];
+      
+      newTables.forEach((value, key) => {
+        if (key.startsWith(`${databaseName}.`)) {
+          keysToRemove.push(key);
+        }
+      });
+      
+      keysToRemove.forEach(key => newTables.delete(key));
+      
+      set({ registeredTables: newTables });
+      
+      // Refresh schema cache
+      await get().refreshSchemaCache();
+      
+      console.log(`[DuckDBStore] Removed ${keysToRemove.length} tables from ${databaseName}`);
+    } catch (err) {
+      console.error(`[DuckDBStore] Error detaching database ${databaseName}:`, err);
+      throw err;
+    }
   },
 }));

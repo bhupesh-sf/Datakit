@@ -52,15 +52,20 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
     motherDuckSchemas,
     refreshMotherDuckSchemas,
     executeMotherDuckQuery,
+    
+    listAttachedDatabases,
   } = useDuckDBStore();
 
   const [localSchemas, setLocalSchemas] = useState<Record<string, TableSchema>>({});
   const [motherDuckTableSchemas, setMotherDuckTableSchemas] = useState<Record<string, TableSchema>>({});
+  const [attachedDatabases, setAttachedDatabases] = useState<Array<{ name: string; tables: number }>>([]);
+  const [attachedDbSchemas, setAttachedDbSchemas] = useState<Record<string, TableSchema>>({});
   const [expandedDatabases, setExpandedDatabases] = useState<Set<string>>(new Set(["local"]));
   const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
   const [localLoading, setLocalLoading] = useState<boolean>(true);
   const [localRefreshing, setLocalRefreshing] = useState<boolean>(false);
   const [motherDuckRefreshing, setMotherDuckRefreshing] = useState<Set<string>>(new Set());
+  const [attachedDbRefreshing, setAttachedDbRefreshing] = useState<Set<string>>(new Set());
   const [loadingColumns, setLoadingColumns] = useState<Set<string>>(new Set());
 
   // Dependency tracking for local tables
@@ -77,6 +82,11 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
       const schemaData: Record<string, TableSchema> = {};
 
       for (const objectName of objectNames) {
+        // Skip attached database tables (they have dots in their names)
+        if (objectName.includes('.')) {
+          continue;
+        }
+        
         try {
           const objectType = await getObjectType(objectName);
           const result = await executeQuery(`DESCRIBE "${objectName}"`);
@@ -112,6 +122,64 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
       setLocalLoading(false);
     }
   }, [getAvailableTables, getObjectType, executeQuery]);
+  
+  // Fetch attached databases and their tables
+  const fetchAttachedDatabases = useCallback(async () => {
+    try {
+      const attached = await listAttachedDatabases();
+      setAttachedDatabases(attached);
+      
+      // Fetch schemas for attached database tables
+      const schemaData: Record<string, TableSchema> = {};
+      const allTables = getAvailableTables();
+      
+      // Filter tables that belong to attached databases (contain dots)
+      for (const tableName of allTables) {
+        if (tableName.includes('.')) {
+          const [dbName, ...tableNameParts] = tableName.split('.');
+          const actualTableName = tableNameParts.join('.');
+          
+          // Check if this database is in our attached list
+          if (attached.some(db => db.name === dbName)) {
+            try {
+              const qualifiedName = registeredTables.get(tableName) || `"${dbName}"."${actualTableName}"`;
+              console.log(`[SchemaBrowser] Describing table ${tableName}, using qualified name: ${qualifiedName}`);
+              console.log(`[SchemaBrowser] Available registered tables:`, Array.from(registeredTables.keys()));
+              const result = await executeQuery(`DESCRIBE ${qualifiedName}`);
+              
+              if (result) {
+                const columns = result.toArray().map((row) => ({
+                  name: row.column_name || row.name || "",
+                  type: row.column_type || row.type || "",
+                }));
+                
+                schemaData[tableName] = {
+                  name: actualTableName,
+                  type: "table",
+                  source: "local",
+                  database: dbName,
+                  columns,
+                };
+              }
+            } catch (err) {
+              console.error(`Error fetching schema for ${tableName}:`, err);
+              schemaData[tableName] = {
+                name: actualTableName,
+                type: "table",
+                source: "local",
+                database: dbName,
+                columns: [],
+              };
+            }
+          }
+        }
+      }
+      
+      setAttachedDbSchemas(schemaData);
+    } catch (err) {
+      console.error("Error fetching attached databases:", err);
+    }
+  }, [listAttachedDatabases, getAvailableTables, registeredTables, executeQuery]);
 
   // Fetch MotherDuck table columns on demand
   const fetchMotherDuckTableColumns = useCallback(async (database: string, tableName: string) => {
@@ -161,6 +229,7 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
   // Fetch local schemas when dependencies change
   useEffect(() => {
     fetchLocalSchemas();
+    fetchAttachedDatabases();
   }, [localDependencyKey]);
 
   // Handle local refresh
@@ -169,8 +238,26 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
     setLocalRefreshing(true);
     try {
       await fetchLocalSchemas();
+      await fetchAttachedDatabases();
     } finally {
       setLocalRefreshing(false);
+    }
+  };
+  
+  // Handle attached database refresh
+  const handleAttachedDbRefresh = async (databaseName: string) => {
+    if (attachedDbRefreshing.has(databaseName)) return;
+    
+    setAttachedDbRefreshing(prev => new Set(prev).add(databaseName));
+    try {
+      // Re-fetch the schemas for this specific database
+      await fetchAttachedDatabases();
+    } finally {
+      setAttachedDbRefreshing(prev => {
+        const next = new Set(prev);
+        next.delete(databaseName);
+        return next;
+      });
     }
   };
 
@@ -247,7 +334,13 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
   const generateSelectQuery = (schema: TableSchema) => {
     let query: string;
     
-    if (schema.source === 'local') {
+    if (schema.source === 'local' && schema.database) {
+      // Attached database table
+      const fullTableName = `${schema.database}.${schema.name}`;
+      const escapedName = registeredTables.get(fullTableName) || `"${schema.database}"."${schema.name}"`;
+      query = `\nSELECT *\nFROM ${escapedName}\nLIMIT 10;`;
+    } else if (schema.source === 'local') {
+      // Regular local table
       const escapedName = registeredTables.get(schema.name) || `"${schema.name}"`;
       query = `\nSELECT *\nFROM ${escapedName}\nLIMIT 10;`;
     } else {
@@ -262,7 +355,13 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
   const generateColumnQuery = (schema: TableSchema, columnName: string) => {
     let query: string;
     
-    if (schema.source === 'local') {
+    if (schema.source === 'local' && schema.database) {
+      // Attached database table
+      const fullTableName = `${schema.database}.${schema.name}`;
+      const escapedName = registeredTables.get(fullTableName) || `"${schema.database}"."${schema.name}"`;
+      query = `\nSELECT "${columnName}"\nFROM ${escapedName}\nLIMIT 10;`;
+    } else if (schema.source === 'local') {
+      // Regular local table
       const escapedName = registeredTables.get(schema.name) || `"${schema.name}"`;
       query = `\nSELECT "${columnName}"\nFROM ${escapedName}\nLIMIT 10;`;
     } else {
@@ -421,6 +520,97 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
                 )}
               </div>
             )}
+
+            {/* Attached DuckDB Database Sections */}
+            {attachedDatabases.map((db) => {
+              // Get tables for this attached database
+              const dbTables = Object.entries(attachedDbSchemas)
+                .filter(([key]) => key.startsWith(`${db.name}.`))
+                .map(([key, schema]) => schema);
+              
+              const isExpanded = expandedDatabases.has(db.name);
+
+              return (
+                <div key={db.name} className="border-b border-white/5">
+                  {/* Database Header */}
+                  <div className="flex items-center justify-between px-2 py-2 hover:bg-white/5 cursor-pointer"
+                       onClick={() => toggleDatabase(db.name)}>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-white/70">
+                        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                      </span>
+                      <HardDrive size={14} className="text-blue-400" />
+                      <Tooltip placement="top" content={`Attached: ${db.name}.duckdb`}>
+                        <span className="text-sm font-medium text-white truncate max-w-[120px] block">
+                          {db.name}
+                        </span>
+                      </Tooltip>
+                      <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">
+                        Attached
+                      </span>
+                      <span className="text-xs text-white/60">
+                        ({dbTables.length})
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Tooltip placement="left" content="Refresh tables">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAttachedDbRefresh(db.name);
+                          }}
+                          disabled={attachedDbRefreshing.has(db.name)}
+                          className="p-1 hover:bg-white/10 rounded text-white/70 hover:text-white transition-colors"
+                        >
+                          <RefreshCw size={12} className={attachedDbRefreshing.has(db.name) ? "animate-spin" : ""} />
+                        </button>
+                      </Tooltip>
+                    </div>
+                  </div>
+
+                  {/* Database Content */}
+                  {isExpanded && (
+                    <div className="pl-6">
+                      {attachedDbRefreshing.has(db.name) ? (
+                        <div className="flex items-center justify-center py-4 text-white/50">
+                          <Loader2 size={16} className="animate-spin mr-2" />
+                          <span className="text-sm">Loading {db.name} tables...</span>
+                        </div>
+                      ) : dbTables.length === 0 ? (
+                        <div className="px-2 py-4 text-center text-white/50 text-sm">
+                          No tables found in {db.name}
+                        </div>
+                      ) : (
+                        <div className="py-1">
+                          <div className="mb-2">
+                            <div className="flex items-center px-2 py-1 text-xs font-medium text-white/50">
+                              <Layers size={12} className="mr-1" />
+                              Tables ({dbTables.length})
+                            </div>
+                            {dbTables.map(schema => {
+                              const tableId = `${db.name}.${schema.name}`;
+                              return (
+                                <TableItem
+                                  key={tableId}
+                                  schema={schema}
+                                  tableId={tableId}
+                                  isExpanded={expandedTables.has(tableId)}
+                                  onToggle={() => toggleTable(tableId)}
+                                  onGenerateQuery={generateSelectQuery}
+                                  onGenerateColumnQuery={generateColumnQuery}
+                                  getObjectIcon={getObjectIcon}
+                                  getColumnTypeIcon={getColumnTypeIcon}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {/* MotherDuck Database Sections - Only show if connected */}
             {motherDuckConnected && motherDuckDatabases.map((db) => {

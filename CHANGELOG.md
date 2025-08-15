@@ -1,3 +1,6 @@
+# 0.3.85
+Added the .duckdb support import 
+
 # 0.3.8
 Added the parallel false for view importFileDirectlyStreaming
 

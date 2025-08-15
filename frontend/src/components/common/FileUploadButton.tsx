@@ -6,6 +6,7 @@ import csv from "@/assets/csv.png";
 import json from "@/assets/json.png";
 import xlsx from "@/assets/xlsx.png";
 import parquet from "@/assets/parquet.png";
+import duckdb from "@/assets/duckdb.svg";
 
 interface FileUploadButtonProps {
   onFileSelect?: (file: File) => void;
@@ -20,7 +21,7 @@ export const FileUploadButton = ({
   onFileSelect,
   onFileHandleSelect,
   isLoading = false,
-  accept = ".csv,.json,.xlsx,.xls,.parquet",
+  accept = ".csv,.json,.xlsx,.xls,.parquet,.duckdb,.db",
   className = "",
   supportLargeFiles = true,
 }: FileUploadButtonProps) => {
@@ -32,6 +33,7 @@ export const FileUploadButton = ({
     { type: "excel", icon: xlsx, color: "bg-green-700", label: "EXCEL" },
     { type: "json", icon: json, color: "bg-amber-100", label: "JSON" },
     { type: "parquet", icon: parquet, color: "bg-sky-200", label: "PARQUET" },
+    // { type: "duckdb", icon: duckdb, color: "bg-yellow-500", label: "DUCKDB" },
   ];
 
   const handleButtonClick = async () => {
@@ -50,6 +52,7 @@ export const FileUploadButton = ({
                 "application/x-parquet": [".parquet"],
                 "application/vnd.apache.parquet": [".parquet"],
                 "text/plain": [".txt"],
+                "application/octet-stream": [".duckdb", ".db"],
               },
             },
           ],
@@ -153,10 +156,10 @@ export const FileUploadButton = ({
     if (!file) return;
 
     const fileExt = file.name.split(".").pop()?.toLowerCase();
-    const validExtensions = ["csv", "json", "xlsx", "xls", "parquet"];
+    const validExtensions = ["csv", "json", "xlsx", "xls", "parquet", "duckdb", "db"];
 
     if (!validExtensions.includes(fileExt || "")) {
-      alert("Please import a CSV, JSON, Excel, or Parquet file");
+      alert("Please import a CSV, JSON, Excel, Parquet, or DuckDB database file");
       return;
     }
 
@@ -233,7 +236,7 @@ export const FileUploadButton = ({
             Drop your file here
           </p>
           <p className="text-xs text-primary/70 mt-1">
-            CSV, JSON, Excel, or Parquet
+            CSV, JSON, Excel, Parquet, or DuckDB
           </p>
         </div>
       ) : (

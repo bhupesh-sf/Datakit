@@ -226,6 +226,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // Multi-file actions
   addFile: (fileData: DataLoadWithDuckDBResult): string => {
+    // If this is a database attachment, don't add it as a regular file
+    // since it doesn't have data to preview
+    if (fileData.isDatabaseAttachment) {
+      console.log('[AppStore] Database attached, not adding to files list:', fileData.fileName);
+      console.log('[AppStore] Attached tables:', fileData.attachedTables);
+      // Return a fake ID for compatibility
+      return `db-attachment-${Date.now()}`;
+    }
+    
     const fileId = generateFileId();
     const tableName =
       fileData.tableName || generateTableName(fileData.fileName, fileId);

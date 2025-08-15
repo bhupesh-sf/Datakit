@@ -168,7 +168,7 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
               <div className="p-4 border-b border-white/10">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-heading font-medium text-white">
-                    Import Remote File
+                    Import Remote Sources
                   </h2>
                 </div>
                 <p className="text-xs text-white/60 mt-1">

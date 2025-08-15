@@ -57,7 +57,8 @@ export const useQueryExecution = (
   const { 
     executePaginatedQuery, 
     isLoading: duckDBLoading,
-    motherDuckConnected 
+    motherDuckConnected,
+    isMotherDuckQuery 
   } = useDuckDBStore();
   
   const { addRecentQuery } = useAppStore();
@@ -100,15 +101,7 @@ export const useQueryExecution = (
     return sql;
   }, []);
   
-  /**
-   * Detect if query is targeting MotherDuck
-   */
-  const isMotherDuckQuery = useCallback((sql: string): boolean => {
-    const normalizedSql = sql.toLowerCase();
-    return normalizedSql.includes('"my_db"') || 
-           normalizedSql.includes('motherduck') ||
-           /"\w+"\."/.test(sql); // database.table pattern
-  }, []);
+  // Remove local isMotherDuckQuery function - now using the one from duckDBStore
   
   /**
    * Execute the current query
@@ -120,7 +113,8 @@ export const useQueryExecution = (
     }
     
     // Check if it's a MotherDuck query but not connected
-    if (isMotherDuckQuery(query) && !motherDuckConnected) {
+    const queryAnalysis = isMotherDuckQuery(query);
+    if (queryAnalysis.isMotherDuck && !motherDuckConnected) {
       setError('This query targets MotherDuck tables, but MotherDuck is not connected. Please connect first.');
       return;
     }
