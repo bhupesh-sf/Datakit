@@ -23,6 +23,78 @@ const isFileSystemAccessSupported = (): boolean => {
   return 'showOpenFilePicker' in window && 'FileSystemFileHandle' in window;
 };
 
+// Helper function to get browser-specific compatibility info
+const getBrowserCompatibilityInfo = () => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isChrome = userAgent.includes('chrome') && !userAgent.includes('edg');
+  const isEdge = userAgent.includes('edg');
+  const isFirefox = userAgent.includes('firefox');
+  const isSafari = userAgent.includes('safari') && !userAgent.includes('chrome');
+  
+  return {
+    isChrome,
+    isEdge,
+    isFirefox,
+    isSafari,
+    hasFullSupport: isChrome || isEdge,
+    hasLimitedSupport: isSafari,
+    noSupport: isFirefox,
+    getBrowserName: () => {
+      if (isChrome) return 'Chrome';
+      if (isEdge) return 'Edge';
+      if (isFirefox) return 'Firefox';
+      if (isSafari) return 'Safari';
+      return 'Unknown';
+    }
+  };
+};
+
+// Helper function to request permission for file handle
+const requestFileHandlePermission = async (handle: FileSystemFileHandle): Promise<boolean> => {
+  try {
+    // Check if we already have permission
+    const permission = await handle.queryPermission({ mode: 'read' });
+    if (permission === 'granted') {
+      return true;
+    }
+    
+    // Request permission if not granted
+    if (permission === 'prompt') {
+      const requestedPermission = await handle.requestPermission({ mode: 'read' });
+      return requestedPermission === 'granted';
+    }
+    
+    return false;
+  } catch (error) {
+    console.log('[Permission] Error requesting file handle permission:', error);
+    return false;
+  }
+};
+
+// Helper function to verify handle validity with permission request
+const verifyFileHandle = async (handle: FileSystemFileHandle, expectedFileName: string): Promise<{ isValid: boolean; file?: File; error?: string }> => {
+  try {
+    // First, try to request permission
+    const hasPermission = await requestFileHandlePermission(handle);
+    if (!hasPermission) {
+      return { isValid: false, error: 'Permission denied by user or system' };
+    }
+    
+    // Try to get the file
+    const file = await handle.getFile();
+    
+    // Verify the file name matches
+    if (file.name !== expectedFileName) {
+      return { isValid: false, error: `File name mismatch: expected "${expectedFileName}", got "${file.name}"` };
+    }
+    
+    return { isValid: true, file };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return { isValid: false, error: errorMessage };
+  }
+};
+
 import RemoteDataImportModal from '@/components/common/RemoteDataImportPanel';
 
 import { ColumnType } from '@/types/csv';
@@ -213,7 +285,20 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
         // Check browser support for File System Access API
         if (!isFileSystemAccessSupported()) {
           console.log('[Sidebar] File System Access API not supported, cannot auto-open files');
-          alert('Your browser does not support automatic file access. Please re-import the file. If you want automatic import please use Chrome.');
+          const browserInfo = getBrowserCompatibilityInfo();
+          const browserName = browserInfo.getBrowserName();
+          
+          let message = `Your browser (${browserName}) does not support automatic file access. Please re-import the file manually. `;
+          
+          if (browserInfo.noSupport) {
+            message += 'For automatic file access, please use Chrome or Edge.';
+          } else if (browserInfo.hasLimitedSupport) {
+            message += 'File access support is limited in Safari. For better experience, use Chrome or Edge.';
+          } else {
+            message += 'For automatic import features, please use Chrome or Edge.';
+          }
+          
+          alert(message);
           return;
         }
         
@@ -221,20 +306,31 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
         if (file.handle) {
           console.log('[Sidebar] Using stored file handle for automatic import:', file.name);
           
-          try {
-            // Verify the handle is still valid and get the file
-            const fileData = await file.handle.getFile();
+          const handleResult = await verifyFileHandle(file.handle, file.name);
+          
+          if (handleResult.isValid && handleResult.file) {
+            console.log('[Sidebar] Handle valid with permission, importing automatically:', file.name);
+            await handleFileWithStreaming(file.handle, handleResult.file, true); // Skip workspace add
+            return;
+          } else {
+            console.log('[Sidebar] Handle verification failed:', handleResult.error);
             
-            // Double-check the file name matches (handle could be stale)
-            if (fileData.name === file.name) {
-              console.log('[Sidebar] Handle valid, importing automatically:', file.name);
-              await handleFileWithStreaming(file.handle, fileData, true); // Skip workspace add
-              return;
+            // Show specific error message to user based on the error type
+            if (handleResult.error?.includes('Permission denied')) {
+              const shouldRetry = confirm(
+                `Permission denied to access "${file.name}". This can happen due to browser security policies.\n\n` +
+                `Click "OK" to manually select the file again, or "Cancel" to skip.`
+              );
+              if (!shouldRetry) return;
+            } else if (handleResult.error?.includes('File name mismatch')) {
+              alert(`The stored file reference for "${file.name}" points to a different file. Please re-select the correct file.`);
             } else {
-              console.log('[Sidebar] Handle file name mismatch, falling back to picker');
+              const shouldRetry = confirm(
+                `Cannot automatically access "${file.name}". The file may have been moved, deleted, or access permissions changed.\n\n` +
+                `Click "OK" to manually select the file again, or "Cancel" to skip.`
+              );
+              if (!shouldRetry) return;
             }
-          } catch (handleError) {
-            console.log('[Sidebar] Stored handle invalid, falling back to picker:', handleError);
           }
         }
         

@@ -942,7 +942,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   loadWorkspacesFromStorage: async () => {
     try {
       const stored = await getFromIndexDB('datakit-workspaces');
-      const storedHandles = await getFromIndexDB('datakit-file-handles') as Record<string, FileSystemFileHandle> || {};
+      let storedHandles: Record<string, FileSystemFileHandle> = {};
+      
+      // Try to load file handles, but don't fail if it doesn't work
+      try {
+        storedHandles = await getFromIndexDB('datakit-file-handles') as Record<string, FileSystemFileHandle> || {};
+      } catch (handleError) {
+        console.warn('[AppStore] Could not load file handles (browser may not support this):', handleError);
+      }
       
       if (stored && Array.isArray(stored)) {
         // Restore file handles to workspace files
@@ -986,18 +993,24 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Store workspace data without handles
       await setToIndexDB('datakit-workspaces', workspacesForStorage);
       
-      // Store file handles separately
-      const fileHandles: Record<string, FileSystemFileHandle> = {};
-      workspaces.forEach(workspace => {
-        workspace.files.forEach(file => {
-          if (file.handle) {
-            fileHandles[file.id] = file.handle;
-          }
+      // Try to store file handles separately, but don't fail if it doesn't work
+      try {
+        const fileHandles: Record<string, FileSystemFileHandle> = {};
+        workspaces.forEach(workspace => {
+          workspace.files.forEach(file => {
+            if (file.handle) {
+              fileHandles[file.id] = file.handle;
+            }
+          });
         });
-      });
-      
-      if (Object.keys(fileHandles).length > 0) {
-        await setToIndexDB('datakit-file-handles', fileHandles);
+        
+        if (Object.keys(fileHandles).length > 0) {
+          await setToIndexDB('datakit-file-handles', fileHandles);
+          console.log('[AppStore] Saved', Object.keys(fileHandles).length, 'file handles');
+        }
+      } catch (handleError) {
+        console.warn('[AppStore] Could not save file handles (browser may not support this):', handleError);
+        // Continue without failing - workspace data is still saved
       }
     } catch (error) {
       console.error('[AppStore] Failed to save workspaces:', error);
