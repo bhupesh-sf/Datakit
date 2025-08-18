@@ -461,12 +461,20 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
                     <li className="flex items-center gap-2">
                       <div className="w-1 h-1 bg-primary rounded-full"></div>
+                      Create unlimited workspaces
+                    </li>
+
+                    <li className="flex items-center gap-2">
+                      <div className="w-1 h-1 bg-primary rounded-full"></div>
                       Export reports from data inspector
                     </li>
+
+                    {/*
+                    TODO:
                     <li className="flex items-center gap-2">
                       <div className="w-1 h-1 bg-primary rounded-full"></div>
                       Sync your settings and data across devices
-                    </li>
+                    </li> */}
                     <li className="flex items-center gap-2">
                       <div className="w-1 h-1 bg-primary rounded-full"></div>
                       Priority support and early access to new features

@@ -9,6 +9,26 @@ import {
 import { DataSourceType } from "@/types/json";
 import { DataFile, DataLoadWithDuckDBResult } from "@/types/multiFile";
 import { ImportProvider } from "@/types/remoteImport";
+import { DucklakeCatalog } from "@/lib/duckdb/ducklake";
+import { WorkspaceFile } from "@/components/workspace/FileTreeView";
+
+/**
+ * Interface for a workspace
+ */
+export interface Workspace {
+  /** Unique identifier for the workspace */
+  id: string;
+  /** User-provided workspace name */
+  name: string;
+  /** Array of files in this workspace */
+  files: WorkspaceFile[];
+  /** Timestamp when workspace was created */
+  createdAt: number;
+  /** Timestamp when workspace was last modified */
+  lastModified: number;
+  /** Whether this is the draft (unsaved) workspace */
+  isDraft?: boolean;
+}
 
 /**
  * Interface for a saved or recent query
@@ -72,6 +92,14 @@ interface AppState {
   /** Pending query to be loaded in query tab */
   pendingQuery: string | null;
 
+  // Workspace state
+  /** Array of all workspaces */
+  workspaces: Workspace[];
+  /** ID of the currently active workspace */
+  activeWorkspaceId: string;
+  /** Files in the current workspace (denormalized for easy access) */
+  workspaceFiles: WorkspaceFile[];
+
   // Multi-file actions
   /** Add a new file to the collection */
   addFile: (fileData: DataLoadWithDuckDBResult) => string;
@@ -134,7 +162,39 @@ interface AppState {
   setActiveProviderRemoteModal: (val: ImportProvider) => void;
   /** Set a pending query to be loaded in query tab */
   setPendingQuery: (query: string | null) => void;
+
+  // Workspace actions
+  /** Create a new workspace */
+  createWorkspace: (name: string) => string;
+  /** Switch to a different workspace */
+  switchWorkspace: (workspaceId: string) => void;
+  /** Rename a workspace */
+  renameWorkspace: (workspaceId: string, newName: string) => void;
+  /** Delete a workspace */
+  deleteWorkspace: (workspaceId: string) => void;
+  /** Add a file to the current workspace */
+  addFileToWorkspace: (file: WorkspaceFile) => void;
+  /** Remove a file from the current workspace */
+  removeFileFromWorkspace: (fileId: string) => void;
+  /** Rename a file in the current workspace */
+  renameFileInWorkspace: (fileId: string, newName: string) => void;
+  /** Save the draft workspace */
+  saveDraftWorkspace: (name: string) => void;
+  /** Load workspaces from storage */
+  loadWorkspacesFromStorage: () => Promise<void>;
+  /** Persist workspaces to storage */
+  saveWorkspacesToStorage: () => Promise<void>;
 }
+
+// Create initial draft workspace
+const createDraftWorkspace = (): Workspace => ({
+  id: 'draft',
+  name: 'Draft',
+  files: [],
+  createdAt: Date.now(),
+  lastModified: Date.now(),
+  isDraft: true
+});
 
 // Initial state
 const initialState = {
@@ -161,7 +221,12 @@ const initialState = {
   savedQueries: [],
   pendingQuery: null,
   isRemoteModalOpen: false,
-  activeProviderRemoteModal: 'huggingface' as ImportProvider
+  activeProviderRemoteModal: 'huggingface' as ImportProvider,
+
+  // Workspace state
+  workspaces: [createDraftWorkspace()],
+  activeWorkspaceId: 'draft',
+  workspaceFiles: [],
 };
 
 /**
@@ -223,6 +288,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   ...initialState,
   sidebarCollapsed: getSavedSidebarState(),
   isInIframe: detectIframe(),
+  
+  // Initialize workspaces on store creation
+  ...((() => {
+    // Load workspaces from storage on initialization
+    setTimeout(() => {
+      get().loadWorkspacesFromStorage();
+    }, 0);
+    return {};
+  })()),
 
   // Multi-file actions
   addFile: (fileData: DataLoadWithDuckDBResult): string => {
@@ -625,4 +699,308 @@ export const useAppStore = create<AppState>((set, get) => ({
   setPendingQuery: (query) => {
     set({ pendingQuery: query });
   },
+
+  // Workspace actions
+  createWorkspace: (name: string): string => {
+    const workspaceId = `workspace-${Date.now()}`;
+    const newWorkspace: Workspace = {
+      id: workspaceId,
+      name,
+      files: [],
+      createdAt: Date.now(),
+      lastModified: Date.now(),
+      isDraft: false
+    };
+
+    set((state) => ({
+      workspaces: [...state.workspaces, newWorkspace],
+      activeWorkspaceId: workspaceId,
+      workspaceFiles: []
+    }));
+
+    // Only save to storage if not a draft workspace
+    const activeWorkspace = get().workspaces.find(w => w.id === get().activeWorkspaceId);
+    if (activeWorkspace && !activeWorkspace.isDraft) {
+      get().saveWorkspacesToStorage();
+    }
+    return workspaceId;
+  },
+
+  switchWorkspace: (workspaceId: string) => {
+    set((state) => {
+      const workspace = state.workspaces.find(w => w.id === workspaceId);
+      if (workspace) {
+        return {
+          activeWorkspaceId: workspaceId,
+          workspaceFiles: workspace.files || []
+        };
+      }
+      return state;
+    });
+  },
+
+  renameWorkspace: (workspaceId: string, newName: string) => {
+    set((state) => ({
+      workspaces: state.workspaces.map(w =>
+        w.id === workspaceId 
+          ? { ...w, name: newName, lastModified: Date.now() }
+          : w
+      )
+    }));
+    // Only save to storage if not a draft workspace
+    const activeWorkspace = get().workspaces.find(w => w.id === get().activeWorkspaceId);
+    if (activeWorkspace && !activeWorkspace.isDraft) {
+      get().saveWorkspacesToStorage();
+    }
+  },
+
+  deleteWorkspace: (workspaceId: string) => {
+    if (workspaceId === 'draft') return; // Can't delete draft
+    
+    set((state) => {
+      const newWorkspaces = state.workspaces.filter(w => w.id !== workspaceId);
+      const needsSwitch = state.activeWorkspaceId === workspaceId;
+      
+      return {
+        workspaces: newWorkspaces,
+        activeWorkspaceId: needsSwitch ? 'draft' : state.activeWorkspaceId,
+        workspaceFiles: needsSwitch ? [] : state.workspaceFiles
+      };
+    });
+    // Always save to storage after deleting a workspace (since we're deleting a non-draft workspace)
+    get().saveWorkspacesToStorage();
+  },
+
+  addFileToWorkspace: (file: WorkspaceFile) => {
+    set((state) => {
+      const updatedWorkspaces = state.workspaces.map(w => {
+        if (w.id === state.activeWorkspaceId) {
+          return {
+            ...w,
+            files: [...(w.files || []), file],
+            lastModified: Date.now()
+          };
+        }
+        return w;
+      });
+
+      return {
+        workspaces: updatedWorkspaces,
+        workspaceFiles: [...state.workspaceFiles, file]
+      };
+    });
+    // Only save to storage if not a draft workspace
+    const activeWorkspace = get().workspaces.find(w => w.id === get().activeWorkspaceId);
+    if (activeWorkspace && !activeWorkspace.isDraft) {
+      get().saveWorkspacesToStorage();
+    }
+  },
+
+  removeFileFromWorkspace: (fileId: string) => {
+    // Get the workspace file before removing to check for corresponding file tabs
+    const workspaceFile = get().workspaceFiles.find(f => f.id === fileId);
+    
+    set((state) => {
+      const updatedWorkspaces = state.workspaces.map(w => {
+        if (w.id === state.activeWorkspaceId) {
+          return {
+            ...w,
+            files: w.files.filter(f => f.id !== fileId),
+            lastModified: Date.now()
+          };
+        }
+        return w;
+      });
+
+      // Find and remove corresponding file tab(s) with the same name
+      let updatedFiles = state.files;
+      if (workspaceFile) {
+        // Remove file tabs that match the workspace file name
+        updatedFiles = state.files.filter(f => {
+          // Check if file tab name matches workspace file name
+          const tabFileName = f.fileName || '';
+          const workspaceFileName = workspaceFile.name || '';
+          return tabFileName !== workspaceFileName;
+        });
+      }
+
+      // Handle active file switching if we removed the active file tab
+      let newActiveFileId = state.activeFileId;
+      const activeFileRemoved = workspaceFile && state.files.some(f => 
+        f.id === state.activeFileId && (f.fileName === workspaceFile.name)
+      );
+      
+      if (activeFileRemoved && updatedFiles.length > 0) {
+        // Switch to the first available file
+        newActiveFileId = updatedFiles[0].id;
+      } else if (activeFileRemoved) {
+        newActiveFileId = null;
+      }
+
+      return {
+        workspaces: updatedWorkspaces,
+        workspaceFiles: state.workspaceFiles.filter(f => f.id !== fileId),
+        files: updatedFiles,
+        activeFileId: newActiveFileId
+      };
+    });
+    
+    // Only save to storage if not a draft workspace
+    const activeWorkspace = get().workspaces.find(w => w.id === get().activeWorkspaceId);
+    if (activeWorkspace && !activeWorkspace.isDraft) {
+      get().saveWorkspacesToStorage();
+    }
+  },
+  // TODO: for now disabling on the UI, as it might bring some confusion on what does it happen to other tabs/query panel
+  renameFileInWorkspace: (fileId: string, newName: string) => {
+    // Get the old file name before renaming for matching with file tabs
+    const oldWorkspaceFile = get().workspaceFiles.find(f => f.id === fileId);
+    const oldFileName = oldWorkspaceFile?.name;
+    
+    set((state) => {
+      const updatedWorkspaces = state.workspaces.map(w => {
+        if (w.id === state.activeWorkspaceId) {
+          return {
+            ...w,
+            files: w.files.map(f => 
+              f.id === fileId ? { ...f, name: newName } : f
+            ),
+            lastModified: Date.now()
+          };
+        }
+        return w;
+      });
+
+      // Find file tabs that match the old workspace file name and update them
+      const updatedFiles = state.files.map(file => {
+        // Check if this file tab corresponds to the renamed workspace file
+        // Match by fileName (since workspace files and file tabs might have different IDs)
+        if (oldFileName && file.fileName === oldFileName) {
+          return {
+            ...file,
+            fileName: newName // Update the display name in the file tab
+          };
+        }
+        return file;
+      });
+
+      return {
+        workspaces: updatedWorkspaces,
+        workspaceFiles: state.workspaceFiles.map(f =>
+          f.id === fileId ? { ...f, name: newName } : f
+        ),
+        files: updatedFiles
+      };
+    });
+    // Only save to storage if not a draft workspace
+    const activeWorkspace = get().workspaces.find(w => w.id === get().activeWorkspaceId);
+    if (activeWorkspace && !activeWorkspace.isDraft) {
+      get().saveWorkspacesToStorage();
+    }
+  },
+
+  saveDraftWorkspace: (name: string) => {
+    const state = get();
+    const draftWorkspace = state.workspaces.find(w => w.id === 'draft');
+    
+    if (draftWorkspace && draftWorkspace.files.length > 0) {
+      const workspaceId = state.createWorkspace(name);
+      
+      // Copy files from draft to new workspace
+      set((state) => {
+        const updatedWorkspaces = state.workspaces.map(w => {
+          if (w.id === workspaceId) {
+            return {
+              ...w,
+              files: draftWorkspace.files,
+              lastModified: Date.now()
+            };
+          } else if (w.id === 'draft') {
+            return {
+              ...w,
+              files: [],
+              lastModified: Date.now()
+            };
+          }
+          return w;
+        });
+
+        return {
+          workspaces: updatedWorkspaces,
+          workspaceFiles: draftWorkspace.files
+        };
+      });
+      
+      // Only save to storage if not a draft workspace
+    const activeWorkspace = get().workspaces.find(w => w.id === get().activeWorkspaceId);
+    if (activeWorkspace && !activeWorkspace.isDraft) {
+      get().saveWorkspacesToStorage();
+    }
+    }
+  },
+
+  loadWorkspacesFromStorage: async () => {
+    try {
+      const stored = await getFromIndexDB('datakit-workspaces');
+      const storedHandles = await getFromIndexDB('datakit-file-handles') as Record<string, FileSystemFileHandle> || {};
+      
+      if (stored && Array.isArray(stored)) {
+        // Restore file handles to workspace files
+        const workspacesWithHandles = stored.map(workspace => ({
+          ...workspace,
+          files: workspace.files.map(file => ({
+            ...file,
+            handle: storedHandles[file.id] || undefined
+          }))
+        }));
+        
+        // Ensure draft workspace exists
+        const hasDraft = workspacesWithHandles.some(w => w.id === 'draft');
+        const workspaces = hasDraft ? workspacesWithHandles : [createDraftWorkspace(), ...workspacesWithHandles];
+        
+        set({ 
+          workspaces,
+          workspaceFiles: workspaces.find(w => w.id === get().activeWorkspaceId)?.files || []
+        });
+        
+        console.log('[AppStore] Loaded workspaces with', Object.keys(storedHandles).length, 'file handles');
+      }
+    } catch (error) {
+      console.error('[AppStore] Failed to load workspaces:', error);
+    }
+  },
+
+  saveWorkspacesToStorage: async () => {
+    try {
+      const workspaces = get().workspaces.filter(w => !w.isDraft);
+      
+      // Separate file handles from workspace data for storage
+      const workspacesForStorage = workspaces.map(workspace => ({
+        ...workspace,
+        files: workspace.files.map(file => ({
+          ...file,
+          handle: undefined // Remove handles from JSON storage
+        }))
+      }));
+      
+      // Store workspace data without handles
+      await setToIndexDB('datakit-workspaces', workspacesForStorage);
+      
+      // Store file handles separately
+      const fileHandles: Record<string, FileSystemFileHandle> = {};
+      workspaces.forEach(workspace => {
+        workspace.files.forEach(file => {
+          if (file.handle) {
+            fileHandles[file.id] = file.handle;
+          }
+        });
+      });
+      
+      if (Object.keys(fileHandles).length > 0) {
+        await setToIndexDB('datakit-file-handles', fileHandles);
+      }
+    } catch (error) {
+      console.error('[AppStore] Failed to save workspaces:', error);
+    }
+  }
 }));

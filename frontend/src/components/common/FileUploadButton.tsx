@@ -1,11 +1,7 @@
 import * as React from "react";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/Button";
-
-import csv from "@/assets/csv.png";
-import json from "@/assets/json.png";
-import xlsx from "@/assets/xlsx.png";
-import parquet from "@/assets/parquet.png";
+import { Upload, FileSpreadsheet, FileText, Database, Package, Braces } from "lucide-react";
 import duckdb from "@/assets/duckdb.svg";
 
 interface FileUploadButtonProps {
@@ -21,7 +17,7 @@ export const FileUploadButton = ({
   onFileSelect,
   onFileHandleSelect,
   isLoading = false,
-  accept = ".csv,.json,.xlsx,.xls,.parquet,.duckdb,.db",
+  accept = ".csv,.json,.xlsx,.xls,.parquet,.duckdb,.db,.txt",
   className = "",
   supportLargeFiles = true,
 }: FileUploadButtonProps) => {
@@ -29,11 +25,12 @@ export const FileUploadButton = ({
   const [isDragging, setIsDragging] = useState(false);
 
   const fileTypes = [
-    { type: "csv", icon: csv, color: "bg-primary", label: "CSV" },
-    { type: "excel", icon: xlsx, color: "bg-green-700", label: "EXCEL" },
-    { type: "json", icon: json, color: "bg-amber-100", label: "JSON" },
-    { type: "parquet", icon: parquet, color: "bg-sky-200", label: "PARQUET" },
-    // { type: "duckdb", icon: duckdb, color: "bg-yellow-500", label: "DUCKDB" },
+    { type: "csv", icon: FileSpreadsheet, color: "text-emerald-400", label: "CSV" },
+    { type: "json", icon: Braces, color: "text-amber-400", label: "JSON" },
+    { type: "excel", icon: FileSpreadsheet, color: "text-teal-400", label: "XLS" },
+    { type: "parquet", icon: Package, color: "text-cyan-400", label: "PQT" },
+    { type: "txt", icon: FileText, color: "text-slate-400", label: "TXT" },
+    { type: "duckdb", icon: Database, color: "text-violet-400", label: "DB" },
   ];
 
   const handleButtonClick = async () => {
@@ -156,10 +153,10 @@ export const FileUploadButton = ({
     if (!file) return;
 
     const fileExt = file.name.split(".").pop()?.toLowerCase();
-    const validExtensions = ["csv", "json", "xlsx", "xls", "parquet", "duckdb", "db"];
+    const validExtensions = ["csv", "json", "xlsx", "xls", "parquet", "duckdb", "db", "txt"];
 
     if (!validExtensions.includes(fileExt || "")) {
-      alert("Please import a CSV, JSON, Excel, Parquet, or DuckDB database file");
+      alert("Please import a CSV, JSON, Excel, Parquet, TXT, or DuckDB database file");
       return;
     }
 
@@ -207,11 +204,6 @@ export const FileUploadButton = ({
   };
 
 
-  const hasStreamingSupport =
-    supportLargeFiles && "showOpenFilePicker" in window && onFileHandleSelect;
-  const maxSizeText = hasStreamingSupport
-    ? "Supports +1GB files"
-    : "Supports files up to 1GB";
 
   return (
     <div
@@ -221,34 +213,31 @@ export const FileUploadButton = ({
       onDrop={handleDrop}
     >
       {isDragging ? (
-        <div className="border-2 border-dashed border-primary py-6 px-4 flex flex-col items-center justify-center transition-colors bg-primary/10 shadow-lg shadow-primary/5 rounded-lg">
-          <div className="flex justify-center mb-3 gap-2">
-            {fileTypes.map((type, index) => (
-              <div
-                key={index}
-                className="transform scale-90 hover:scale-100 transition-transform"
-              >
-                <img src={type.icon} alt={type.label} className="h-8 w-8" />
-              </div>
-            ))}
+        <div className="border-2 border-dashed border-primary py-6 px-3 flex flex-col items-center justify-center transition-colors bg-primary/10 shadow-lg shadow-primary/5 rounded-lg">
+          <div className="relative mb-3">
+            <Upload className="h-12 w-12 text-primary animate-pulse" />
+            <div className="absolute -inset-1.5 border-2 border-dashed border-primary/60 rounded-lg animate-pulse" />
           </div>
-          <p className="text-primary font-medium text-sm">
-            Drop your file here
-          </p>
-          <p className="text-xs text-primary/70 mt-1">
-            CSV, JSON, Excel, Parquet, or DuckDB
-          </p>
+          
+          <div className="text-center px-2">
+            <p className="text-primary font-semibold text-xs mb-1">
+              Drop your file here
+            </p>
+            <p className="text-[10px] text-primary/70">
+              Ready to import
+            </p>
+          </div>
         </div>
       ) : (
         <div className="overflow-hidden shadow-sm group hover:shadow-md transition-shadow rounded-lg">
           <Button
             type="button"
             variant="outline"
-            className={`w-full bg-white/5 border border-white/20 hover:border-primary/80 hover:bg-black/30 transition-all p-0 h-auto rounded-lg ${className}`}
+            className={`w-full bg-white/5 border border-white/20 hover:border-primary/50 hover:bg-white/10 transition-all p-0 h-auto rounded-lg ${className}`}
             onClick={handleButtonClick}
             disabled={isLoading}
           >
-            <div className="flex flex-col items-center w-full py-5 px-4">
+            <div className="flex flex-col items-center w-full py-6 px-6">
               {isLoading ? (
                 <div className="flex flex-col items-center">
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mb-2" />
@@ -256,29 +245,35 @@ export const FileUploadButton = ({
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-4 gap-2 mb-3">
-                    {fileTypes.map((type, index) => (
-                      <div
-                        key={index}
-                        className="flex flex-col items-center group-hover:transform group-hover:-translate-y-1 transition-all duration-200"
-                      >
-                        <img
-                          src={type.icon}
-                          alt={type.label}
-                          className="h-8 w-8"
-                        />
-                        <div
-                          className={`h-1 w-1 rounded-full ${type.color} mt-1`}
-                        />
-                        <span className={`text-[10px] mt-1`}>{type.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs text-white/80 mb-1">
-                      Click to open or drag files here
-                    </p>
-                    {/* <p className="text-[10px] text-white/50">{maxSizeText}</p> */}
+                  <div className="flex flex-col items-center">
+                    <div className="text-center mb-4 px-4">
+                      <p className="text-sm font-medium text-white mb-2">
+                        Drop files here or click
+                      </p>
+                      <p className="text-xs text-white/60">
+                        Supports large data files
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-center space-x-2.5 text-white/50">
+                      {fileTypes.map((type, index) => {
+                        const Icon = type.icon;
+                        return (
+                          <div key={index} className="flex flex-col items-center group/icon">
+                            {type.isImage ? (
+                              <img 
+                                src={type.icon} 
+                                alt={type.label}
+                                className="h-5 w-5 group-hover/icon:scale-110 transition-transform"
+                              />
+                            ) : (
+                              <Icon className={`h-5 w-5 ${type.color} group-hover/icon:scale-110 transition-transform`} />
+                            )}
+                            <span className="text-[10px] mt-1.5 font-mono">{type.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </>
               )}

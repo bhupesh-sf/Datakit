@@ -1,3 +1,6 @@
+# 0.3.9
+Introducing workspaces
+
 # 0.3.85
 Added the .duckdb support import 
 

@@ -2,16 +2,22 @@ import { useRef } from "react";
 import useDirectFileImport from "@/hooks/useDirectFileImport";
 import { useAppStore } from "@/store/appStore";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { WorkspaceFile } from "@/components/workspace/FileTreeView";
+
+// Helper function to check File System Access API support
+const isFileSystemAccessSupported = (): boolean => {
+  return 'showOpenFilePicker' in window && 'FileSystemFileHandle' in window;
+};
 
 export const useFileUpload = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const analytics = useAnalytics();
-  const { addFile } = useAppStore();
+  const { addFile, addFileToWorkspace } = useAppStore();
   const { processFile, processFileStreaming, isProcessing } = useDirectFileImport();
 
   const handleButtonClick = async () => {
     // Try to use File System Access API for better performance
-    if ("showOpenFilePicker" in window) {
+    if (isFileSystemAccessSupported()) {
       try {
         const [fileHandle] = await window.showOpenFilePicker({
           types: [
@@ -23,7 +29,9 @@ export const useFileUpload = () => {
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
                 "application/vnd.ms-excel": [".xls"],
                 "application/x-parquet": [".parquet"],
-                "application/octet-stream": [".duckdb"],
+                "application/vnd.apache.parquet": [".parquet"],
+                "text/plain": [".txt"],
+                "application/octet-stream": [".duckdb", ".db"],
               },
             },
           ],
@@ -36,6 +44,18 @@ export const useFileUpload = () => {
         await processFileStreaming(fileHandle, file, (result) => {
           addFile(result);
           analytics.trackFileUpload(result);
+          
+          // Add file to workspace with handle for automatic access
+          const fileType = file.name.split('.').pop()?.toLowerCase() || 'txt';
+          const newFile: WorkspaceFile = {
+            id: `file-${Date.now()}`,
+            name: file.name,
+            type: fileType as WorkspaceFile['type'],
+            size: file.size,
+            lastModified: file.lastModified,
+            handle: fileHandle, // Store the file handle for future automatic access
+          };
+          addFileToWorkspace(newFile);
         });
       } catch (err) {
         if (!(err instanceof Error) || err.name !== "AbortError") {
@@ -56,6 +76,18 @@ export const useFileUpload = () => {
     await processFile(file, (result) => {
       addFile(result);
       analytics.trackFileUpload(result);
+      
+      // Add file to workspace (without handle since we're using regular file input)
+      const fileType = file.name.split('.').pop()?.toLowerCase() || 'txt';
+      const newFile: WorkspaceFile = {
+        id: `file-${Date.now()}`,
+        name: file.name,
+        type: fileType as WorkspaceFile['type'],
+        size: file.size,
+        lastModified: file.lastModified,
+        // No handle available for regular file input
+      };
+      addFileToWorkspace(newFile);
     });
     
     // Reset input

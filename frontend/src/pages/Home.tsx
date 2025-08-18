@@ -1,4 +1,4 @@
-import { Table, BarChart, Database, UserPen, Notebook } from "lucide-react";
+import { Table, BarChart, Database, UserPen, Notebook, FolderOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import MainLayout from "@/components/layout/MainLayout";
@@ -13,6 +13,7 @@ import { SEO } from "@/components/common/SEO";
 
 import { DataSourceType } from "@/types/json";
 import { useHomePageLogic } from "@/hooks/useHomePageLogic";
+import { useAppStore } from "@/store/appStore";
 
 /**
  * Main application home page component
@@ -38,6 +39,9 @@ const Home = () => {
     handleDataLoad,
   } = useHomePageLogic();
 
+  // DuckLake state
+  const { currentCatalog } = useAppStore();
+
 
   // Define available tabs
   const tabs: Tab[] = [
@@ -45,7 +49,8 @@ const Home = () => {
     { id: "query", label: "Query", icon: <Database size={16} /> },
     { id: "scripts", label: "Notebook", icon: <Notebook size={16} /> },
     { id: "visualization", label: "Visualize", icon: <BarChart size={16} /> },
-    { id: "ai", label: "Assistant", icon: <UserPen size={16} /> }, 
+    { id: "ai", label: "Assistant", icon: <UserPen size={16} /> },
+    ...(currentCatalog ? [{ id: "workspace", label: "Workspace", icon: <FolderOpen size={16} /> }] : [])
   ];
 
 
@@ -66,18 +71,20 @@ const Home = () => {
 
       <MainLayout onDataLoad={handleDataLoad}>
         <div className="p-6 h-full flex flex-col bg-background">
-          <div className="mb-4 flex justify-between items-center">
-            <div className="flex items-baseline gap-2">
+          <div className="mb-4 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-2">
               <h2 className="text-xl font-heading font-semibold text-white">
                 {fileName ? `Viewing: ${fileName}` : "Welcome"}
               </h2>
-              <span className="text-primary">•</span>
-              <p className="text-white text-opacity-60 text-sm font-medium">
-                {statusText}
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-primary hidden sm:inline">•</span>
+                <p className="text-white text-opacity-60 text-sm font-medium">
+                  {statusText}
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <ActionButtons feedbackContext={feedbackContext} />
               {/* JSON View Mode Toggle (only show for JSON data) */}
               {sourceType === DataSourceType.JSON && jsonSchema?.isNested && (
@@ -132,6 +139,7 @@ const Home = () => {
                 {activeTab === "scripts" && <NotebooksTab />}
                 {activeTab === "visualization" && <VisualizationTab />}
                 {activeTab === "ai" && <AITab />}
+               
               </motion.div>
             </AnimatePresence>
           </div>
