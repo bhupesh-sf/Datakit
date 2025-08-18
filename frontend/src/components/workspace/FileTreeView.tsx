@@ -211,7 +211,8 @@ export const FileTreeView: React.FC<FileTreeViewProps> = ({
                         className="absolute right-0 top-full mt-1 bg-black border border-white/15 rounded-md shadow-xl overflow-hidden z-50"
                         onMouseLeave={() => setContextMenuFileId(null)}
                       >
-                        <button
+                        {/* // TOOD: Disabled for now */}
+                        {/* <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleStartRename(file);
@@ -220,7 +221,7 @@ export const FileTreeView: React.FC<FileTreeViewProps> = ({
                         >
                           <Edit2 className="h-3 w-3" />
                           Rename
-                        </button>
+                        </button> */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

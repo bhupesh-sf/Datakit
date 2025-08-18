@@ -12,6 +12,10 @@ import {
   MoreHorizontal,
   Database,
   SplitSquareVertical,
+  FileSpreadsheet,
+  Braces,
+  Package,
+  Cloud,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import GoogleSheetsIcon from '@/components/icons/GoogleSheetsIcon';
@@ -38,7 +42,7 @@ interface ContextMenuState {
 }
 
 /**
- * Get the appropriate icon for a file type with better visual hierarchy
+ * Get the appropriate icon for a file type - aligned with FileTreeView
  */
 const getFileIcon = (
   sourceType: DataSourceType,
@@ -54,16 +58,24 @@ const getFileIcon = (
     return <GoogleSheetsIcon className={iconClass} />;
   }
 
+  // Align with FileTreeView icon mapping and colors
   switch (sourceType) {
-    case DataSourceType.JSON:
-      return <BarChart3 className={cn(iconClass, 'text-amber-400')} />;
-    case DataSourceType.XLSX:
-      return <Table className={cn(iconClass, 'text-emerald-400')} />;
-    case DataSourceType.PARQUET:
-      return <Database className={cn(iconClass, 'text-violet-400')} />;
     case DataSourceType.CSV:
+    case DataSourceType.XLSX:
+      return <FileSpreadsheet className={cn(iconClass, 'text-emerald-400')} />;
+    case DataSourceType.JSON:
+      return <Braces className={cn(iconClass, 'text-amber-400')} />;
+    case DataSourceType.PARQUET:
+      return <Package className={cn(iconClass, 'text-cyan-400')} />;
+    case DataSourceType.TXT:
+    case DataSourceType.TSV:
+      return <FileText className={cn(iconClass, 'text-slate-400')} />;
     default:
-      return <FileText className={cn(iconClass, 'text-blue-400')} />;
+      // For remote files or unknown types
+      if (remoteProvider) {
+        return <Cloud className={cn(iconClass, 'text-blue-400')} />;
+      }
+      return <FileText className={cn(iconClass, 'text-white/50')} />;
   }
 };
 

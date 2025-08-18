@@ -1,6 +1,6 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, ExternalLink, Cloud } from 'lucide-react';
-import { FileUploadButton } from '@/components/common/FileUploadButton';
+import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+
 import { DataSourceManager } from '@/components/data-sources';
 import { WorkspaceSelector } from '@/components/workspace/WorkspaceSelector';
 import {
@@ -13,7 +13,7 @@ import useDirectFileImport from '@/hooks/useDirectFileImport';
 import { useAppStore } from '@/store/appStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import usePopover from '@/hooks/usePopover';
-import { Button } from '@/components/ui/Button';
+
 import UserMenu from '@/components/auth/UserMenu';
 import DuckDBIcon from '@/assets/duckdb.svg';
 
@@ -145,18 +145,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
     // Remove from workspace first
     removeFileFromWorkspace(fileId);
     
-    // If file was loaded into DuckDB, remove the table
+    // If file was loaded into DuckDB, remove the table or view
     if (file) {
       try {
         const duckDBStore = useDuckDBStore.getState();
         
-        // Try to drop table with the file name (escaped)
+        // Try to drop table or view with the file name (escaped)
         const tableName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_]/g, '_');
-        await duckDBStore.dropTable(tableName);
+        await duckDBStore.dropTableOrView(tableName);
         
-        console.log(`[Sidebar] Dropped table for removed file: ${tableName}`);
+        console.log(`[Sidebar] Dropped table/view for removed file: ${tableName}`);
       } catch (error) {
-        console.error('[Sidebar] Error dropping table for removed file:', error);
+        console.error('[Sidebar] Error dropping table/view for removed file:', error);
       }
     }
   };

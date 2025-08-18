@@ -1,13 +1,13 @@
-import React from "react";
-import { Book, History } from "lucide-react";
+import React from 'react';
+import { Book, History } from 'lucide-react';
 
-import { Button } from "@/components/ui/Button";
-import { Tooltip } from "@/components/ui/Tooltip";
-import FeedbackButton from "@/components/common/FeedbackButton";
+import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
+import FeedbackButton from '@/components/common/FeedbackButton';
 
-import discord from "@/assets/discord.png";
+import discord from '@/assets/discord.png';
 
-export const DISCORD_URL = "https://discord.gg/gZmXmhbBdP";
+export const DISCORD_URL = 'https://discord.gg/gZmXmhbBdP';
 
 interface UnifiedActionButtonsProps {
   /** Context for feedback button */
@@ -27,7 +27,7 @@ interface UnifiedActionButtonsProps {
 const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
   feedbackContext,
   discordInviteUrl = DISCORD_URL,
-  docsUrl = "https://docs.datakit.page/"
+  docsUrl = 'https://docs.datakit.page/',
   // productHuntUrl = "https://www.producthunt.com/products/datakit",
 }) => {
   return (
@@ -40,8 +40,10 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
           rel="noopener noreferrer"
           className="flex items-center"
         >
-          <Book size={14} className="mr-1.5" />
-          <span className="text-xs">Documentation</span>
+          <Book size={14} className="mr-1.5 xl:mr-1.5 lg:mr-0" />
+          <span className="text-xs hidden lg:inline xl:inline">
+            Documentation
+          </span>
         </a>
       </Button>
 
@@ -51,19 +53,28 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
         variant="primary"
         size="sm"
         text="Share Feedback"
-        className=""
+        className="[&>span]:hidden [&>span]:lg:inline [&>span]:xl:inline"
       />
 
       {/* Discord Button - Icon only with tooltip */}
       <Tooltip placement="bottom" content="Join our Discord">
-        <Button variant="ghost" size="sm" asChild className="!px-2 !py-1 min-w-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="!px-2 !py-1 min-w-0"
+        >
           <a
             href={discordInviteUrl}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Join our Discord community"
           >
-            <img src={discord} alt="Discord" className="w-4 h-4 fill-primary fitext-primary" />
+            <img
+              src={discord}
+              alt="Discord"
+              className="w-4 h-4 fill-primary fitext-primary"
+            />
           </a>
         </Button>
       </Tooltip>

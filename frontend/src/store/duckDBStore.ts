@@ -101,6 +101,8 @@ interface DuckDBState {
   resetError: () => void;
   cleanupDB: () => Promise<void>;
   dropTable: (tableName: string) => Promise<boolean>;
+  dropView: (viewName: string) => Promise<boolean>;
+  dropTableOrView: (objectName: string) => Promise<boolean>;
   importFileDirectlyStreaming: (
     fileHandle: FileSystemFileHandle,
     fileName: string,
@@ -801,7 +803,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       // Remove from registered tables
       const registeredTables = new Map(get().registeredTables);
       for (const [rawName, registeredName] of registeredTables) {
-        if (registeredName === escapedTableName) {
+        if (registeredName === escapedTableName || registeredName === `"${escapedTableName}"`) {
           registeredTables.delete(rawName);
           break;
         }
@@ -821,6 +823,91 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     } catch (error) {
       console.error(`[DuckDBStore] Failed to drop table ${tableName}:`, error);
       set({ error: `Failed to drop table: ${error}` });
+      return false;
+    }
+  },
+
+  dropView: async (viewName: string) => {
+    const { connection } = get();
+    
+    if (!connection) {
+      console.error('[DuckDBStore] Cannot drop view: no connection');
+      return false;
+    }
+
+    try {
+      // Create a sanitized view name for the query
+      const escapedViewName = viewName.replace(/[^a-zA-Z0-9_]/g, '_');
+      
+      const dropQuery = `DROP VIEW IF EXISTS "${escapedViewName}"`;
+      
+      if (isDevelopment) {
+        console.log(`[DuckDBStore] Dropping view: ${dropQuery}`);
+      }
+
+      await connection.query(dropQuery);
+
+      // Remove from registered tables (views are also in this registry)
+      const registeredTables = new Map(get().registeredTables);
+      for (const [rawName, registeredName] of registeredTables) {
+        if (registeredName === escapedViewName || registeredName === `"${escapedViewName}"`) {
+          registeredTables.delete(rawName);
+          break;
+        }
+      }
+
+      // Update state
+      set({ 
+        registeredTables,
+        lastSchemaCacheUpdate: 0  // Force schema cache refresh
+      });
+
+      if (isDevelopment) {
+        console.log(`[DuckDBStore] Successfully dropped view: ${escapedViewName}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error(`[DuckDBStore] Failed to drop view ${viewName}:`, error);
+      set({ error: `Failed to drop view: ${error}` });
+      return false;
+    }
+  },
+
+  dropTableOrView: async (objectName: string) => {
+    const { connection } = get();
+    
+    if (!connection) {
+      console.error('[DuckDBStore] Cannot drop table/view: no connection');
+      return false;
+    }
+
+    try {
+      // Create a sanitized name for the query
+      const rawName = objectName.replace(/[^a-zA-Z0-9_]/g, '_');
+      
+      // First check what type of object this is (table or view)
+      const objectType = await get().getObjectType(rawName);
+      
+      if (objectType === 'table') {
+        return await get().dropTable(rawName);
+      } else if (objectType === 'view') {
+        return await get().dropView(rawName);
+      } else {
+        // Object doesn't exist or unknown type - try both as fallback
+        if (isDevelopment) {
+          console.log(`[DuckDBStore] Object type unknown for ${rawName}, attempting cleanup`);
+        }
+        
+        // Try dropping as table first, then as view
+        const tableDropped = await get().dropTable(rawName);
+        const viewDropped = await get().dropView(rawName);
+        
+        return tableDropped || viewDropped;
+      }
+    } catch (error) {
+      console.error(`[DuckDBStore] Failed to drop table/view ${objectName}:`, error);
+      set({ error: `Failed to drop table/view: ${error}` });
       return false;
     }
   },
@@ -999,12 +1086,8 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
           const rawTableName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
           const escapedTableName = `"${rawTableName}"`;
 
-          await get().connection!.query(
-            `DROP VIEW IF EXISTS ${escapedTableName}`
-          );
-          await get().connection!.query(
-            `DROP TABLE IF EXISTS ${escapedTableName}`
-          );
+          // Clean up any existing table or view
+          await get().dropTableOrView(rawTableName);
 
           const conn = await get().db!.connect();
 
@@ -1178,12 +1261,8 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         const rawTableName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
         const escapedTableName = `"${rawTableName}"`;
 
-        await get().connection!.query(
-          `DROP VIEW IF EXISTS ${escapedTableName}`
-        );
-        await get().connection!.query(
-          `DROP TABLE IF EXISTS ${escapedTableName}`
-        );
+        // Clean up any existing table or view
+        await get().dropTableOrView(rawTableName);
 
         const conn = await get().db!.connect();
 
@@ -1268,12 +1347,8 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         const rawTableName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
         const escapedTableName = `"${rawTableName}"`;
 
-        await get().connection!.query(
-          `DROP VIEW IF EXISTS ${escapedTableName}`
-        );
-        await get().connection!.query(
-          `DROP TABLE IF EXISTS ${escapedTableName}`
-        );
+        // Clean up any existing table or view
+        await get().dropTableOrView(rawTableName);
 
         const conn = await get().db!.connect();
 
@@ -1335,9 +1410,27 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         .replace(/[^a-zA-Z0-9_]/g, "_");
       const escapedTableName = `"${rawTableName}"`;
 
-      // Clean up any existing table/view
-      await get().connection!.query(`DROP VIEW IF EXISTS ${escapedTableName}`);
-      await get().connection!.query(`DROP TABLE IF EXISTS ${escapedTableName}`);
+      // Clean up any existing table/view - check what type exists first
+      try {
+        const objectType = await get().getObjectType(rawTableName);
+        if (objectType === 'table') {
+          await get().connection!.query(`DROP TABLE IF EXISTS ${escapedTableName}`);
+        } else if (objectType === 'view') {
+          await get().connection!.query(`DROP VIEW IF EXISTS ${escapedTableName}`);
+        }
+      } catch (cleanupError) {
+        console.warn(`[DuckDBStore] Error during cleanup for ${rawTableName}:`, cleanupError);
+        // Fallback to both commands if object type detection fails
+        try {
+          await get().connection!.query(`DROP TABLE IF EXISTS ${escapedTableName}`);
+        } catch (e) {
+          try {
+            await get().connection!.query(`DROP VIEW IF EXISTS ${escapedTableName}`);
+          } catch (e2) {
+            console.warn(`[DuckDBStore] Both cleanup attempts failed for ${rawTableName}`);
+          }
+        }
+      }
       set({ processingProgress: 0.3 });
 
       const conn = await get().db!.connect();
@@ -1747,12 +1840,8 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
           const rawTableName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
           const escapedTableName = `"${rawTableName}"`;
 
-          await get().connection!.query(
-            `DROP VIEW IF EXISTS ${escapedTableName}`
-          );
-          await get().connection!.query(
-            `DROP TABLE IF EXISTS ${escapedTableName}`
-          );
+          // Clean up any existing table or view
+          await get().dropTableOrView(rawTableName);
 
           const conn = await get().db!.connect();
 
@@ -1926,12 +2015,8 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         const rawTableName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
         const escapedTableName = `"${rawTableName}"`;
 
-        await get().connection!.query(
-          `DROP VIEW IF EXISTS ${escapedTableName}`
-        );
-        await get().connection!.query(
-          `DROP TABLE IF EXISTS ${escapedTableName}`
-        );
+        // Clean up any existing table or view
+        await get().dropTableOrView(rawTableName);
 
         const conn = await get().db!.connect();
 
@@ -2123,9 +2208,8 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
         `[DuckDBStore] Importing file directly as table: ${rawTableName}`
       );
 
-      // Drop existing table if any
-      const dropQuery = `DROP TABLE IF EXISTS ${escapedTableName}`;
-      await get().connection!.query(dropQuery);
+      // Clean up any existing table or view
+      await get().dropTableOrView(rawTableName);
       set({ processingProgress: 0.2 });
 
       // Create a temporary connection for this operation

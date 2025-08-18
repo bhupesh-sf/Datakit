@@ -71,18 +71,20 @@ const Home = () => {
 
       <MainLayout onDataLoad={handleDataLoad}>
         <div className="p-6 h-full flex flex-col bg-background">
-          <div className="mb-4 flex justify-between items-center">
-            <div className="flex items-baseline gap-2">
+          <div className="mb-4 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-2">
               <h2 className="text-xl font-heading font-semibold text-white">
                 {fileName ? `Viewing: ${fileName}` : "Welcome"}
               </h2>
-              <span className="text-primary">•</span>
-              <p className="text-white text-opacity-60 text-sm font-medium">
-                {statusText}
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-primary hidden sm:inline">•</span>
+                <p className="text-white text-opacity-60 text-sm font-medium">
+                  {statusText}
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <ActionButtons feedbackContext={feedbackContext} />
               {/* JSON View Mode Toggle (only show for JSON data) */}
               {sourceType === DataSourceType.JSON && jsonSchema?.isNested && (

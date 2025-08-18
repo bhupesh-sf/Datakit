@@ -409,7 +409,7 @@ export const WorkspaceSelector: React.FC = () => {
                   ) : (
                     <button
                       onClick={() => setIsSavingDraft(true)}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
                     >
                       <Save className="h-4 w-4 text-green-400" />
                       <span className="text-sm text-white">
@@ -469,7 +469,7 @@ export const WorkspaceSelector: React.FC = () => {
                       }
                       setIsCreating(true);
                     }}
-                    className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 rounded-lg transition-colors group"
+                    className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 rounded-lg transition-colors group cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <Plus className="h-4 w-4 text-primary" />

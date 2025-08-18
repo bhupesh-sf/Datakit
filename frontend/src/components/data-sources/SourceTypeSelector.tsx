@@ -30,7 +30,7 @@ export const SourceTypeSelector: React.FC<SourceTypeSelectorProps> = ({
             key={sourceType.type}
             onClick={() => onTypeSelect(sourceType.type)}
             className={`
-              p-1.5 rounded-lg border transition-all duration-200 text-center group relative overflow-hidden
+              p-1.5 rounded-lg border transition-all duration-200 text-center group relative overflow-hidden cursor-pointer
               ${isActive 
                 ? 'border-primary/60 bg-primary/10 text-primary shadow-sm shadow-primary/10' 
                 : 'border-white/15 bg-white/5 text-white/80 hover:border-primary/30 hover:bg-primary/5 hover:text-white/95'

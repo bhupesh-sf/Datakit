@@ -851,8 +851,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       get().saveWorkspacesToStorage();
     }
   },
-
+  // TODO: for now disabling on the UI, as it might bring some confusion on what does it happen to other tabs/query panel
   renameFileInWorkspace: (fileId: string, newName: string) => {
+    // Get the old file name before renaming for matching with file tabs
+    const oldWorkspaceFile = get().workspaceFiles.find(f => f.id === fileId);
+    const oldFileName = oldWorkspaceFile?.name;
+    
     set((state) => {
       const updatedWorkspaces = state.workspaces.map(w => {
         if (w.id === state.activeWorkspaceId) {
@@ -867,11 +871,25 @@ export const useAppStore = create<AppState>((set, get) => ({
         return w;
       });
 
+      // Find file tabs that match the old workspace file name and update them
+      const updatedFiles = state.files.map(file => {
+        // Check if this file tab corresponds to the renamed workspace file
+        // Match by fileName (since workspace files and file tabs might have different IDs)
+        if (oldFileName && file.fileName === oldFileName) {
+          return {
+            ...file,
+            fileName: newName // Update the display name in the file tab
+          };
+        }
+        return file;
+      });
+
       return {
         workspaces: updatedWorkspaces,
         workspaceFiles: state.workspaceFiles.map(f =>
           f.id === fileId ? { ...f, name: newName } : f
-        )
+        ),
+        files: updatedFiles
       };
     });
     // Only save to storage if not a draft workspace
