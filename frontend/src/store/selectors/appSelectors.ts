@@ -1,5 +1,5 @@
-import { DataSourceType } from "@/types/json";
-import { DataFile, FileTab } from "@/types/multiFile";
+import { DataSourceType } from '@/types/json';
+import { DataFile, FileTab } from '@/types/multiFile';
 
 // Define the store state type (extract from your store)
 export interface AppState {
@@ -12,7 +12,7 @@ export interface AppState {
     splitRatio: number;
   };
   activeTab: string;
-  jsonViewMode: "table" | "tree";
+  jsonViewMode: 'table' | 'tree';
   sidebarCollapsed: boolean;
   recentQueries: any[];
   savedQueries: any[];
@@ -42,10 +42,12 @@ export const selectFileTabs = (state: AppState): FileTab[] => {
       isActive: file?.id === state?.activeFileId,
       remoteProvider: file?.remoteProvider,
       hasGoogleSheetsMetadata: !!file.googleSheets,
-      splitView: file?.splitView ? {
-        isActive: file.splitView.isActive,
-        partnerId: file.splitView.partnerId
-      } : undefined,
+      splitView: file?.splitView
+        ? {
+            isActive: file.splitView.isActive,
+            partnerId: file.splitView.partnerId,
+          }
+        : undefined,
     }));
 
     // Update cache keys
@@ -68,7 +70,7 @@ export const selectColumnTypes = (state: AppState) =>
   selectActiveFile(state)?.columnTypes || [];
 
 export const selectFileName = (state: AppState) =>
-  selectActiveFile(state)?.fileName || "";
+  selectActiveFile(state)?.fileName || '';
 
 export const selectSourceType = (state: AppState) =>
   selectActiveFile(state)?.sourceType || DataSourceType.CSV;
@@ -113,38 +115,17 @@ export const selectStatusText = (state: AppState) => {
   const activeFile = selectActiveFile(state);
 
   if (!activeFile) {
-    return "Bring a CSV, PARQUET, XLSX or JSON file to get started.";
+    return 'Bring a CSV, PARQUET, XLSX or JSON file to get started.';
   }
 
-  const baseText = `${
-    activeFile?.rowCount?.toLocaleString()
-      ? `${activeFile?.rowCount?.toLocaleString()} rows x`
-      : ""
-  } ${activeFile.columnCount.toLocaleString()} columns | ${
-    activeFile.sourceType === DataSourceType.JSON
-      ? "JSON data"
-      : activeFile.sourceType === DataSourceType.TXT
-      ? "TXT data"
-      : activeFile.sourceType === DataSourceType.PARQUET
-      ? "Parquet data"
-      : activeFile.sourceType === DataSourceType.XLSX
-      ? "Excel data"
-      : "CSV data"
-  }`;
-
-  const interactionText =
-    activeFile.sourceType === DataSourceType.JSON &&
-    state.jsonViewMode === "tree"
-      ? " | Explore the JSON structure."
-      : " ";
-
-  return baseText + interactionText;
+  return '';
 };
 
 // Split view selectors
 export const selectSplitView = (state: AppState) => state.splitView;
 
-export const selectIsSplitViewActive = (state: AppState) => state.splitView?.isActive || false;
+export const selectIsSplitViewActive = (state: AppState) =>
+  state.splitView?.isActive || false;
 
 export const selectSplitViewLeftFile = (state: AppState): DataFile | null => {
   const splitView = state.splitView;
@@ -158,4 +139,5 @@ export const selectSplitViewRightFile = (state: AppState): DataFile | null => {
   return state.files.find((f) => f.id === splitView.rightFileId) || null;
 };
 
-export const selectSplitViewRatio = (state: AppState) => state.splitView?.splitRatio || 0.5;
+export const selectSplitViewRatio = (state: AppState) =>
+  state.splitView?.splitRatio || 0.5;

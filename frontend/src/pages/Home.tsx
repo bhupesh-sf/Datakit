@@ -1,4 +1,4 @@
-import { Table, BarChart, Database, UserPen, Notebook, FolderOpen } from "lucide-react";
+import { Table, BarChart, Database, UserPen, Notebook } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import MainLayout from "@/components/layout/MainLayout";
@@ -13,7 +13,6 @@ import { SEO } from "@/components/common/SEO";
 
 import { DataSourceType } from "@/types/json";
 import { useHomePageLogic } from "@/hooks/useHomePageLogic";
-import { useAppStore } from "@/store/appStore";
 
 /**
  * Main application home page component
@@ -39,8 +38,6 @@ const Home = () => {
     handleDataLoad,
   } = useHomePageLogic();
 
-  // DuckLake state
-  const { currentCatalog } = useAppStore();
 
 
   // Define available tabs
@@ -49,8 +46,7 @@ const Home = () => {
     { id: "query", label: "Query", icon: <Database size={16} /> },
     { id: "scripts", label: "Notebook", icon: <Notebook size={16} /> },
     { id: "visualization", label: "Visualize", icon: <BarChart size={16} /> },
-    { id: "ai", label: "Assistant", icon: <UserPen size={16} /> },
-    ...(currentCatalog ? [{ id: "workspace", label: "Workspace", icon: <FolderOpen size={16} /> }] : [])
+    { id: "ai", label: "Assistant", icon: <UserPen size={16} /> }
   ];
 
 
@@ -77,7 +73,7 @@ const Home = () => {
                 {fileName ? `Viewing: ${fileName}` : "Welcome"}
               </h2>
               <div className="flex items-center gap-2">
-                <span className="text-primary hidden sm:inline">•</span>
+                {statusText !== '' && (<span className="text-primary hidden sm:inline">•</span>)}
                 <p className="text-white text-opacity-60 text-sm font-medium">
                   {statusText}
                 </p>
