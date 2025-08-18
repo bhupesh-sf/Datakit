@@ -303,7 +303,7 @@ export const WorkspaceSelector: React.FC = () => {
                                 <strong className="text-amber-400">
                                   Limit:
                                 </strong>{' '}
-                                Create up to 2 workspaces.{' '}
+                                Create up to 1 workspaces.{' '}
                                 <span className="text-primary">Sign up</span>{' '}
                                 for unlimited workspaces.
                               </p>
