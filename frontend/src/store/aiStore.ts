@@ -1,13 +1,13 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { 
-  AIProvider, 
-  AIModel, 
-  LocalModel, 
-  AIQuery, 
-  MCPConnection
-} from "@/types/ai";
-import { AIMessage } from "@/lib/ai/types";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import {
+  AIProvider,
+  AIModel,
+  LocalModel,
+  AIQuery,
+  MCPConnection,
+} from '@/types/ai';
+import { AIMessage } from '@/lib/ai/types';
 
 interface QueryResults {
   data: any[] | null;
@@ -26,10 +26,10 @@ interface AIState {
   activeModel: string | null;
   availableModels: Map<AIProvider, AIModel[]>;
   localModels: LocalModel[];
-  
+
   // API Keys (encrypted in localStorage)
   apiKeys: Map<AIProvider, string>;
-  
+
   // Query State
   currentPrompt: string;
   queryHistory: AIQuery[];
@@ -41,25 +41,29 @@ interface AIState {
   currentTokenUsage: { input: number; output: number } | null;
   visualizationTokenUsage: { input: number; output: number } | null;
   currentError: string | null;
-  
+
   // Conversation State
   currentConversation: AIMessage[];
   conversationId: string | null;
   currentMessageIndex: number;
-  
-  // Data Context
-  context: {
+
+  // Multiple table contexts
+  multiTableContexts: Array<{
     tableName: string;
     schema: Array<{ name: string; type: string }>;
     sampleData?: any[];
     rowCount?: number;
     description?: string;
-  } | null;
-  
+    isSelected: boolean;
+  }>;
+
+  // System prompt configuration
+  systemPrompt: string;
+
   // MCP State
   mcpConnections: MCPConnection[];
   activeMCPConnection: string | null;
-  
+
   // UI State
   showModelSelector: boolean;
   showApiKeyModal: boolean;
@@ -68,22 +72,27 @@ interface AIState {
   sidebarWidth: number;
   showDataContext: boolean;
   showQueryHistory: boolean;
-  
+
   // Settings
   autoExecuteSQL: boolean;
   showCostEstimates: boolean;
   maxHistoryItems: number;
-  
+
   // Actions
   setActiveProvider: (provider: AIProvider) => void;
   setActiveModel: (model: string) => void;
   setApiKey: (provider: AIProvider, key: string) => void;
   validateApiKey: (provider: AIProvider) => Promise<boolean>;
   updateOllamaModels: (models: any[]) => void;
-  
+
   // Context Actions
-  setContext: (context: AIState['context']) => void;
-  
+  addTableContext: (
+    context: Omit<AIState['multiTableContexts'][0], 'isSelected'>
+  ) => void;
+  removeTableContext: (tableName: string) => void;
+  toggleTableContext: (tableName: string) => void;
+  clearTableContexts: () => void;
+
   // Query Actions
   setCurrentPrompt: (prompt: string) => void;
   addQueryToHistory: (query: AIQuery) => void;
@@ -92,10 +101,14 @@ interface AIState {
   setQueryResults: (results: QueryResults | null) => void;
   setCurrentResponse: (response: string | null) => void;
   setStreamingResponse: (response: string) => void;
-  setCurrentTokenUsage: (usage: { input: number; output: number } | null) => void;
-  setVisualizationTokenUsage: (usage: { input: number; output: number } | null) => void;
+  setCurrentTokenUsage: (
+    usage: { input: number; output: number } | null
+  ) => void;
+  setVisualizationTokenUsage: (
+    usage: { input: number; output: number } | null
+  ) => void;
   setCurrentError: (error: string | null) => void;
-  
+
   // Conversation Actions
   addMessageToConversation: (message: AIMessage) => void;
   clearConversation: () => void;
@@ -103,18 +116,21 @@ interface AIState {
   navigateToMessage: (index: number) => void;
   navigateToNextMessage: () => void;
   navigateToPreviousMessage: () => void;
-  
+
   // Model Actions
   downloadLocalModel: (modelId: string) => Promise<void>;
   removeLocalModel: (modelId: string) => void;
   updateModelDownloadProgress: (modelId: string, progress: number) => void;
-  
+
   // MCP Actions
   addMCPConnection: (connection: MCPConnection) => void;
   removeMCPConnection: (connectionId: string) => void;
   setActiveMCPConnection: (connectionId: string | null) => void;
-  updateMCPConnectionStatus: (connectionId: string, status: MCPConnection['status']) => void;
-  
+  updateMCPConnectionStatus: (
+    connectionId: string,
+    status: MCPConnection['status']
+  ) => void;
+
   // UI Actions
   toggleModelSelector: () => void;
   toggleApiKeyModal: () => void;
@@ -123,148 +139,165 @@ interface AIState {
   setSidebarWidth: (width: number) => void;
   toggleDataContext: () => void;
   toggleQueryHistory: () => void;
-  
+
   // Settings Actions
-  updateSettings: (settings: Partial<{
-    autoExecuteSQL: boolean;
-    showCostEstimates: boolean;
-    maxHistoryItems: number;
-  }>) => void;
-  
+  updateSettings: (
+    settings: Partial<{
+      autoExecuteSQL: boolean;
+      showCostEstimates: boolean;
+      maxHistoryItems: number;
+    }>
+  ) => void;
+
   // Initialize default models
   initializeModels: () => void;
 }
 
 // Default available models
 const DEFAULT_MODELS: Map<AIProvider, AIModel[]> = new Map([
-  ['datakit', [
-    {
-      id: 'datakit-smart',
-      name: 'Smart',
-      provider: 'datakit',
-      type: 'chat',
-      contextWindow: 200000,
-      costPer1kTokens: { input: 0.3, output: 1.5 }, // Credits per 1K tokens
-      capabilities: [],
-      requiresApiKey: false,
-      description: 'Powered by Claude 3.5 Sonnet - Best for complex analysis',
-    },
-    {
-      id: 'datakit-fast',
-      name: 'Fast',
-      provider: 'datakit',
-      type: 'chat',
-      contextWindow: 200000,
-      costPer1kTokens: { input: 0.08, output: 0.4 }, // Credits per 1K tokens
-      capabilities: [],
-      requiresApiKey: false,
-      description: 'Powered by Claude 3.5 Haiku - Economical',
-    },
-  ]],
-  ['ollama', [
-    {
-      id: 'llama3.2',
-      name: 'Llama 3.2',
-      provider: 'ollama',
-      type: 'chat',
-      contextWindow: 128000,
-      costPer1kTokens: { input: 0, output: 0 },
-      capabilities: [],
-      requiresApiKey: false,
-      isLocal: true,
-      description: 'Latest Llama model - Great for general tasks',
-    },
-    {
-      id: 'mistral',
-      name: 'Mistral',
-      provider: 'ollama',
-      type: 'chat',
-      contextWindow: 8192,
-      costPer1kTokens: { input: 0, output: 0 },
-      capabilities: [],
-      requiresApiKey: false,
-      isLocal: true,
-      description: 'Fast and efficient model',
-    },
-    {
-      id: 'codellama',
-      name: 'Code Llama',
-      provider: 'ollama',
-      type: 'chat',
-      contextWindow: 16384,
-      costPer1kTokens: { input: 0, output: 0 },
-      capabilities: [],
-      requiresApiKey: false,
-      isLocal: true,
-      description: 'Specialized for code and SQL generation',
-    },
-  ]],
-  ['openai', [
-    {
-      id: 'gpt-4o-2024-11-20',
-      name: 'GPT-4o',
-      provider: 'openai',
-      type: 'chat',
-      contextWindow: 128000,
-      costPer1kTokens: { input: 0.0025, output: 0.01 },
-      capabilities: [],
-      requiresApiKey: true,
-    },
-    {
-      id: 'gpt-4o-mini',
-      name: 'GPT-4o Mini',
-      provider: 'openai',
-      type: 'chat',
-      contextWindow: 128000,
-      costPer1kTokens: { input: 0.00015, output: 0.0006 },
-      capabilities: [],
-      requiresApiKey: true,
-    },
-  ]],
-  ['anthropic', [
-    {
-      id: 'claude-3-5-sonnet-20241022',
-      name: 'Claude 3.5 Sonnet',
-      provider: 'anthropic',
-      type: 'chat',
-      contextWindow: 200000,
-      costPer1kTokens: { input: 0.003, output: 0.015 },
-      capabilities: [],
-      requiresApiKey: true,
-    },
-    {
-      id: 'claude-3-5-haiku-20241022',
-      name: 'Claude 3.5 Haiku',
-      provider: 'anthropic',
-      type: 'chat',
-      contextWindow: 200000,
-      costPer1kTokens: { input: 0.0008, output: 0.004 },
-      capabilities: [],
-      requiresApiKey: true,
-    },
-  ]],
-  ['groq', [
-    {
-      id: 'llama-3.1-70b-versatile',
-      name: 'Llama 3.1 70B (Free)',
-      provider: 'groq',
-      type: 'chat',
-      contextWindow: 131072,
-      costPer1kTokens: { input: 0, output: 0 },
-      capabilities: [],
-      requiresApiKey: true,
-    },
-    {
-      id: 'llama-3.1-8b-instant',
-      name: 'Llama 3.1 8B (Free)',
-      provider: 'groq',
-      type: 'chat',
-      contextWindow: 131072,
-      costPer1kTokens: { input: 0, output: 0 },
-      capabilities: [],
-      requiresApiKey: true,
-    },
-  ]]
+  [
+    'datakit',
+    [
+      {
+        id: 'datakit-smart',
+        name: 'Smart',
+        provider: 'datakit',
+        type: 'chat',
+        contextWindow: 200000,
+        costPer1kTokens: { input: 0.3, output: 1.5 }, // Credits per 1K tokens
+        capabilities: [],
+        requiresApiKey: false,
+        description: 'Powered by Claude 3.5 Sonnet - Best for complex analysis',
+      },
+      {
+        id: 'datakit-fast',
+        name: 'Fast',
+        provider: 'datakit',
+        type: 'chat',
+        contextWindow: 200000,
+        costPer1kTokens: { input: 0.08, output: 0.4 }, // Credits per 1K tokens
+        capabilities: [],
+        requiresApiKey: false,
+        description: 'Powered by Claude 3.5 Haiku - Economical',
+      },
+    ],
+  ],
+  [
+    'ollama',
+    [
+      {
+        id: 'llama3.2',
+        name: 'Llama 3.2',
+        provider: 'ollama',
+        type: 'chat',
+        contextWindow: 128000,
+        costPer1kTokens: { input: 0, output: 0 },
+        capabilities: [],
+        requiresApiKey: false,
+        isLocal: true,
+        description: 'Latest Llama model - Great for general tasks',
+      },
+      {
+        id: 'mistral',
+        name: 'Mistral',
+        provider: 'ollama',
+        type: 'chat',
+        contextWindow: 8192,
+        costPer1kTokens: { input: 0, output: 0 },
+        capabilities: [],
+        requiresApiKey: false,
+        isLocal: true,
+        description: 'Fast and efficient model',
+      },
+      {
+        id: 'codellama',
+        name: 'Code Llama',
+        provider: 'ollama',
+        type: 'chat',
+        contextWindow: 16384,
+        costPer1kTokens: { input: 0, output: 0 },
+        capabilities: [],
+        requiresApiKey: false,
+        isLocal: true,
+        description: 'Specialized for code and SQL generation',
+      },
+    ],
+  ],
+  [
+    'openai',
+    [
+      {
+        id: 'gpt-4o-2024-11-20',
+        name: 'GPT-4o',
+        provider: 'openai',
+        type: 'chat',
+        contextWindow: 128000,
+        costPer1kTokens: { input: 0.0025, output: 0.01 },
+        capabilities: [],
+        requiresApiKey: true,
+      },
+      {
+        id: 'gpt-4o-mini',
+        name: 'GPT-4o Mini',
+        provider: 'openai',
+        type: 'chat',
+        contextWindow: 128000,
+        costPer1kTokens: { input: 0.00015, output: 0.0006 },
+        capabilities: [],
+        requiresApiKey: true,
+      },
+    ],
+  ],
+  [
+    'anthropic',
+    [
+      {
+        id: 'claude-3-5-sonnet-20241022',
+        name: 'Claude 3.5 Sonnet',
+        provider: 'anthropic',
+        type: 'chat',
+        contextWindow: 200000,
+        costPer1kTokens: { input: 0.003, output: 0.015 },
+        capabilities: [],
+        requiresApiKey: true,
+      },
+      {
+        id: 'claude-3-5-haiku-20241022',
+        name: 'Claude 3.5 Haiku',
+        provider: 'anthropic',
+        type: 'chat',
+        contextWindow: 200000,
+        costPer1kTokens: { input: 0.0008, output: 0.004 },
+        capabilities: [],
+        requiresApiKey: true,
+      },
+    ],
+  ],
+  [
+    'groq',
+    [
+      {
+        id: 'llama-3.1-70b-versatile',
+        name: 'Llama 3.1 70B (Free)',
+        provider: 'groq',
+        type: 'chat',
+        contextWindow: 131072,
+        costPer1kTokens: { input: 0, output: 0 },
+        capabilities: [],
+        requiresApiKey: true,
+      },
+      {
+        id: 'llama-3.1-8b-instant',
+        name: 'Llama 3.1 8B (Free)',
+        provider: 'groq',
+        type: 'chat',
+        contextWindow: 131072,
+        costPer1kTokens: { input: 0, output: 0 },
+        capabilities: [],
+        requiresApiKey: true,
+      },
+    ],
+  ],
 ]);
 
 export const useAIStore = create<AIState>()(
@@ -276,7 +309,7 @@ export const useAIStore = create<AIState>()(
       availableModels: DEFAULT_MODELS,
       localModels: [],
       apiKeys: new Map(),
-      
+
       currentPrompt: '',
       queryHistory: [],
       isProcessing: false,
@@ -287,16 +320,18 @@ export const useAIStore = create<AIState>()(
       currentTokenUsage: null,
       visualizationTokenUsage: null,
       currentError: null,
-      
+
       currentConversation: [],
       conversationId: null,
       currentMessageIndex: -1,
-      
-      context: null,
-      
+
+      multiTableContexts: [],
+      systemPrompt:
+        'You are a SQL expert helping users query their data using DuckDB syntax.',
+
       mcpConnections: [],
       activeMCPConnection: null,
-      
+
       showModelSelector: false,
       showApiKeyModal: false,
       splitViewMode: 'horizontal',
@@ -304,16 +339,16 @@ export const useAIStore = create<AIState>()(
       sidebarWidth: 280,
       showDataContext: true,
       showQueryHistory: false,
-      
+
       autoExecuteSQL: false,
       showCostEstimates: true,
       maxHistoryItems: 50,
-      
+
       // Actions
       setActiveProvider: (provider) => set({ activeProvider: provider }),
-      
+
       setActiveModel: (model) => set({ activeModel: model }),
-      
+
       setApiKey: (provider, key) => {
         set((state) => {
           const newKeys = new Map(state.apiKeys);
@@ -321,22 +356,22 @@ export const useAIStore = create<AIState>()(
           return { apiKeys: newKeys };
         });
       },
-      
+
       validateApiKey: async (provider) => {
         // TODO: Implement actual API key validation
         const key = get().apiKeys.get(provider);
         if (!key) return false;
-        
+
         // Placeholder for actual validation
         return true;
       },
-      
+
       updateOllamaModels: (models) => {
         set((state) => {
           const newAvailableModels = new Map(state.availableModels);
-          
+
           // Convert Ollama models to AIModel format
-          const ollamaAIModels: AIModel[] = models.map(model => ({
+          const ollamaAIModels: AIModel[] = models.map((model) => ({
             id: model.name || model.model,
             name: model.name || model.model,
             provider: 'ollama' as AIProvider,
@@ -346,28 +381,30 @@ export const useAIStore = create<AIState>()(
             capabilities: [],
             requiresApiKey: false,
             isLocal: true,
-            description: `${formatSize(model.size)} - Modified ${formatDate(model.modified_at)}`,
+            description: `${formatSize(model.size)} - Modified ${formatDate(
+              model.modified_at
+            )}`,
           }));
-          
+
           // Update the models for Ollama provider
           newAvailableModels.set('ollama', ollamaAIModels);
-          
+
           return { availableModels: newAvailableModels };
         });
-        
+
         // Helper functions for formatting
         function formatSize(bytes: number): string {
           const gb = bytes / (1024 * 1024 * 1024);
-          return gb.toFixed(1) + " GB";
+          return gb.toFixed(1) + ' GB';
         }
-        
+
         function formatDate(dateString: string): string {
           return new Date(dateString).toLocaleDateString();
         }
       },
-      
+
       setCurrentPrompt: (prompt) => set({ currentPrompt: prompt }),
-      
+
       addQueryToHistory: (query) => {
         set((state) => {
           const history = [query, ...state.queryHistory];
@@ -378,24 +415,58 @@ export const useAIStore = create<AIState>()(
           return { queryHistory: history };
         });
       },
-      
+
       clearQueryHistory: () => set({ queryHistory: [] }),
-      
+
       setProcessing: (isProcessing) => set({ isProcessing }),
-      
+
       setQueryResults: (results) => set({ queryResults: results }),
-      
+
       setCurrentResponse: (response) => set({ currentResponse: response }),
-      
+
       setStreamingResponse: (response) => set({ streamingResponse: response }),
-      
+
       setCurrentTokenUsage: (usage) => set({ currentTokenUsage: usage }),
-      setVisualizationTokenUsage: (usage) => set({ visualizationTokenUsage: usage }),
-      
+      setVisualizationTokenUsage: (usage) =>
+        set({ visualizationTokenUsage: usage }),
+
       setCurrentError: (error) => set({ currentError: error }),
-      
-      setContext: (context) => set({ context }),
-      
+
+      addTableContext: (context) => {
+        set((state) => {
+          const existing = state.multiTableContexts.find(
+            (c) => c.tableName === context.tableName
+          );
+          if (existing) {
+            return state;
+          }
+          return {
+            multiTableContexts: [
+              ...state.multiTableContexts,
+              { ...context, isSelected: true },
+            ],
+          };
+        });
+      },
+
+      removeTableContext: (tableName) => {
+        set((state) => ({
+          multiTableContexts: state.multiTableContexts.filter(
+            (c) => c.tableName !== tableName
+          ),
+        }));
+      },
+
+      toggleTableContext: (tableName) => {
+        set((state) => ({
+          multiTableContexts: state.multiTableContexts.map((c) =>
+            c.tableName === tableName ? { ...c, isSelected: !c.isSelected } : c
+          ),
+        }));
+      },
+
+      clearTableContexts: () => set({ multiTableContexts: [] }),
+
       addMessageToConversation: (message) => {
         set((state) => {
           const newConversation = [...state.currentConversation, message];
@@ -403,24 +474,26 @@ export const useAIStore = create<AIState>()(
           if (newConversation.length > 20) {
             newConversation.splice(0, newConversation.length - 20);
           }
-          
+
           // If this is a user message, update the current message index to point to the virtual "new message" index
           let newMessageIndex = state.currentMessageIndex;
           if (message.role === 'user') {
-            const userMessages = newConversation.filter(msg => msg.role === 'user');
+            const userMessages = newConversation.filter(
+              (msg) => msg.role === 'user'
+            );
             newMessageIndex = userMessages.length; // Point to virtual index for new message
           }
-          
-          return { 
+
+          return {
             currentConversation: newConversation,
-            currentMessageIndex: newMessageIndex
+            currentMessageIndex: newMessageIndex,
           };
         });
       },
-      
+
       clearConversation: () => {
-        set({ 
-          currentConversation: [], 
+        set({
+          currentConversation: [],
           conversationId: null,
           currentResponse: null,
           streamingResponse: '',
@@ -428,11 +501,11 @@ export const useAIStore = create<AIState>()(
           currentMessageIndex: -1,
         });
       },
-      
+
       startNewConversation: () => {
         const newConversationId = Date.now().toString();
-        set({ 
-          currentConversation: [], 
+        set({
+          currentConversation: [],
           conversationId: newConversationId,
           currentResponse: null,
           streamingResponse: '',
@@ -440,14 +513,16 @@ export const useAIStore = create<AIState>()(
           currentMessageIndex: -1,
         });
       },
-      
+
       navigateToMessage: (index) => {
         set({ currentMessageIndex: index });
       },
-      
+
       navigateToNextMessage: () => {
         set((state) => {
-          const userMessages = state.currentConversation.filter(msg => msg.role === 'user');
+          const userMessages = state.currentConversation.filter(
+            (msg) => msg.role === 'user'
+          );
           const maxIndex = userMessages.length; // Include virtual index for unsent message
           if (state.currentMessageIndex < maxIndex) {
             return { currentMessageIndex: state.currentMessageIndex + 1 };
@@ -455,7 +530,7 @@ export const useAIStore = create<AIState>()(
           return state;
         });
       },
-      
+
       navigateToPreviousMessage: () => {
         set((state) => {
           if (state.currentMessageIndex > 0) {
@@ -464,15 +539,15 @@ export const useAIStore = create<AIState>()(
           return state;
         });
       },
-      
+
       downloadLocalModel: async (modelId) => {
         try {
-          const { aiService } = await import("@/lib/ai/aiService");
-          const { modelManager } = await import("@/lib/ai/modelManager");
-          
+          const { aiService } = await import('@/lib/ai/aiService');
+          const { modelManager } = await import('@/lib/ai/modelManager');
+
           // Start download and load process
           set({ isProcessing: true });
-          
+
           await aiService.loadLocalModel(modelId, (progress) => {
             set((state) => ({
               localModels: state.localModels.map((m) =>
@@ -480,26 +555,27 @@ export const useAIStore = create<AIState>()(
               ),
             }));
           });
-          
+
           // Mark as downloaded
-          const model = get().availableModels.get('local')?.find(m => m.id === modelId);
+          const model = get()
+            .availableModels.get('local')
+            ?.find((m) => m.id === modelId);
           if (model) {
             modelManager.markModelDownloaded(model as any);
           }
-          
         } catch (error) {
           console.error('Failed to download model:', error);
         } finally {
           set({ isProcessing: false });
         }
       },
-      
+
       removeLocalModel: (modelId) => {
         set((state) => ({
           localModels: state.localModels.filter((m) => m.id !== modelId),
         }));
       },
-      
+
       updateModelDownloadProgress: (modelId, progress) => {
         set((state) => ({
           localModels: state.localModels.map((m) =>
@@ -507,25 +583,29 @@ export const useAIStore = create<AIState>()(
           ),
         }));
       },
-      
+
       addMCPConnection: (connection) => {
         set((state) => ({
           mcpConnections: [...state.mcpConnections, connection],
         }));
       },
-      
+
       removeMCPConnection: (connectionId) => {
         set((state) => ({
-          mcpConnections: state.mcpConnections.filter((c) => c.id !== connectionId),
+          mcpConnections: state.mcpConnections.filter(
+            (c) => c.id !== connectionId
+          ),
           activeMCPConnection:
-            state.activeMCPConnection === connectionId ? null : state.activeMCPConnection,
+            state.activeMCPConnection === connectionId
+              ? null
+              : state.activeMCPConnection,
         }));
       },
-      
+
       setActiveMCPConnection: (connectionId) => {
         set({ activeMCPConnection: connectionId });
       },
-      
+
       updateMCPConnectionStatus: (connectionId, status) => {
         set((state) => ({
           mcpConnections: state.mcpConnections.map((c) =>
@@ -533,37 +613,40 @@ export const useAIStore = create<AIState>()(
           ),
         }));
       },
-      
+
       toggleModelSelector: () => {
         set((state) => ({ showModelSelector: !state.showModelSelector }));
       },
-      
+
       toggleApiKeyModal: () => {
         set((state) => ({ showApiKeyModal: !state.showApiKeyModal }));
       },
-      
+
       setSplitViewMode: (mode) => set({ splitViewMode: mode }),
-      
+
       setPromptEditorHeight: (height) => set({ promptEditorHeight: height }),
-      
+
       setSidebarWidth: (width) => set({ sidebarWidth: width }),
-      
+
       toggleDataContext: () => {
         set((state) => ({ showDataContext: !state.showDataContext }));
       },
-      
+
       toggleQueryHistory: () => {
         set((state) => ({ showQueryHistory: !state.showQueryHistory }));
       },
-      
+
       updateSettings: (settings) => {
         set((state) => ({ ...state, ...settings }));
       },
-      
+
       initializeModels: () => {
         // Initialize with default models if needed
         const state = get();
-        if (!state.activeModel && state.availableModels.get(state.activeProvider)) {
+        if (
+          !state.activeModel &&
+          state.availableModels.get(state.activeProvider)
+        ) {
           const models = state.availableModels.get(state.activeProvider);
           if (models && models.length > 0) {
             set({ activeModel: models[0].id });
@@ -585,6 +668,7 @@ export const useAIStore = create<AIState>()(
         autoExecuteSQL: state.autoExecuteSQL,
         showCostEstimates: state.showCostEstimates,
         maxHistoryItems: state.maxHistoryItems,
+        systemPrompt: state.systemPrompt,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

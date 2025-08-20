@@ -1,3 +1,6 @@
+# 0.3.91
+Multiple table selection on ai context panel assistant
+
 # 0.3.9
 Introducing workspaces
 

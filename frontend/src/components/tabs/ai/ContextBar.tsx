@@ -1,130 +1,126 @@
-import React, { useState } from "react";
-import { Database, Zap, Settings, ChevronDown } from "lucide-react";
-import { useAIStore } from "@/store/aiStore";
-import { useAppStore } from "@/store/appStore";
-import { selectTableName } from "@/store/selectors/appSelectors";
-import { useDuckDBStore } from "@/store/duckDBStore";
-import { useAuth } from "@/hooks/auth/useAuth";
+import React, { useState } from 'react';
+import { Database, Zap, Settings, Plus, X } from 'lucide-react';
+
+import { useAIStore } from '@/store/aiStore';
+
+import { useAuth } from '@/hooks/auth/useAuth';
+
+import MultiTableSelector from './MultiTableSelector';
 
 interface ContextBarProps {
   onOpenApiKeyModal?: () => void;
 }
 
 /**
- * Table selector dropdown component
+ * Multi-table context display
  */
-const TableDropdown: React.FC<{
-  selectedTable: string | null;
-  onTableChange: (tableName: string) => void;
-}> = ({ selectedTable, onTableChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { registeredTables } = useDuckDBStore();
-  
-  const tables = Array.from(registeredTables.entries());
-  
+const MultiTableContextDisplay: React.FC<{
+  onOpenSelector: () => void;
+}> = ({ onOpenSelector }) => {
+  const { multiTableContexts, removeTableContext } = useAIStore();
+
+  const selectedTables = multiTableContexts.filter((ctx) => ctx.isSelected);
+
   return (
-    <div className="relative">
-      <button
-        className="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded text-sm hover:bg-white/10 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <Database className="h-4 w-4 text-white/70" />
-        <span className="text-white/90">
-          {selectedTable || "Select table"}
-        </span>
-        <ChevronDown
-          className={`h-3 w-3 text-white/50 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-black border border-white/10 rounded-lg shadow-xl z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
-          {tables.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-white/50">
-              No tables available
-            </div>
-          ) : (
-            tables.map(([name, info]) => (
-              <button
-                key={name}
-                className="w-full px-3 py-2 text-left text-sm text-white/80 hover:bg-white/10 hover:text-white flex items-center justify-between transition-colors"
-                onClick={() => {
-                  onTableChange(name);
-                  setIsOpen(false);
-                }}
+    <div className="flex items-center gap-2">
+      {selectedTables.length > 0 ? (
+        <>
+          <span className="text-xs text-white/50">Context:</span>
+          <div className="flex items-center gap-1">
+            {selectedTables.slice(0, 3).map((ctx) => (
+              <div
+                key={ctx.tableName}
+                className="flex items-center gap-1 px-2 py-0.5 bg-primary/20 border border-primary/30 rounded text-xs text-primary"
               >
-                <span className="truncate">{name}</span>
-                {info.rowCount && (
-                  <span className="text-xs text-white/50 ml-2">
-                    {info.rowCount.toLocaleString()} rows
-                  </span>
-                )}
-              </button>
-            ))
-          )}
-        </div>
+                <Database className="h-3 w-3" />
+                <span className="max-w-[100px] truncate">{ctx.tableName}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeTableContext(ctx.tableName);
+                  }}
+                  className="ml-1 hover:text-white transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            {selectedTables.length > 3 && (
+              <span className="px-2 py-0.5 bg-white/10 rounded text-xs text-white/60">
+                +{selectedTables.length - 3} more
+              </span>
+            )}
+          </div>
+        </>
+      ) : (
+        <span className="text-xs text-white/50">No tables in context</span>
       )}
+
+      <button
+        onClick={onOpenSelector}
+        className="flex items-center gap-1 px-2 py-0.5 bg-white/5 border border-white/10 rounded text-xs text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+      >
+        <Plus className="h-3 w-3" />
+        Add Tables
+      </button>
     </div>
   );
 };
 
 const ContextBar: React.FC<ContextBarProps> = ({ onOpenApiKeyModal }) => {
-  const tableName = useAppStore(selectTableName);
   const { autoExecuteSQL, updateSettings } = useAIStore();
-  const { setActiveFile, files } = useAppStore();
-  const { isAuthenticated } = useAuth();
-  
 
-  
-  // Handle table change
-  const handleTableChange = (newTableName: string) => {
-    // Find the file associated with this table
-    const file = files.find(f => f.tableName === newTableName);
-    if (file) {
-      setActiveFile(file.id);
-    }
-  };
-  
+  const { isAuthenticated } = useAuth();
+
+  const [showMultiTableSelector, setShowMultiTableSelector] = useState(false);
+
   return (
-    <div className="h-10 bg-darkNav border-b border-white/10 flex items-center justify-between px-4">
-      <div className="flex items-center gap-4 text-sm">
-        {/* Table Dropdown Selector */}
-        <TableDropdown 
-          selectedTable={tableName}
-          onTableChange={handleTableChange}
-        />
+    <>
+      <div className="h-10 bg-darkNav border-b border-white/10 flex items-center justify-between px-4">
+        <div className="flex items-center gap-4 text-sm">
+          {/* Multi-table Context Display */}
+          <MultiTableContextDisplay
+            onOpenSelector={() => setShowMultiTableSelector(true)}
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Model Settings Button */}
+          {onOpenApiKeyModal && isAuthenticated && (
+            <button
+              onClick={onOpenApiKeyModal}
+              className="flex items-center gap-2 px-3 py-1 rounded-md text-sm bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 transition-colors"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              <span>Models</span>
+            </button>
+          )}
+
+          {/* Auto-execute Toggle */}
+          {isAuthenticated && (
+            <button
+              onClick={() =>
+                updateSettings({ autoExecuteSQL: !autoExecuteSQL })
+              }
+              className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm transition-colors cursor-pointer ${
+                autoExecuteSQL
+                  ? 'bg-primary/20 text-primary border border-primary/30 hover:bg-primary/25'
+                  : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'
+              }`}
+            >
+              <Zap className="h-3.5 w-3.5" />
+              <span>Auto-execute: {autoExecuteSQL ? 'ON' : 'OFF'}</span>
+            </button>
+          )}
+        </div>
       </div>
-      
-      <div className="flex items-center gap-4">
-        {/* Settings Button - Only show if authenticated */}
-        {onOpenApiKeyModal && isAuthenticated && (
-          <button
-            onClick={onOpenApiKeyModal}
-            className="flex items-center gap-2 px-3 py-1 rounded-md text-sm bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 transition-colors"
-          >
-            <Settings className="h-3.5 w-3.5" />
-            <span>Configure models</span>
-          </button>
-        )}
-        
-        {/* Auto-execute Toggle - Only show if authenticated */}
-        {isAuthenticated && (
-          <button
-            onClick={() => updateSettings({ autoExecuteSQL: !autoExecuteSQL })}
-            className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm transition-colors cursor-pointer ${
-              autoExecuteSQL 
-                ? "bg-primary/20 text-primary border border-primary/30 hover:bg-primary/25" 
-                : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
-            }`}
-          >
-            <Zap className="h-3.5 w-3.5" />
-            <span>Auto-execute: {autoExecuteSQL ? "ON" : "OFF"}</span>
-          </button>
-        )}
-      </div>
-    </div>
+
+      {/* Modals */}
+      <MultiTableSelector
+        isOpen={showMultiTableSelector}
+        onClose={() => setShowMultiTableSelector(false)}
+      />
+    </>
   );
 };
 
