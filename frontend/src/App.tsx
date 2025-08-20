@@ -15,14 +15,18 @@ import NotFound from "@/pages/NotFound";
 import DatasetImport from "@/pages/DatasetImport";
 import { Button } from "@/components/ui/Button";
 import { SEO } from "@/components/common/SEO";
+import DemoVideoModal from "@/components/data-grid/DemoVideoModal";
 
 import { applyThemeColor } from "@/utils/theme";
 
 import { DISCORD_URL } from "@/components/common/ActionButtons";
 
 import discord from "@/assets/discord.png";
+import { PlayCircle } from "lucide-react";
 
 const MobileWarning = () => {
+  const [showDemoModal, setShowDemoModal] = useState(false);
+
   return (
     <>
       <SEO
@@ -32,21 +36,32 @@ const MobileWarning = () => {
       />
 
       <div className="flex flex-col bg-black items-center justify-center h-screen p-6 text-center">
-        <div className="bg-black p-8 rounded-lg shadow-lg max-w-md">
+        <div className="bg-black p-8 rounded-lg shadow-lg max-w-md w-full">
           <h1 className="text-2xl font-bold mb-4 text-white">
-            Desktop Experience Recommended
+            DataKit works best on desktop
           </h1>
-          <p className="text-white mb-6">
-            This application is optimized for desktop browsers. For the best
-            experience, please open this application on a desktop or laptop
-            computer.
+          <p className="text-white/80 mb-2 leading-relaxed">
+            Experience powerful data analysis and seamless file processing.
           </p>
+          <p className="text-white/60 text-sm mb-6">
+            Switch to desktop for the full experience, or
+          </p>
+          
+          {/* Watch Demo Button */}
+          <button
+            onClick={() => setShowDemoModal(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-6 py-2 mb-6 rounded-md bg-purple-500/20 hover:bg-purple-400/30 text-purple-200 hover:text-white text-sm border border-purple-400/30 hover:border-purple-300/50 transition-colors duration-150 min-w-[140px]"
+          >
+            <PlayCircle className="w-3.5 h-3.5" />
+            <span>watch the demo</span>
+          </button>
+
           <Button variant="link" size="lg" asChild>
             <a
               href={DISCORD_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center"
+              className="flex items-center justify-center"
               title="Join our Discord community"
             >
               <img src={discord} alt="Discord" className="w-6 h-6 mr-1.5" />
@@ -55,6 +70,14 @@ const MobileWarning = () => {
           </Button>
         </div>
       </div>
+
+      {/* Demo Video Modal */}
+      <DemoVideoModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+        videoUrl="/video/datakit-demo.mp4"
+        title="Take a look at your DataKit"
+      />
     </>
   );
 };
