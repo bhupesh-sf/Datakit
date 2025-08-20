@@ -1,21 +1,28 @@
-import React, { useState, useEffect, RefObject } from "react";
-import { Send, ChevronRight, ChevronLeft, RefreshCw, Command, Server } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, RefObject } from 'react';
+import {
+  Send,
+  ChevronRight,
+  ChevronLeft,
+  RefreshCw,
+  Command
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-import OpenAILogo from "@/assets/openai.webp";
-import AnthropicLogo from "@/assets/anthropic.webp";
+import OpenAILogo from '@/assets/openai.webp';
+import AnthropicLogo from '@/assets/anthropic.webp';
 import OllamaLogo from '@/assets/ollama.webp';
 
-import { useAIStore } from "@/store/aiStore";
-import { useAIOperations } from "@/hooks/ai/useAIOperations";
-import { useAppStore } from "@/store/appStore";
-import { selectTableName } from "@/store/selectors/appSelectors";
+import { useAIStore } from '@/store/aiStore';
+import { useAIOperations } from '@/hooks/ai/useAIOperations';
+import { useAppStore } from '@/store/appStore';
+import { useDuckDBStore } from '@/store/duckDBStore';
+import { selectTableName } from '@/store/selectors/appSelectors';
 
-import ModelSelector from "./ModelSelector";
-import { Button } from "@/components/ui/Button";
-import { Tooltip } from "@/components/ui/Tooltip";
-import ErrorDisplay from "./ErrorDisplay";
-import { validateAIInput } from "./utils/validation";
+import ModelSelector from './ModelSelector';
+import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
+import ErrorDisplay from './ErrorDisplay';
+import { validateAIInput } from './utils/validation';
 
 interface PromptPanelProps {
   inputRef: RefObject<HTMLTextAreaElement>;
@@ -28,22 +35,22 @@ interface PromptPanelProps {
 
 const PROMPT_SUGGESTIONS = [
   {
-    title: "Explore Data",
+    title: 'Explore Data',
     prompt:
-      "Give me an overview of this dataset - what columns do we have and what insights can you find?",
+      'Give me an overview of this dataset - what columns do we have and what insights can you find?',
   },
   {
-    title: "Find Patterns",
-    prompt: "What are the most interesting patterns or trends in this data?",
+    title: 'Find Patterns',
+    prompt: 'What are the most interesting patterns or trends in this data?',
   },
   {
-    title: "Data Quality",
+    title: 'Data Quality',
     prompt:
-      "Check this dataset for missing values, duplicates, or data quality issues",
+      'Check this dataset for missing values, duplicates, or data quality issues',
   },
   {
-    title: "Quick Stats",
-    prompt: "Show me summary statistics for all numeric columns",
+    title: 'Quick Stats',
+    prompt: 'Show me summary statistics for all numeric columns',
   },
 ];
 
@@ -55,10 +62,11 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
   onToggleSchema,
   schemaBrowserOpen = false,
 }) => {
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(true);
 
   const tableName = useAppStore(selectTableName);
+  const { registeredTables } = useDuckDBStore();
   const {
     isProcessing,
     clearQueryHistory,
@@ -71,11 +79,12 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
     currentMessageIndex,
     navigateToNextMessage,
     navigateToPreviousMessage,
+    multiTableContexts,
   } = useAIStore();
   const { executeAIQueryStream, canExecute } = useAIOperations();
 
   // Get user messages for navigation
-  const userMessages = currentConversation.filter(msg => msg.role === 'user');
+  const userMessages = currentConversation.filter((msg) => msg.role === 'user');
 
   // Update prompt when navigating to a different message
   useEffect(() => {
@@ -100,21 +109,46 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
 
   // Validate input and show warnings when user starts typing
   useEffect(() => {
+    const hasRegisteredTables = registeredTables.size > 0;
     const validationError = validateAIInput(
       prompt,
       tableName,
       activeProvider,
-      activeModel
+      activeModel,
+      multiTableContexts,
+      hasRegisteredTables
     );
     setCurrentError(validationError);
-  }, [prompt, tableName, activeProvider, activeModel, setCurrentError]);
+  }, [
+    prompt,
+    tableName,
+    activeProvider,
+    activeModel,
+    multiTableContexts,
+    registeredTables,
+    setCurrentError,
+  ]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = `${Math.min(
+        inputRef.current.scrollHeight,
+        120
+      )}px`;
+    }
+  }, [prompt, inputRef]);
 
   const validateBeforeSubmit = () => {
+    const hasRegisteredTables = registeredTables.size > 0;
     const validationError = validateAIInput(
       prompt,
       tableName,
       activeProvider,
-      activeModel
+      activeModel,
+      multiTableContexts,
+      hasRegisteredTables
     );
 
     if (validationError) {
@@ -124,8 +158,8 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
 
     // Check if provider is configured
     if (!canExecute) {
-      if (activeProvider === "datakit") {
-        setCurrentError("authentication required");
+      if (activeProvider === 'datakit') {
+        setCurrentError('authentication required');
       } else {
         setCurrentError(`AI provider ${activeProvider} not configured`);
       }
@@ -144,16 +178,16 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
 
     try {
       await executeAIQueryStream(prompt);
-      setPrompt("");
+      setPrompt('');
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
+        error instanceof Error ? error.message : 'Unknown error occurred';
       setCurrentError(errorMessage);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
@@ -167,7 +201,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
   const handleRefreshChat = () => {
     clearQueryHistory();
     clearConversation();
-    setPrompt("");
+    setPrompt('');
     setShowSuggestions(true);
     setCurrentError(null);
     inputRef.current?.focus();
@@ -176,12 +210,12 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
   // Determine placeholder text based on conversation state
   const getPlaceholderText = () => {
     if (!tableName) {
-      return "Ask about your data...";
+      return 'Ask about your data...';
     }
 
     // Check if there's an ongoing conversation (has user messages)
     const hasConversation = currentConversation.some(
-      (msg) => msg.role === "user"
+      (msg) => msg.role === 'user'
     );
 
     if (hasConversation) {
@@ -191,19 +225,8 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
     return `Ask about ${tableName}...`;
   };
 
-  // Auto-resize textarea
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.style.height = "auto";
-      inputRef.current.style.height = `${Math.min(
-        inputRef.current.scrollHeight,
-        120
-      )}px`;
-    }
-  }, [prompt, inputRef]);
-
-  useEffect(() => {
-    const style = document.createElement("style");
+    const style = document.createElement('style');
     style.textContent = `
       @property --angle {
         syntax: '<angle>';
@@ -279,11 +302,11 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                 <button
                   onClick={onToggleSchema}
                   className="p-1 hover:bg-white/10 rounded transition-colors"
-                  title={schemaBrowserOpen ? "Hide Schema" : "Show Schema"}
+                  title={schemaBrowserOpen ? 'Hide Schema' : 'Show Schema'}
                 >
                   <ChevronRight
                     className={`h-4 w-4 text-white/70 transition-transform ${
-                      schemaBrowserOpen ? "rotate-180" : ""
+                      schemaBrowserOpen ? 'rotate-180' : ''
                     }`}
                   />
                 </button>
@@ -296,12 +319,12 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
           <div className="flex items-center gap-2">
             <div
               className={
-                showSetupPrompt ? "opacity-50 pointer-events-none" : ""
+                showSetupPrompt ? 'opacity-50 pointer-events-none' : ''
               }
             >
               <ModelSelector compact />
             </div>
-            
+
             {/* Message Navigation */}
             {userMessages.length > 0 && (
               <div className="flex items-center gap-1">
@@ -313,11 +336,11 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                 >
                   <ChevronLeft className="h-4 w-4 text-white/70" />
                 </button>
-                
+
                 <span className="text-xs text-white/60 px-2">
                   {currentMessageIndex + 1} / {userMessages.length + 1}
                 </span>
-                
+
                 <button
                   onClick={navigateToNextMessage}
                   disabled={currentMessageIndex >= userMessages.length}
@@ -328,7 +351,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                 </button>
               </div>
             )}
-            
+
             {/* Refresh Button */}
             <Tooltip content="Start a new chat" placement="bottom">
               <button
@@ -336,8 +359,8 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                 disabled={showSetupPrompt || isProcessing}
                 className={`p-1.5 rounded transition-all ${
                   showSetupPrompt || isProcessing
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-white/10 text-white/70 hover:text-white"
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:bg-white/10 text-white/70 hover:text-white'
                 }`}
                 aria-label="Start new chat"
               >
@@ -371,7 +394,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                   <Command className="h-3 w-3" />
                   <span>K</span>
                 </div>
-                
+
                 <button
                   type="submit"
                   disabled={
@@ -385,8 +408,8 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                     canExecute &&
                     !isProcessing &&
                     !showSetupPrompt
-                      ? "bg-primary text-white hover:bg-primary/80"
-                      : "bg-white/10 text-white/30 cursor-not-allowed"
+                      ? 'bg-primary text-white hover:bg-primary/80'
+                      : 'bg-white/10 text-white/30 cursor-not-allowed'
                   }`}
                 >
                   <Send className="h-4 w-4" />
@@ -436,9 +459,21 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                   >
                     <span>Use Your Own API Keys</span>
                     <div className="flex items-center gap-1">
-                      <img src={OpenAILogo} className="h-4 w-4 opacity-60" alt="OpenAI" />
-                      <img src={AnthropicLogo} className="h-4 w-4 opacity-60" alt="Anthropic" />
-                      <img src={OllamaLogo} className="h-4 w-4 opacity-60" alt="Ollama" />
+                      <img
+                        src={OpenAILogo}
+                        className="h-4 w-4 opacity-60"
+                        alt="OpenAI"
+                      />
+                      <img
+                        src={AnthropicLogo}
+                        className="h-4 w-4 opacity-60"
+                        alt="Anthropic"
+                      />
+                      <img
+                        src={OllamaLogo}
+                        className="h-4 w-4 opacity-60"
+                        alt="Ollama"
+                      />
                     </div>
                   </Button>
                 </div>
@@ -473,8 +508,8 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                   disabled={showSetupPrompt}
                   className={`w-full text-left p-3 border rounded-lg transition-all ${
                     showSetupPrompt
-                      ? "bg-white/3 border-white/5 cursor-not-allowed opacity-50"
-                      : "bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20 group"
+                      ? 'bg-white/3 border-white/5 cursor-not-allowed opacity-50'
+                      : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20 group'
                   }`}
                 >
                   <div className="font-medium text-sm text-white/90 mb-1">
@@ -483,8 +518,8 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                   <div
                     className={`text-xs ${
                       showSetupPrompt
-                        ? "text-white/40"
-                        : "text-white/60 group-hover:text-white/70"
+                        ? 'text-white/40'
+                        : 'text-white/60 group-hover:text-white/70'
                     }`}
                   >
                     {suggestion.prompt}

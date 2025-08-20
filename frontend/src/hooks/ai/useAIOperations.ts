@@ -8,6 +8,7 @@ import { aiService } from "@/lib/ai/aiService";
 import { DataKitProvider } from "@/lib/ai/providers/datakit";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { AIQuery, QueryIntent } from "@/types/ai";
+import { createMultiTableSystemPrompt } from "@/lib/ai/prompts/sqlPrompts";
 
 export const useAIOperations = () => {
   const [isExecuting, setIsExecuting] = useState(false);
@@ -28,6 +29,7 @@ export const useAIOperations = () => {
     setCurrentTokenUsage,
     setVisualizationTokenUsage,
     setCurrentError,
+    multiTableContexts,
   } = useAIStore();
 
   const { executeQuery, executePaginatedQuery } = useDuckDBStore();
@@ -81,6 +83,45 @@ export const useAIOperations = () => {
       };
     }
   }, [tableName, activeFileInfo, executeQuery]);
+
+  const getMultiTableContext = useCallback(async () => {
+    const selectedTables = multiTableContexts.filter(ctx => ctx.isSelected);
+    
+    if (selectedTables.length === 0) {
+      return null;
+    }
+
+    // Get schemas for all selected tables
+    const tablesWithSchemas = await Promise.all(
+      selectedTables.map(async (table) => {
+        try {
+          const result = await executeQuery(`DESCRIBE "${table.tableName}"`);
+          const schema = result ? result.toArray().map((row: any) => ({
+            name: row.column_name || row.name || "",
+            type: row.column_type || row.type || "",
+          })) : table.schema;
+          
+          return {
+            tableName: table.tableName,
+            schema,
+            rowCount: table.rowCount,
+            description: table.description,
+          };
+        } catch (error) {
+          console.error(`Failed to get schema for table ${table.tableName}:`, error);
+          // Use cached schema if query fails
+          return {
+            tableName: table.tableName,
+            schema: table.schema,
+            rowCount: table.rowCount,
+            description: table.description,
+          };
+        }
+      })
+    );
+
+    return { tables: tablesWithSchemas };
+  }, [multiTableContexts, executeQuery]);
 
   const detectIntent = useCallback((prompt: string): QueryIntent => {
     const lowerPrompt = prompt.toLowerCase();
@@ -176,6 +217,7 @@ export const useAIOperations = () => {
   }, []);
 
   const generateSQL = useCallback(async (prompt: string) => {
+    // For backward compatibility, use single table context for this function
     const context = await getDataContext();
     if (!context) {
       throw new Error('No data context available');
@@ -192,6 +234,7 @@ export const useAIOperations = () => {
   }, [activeProvider, getDataContext]);
 
   const analyzeData = useCallback(async (prompt: string, data?: any[]) => {
+    // For backward compatibility, use single table context for this function
     const context = await getDataContext();
     if (!context) {
       throw new Error('No data context available');
@@ -222,22 +265,16 @@ export const useAIOperations = () => {
     const startTime = Date.now();
     
     try {
-      const context = await getDataContext();
-      if (!context) {
+      const multiContext = await getMultiTableContext();
+      if (!multiContext || multiContext.tables.length === 0) {
         throw new Error('No data context available');
       }
 
-      // Build conversation messages with history
+      // Build system message with multi-table context
+      const systemPrompt = createMultiTableSystemPrompt(multiContext);
       const systemMessage = {
         role: 'system' as const,
-        content: `You are a SQL expert helping users query their data using DuckDB syntax. 
-        
-        Table: ${context.tableName}
-        Schema: ${context.schema.map(col => `${col.name} (${col.type})`).join(', ')}
-        
-        IMPORTANT: Only use the column names listed in the schema above. Do not assume any other columns exist.
-        
-        Provide helpful, accurate responses with SQL queries when appropriate. You are in a conversation with the user, so maintain context from previous exchanges.`,
+        content: systemPrompt,
       };
 
       // Create the new user message
@@ -305,7 +342,21 @@ export const useAIOperations = () => {
             }
             
             // Auto-execute SQL if enabled
-            autoExecuteSQLQueries(fullResponse);
+            if (autoExecuteSQL) {
+              const queries = extractSQLQueries(fullResponse);
+              if (queries.length > 0) {
+                // Auto-execute the first query
+                const firstQuery = queries[0];
+                
+                // Validate the query before executing
+                if (firstQuery && firstQuery.length > 20 && !firstQuery.endsWith('SELECT')) {
+                  console.log('[Auto-execute] Running query:', firstQuery.substring(0, 50) + '...');
+                  handleRunSQL(firstQuery);
+                } else {
+                  console.log('[Auto-execute] Skipping invalid query:', firstQuery);
+                }
+              }
+            }
           }
         },
         { temperature: 0.1, maxTokens: 8000 }
@@ -337,9 +388,16 @@ export const useAIOperations = () => {
     activeModel,
     currentConversation,
     addMessageToConversation,
-    getDataContext,
+    getMultiTableContext,
     addQueryToHistory,
     setProcessing,
+    setCurrentResponse,
+    setStreamingResponse,
+    setCurrentTokenUsage,
+    setCurrentError,
+    autoExecuteSQL,
+    extractSQLQueries,
+    executePaginatedQuery,
   ]);
 
   const executeGeneratedSQL = useCallback(async (sql: string, switchToQueryTab = true) => {
@@ -417,24 +475,6 @@ export const useAIOperations = () => {
     }
   }, [executePaginatedQuery]);
 
-  // Auto-execute SQL queries if setting is enabled
-  const autoExecuteSQLQueries = useCallback(async (response: string) => {
-    if (!autoExecuteSQL) return;
-    
-    const queries = extractSQLQueries(response);
-    if (queries.length === 0) return;
-    
-    // Auto-execute the first query
-    const firstQuery = queries[0];
-    
-    // Validate the query before executing
-    if (firstQuery && firstQuery.length > 20 && !firstQuery.endsWith('SELECT')) {
-      console.log('[Auto-execute] Running query:', firstQuery.substring(0, 50) + '...');
-      await handleRunSQL(firstQuery);
-    } else {
-      console.log('[Auto-execute] Skipping invalid query:', firstQuery);
-    }
-  }, [autoExecuteSQL, extractSQLQueries, handleRunSQL]);
 
   return {
     // State

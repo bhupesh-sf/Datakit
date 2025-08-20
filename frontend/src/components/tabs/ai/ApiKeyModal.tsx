@@ -182,7 +182,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
             <div className="w-64 bg-gradient-to-b from-darkNav to-black border-r border-white/10 flex flex-col">
               <div className="p-4 border-b border-white/10">
                 <h2 className="text-lg font-heading font-medium text-white">
-                  AI Configuration
+                  Configuration
                 </h2>
                 <p className="text-xs text-white/60 mt-1">
                   Configure AI providers and settings
