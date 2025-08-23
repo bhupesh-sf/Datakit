@@ -264,7 +264,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setShowDropdown(!showDropdown)}
-          className={`w-full flex items-center gap-2 py-2 px-1 rounded text-white/80 hover:text-white hover:bg-white/5 transition-colors ${className}`}
+          className={`w-full flex items-center gap-2 py-2 px-1 rounded text-white/80 hover:text-white hover:bg-white/5 transition-colors cursor-pointer ${className}`}
         >
           {/* Avatar */}
           <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-xs font-medium text-white">
@@ -298,13 +298,13 @@ const UserMenu: React.FC<UserMenuProps> = ({
         <AnimatePresence>
           {showDropdown && (
             <>
-              {/* Transparent Backdrop - Only covers sidebar */}
+              {/* Invisible click area to close dropdown */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed left-0 top-0 bottom-0 w-64 bg-black/30 backdrop-blur-sm z-40"
+                className="fixed left-0 top-0 bottom-0 w-64 z-40"
                 onClick={() => setShowDropdown(false)}
               />
 

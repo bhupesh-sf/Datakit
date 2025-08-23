@@ -5,7 +5,8 @@ import { useState } from "react";
 import S3 from "@/assets/s3.png";
 import HuggingFace from "@/assets/huggingface.png";
 import GoogleSheetsIcon from "@/components/icons/GoogleSheetsIcon";
-import { Link } from "lucide-react";
+import postgresIcon from "@/assets/postgres.png";
+
 import { ImportProvider } from "@/types/remoteImport";
 import { useFileUpload } from "@/components/data-grid/hooks";
 import DemoVideoModal from "@/components/data-grid/DemoVideoModal";
@@ -27,10 +28,10 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
 
   const remoteOptions: RemoteImportOption[] = [
     {
-      id: "custom-url",
-      name: "Custom URL",
-      icon: <Link className="h-4 w-4 text-white/70" />,
-      description: "Any public URL",
+      id: "postgresql",
+      name: "PostgreSQL",
+      icon: <img src={postgresIcon} className="h-5 w-5" />,
+      description: "Postgres Databases",
     },
     {
       id: "s3",
