@@ -718,7 +718,7 @@ const PostgreSQLPanel: React.FC<PostgreSQLPanelProps> = ({ onImport }) => {
     return (
       <AuthGate
         title="Sign In Required"
-        description="PostgreSQL connections require authentication to keep your database credentials secure and enable advanced features."
+        description="PostgreSQL connections require authentication to keep your database credentials secure."
       />
     );
   }
