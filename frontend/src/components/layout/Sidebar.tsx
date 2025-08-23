@@ -18,6 +18,10 @@ import { useNotifications } from '@/hooks/useNotifications';
 import UserMenu from '@/components/auth/UserMenu';
 import DuckDBIcon from '@/assets/duckdb.svg';
 
+// Check for custom logo from environment variable or window object
+const customLogoUrl =
+  import.meta.env.VITE_CUSTOM_LOGO_URL || (window as any).CUSTOM_LOGO_URL;
+
 // Helper function to check File System Access API support
 const isFileSystemAccessSupported = (): boolean => {
   return 'showOpenFilePicker' in window && 'FileSystemFileHandle' in window;
@@ -29,8 +33,9 @@ const getBrowserCompatibilityInfo = () => {
   const isChrome = userAgent.includes('chrome') && !userAgent.includes('edg');
   const isEdge = userAgent.includes('edg');
   const isFirefox = userAgent.includes('firefox');
-  const isSafari = userAgent.includes('safari') && !userAgent.includes('chrome');
-  
+  const isSafari =
+    userAgent.includes('safari') && !userAgent.includes('chrome');
+
   return {
     isChrome,
     isEdge,
@@ -45,25 +50,29 @@ const getBrowserCompatibilityInfo = () => {
       if (isFirefox) return 'Firefox';
       if (isSafari) return 'Safari';
       return 'Unknown';
-    }
+    },
   };
 };
 
 // Helper function to request permission for file handle
-const requestFileHandlePermission = async (handle: FileSystemFileHandle): Promise<boolean> => {
+const requestFileHandlePermission = async (
+  handle: FileSystemFileHandle
+): Promise<boolean> => {
   try {
     // Check if we already have permission
     const permission = await handle.queryPermission({ mode: 'read' });
     if (permission === 'granted') {
       return true;
     }
-    
+
     // Request permission if not granted
     if (permission === 'prompt') {
-      const requestedPermission = await handle.requestPermission({ mode: 'read' });
+      const requestedPermission = await handle.requestPermission({
+        mode: 'read',
+      });
       return requestedPermission === 'granted';
     }
-    
+
     return false;
   } catch (error) {
     console.log('[Permission] Error requesting file handle permission:', error);
@@ -72,25 +81,32 @@ const requestFileHandlePermission = async (handle: FileSystemFileHandle): Promis
 };
 
 // Helper function to verify handle validity with permission request
-const verifyFileHandle = async (handle: FileSystemFileHandle, expectedFileName: string): Promise<{ isValid: boolean; file?: File; error?: string }> => {
+const verifyFileHandle = async (
+  handle: FileSystemFileHandle,
+  expectedFileName: string
+): Promise<{ isValid: boolean; file?: File; error?: string }> => {
   try {
     // First, try to request permission
     const hasPermission = await requestFileHandlePermission(handle);
     if (!hasPermission) {
       return { isValid: false, error: 'Permission denied by user or system' };
     }
-    
+
     // Try to get the file
     const file = await handle.getFile();
-    
+
     // Verify the file name matches
     if (file.name !== expectedFileName) {
-      return { isValid: false, error: `File name mismatch: expected "${expectedFileName}", got "${file.name}"` };
+      return {
+        isValid: false,
+        error: `File name mismatch: expected "${expectedFileName}", got "${file.name}"`,
+      };
     }
-    
+
     return { isValid: true, file };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     return { isValid: false, error: errorMessage };
   }
 };
@@ -134,7 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   } = useAppStore();
 
   const uploadPopover = usePopover();
-  
+
   // Get notifications
   const { showSuccess } = useNotifications();
 
@@ -209,11 +225,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
           lastModified: Date.now(),
         };
         addFileToWorkspace(newFile);
-        
+
         // Show success notification for remote file import
         showSuccess(
           'Remote File Imported',
-          `"${result.fileName}" has been imported from ${result.remoteProvider || 'remote source'}`,
+          `"${result.fileName}" has been imported from ${
+            result.remoteProvider || 'remote source'
+          }`,
           { icon: 'check', duration: 5000 }
         );
       }
@@ -223,38 +241,45 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   // File tree handlers
   const handleFileRemove = async (fileId: string) => {
     // Get file info before removing
-    const file = workspaceFiles.find(f => f.id === fileId);
-    
+    const file = workspaceFiles.find((f) => f.id === fileId);
+
     if (!file) return;
-    
+
     // Show confirmation alert before removing
     const confirmed = confirm(
       `Remove "${file.name}" from workspace? This will not delete the actual file.`
     );
-    
+
     if (!confirmed) return;
-    
+
     // Remove from workspace after confirmation
     removeFileFromWorkspace(fileId);
-    
+
     // Show success notification
     showSuccess(
       'File Removed',
       `"${file.name}" has been removed from workspace`,
       { icon: 'check', duration: 4000 }
     );
-    
+
     // If file was loaded into DuckDB, remove the table or view
     try {
       const duckDBStore = useDuckDBStore.getState();
-      
+
       // Try to drop table or view with the file name (escaped)
-      const tableName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_]/g, '_');
+      const tableName = file.name
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[^a-zA-Z0-9_]/g, '_');
       await duckDBStore.dropTableOrView(tableName);
-      
-      console.log(`[Sidebar] Dropped table/view for removed file: ${tableName}`);
+
+      console.log(
+        `[Sidebar] Dropped table/view for removed file: ${tableName}`
+      );
     } catch (error) {
-      console.error('[Sidebar] Error dropping table/view for removed file:', error);
+      console.error(
+        '[Sidebar] Error dropping table/view for removed file:',
+        error
+      );
     }
   };
 
@@ -264,7 +289,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
 
   const handleFileSelect = async (file: WorkspaceFile) => {
     console.log('[Sidebar] File selected from workspace:', file);
-    
+
     if (!onDataLoad) {
       console.log('[Sidebar] No onDataLoad callback available');
       return;
@@ -272,10 +297,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
 
     try {
       // First, check if file is already loaded in FileTabs
-      const existingFileTab = files.find(f => f.fileName === file.name);
-      
+      const existingFileTab = files.find((f) => f.fileName === file.name);
+
       if (existingFileTab) {
-        console.log('[Sidebar] File already loaded, switching to existing tab:', file.name);
+        console.log(
+          '[Sidebar] File already loaded, switching to existing tab:',
+          file.name
+        );
         setActiveFile(existingFileTab.id);
         return;
       }
@@ -284,74 +312,95 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       if (!file.isRemote) {
         // Check browser support for File System Access API
         if (!isFileSystemAccessSupported()) {
-          console.log('[Sidebar] File System Access API not supported, cannot auto-open files');
+          console.log(
+            '[Sidebar] File System Access API not supported, cannot auto-open files'
+          );
           const browserInfo = getBrowserCompatibilityInfo();
           const browserName = browserInfo.getBrowserName();
-          
+
           let message = `Your browser (${browserName}) does not support automatic file access. Please re-import the file manually. `;
-          
+
           if (browserInfo.noSupport) {
             message += 'For automatic file access, please use Chrome or Edge.';
           } else if (browserInfo.hasLimitedSupport) {
-            message += 'File access support is limited in Safari. For better experience, use Chrome or Edge.';
+            message +=
+              'File access support is limited in Safari. For better experience, use Chrome or Edge.';
           } else {
-            message += 'For automatic import features, please use Chrome or Edge.';
+            message +=
+              'For automatic import features, please use Chrome or Edge.';
           }
-          
+
           alert(message);
           return;
         }
-        
+
         // Try using stored file handle for automatic access
         if (file.handle) {
-          console.log('[Sidebar] Using stored file handle for automatic import:', file.name);
-          
+          console.log(
+            '[Sidebar] Using stored file handle for automatic import:',
+            file.name
+          );
+
           const handleResult = await verifyFileHandle(file.handle, file.name);
-          
+
           if (handleResult.isValid && handleResult.file) {
-            console.log('[Sidebar] Handle valid with permission, importing automatically:', file.name);
+            console.log(
+              '[Sidebar] Handle valid with permission, importing automatically:',
+              file.name
+            );
             await handleFileWithStreaming(file.handle, handleResult.file, true); // Skip workspace add
             return;
           } else {
-            console.log('[Sidebar] Handle verification failed:', handleResult.error);
-            
+            console.log(
+              '[Sidebar] Handle verification failed:',
+              handleResult.error
+            );
+
             // Show specific error message to user based on the error type
             if (handleResult.error?.includes('Permission denied')) {
               const shouldRetry = confirm(
                 `Permission denied to access "${file.name}". This can happen due to browser security policies.\n\n` +
-                `Click "OK" to manually select the file again, or "Cancel" to skip.`
+                  `Click "OK" to manually select the file again, or "Cancel" to skip.`
               );
               if (!shouldRetry) return;
             } else if (handleResult.error?.includes('File name mismatch')) {
-              alert(`The stored file reference for "${file.name}" points to a different file. Please re-select the correct file.`);
+              alert(
+                `The stored file reference for "${file.name}" points to a different file. Please re-select the correct file.`
+              );
             } else {
               const shouldRetry = confirm(
                 `Cannot automatically access "${file.name}". The file may have been moved, deleted, or access permissions changed.\n\n` +
-                `Click "OK" to manually select the file again, or "Cancel" to skip.`
+                  `Click "OK" to manually select the file again, or "Cancel" to skip.`
               );
               if (!shouldRetry) return;
             }
           }
         }
-        
+
         // Fallback: prompt user to re-select file
-        console.log('[Sidebar] No valid handle, prompting user to re-select:', file.name);
-        
+        console.log(
+          '[Sidebar] No valid handle, prompting user to re-select:',
+          file.name
+        );
+
         try {
           const fileHandleArray = await window.showOpenFilePicker({
-            types: [{
-              description: 'Data Files',
-              accept: {
-                'text/csv': ['.csv'],
-                'application/json': ['.json'],
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-                'application/vnd.ms-excel': ['.xls'],
-                'application/x-parquet': ['.parquet'],
-                'application/vnd.apache.parquet': ['.parquet'],
-                'text/plain': ['.txt'],
-                'application/octet-stream': ['.duckdb', '.db'],
-              }
-            }],
+            types: [
+              {
+                description: 'Data Files',
+                accept: {
+                  'text/csv': ['.csv'],
+                  'application/json': ['.json'],
+                  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                    ['.xlsx'],
+                  'application/vnd.ms-excel': ['.xls'],
+                  'application/x-parquet': ['.parquet'],
+                  'application/vnd.apache.parquet': ['.parquet'],
+                  'text/plain': ['.txt'],
+                  'application/octet-stream': ['.duckdb', '.db'],
+                },
+              },
+            ],
             excludeAcceptAllOption: false,
             multiple: false,
           });
@@ -359,43 +408,61 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
           if (fileHandleArray.length > 0) {
             const selectedHandle = fileHandleArray[0];
             const selectedFile = await selectedHandle.getFile();
-            
-            // Verify it's the same file name  
+
+            // Verify it's the same file name
             if (selectedFile.name === file.name) {
-              console.log('[Sidebar] File verified, importing with streaming:', selectedFile.name);
-              
+              console.log(
+                '[Sidebar] File verified, importing with streaming:',
+                selectedFile.name
+              );
+
               // Check again if file was loaded while we were selecting (race condition)
-              const existingFileTabAfterPicker = files.find(f => f.fileName === file.name);
+              const existingFileTabAfterPicker = files.find(
+                (f) => f.fileName === file.name
+              );
               if (existingFileTabAfterPicker) {
-                console.log('[Sidebar] File was loaded while picker was open, switching to existing');
+                console.log(
+                  '[Sidebar] File was loaded while picker was open, switching to existing'
+                );
                 setActiveFile(existingFileTabAfterPicker.id);
                 return;
               }
-              
+
               await handleFileWithStreaming(selectedHandle, selectedFile, true); // Skip workspace add
-              
+
               // Update the file handle in the workspace file for future automatic access
               const updatedFile: WorkspaceFile = {
                 ...file,
-                handle: isFileSystemAccessSupported() ? selectedHandle : undefined
+                handle: isFileSystemAccessSupported()
+                  ? selectedHandle
+                  : undefined,
               };
               // We could add a method to update workspace file handles here
               console.log('[Sidebar] Updated file handle for:', file.name);
             } else {
-              console.log('[Sidebar] File name mismatch:', selectedFile.name, 'vs', file.name);
+              console.log(
+                '[Sidebar] File name mismatch:',
+                selectedFile.name,
+                'vs',
+                file.name
+              );
               alert(`Please select the correct file: ${file.name}`);
             }
           }
         } catch (error) {
           if ((error as Error).name !== 'AbortError') {
             console.error('Error re-importing file:', error);
-            alert(`Could not load file ${file.name}. Please re-import it using the file upload button.`);
+            alert(
+              `Could not load file ${file.name}. Please re-import it using the file upload button.`
+            );
           }
         }
       } else if (file.isRemote && file.remoteUrl) {
         // Handle remote files - could trigger remote import modal
         console.log('Remote file clicked:', file);
-        alert('Remote file re-import not yet implemented. Please use the Cloud Sources button to re-import.');
+        alert(
+          'Remote file re-import not yet implemented. Please use the Cloud Sources button to re-import.'
+        );
       }
     } catch (error) {
       console.error('Error handling file selection:', error);
@@ -528,7 +595,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
     <>
       {/* Header with logo and title */}
       <div className="px-5 py-4 border-b border-white border-opacity-10 flex items-center justify-between">
-        <h1 className="text-white font-heading font-medium text-lg">DataKit</h1>
+        {customLogoUrl ? (
+          <img
+            src={customLogoUrl}
+            className="h-12 w-24 object-contain"
+            crossOrigin="anonymous"
+          />
+        ) : (
+          <h1 className="text-white font-heading font-medium text-lg">
+            DataKit
+          </h1>
+        )}
       </div>
 
       {/* Workspace Selector */}

@@ -3,7 +3,7 @@ FROM nginx:alpine
 
 LABEL maintainer="DataKit Team <amin@datakit.page>"
 LABEL description="DataKit - Modern web-based data analysis tool"
-LABEL version="0.3.8"
+LABEL version="0.3.92"
 
 RUN rm -rf /usr/share/nginx/html/*
 
@@ -22,5 +22,9 @@ EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost/ || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Copy environment injection script
+COPY inject-env.sh /usr/local/bin/inject-env.sh
+RUN chmod +x /usr/local/bin/inject-env.sh
+
+# Start with environment injection
+CMD ["/usr/local/bin/inject-env.sh"]

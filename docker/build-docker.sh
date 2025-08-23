@@ -10,7 +10,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 IMAGE_NAME="datakit/app"
-VERSION="0.3.8"
+VERSION="0.3.92"
 LATEST_TAG="datakit/app:latest"
 VERSION_TAG="datakit/app:$VERSION"
 
