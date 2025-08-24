@@ -461,7 +461,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
         // Handle remote files - could trigger remote import modal
         console.log('Remote file clicked:', file);
         alert(
-          'Remote file re-import not yet implemented. Please use the Cloud Sources button to re-import.'
+          'Remote source re-import not yet implemented. Please use the Cloud Sources button to re-import.'
         );
       }
     } catch (error) {
@@ -550,7 +550,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   // Define what to show in collapsed mode - only icons with functionality
   const renderCollapsedContent = () => (
     <>
-      <div className="p-4 border-b border-white/10">
+      <div className="p-4">
         {/* Header space for collapsed mode */}
       </div>
 
@@ -742,7 +742,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
 
         <button
           onClick={toggleSidebar}
-          className="absolute top-5 right-3 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white hover:border-white/10 transition-colors shadow-lg"
+          className="absolute top-5 right-3 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white hover:border-white/10 transition-colors shadow-lg cursor-pointer"
           aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {sidebarCollapsed ? (

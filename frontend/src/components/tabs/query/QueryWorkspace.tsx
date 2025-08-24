@@ -310,7 +310,7 @@ const QueryWorkspace: React.FC = () => {
       <div className="flex items-center space-x-3">
         <h3 className="text-sm font-medium">Query Results</h3>
 
-        {executionTime !== null && (
+        {!!executionTime && (
           <div className="flex items-center text-xs text-white/60">
             <Clock size={12} className="mr-1" />
             <span>{executionTime.toFixed(0)}ms</span>

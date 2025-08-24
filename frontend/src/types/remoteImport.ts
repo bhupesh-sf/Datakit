@@ -9,7 +9,8 @@ export type ImportProvider =
   | "custom-url"
   | "huggingface"
   | "google-sheets"
-  | "motherduck";
+  | "motherduck"
+  | "postgresql";
 
 /**
  * Provider configuration interface

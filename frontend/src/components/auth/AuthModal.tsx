@@ -13,7 +13,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/auth/useAuth';
-import { PasswordValidator } from '@/lib/utils/passwordValidator';
+import { PasswordValidator } from '@/lib/duckdb/utils/passwordValidator';
 import { useNotifications } from '@/hooks/useNotifications';
 
 interface AuthModalProps {
@@ -415,7 +415,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 </span>
                 <button
                   onClick={toggleMode}
-                  className="text-sm text-primary hover:text-primary-foreground transition-colors font-medium"
+                  className="text-sm text-primary hover:text-primary-foreground transition-colors font-medium cursor-pointer"
                 >
                   {mode === 'login' ? 'Sign up' : 'Sign in'}
                 </button>
@@ -462,6 +462,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     <li className="flex items-center gap-2">
                       <div className="w-1 h-1 bg-primary rounded-full"></div>
                       Create unlimited workspaces
+                    </li>
+
+                    <li className="flex items-center gap-2">
+                      <div className="w-1 h-1 bg-primary rounded-full"></div>
+                      Access to all cloud connections
                     </li>
 
                     <li className="flex items-center gap-2">

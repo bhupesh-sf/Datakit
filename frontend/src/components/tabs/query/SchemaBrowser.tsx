@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDuckDBStore } from "@/store/duckDBStore";
+import { usePostgreSQLStore } from "@/store/postgresStore";
 import {
   Database,
   Table,
@@ -16,6 +17,8 @@ import {
   HardDrive,
   Cloud,
   Loader2,
+  Server,
+  Plus,
 } from "lucide-react";
 import Tooltip from "@/components/ui/Tooltip";
 
@@ -54,7 +57,24 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
     executeMotherDuckQuery,
     
     listAttachedDatabases,
+    
+    // PostgreSQL bridge state
+    postgresConnections,
+    postgresActiveConnections,
+    postgresVirtualTables,
+    postgresSchemas,
+    postgresError,
+    connectToPostgreSQL,
+    disconnectFromPostgreSQL,
+    addVirtualPostgreSQLTable,
+    refreshPostgreSQLVirtualSchemas,
   } = useDuckDBStore();
+  
+  // PostgreSQL store for connection management
+  const {
+    connections: allPostgresConnections,
+    loadConnections: loadPostgresConnections,
+  } = usePostgreSQLStore();
 
   const [localSchemas, setLocalSchemas] = useState<Record<string, TableSchema>>({});
   const [motherDuckTableSchemas, setMotherDuckTableSchemas] = useState<Record<string, TableSchema>>({});
@@ -67,6 +87,8 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
   const [motherDuckRefreshing, setMotherDuckRefreshing] = useState<Set<string>>(new Set());
   const [attachedDbRefreshing, setAttachedDbRefreshing] = useState<Set<string>>(new Set());
   const [loadingColumns, setLoadingColumns] = useState<Set<string>>(new Set());
+  const [postgresRefreshing, setPostgresRefreshing] = useState<Set<string>>(new Set());
+  const [postgresConnecting, setPostgresConnecting] = useState<Set<string>>(new Set());
 
   // Dependency tracking for local tables
   const localDependencyKey = useMemo(() => {
@@ -226,6 +248,58 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
     }
   }, [executeMotherDuckQuery, motherDuckSchemas, motherDuckTableSchemas]);
 
+  // Load available PostgreSQL connections on mount
+  useEffect(() => {
+    loadPostgresConnections().catch(console.error);
+  }, [loadPostgresConnections]);
+
+  // PostgreSQL connection handlers
+  const handlePostgreSQLConnect = async (connectionId: string) => {
+    if (postgresConnecting.has(connectionId)) return;
+    
+    setPostgresConnecting(prev => new Set(prev).add(connectionId));
+    try {
+      await connectToPostgreSQL(connectionId);
+      await refreshPostgreSQLVirtualSchemas(connectionId);
+    } catch (error) {
+      console.error('Failed to connect to PostgreSQL:', error);
+    } finally {
+      setPostgresConnecting(prev => {
+        const next = new Set(prev);
+        next.delete(connectionId);
+        return next;
+      });
+    }
+  };
+
+  // TODO: Maybe we want to give user ability to disconnect in the next iterations?
+  //
+  // const handlePostgreSQLDisconnect = async (connectionId: string) => {
+  //   try {
+  //     await disconnectFromPostgreSQL(connectionId);
+  //   } catch (error) {
+  //     console.error('Failed to disconnect from PostgreSQL:', error);
+  //   }
+  // };
+
+  const handlePostgreSQLRefresh = async (connectionId: string) => {
+    if (postgresRefreshing.has(connectionId)) return;
+    
+    setPostgresRefreshing(prev => new Set(prev).add(connectionId));
+    try {
+      await refreshPostgreSQLVirtualSchemas(connectionId);
+    } catch (error) {
+      console.error('Failed to refresh PostgreSQL schemas:', error);
+    } finally {
+      setPostgresRefreshing(prev => {
+        const next = new Set(prev);
+        next.delete(connectionId);
+        return next;
+      });
+    }
+  };
+
+
   // Fetch local schemas when dependencies change
   useEffect(() => {
     fetchLocalSchemas();
@@ -343,6 +417,10 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
       // Regular local table
       const escapedName = registeredTables.get(schema.name) || `"${schema.name}"`;
       query = `\nSELECT *\nFROM ${escapedName}\nLIMIT 10;`;
+    } else if (schema.source === 'postgresql') {
+      // PostgreSQL table - use proper PostgreSQL syntax
+      const tableRef = `"${schema.database}"."${schema.name}"`;
+      query = `\nSELECT *\nFROM ${tableRef}\nLIMIT 10;`;
     } else {
       // MotherDuck table
       const tableRef = schema.database ? `"${schema.database}"."${schema.name}"` : `"${schema.name}"`;
@@ -364,6 +442,10 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
       // Regular local table
       const escapedName = registeredTables.get(schema.name) || `"${schema.name}"`;
       query = `\nSELECT "${columnName}"\nFROM ${escapedName}\nLIMIT 10;`;
+    } else if (schema.source === 'postgresql') {
+      // PostgreSQL table - use proper PostgreSQL syntax
+      const tableRef = `"${schema.database}"."${schema.name}"`;
+      query = `\nSELECT "${columnName}"\nFROM ${tableRef}\nLIMIT 10;`;
     } else {
       // MotherDuck table
       const tableRef = schema.database ? `"${schema.database}"."${schema.name}"` : `"${schema.name}"`;
@@ -402,7 +484,8 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
   // Check if we have any data to show
   const hasLocalData = localTablesData.length > 0 || localViewsData.length > 0;
   const hasMotherDuckData = motherDuckConnected && motherDuckDatabases.length > 0;
-  const hasAnyData = hasLocalData || hasMotherDuckData;
+  const hasPostgreSQLData = postgresActiveConnections.size > 0 || allPostgresConnections.length > 0;
+  const hasAnyData = hasLocalData || hasMotherDuckData || hasPostgreSQLData;
 
   return (
     <div className="h-full flex flex-col">
@@ -420,7 +503,7 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
       <div className="flex-1 overflow-auto">
         {/* Show empty state if no data at all */}
         {!hasAnyData && !localLoading ? (
-          <div className="px-4 py-8 text-center text-white/50 text-sm">
+          <div className="px-4 py-8 text-center text-white/50 text-xs">
             No data available. Import files to get started.
           </div>
         ) : (
@@ -663,10 +746,10 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
                       {motherDuckRefreshing.has(db.name) ? (
                         <div className="flex items-center justify-center py-4 text-white/50">
                           <Loader2 size={16} className="animate-spin mr-2" />
-                          <span className="text-sm">Loading {db.name} schemas...</span>
+                          <span className="text-xs">Loading {db.name} schemas...</span>
                         </div>
                       ) : schemas.length === 0 ? (
-                        <div className="px-2 py-4 text-center text-white/50 text-sm">
+                        <div className="px-2 py-4 text-center text-white/50 text-xs">
                           No tables found in {db.name}
                         </div>
                       ) : (
@@ -747,6 +830,353 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
                 </div>
               );
             })}
+
+            {/* PostgreSQL Connections Section */}
+            {hasPostgreSQLData && (
+              <>
+                {/* Available PostgreSQL Connections */}
+                {allPostgresConnections.filter(conn => !postgresActiveConnections.has(conn.id)).map((connection) => (
+                  <div key={`pg-available-${connection.id}`} className="border-b border-white/5">
+                    <div className="flex items-center justify-between px-2 py-2 hover:bg-white/5">
+                      <div className="flex items-center space-x-2">
+                        <Server size={14} className="text-blue-400" />
+                        <span className="text-sm font-medium text-white/80">
+                          {connection.name}
+                        </span>
+                        <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">
+                          Available
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Tooltip placement="left" content="Connect and browse tables">
+                          <button
+                            onClick={() => handlePostgreSQLConnect(connection.id)}
+                            disabled={postgresConnecting.has(connection.id)}
+                            className="p-1 hover:bg-white/10 rounded text-white/70 hover:text-white transition-colors"
+                          >
+                            {postgresConnecting.has(connection.id) ? (
+                              <Loader2 size={12} className="animate-spin" />
+                            ) : (
+                              <Plus size={12} />
+                            )}
+                          </button>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Active PostgreSQL Connections */}
+                {Array.from(postgresActiveConnections).map((connectionId) => {
+                  const connection = postgresConnections.get(connectionId);
+                  if (!connection) return null;
+
+                  const isExpanded = expandedDatabases.has(`pg-${connectionId}`);
+                  const virtualTables = Array.from(postgresVirtualTables.entries())
+                    .filter(([_, table]) => table.connectionId === connectionId);
+
+                  return (
+                    <div key={`pg-active-${connectionId}`} className="border-b border-white/5">
+                      {/* Connection Header */}
+                      <div className="flex items-center justify-between px-2 py-2 hover:bg-white/5 cursor-pointer"
+                           onClick={() => toggleDatabase(`pg-${connectionId}`)}>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-white/70">
+                            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                          </span>
+                          <Server size={14} className="text-blue-400" />
+                          <span className="text-sm font-medium text-white">
+                            {connection.name}
+                          </span>
+                          <span className="text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">
+                            Connected
+                          </span>
+                          <span className="text-xs text-white/60">
+                            ({virtualTables.length})
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Tooltip placement="left" content="Refresh schemas">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePostgreSQLRefresh(connectionId);
+                              }}
+                              disabled={postgresRefreshing.has(connectionId)}
+                              className="p-1 hover:bg-white/10 rounded text-white/70 hover:text-white transition-colors"
+                            >
+                              <RefreshCw size={12} className={postgresRefreshing.has(connectionId) ? "animate-spin" : ""} />
+                            </button>
+                          </Tooltip>
+                          {/* <Tooltip placement="left" content="Disconnect">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePostgreSQLDisconnect(connectionId);
+                              }}
+                              className="p-1 hover:bg-white/10 rounded text-white/70 hover:text-red-400 transition-colors"
+                            >
+                              <Database size={12} />
+                            </button>
+                          </Tooltip> */}
+                        </div>
+                      </div>
+
+                      {/* Connection Content */}
+                      {isExpanded && (
+                        <div className="pl-6">
+                          {postgresRefreshing.has(connectionId) ? (
+                            <div className="flex items-center justify-center py-4 text-white/50">
+                              <Loader2 size={16} className="animate-spin mr-2" />
+                              <span className="text-xs">Loading PostgreSQL schemas...</span>
+                            </div>
+                          ) : virtualTables.length === 0 ? (
+                            <div className="px-2 py-4 text-center text-white/50 text-xs">
+                              No tables found. Click refresh to load schemas.
+                            </div>
+                          ) : (
+                            <div className="py-1">
+                              {/* Group virtual tables by schema, then by type */}
+                              {(() => {
+                                const schemaGroups = new Map();
+                                virtualTables.forEach(([tableKey, table]) => {
+                                  if (!schemaGroups.has(table.schemaName)) {
+                                    schemaGroups.set(table.schemaName, { tables: [], views: [] });
+                                  }
+                                  const group = schemaGroups.get(table.schemaName);
+                                  if (table.tableType === 'view') {
+                                    group.views.push({ tableKey, table });
+                                  } else {
+                                    group.tables.push({ tableKey, table });
+                                  }
+                                });
+
+                                return Array.from(schemaGroups.entries()).map(([schemaName, { tables, views }]) => (
+                                  <div key={`${connectionId}-${schemaName}`} className="mb-3">
+                                    <div className="flex items-center px-2 py-1 text-xs font-medium text-white/50">
+                                      <Database size={12} className="mr-1" />
+                                      {schemaName} ({tables.length + views.length})
+                                    </div>
+                                    
+                                    {/* Tables Section */}
+                                    {tables.length > 0 && (
+                                      <div className="mb-2">
+                                        <div className="flex items-center px-4 py-1 text-xs font-medium text-white/40">
+                                          <Layers size={10} className="mr-1" />
+                                          Tables ({tables.length})
+                                        </div>
+                                        {tables.map(({ tableKey, table }) => {
+                                      const fullTableId = `pg-${tableKey}`;
+                                      const tableSchema: TableSchema = {
+                                        name: table.tableName,
+                                        type: table.tableType,
+                                        source: "postgresql",
+                                        database: table.schemaName,
+                                        columns: table.columns,
+                                      };
+
+                                      return (
+                                        <div key={tableKey} className="schema-item group">
+                                          <div 
+                                            className="flex items-center px-2 py-1.5 hover:bg-white/5 rounded text-sm cursor-pointer"
+                                            onClick={() => toggleTable(fullTableId)}
+                                          >
+                                            <span className="mr-1.5 text-white/70 flex-shrink-0">
+                                              {expandedTables.has(fullTableId) ? (
+                                                <ChevronDown size={14} />
+                                              ) : (
+                                                <ChevronRight size={14} />
+                                              )}
+                                            </span>
+                                            
+                                            <span className="flex-shrink-0">
+                                              {getObjectIcon(table.tableType)}
+                                            </span>
+                                            
+                                            <div className="flex-1 min-w-0 ml-1.5">
+                                              <span className="text-white/90 truncate block">
+                                                {table.tableName}
+                                              </span>
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                              <Tooltip placement="left" content="Insert SELECT query">
+                                                <button
+                                                  className="text-white/70 hover:text-primary p-1"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    generateSelectQuery(tableSchema);
+                                                  }}
+                                                >
+                                                  <FileText size={12} />
+                                                </button>
+                                              </Tooltip>
+                                            </div>
+                                          </div>
+
+                                          {/* Table Columns */}
+                                          {expandedTables.has(fullTableId) && (
+                                            <div className="ml-6 pl-2 border-l border-white/10 mt-1 mb-2">
+                                              {table.columns.length > 0 ? (
+                                                <div className="space-y-0.5">
+                                                  {table.columns.map((column) => (
+                                                    <div
+                                                      key={`${fullTableId}-${column.name}`}
+                                                      className="flex items-center px-2 py-1 hover:bg-white/5 rounded text-xs group/column"
+                                                      onClick={() => generateColumnQuery(tableSchema, column.name)}
+                                                    >
+                                                      <span className="flex-shrink-0">
+                                                        {getColumnTypeIcon(column.type)}
+                                                      </span>
+                                                      
+                                                      <span className="ml-1.5 text-white/80 truncate flex-1 min-w-0">
+                                                        {column.name}
+                                                      </span>
+                                                      
+                                                      <span className="text-white/40 text-xs flex-shrink-0 ml-2 max-w-[60px] truncate">
+                                                        {column.type}
+                                                      </span>
+                                                      
+                                                      <button
+                                                        className="opacity-0 group-hover/column:opacity-100 hover:text-primary transition-all text-white/70 p-0.5 flex-shrink-0 ml-1"
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          generateColumnQuery(tableSchema, column.name);
+                                                        }}
+                                                      >
+                                                        <FileText size={10} />
+                                                      </button>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              ) : (
+                                                <div className="px-2 py-2 text-white/40 text-xs">
+                                                  No columns available
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                        })}
+                                      </div>
+                                    )}
+                                    
+                                    {/* Views Section */}
+                                    {views.length > 0 && (
+                                      <div className="mb-2">
+                                        <div className="flex items-center px-4 py-1 text-xs font-medium text-white/40">
+                                          <Eye size={10} className="mr-1" />
+                                          Views ({views.length})
+                                        </div>
+                                        {views.map(({ tableKey, table }) => {
+                                          const fullTableId = `pg-${tableKey}`;
+                                          const tableSchema: TableSchema = {
+                                            name: table.tableName,
+                                            type: table.tableType,
+                                            source: "postgresql",
+                                            database: table.schemaName,
+                                            columns: table.columns,
+                                          };
+
+                                          return (
+                                            <div key={tableKey} className="schema-item group">
+                                              <div 
+                                                className="flex items-center px-2 py-1.5 hover:bg-white/5 rounded text-sm cursor-pointer"
+                                                onClick={() => toggleTable(fullTableId)}
+                                              >
+                                                <span className="mr-1.5 text-white/70 flex-shrink-0">
+                                                  {expandedTables.has(fullTableId) ? (
+                                                    <ChevronDown size={14} />
+                                                  ) : (
+                                                    <ChevronRight size={14} />
+                                                  )}
+                                                </span>
+                                                
+                                                <span className="flex-shrink-0">
+                                                  {getObjectIcon(table.tableType)}
+                                                </span>
+                                                
+                                                <div className="flex-1 min-w-0 ml-1.5">
+                                                  <span className="text-white/90 truncate block">
+                                                    {table.tableName}
+                                                  </span>
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                  <Tooltip placement="left" content="Insert SELECT query">
+                                                    <button
+                                                      className="text-white/70 hover:text-primary p-1"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        generateSelectQuery(tableSchema);
+                                                      }}
+                                                    >
+                                                      <FileText size={12} />
+                                                    </button>
+                                                  </Tooltip>
+                                                </div>
+                                              </div>
+
+                                              {/* View Columns */}
+                                              {expandedTables.has(fullTableId) && (
+                                                <div className="ml-6 pl-2 border-l border-white/10 mt-1 mb-2">
+                                                  {table.columns.length > 0 ? (
+                                                    <div className="space-y-0.5">
+                                                      {table.columns.map((column) => (
+                                                        <div
+                                                          key={`${fullTableId}-${column.name}`}
+                                                          className="flex items-center px-2 py-1 hover:bg-white/5 rounded text-xs group/column"
+                                                          onClick={() => generateColumnQuery(tableSchema, column.name)}
+                                                        >
+                                                          <span className="flex-shrink-0">
+                                                            {getColumnTypeIcon(column.type)}
+                                                          </span>
+                                                          
+                                                          <span className="ml-1.5 text-white/80 truncate flex-1 min-w-0">
+                                                            {column.name}
+                                                          </span>
+                                                          
+                                                          <span className="text-white/40 text-xs flex-shrink-0 ml-2 max-w-[60px] truncate">
+                                                            {column.type}
+                                                          </span>
+                                                          
+                                                          <button
+                                                            className="opacity-0 group-hover/column:opacity-100 hover:text-primary transition-all text-white/70 p-0.5 flex-shrink-0 ml-1"
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              generateColumnQuery(tableSchema, column.name);
+                                                            }}
+                                                          >
+                                                            <FileText size={10} />
+                                                          </button>
+                                                        </div>
+                                                      ))}
+                                                    </div>
+                                                  ) : (
+                                                    <div className="px-2 py-2 text-white/40 text-xs">
+                                                      No columns available
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                ));
+                              })()}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
           </>
         )}
       </div>

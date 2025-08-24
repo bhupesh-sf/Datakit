@@ -9,7 +9,7 @@ import {
   selectJsonSchema,
 } from '@/store/selectors/appSelectors'
 import { DataSourceType } from '@/types/json'
-import { DataLoadWithDuckDBResult } from '@/components/layout/Sidebar'
+import { DataLoadWithDuckDBResult } from '@/types/multiFile'
 import { useDemoFileDrops } from './useDemoFileDrops'
 import { useUrlParameterHandler } from './useUrlParameterHandler'
 import { useTabTracking } from './useTabTracking'

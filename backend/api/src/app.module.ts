@@ -13,6 +13,7 @@ import { CreditsModule } from './credits/credits.module';
 import { AIModule } from './ai/ai.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { WaitlistModule } from './waitlist/waitlist.module';
+import { PostgresProxyModule } from './postgres-proxy/postgres-proxy.module';
 import { getDatabaseConfig } from './config/database.config';
 import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 
@@ -67,6 +68,7 @@ import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
     CreditsModule,
     AIModule,
     WaitlistModule,
+    PostgresProxyModule,
   ],
   controllers: [AppController],
   providers: [

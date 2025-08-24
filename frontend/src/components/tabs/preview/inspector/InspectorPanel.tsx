@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, FileText, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import PostgreSQLIcon from '@/assets/postgres.png';
 import { exportHTMLReport } from './utils/htmlReportUtils';
 import { handleProblemExport, ProblemType } from './utils/problemExportUtils';
 import { exportPDFReport } from './utils/reportExportUtils';
@@ -441,6 +442,68 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
   }, [isOpen, closePanel]);
 
   if (!isOpen) return null;
+
+  // PostgreSQL Coming Soon - Early return
+  if (activeFile?.isRemote && activeFile?.remoteProvider === 'postgresql') {
+    return (
+      <div className={cn('fixed inset-y-0 right-0 z-50', className)}>
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm"
+        />
+
+        {/* Panel */}
+        <motion.div
+          className="relative h-full bg-background/95 backdrop-blur-md border-l border-white/10 shadow-2xl flex"
+          style={{ width: `${Math.max(600, width)}px` }}
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+        >
+          {/* Panel Content */}
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            {/* Header */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between p-4 border-b border-white/10"
+            >
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-white">
+                  Data Inspector
+                </h2>
+              </div>
+              <button
+                onClick={closePanel}
+                className="p-2 hover:bg-white/10 rounded-lg text-white/70 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </motion.div>
+
+            {/* PostgreSQL Coming Soon Content */}
+            <div className="flex-1 flex items-center justify-center">
+              <div className="p-6 text-center">
+                <div className="flex flex-col items-center justify-center max-w-md mx-auto">
+                  <img src={PostgreSQLIcon} className="h-10 w-10 mb-4" alt="PostgreSQL" />
+                  <h3 className="text-lg font-medium text-white mb-2">
+                    PostgreSQL Inspector
+                  </h3>
+                  <p className="text-white/70 text-sm">
+                    Coming soon! We're working on data inspection for PostgreSQL tables.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   const FileSelector: React.FC<{
     currentFileId: string | null;

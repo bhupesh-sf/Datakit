@@ -1,11 +1,14 @@
-import React, { useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Coins } from 'lucide-react';
 
-import { useAIStore } from "@/store/aiStore";
-import { useAIOperations } from "@/hooks/ai/useAIOperations";
-import { useTokenUsage } from "@/hooks/ai/useTokenUsage";
-import SQLQueryCard from "./SQLQueryCard";
-import { Coins, BarChart3, ChevronRight } from "lucide-react";
+import { useAIStore } from '@/store/aiStore';
+import { useDuckDBStore } from '@/store/duckDBStore';
+
+import { useAIOperations } from '@/hooks/ai/useAIOperations';
+import { useTokenUsage } from '@/hooks/ai/useTokenUsage';
+
+import SQLQueryCard from './SQLQueryCard';
 
 interface ResponsePanelProps {
   onVisualizationOpen?: (queryId: string) => void;
@@ -15,21 +18,23 @@ interface ResponsePanelProps {
   onShowVisualization?: () => void;
 }
 
-const ResponsePanel: React.FC<ResponsePanelProps> = ({ 
+const ResponsePanel: React.FC<ResponsePanelProps> = ({
   onVisualizationOpen,
   generateVisualization,
   isGeneratingViz,
   hasActiveVisualization,
-  onShowVisualization
+  onShowVisualization,
 }) => {
   const {
     isProcessing,
     currentResponse,
     streamingResponse,
-    showCostEstimates
+    showCostEstimates,
   } = useAIStore();
   const { extractSQLQueries } = useAIOperations();
   const { getCostBreakdown, hasUsage } = useTokenUsage();
+  const { isLoading } = useDuckDBStore();
+
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Use streaming response if available, otherwise use current response
@@ -50,14 +55,14 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
     if (!displayResponse) return null;
 
     const text = displayResponse;
-    const parts: Array<{ type: "text" | "sql"; content: string }> = [];
+    const parts: Array<{ type: 'text' | 'sql'; content: string }> = [];
 
     // Use extractSQLQueries to get all SQL queries
     const queries = sqlQueries;
 
     if (queries.length === 0) {
       // No SQL found, return as text
-      return [{ type: "text", content: text }];
+      return [{ type: 'text', content: text }];
     }
 
     // Replace each SQL query with a unique placeholder
@@ -69,18 +74,18 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
       placeholders.push(placeholder);
 
       // Normalize whitespace for matching
-      const normalizedQuery = query.replace(/\s+/g, " ").trim();
+      const normalizedQuery = query.replace(/\s+/g, ' ').trim();
 
       // Try to find and replace the query in various formats
       // 1. In code blocks
       const codeBlockPattern = new RegExp(
         `\`\`\`(?:sql)?\\s*\\n([\\s\\S]*?)\\n\\s*\`\`\``,
-        "gi"
+        'gi'
       );
       processedText = processedText.replace(
         codeBlockPattern,
         (match, content) => {
-          const normalizedContent = content.replace(/\s+/g, " ").trim();
+          const normalizedContent = content.replace(/\s+/g, ' ').trim();
           if (normalizedContent === normalizedQuery) {
             return placeholder;
           }
@@ -89,9 +94,9 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
       );
 
       // 2. As inline SQL - create regex that matches the SQL with flexible whitespace
-      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const flexibleQueryPattern = escapedQuery.replace(/\s+/g, "\\s+");
-      const queryRegex = new RegExp(flexibleQueryPattern, "gi");
+      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const flexibleQueryPattern = escapedQuery.replace(/\s+/g, '\\s+');
+      const queryRegex = new RegExp(flexibleQueryPattern, 'gi');
 
       if (queryRegex.test(processedText)) {
         processedText = processedText.replace(queryRegex, placeholder);
@@ -102,22 +107,22 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
     const segments = processedText.split(/(__SQL_PLACEHOLDER_\d+__)/);
 
     segments.forEach((segment) => {
-      if (segment.startsWith("__SQL_PLACEHOLDER_")) {
+      if (segment.startsWith('__SQL_PLACEHOLDER_')) {
         // Extract the index from placeholder
         const match = segment.match(/__SQL_PLACEHOLDER_(\d+)__/);
         if (match) {
           const index = parseInt(match[1]);
           const query = queries[index];
           if (query) {
-            parts.push({ type: "sql", content: query });
+            parts.push({ type: 'sql', content: query });
           }
         }
       } else if (segment.trim()) {
-        parts.push({ type: "text", content: segment.trim() });
+        parts.push({ type: 'text', content: segment.trim() });
       }
     });
 
-    return parts.length > 0 ? parts : [{ type: "text", content: text }];
+    return parts.length > 0 ? parts : [{ type: 'text', content: text }];
   };
 
   const responseParts = renderResponse();
@@ -149,11 +154,13 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
               <span className="text-white/80 font-mono">
                 {costBreakdown.total.tokens.toLocaleString()}
               </span>
-              {costBreakdown.response.tokens > 0 && costBreakdown.visualization.tokens > 0 && (
-                <span className="text-white/40">
-                  ({costBreakdown.response.tokens.toLocaleString()} response + {costBreakdown.visualization.tokens.toLocaleString()} viz)
-                </span>
-              )}
+              {costBreakdown.response.tokens > 0 &&
+                costBreakdown.visualization.tokens > 0 && (
+                  <span className="text-white/40">
+                    ({costBreakdown.response.tokens.toLocaleString()} response +{' '}
+                    {costBreakdown.visualization.tokens.toLocaleString()} viz)
+                  </span>
+                )}
             </div>
             {costBreakdown.total.cost > 0 && (
               <div className="flex items-center gap-1">
@@ -204,7 +211,7 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
                 className="space-y-4 w-full max-w-full min-w-0"
               >
                 {responseParts?.map((part, index) => {
-                  if (part.type === "text") {
+                  if (part.type === 'text') {
                     return (
                       <div
                         key={index}
@@ -230,6 +237,7 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
                         onVisualizationOpen={onVisualizationOpen}
                         generateVisualization={generateVisualization}
                         isGenerating={isGeneratingViz}
+                        queryRunning={isLoading}
                       />
                     );
                   }

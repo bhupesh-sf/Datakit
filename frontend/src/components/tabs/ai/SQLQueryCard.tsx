@@ -1,18 +1,18 @@
-import React, { useState } from "react";
-import { Play, Copy, Check, Code, PenSquare, BarChart3 } from "lucide-react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import Prism from "prismjs";
-import "prismjs/components/prism-sql";
+import React, { useState } from 'react';
+import { Play, Copy, Check, Code, PenSquare, BarChart3 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-sql';
 
-import { useAppStore } from "@/store/appStore";
-import { useAuth } from "@/hooks/auth/useAuth";
-import { useAIOperations } from "@/hooks/ai/useAIOperations";
+import { useAppStore } from '@/store/appStore';
+import { useAuth } from '@/hooks/auth/useAuth';
+import { useAIOperations } from '@/hooks/ai/useAIOperations';
 // Removed useAIVisualization import - will receive functions as props
 
-import { Button } from "@/components/ui/Button";
-import { Tooltip } from "@/components/ui/Tooltip";
-import AuthModal from "@/components/auth/AuthModal";
+import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
+import AuthModal from '@/components/auth/AuthModal';
 
 interface SQLQueryCardWithVizProps {
   query: string;
@@ -22,6 +22,7 @@ interface SQLQueryCardWithVizProps {
   onVisualizationOpen?: (queryId: string) => void;
   generateVisualization: (request: any) => Promise<any>;
   isGenerating?: boolean;
+  queryRunning?: boolean;
 }
 
 const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
@@ -32,6 +33,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
   onVisualizationOpen,
   generateVisualization,
   isGenerating = false,
+  queryRunning,
 }) => {
   const [copied, setCopied] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -39,7 +41,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
   const { setActiveTab, setPendingQuery } = useAppStore();
   const { isAuthenticated } = useAuth();
   const { handleRunSQL } = useAIOperations();
-  
+
   // Generate unique responseId if not provided
   const uniqueResponseId = responseId || `response-${Date.now()}`;
 
@@ -49,7 +51,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy:", err);
+      console.error('Failed to copy:', err);
     }
   };
 
@@ -59,8 +61,8 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
 
   const handleEdit = () => {
     setPendingQuery(query);
-    setActiveTab("query");
-    navigate("/");
+    setActiveTab('query');
+    navigate('/');
   };
 
   const handleVisualize = async () => {
@@ -85,7 +87,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
   // Get syntax highlighted HTML
   const getHighlightedSQL = () => {
     try {
-      return Prism.highlight(query, Prism.languages.sql, "sql");
+      return Prism.highlight(query, Prism.languages.sql, 'sql');
     } catch {
       return query;
     }
@@ -98,7 +100,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.1 }}
         className={`group relative bg-white/5 border rounded-lg transition-all hover:bg-white/[0.07] w-full ${
-          isPrimary ? "border-primary/30" : "border-white/10"
+          isPrimary ? 'border-primary/30' : 'border-white/10'
         }`}
       >
         {/* Header */}
@@ -129,7 +131,10 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
               </Button>
             </Tooltip>
 
-            <Tooltip content={copied ? "Copied!" : "Copy SQL"} placement="bottom">
+            <Tooltip
+              content={copied ? 'Copied!' : 'Copy SQL'}
+              placement="bottom"
+            >
               <Button
                 variant="ghost"
                 size="icon"
@@ -159,6 +164,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
               <Button
                 variant="ghost"
                 size="icon"
+                disabled={queryRunning}
                 className="h-7 w-7 text-primary hover:text-primary/80"
                 onClick={handleRun}
               >
@@ -181,14 +187,35 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
         {/* Generating indicator */}
         {isGenerating && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, scaleY: 0 }}
+            animate={{ opacity: 1, scaleY: 1 }}
+            exit={{ opacity: 0, scaleY: 0 }}
+            transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+            style={{ transformOrigin: 'top' }}
             className="px-4 py-2 border-t border-white/10 bg-purple-500/10"
           >
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 bg-purple-400 rounded-full animate-pulse" />
-              <span className="text-xs text-purple-300">Generating visualization...</span>
+              <span className="text-xs text-purple-300">
+                Generating visualization...
+              </span>
+            </div>
+          </motion.div>
+        )}
+        {queryRunning && (
+          <motion.div
+            initial={{ opacity: 0, scaleY: 0 }}
+            animate={{ opacity: 1, scaleY: 1 }}
+            exit={{ opacity: 0, scaleY: 0 }}
+            transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+            style={{ transformOrigin: 'top' }}
+            className="px-4 py-2 border-t border-white/10 bg-primary/10"
+          >
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />
+              <span className="text-xs text-primary/80">
+                Query is running...
+              </span>
             </div>
           </motion.div>
         )}

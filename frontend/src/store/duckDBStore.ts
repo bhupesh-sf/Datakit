@@ -13,7 +13,6 @@ import {
   getObjectType,
 } from "@/lib/duckdb/ingestion/tables";
 import { analyzeTxtFile } from "@/lib/duckdb/ingestion/analyzeTextFile";
-import { DuckDBTableRegistry } from "@/lib/duckdb/ducklake";
 import {
   createCsvViewWithFallback,
   importCsvWithFallback,
@@ -21,6 +20,7 @@ import {
 
 import { PaginatedQueryResult } from "@/lib/duckdb/types";
 import { ColumnType } from "@/types/csv";
+import { PostgreSQLConnection, PostgreSQLTable } from "@/types/postgres";
 
 import { SAMPLE_EMPLOYEES_DATA } from "./constants";
 import {
@@ -42,9 +42,6 @@ interface DuckDBState {
 
   // Table registry - maps raw names to escaped names
   registeredTables: Map<string, string>;
-  
-  // DuckLake table registry
-  ducklakeRegistry: DuckDBTableRegistry | null;
 
   // Sample table state
   hasSampleTable: boolean;
@@ -70,6 +67,23 @@ interface DuckDBState {
   motherDuckDatabases: Array<{ name: string; shared: boolean }>;
   selectedMotherDuckDatabase: string | null;
   motherDuckSchemas: Map<string, { name: string; type: string }[]>;
+
+  // PostgreSQL state - Bridge to postgresStore
+  postgresConnections: Map<string, PostgreSQLConnection>;
+  postgresActiveConnections: Set<string>;
+  postgresVirtualTables: Map<string, {
+    connectionId: string;
+    schemaName: string;
+    tableName: string;
+    tableType: 'table' | 'view';
+    columns: Array<{ name: string; type: string }>;
+    isImported: boolean;
+    localTableName?: string;
+    estimatedSize?: number;
+  }>;
+  postgresError: string | null;
+  postgresSchemas: Map<string, Array<{ name: string; type: string; tableType: 'table' | 'view' }>>;
+  postgresAutoImportThreshold: number; // Size in bytes for auto-import
 
   // Actions
   initialize: () => Promise<boolean>;
@@ -156,6 +170,30 @@ interface DuckDBState {
   };
   listAttachedDatabases: () => Promise<Array<{ name: string; tables: number }>>;
   detachDatabase: (databaseName: string) => Promise<void>;
+
+  // PostgreSQL bridge actions
+  connectToPostgreSQL: (connectionId: string) => Promise<void>;
+  disconnectFromPostgreSQL: (connectionId: string) => Promise<void>;
+  addVirtualPostgreSQLTable: (connectionId: string, table: PostgreSQLTable, columns?: Array<{ name: string; type: string }>) => void;
+  removeVirtualPostgreSQLTable: (tableKey: string) => void;
+  refreshPostgreSQLVirtualSchemas: (connectionId: string) => Promise<void>;
+  executePostgreSQLQuery: (sql: string, connectionId: string) => Promise<any>;
+  getAllAvailableTablesWithPostgreSQL: () => Array<{
+    name: string;
+    source: "local" | "motherduck" | "postgresql";
+    database?: string;
+    connectionId?: string;
+    isVirtual?: boolean;
+  }>;
+  isPostgreSQLQuery: (sql: string) => {
+    isPostgreSQL: boolean;
+    targetConnection?: string;
+    localTables: string[];
+    postgreSQLTables: Array<{ name: string; connectionId: string; schemaName: string }>;
+    isHybrid: boolean;
+  };
+  setPostgreSQLAutoImportThreshold: (bytes: number) => void;
+  importPostgreSQLTableData: (tableKey: string, forceImport?: boolean) => Promise<void>;
 }
 
 export const useDuckDBStore = create<DuckDBState>((set, get) => ({
@@ -181,6 +219,14 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
   motherDuckDatabases: [],
   selectedMotherDuckDatabase: null,
   motherDuckSchemas: new Map(),
+
+  // PostgreSQL initial state - Bridge to postgresStore
+  postgresConnections: new Map(),
+  postgresActiveConnections: new Set(),
+  postgresVirtualTables: new Map(),
+  postgresError: null,
+  postgresSchemas: new Map(),
+  postgresAutoImportThreshold: 10 * 1024 * 1024, // 10MB default threshold
 
   // Initialize DuckDB and create sample table
   initialize: async () => {
@@ -654,7 +700,86 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       console.log(`[DuckDBStore] Executing query:`, sql);
       set({ isLoading: true, error: null });
 
-      // PRE-PROCESSING: Replace unquoted table names with quoted ones
+      // POSTGRESQL DETECTION: Check if query references PostgreSQL tables
+      const postgresTablePattern = /"([^"]+)"\."([^"]+)"/g;
+      const postgresMatches = [...sql.matchAll(postgresTablePattern)];
+      
+      console.log(`[DuckDBStore] Query analysis:`, {
+        sql: sql,
+        matches: postgresMatches.length,
+        patterns: postgresMatches.map(match => ({ schema: match[1], table: match[2] }))
+      });
+      
+      if (postgresMatches.length > 0) {
+        // This looks like a PostgreSQL query, try to route it
+        console.log(`[DuckDBStore] Detected PostgreSQL table references:`, postgresMatches);
+        
+        // Find the connection for these tables
+        const { postgresVirtualTables, postgresActiveConnections } = get();
+        console.log(`[DuckDBStore] Available PostgreSQL state:`, {
+          virtualTables: Array.from(postgresVirtualTables.entries()),
+          activeConnections: Array.from(postgresActiveConnections)
+        });
+        
+        let targetConnectionId = null;
+        
+        for (const [schemaName, tableName] of postgresMatches) {
+          // Look for a matching virtual table
+          for (const [tableKey, table] of postgresVirtualTables) {
+            if (table.schemaName === schemaName && table.tableName === tableName) {
+              targetConnectionId = table.connectionId;
+              break;
+            }
+          }
+          if (targetConnectionId) break;
+        }
+        
+        if (targetConnectionId && postgresActiveConnections.has(targetConnectionId)) {
+          console.log(`[DuckDBStore] Routing query to PostgreSQL connection: ${targetConnectionId}`);
+          
+          try {
+            // Route to PostgreSQL service
+            const { postgreSQLService } = await import('@/lib/api/postgresService');
+            const result = await postgreSQLService.executeQuery(targetConnectionId, {
+              sql: sql, // Use original SQL, not processed
+              timeout: 30000,
+            });
+            
+            set({ isLoading: false });
+            
+            if (result.success && result.data) {
+              // Convert PostgreSQL result to DuckDB-like format
+              const headers = result.columns?.map(col => col.name) || [];
+              const rows = result.data || [];
+              
+              // Create a mock DuckDB result structure
+              const mockResult = {
+                toArray: () => rows,
+                columns: headers,
+                columnNames: headers,
+                numCols: headers.length,
+                numRows: rows.length,
+              };
+              
+              console.log(`[DuckDBStore] PostgreSQL query executed successfully: ${rows.length} rows`);
+              return mockResult;
+            } else {
+              throw new Error(result.error?.message || 'PostgreSQL query execution failed');
+            }
+          } catch (pgError) {
+            console.error(`[DuckDBStore] PostgreSQL query execution failed:`, pgError);
+            set({
+              error: `PostgreSQL query error: ${
+                pgError instanceof Error ? pgError.message : String(pgError)
+              }`,
+              isLoading: false,
+            });
+            return null;
+          }
+        }
+      }
+
+      // PRE-PROCESSING: Replace unquoted table names with quoted ones (for DuckDB)
       let processedSQL = sql;
 
       // Log available tables for debugging
@@ -718,7 +843,7 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
   },
 
   getTableSchema: async (tableName) => {
-    const { connection, isInitialized, registeredTables, schemaCache } = get();
+    const { connection, isInitialized, registeredTables, schemaCache, postgresVirtualTables } = get();
 
     if (!connection || !isInitialized) {
       return null;
@@ -730,14 +855,40 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     }
 
     try {
-      const escapedTableName =
-        registeredTables.get(tableName) || `"${tableName}"`;
-      const schemaQuery = `PRAGMA table_info(${escapedTableName})`;
-      const result = await connection.query(schemaQuery);
-      const schema = result.toArray().map((col) => ({
-        name: col.name,
-        type: col.type,
-      }));
+      // Check if this is a PostgreSQL virtual table
+      let isPostgreSQLTable = false;
+      let postgresTableInfo = null;
+      
+      // Check if tableName matches PostgreSQL format (schema.table)
+      if (tableName.includes('.')) {
+        // Look for matching PostgreSQL virtual table
+        for (const [tableKey, table] of postgresVirtualTables) {
+          const virtualTableName = `${table.schemaName}.${table.tableName}`;
+          if (virtualTableName === tableName) {
+            isPostgreSQLTable = true;
+            postgresTableInfo = table;
+            break;
+          }
+        }
+      }
+
+      let schema;
+      
+      if (isPostgreSQLTable && postgresTableInfo) {
+        // For PostgreSQL tables, use the stored column information
+        schema = postgresTableInfo.columns || [];
+        console.log(`[DuckDBStore] Using cached PostgreSQL schema for ${tableName}`, schema);
+      } else {
+        // For local tables, use PRAGMA table_info
+        const escapedTableName =
+          registeredTables.get(tableName) || `"${tableName}"`;
+        const schemaQuery = `PRAGMA table_info(${escapedTableName})`;
+        const result = await connection.query(schemaQuery);
+        schema = result.toArray().map((col) => ({
+          name: col.name,
+          type: col.type,
+        }));
+      }
 
       // Update cache using functional update to avoid race conditions
       set((state) => ({
@@ -2365,6 +2516,83 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
+      // QUERY ROUTING: Use unified query router to determine execution target
+      const { postgresVirtualTables, postgresActiveConnections } = get();
+      const { analyzeQuery } = await import('@/lib/duckdb/utils/queryRouter');
+      
+      const routingResult = analyzeQuery(
+        sql,
+        postgresVirtualTables,
+        postgresActiveConnections,
+        new Set() // TODO: Add MotherDuck databases when available
+      );
+      
+      console.log(`[DuckDBStore] Paginated query routing analysis:`, {
+        sql: sql,
+        target: routingResult.target,
+        confidence: routingResult.confidence,
+        reasoning: routingResult.reasoning,
+        postgresqlTables: routingResult.postgresqlTables,
+        connectionId: routingResult.connectionId
+      });
+      
+      if (routingResult.target === 'postgresql' && routingResult.connectionId) {
+        console.log(`[DuckDBStore] Routing paginated query to PostgreSQL connection: ${routingResult.connectionId}`);
+        
+        try {
+          // Route to PostgreSQL service with pagination
+          const { postgreSQLService } = await import('@/lib/api/postgresService');
+          
+          // Add pagination to PostgreSQL query if requested
+          let paginatedSql = sql;
+          if (applyPagination) {
+            // Use the proper pagination utility that handles SQL syntax correctly
+            const { addLimitIfMissing } = await import('@/lib/duckdb/query/pagination');
+            paginatedSql = addLimitIfMissing(sql, page, pageSize);
+          }
+          
+          const result = await postgreSQLService.executeQuery(routingResult.connectionId, {
+            sql: paginatedSql,
+            timeout: 30000,
+          });
+          
+          set({ isLoading: false });
+          
+          if (result.success && result.data) {
+            // Convert PostgreSQL result to paginated format
+            const headers = result.columns?.map(col => col.name) || [];
+            const rows = result.data || [];
+            
+            // Create a mock paginated result structure
+            const paginatedResult: PaginatedQueryResult = {
+              data: rows,
+              columns: headers,
+              totalRows: countTotalRows ? rows.length : -1, // -1 indicates unknown for PostgreSQL
+              page: page,
+              pageSize: pageSize,
+              totalPages: countTotalRows ? Math.ceil(rows.length / pageSize) : -1,
+            };
+            
+            console.log(`[DuckDBStore] PostgreSQL paginated query executed successfully: ${rows.length} rows`);
+            return paginatedResult;
+          } else {
+            throw new Error(result.error?.message || 'PostgreSQL query execution failed');
+          }
+        } catch (pgError) {
+          console.error(`[DuckDBStore] PostgreSQL paginated query execution failed:`, pgError);
+          set({
+            error: `PostgreSQL query error: ${
+              pgError instanceof Error ? pgError.message : String(pgError)
+            }`,
+            isLoading: false,
+          });
+          throw pgError;
+        }
+      } else if (routingResult.target === 'hybrid') {
+        set({ isLoading: false });
+        throw new Error(`Cross-database query not supported yet!\n\n${routingResult.reasoning}`);
+      }
+      
       const transformedSql = get().transformQueryForExecution(sql);
 
       // SMART DETECTION: Analyze the query to determine execution target
@@ -3447,6 +3675,307 @@ export const useDuckDBStore = create<DuckDBState>((set, get) => ({
       console.log(`[DuckDBStore] Removed ${keysToRemove.length} tables from ${databaseName}`);
     } catch (err) {
       console.error(`[DuckDBStore] Error detaching database ${databaseName}:`, err);
+      throw err;
+    }
+  },
+
+  // PostgreSQL Bridge Actions
+  connectToPostgreSQL: async (connectionId: string) => {
+    try {
+      // Import postgresStore to get connection details
+      const { usePostgreSQLStore } = await import('@/store/postgresStore');
+      const postgresState = usePostgreSQLStore.getState();
+      const connection = postgresState.connections.find(c => c.id === connectionId);
+      
+      if (!connection) {
+        throw new Error(`PostgreSQL connection ${connectionId} not found`);
+      }
+
+      set((state) => ({
+        postgresConnections: new Map(state.postgresConnections).set(connectionId, connection),
+        postgresActiveConnections: new Set(state.postgresActiveConnections).add(connectionId),
+        postgresError: null,
+      }));
+
+      console.log(`[DuckDBStore] Connected to PostgreSQL: ${connection.name}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to connect to PostgreSQL';
+      set({ postgresError: errorMessage });
+      throw err;
+    }
+  },
+
+  disconnectFromPostgreSQL: async (connectionId: string) => {
+    try {
+      set((state) => {
+        const newConnections = new Map(state.postgresConnections);
+        newConnections.delete(connectionId);
+        
+        const newActiveConnections = new Set(state.postgresActiveConnections);
+        newActiveConnections.delete(connectionId);
+        
+        // Remove virtual tables for this connection
+        const newVirtualTables = new Map(state.postgresVirtualTables);
+        for (const [key, table] of newVirtualTables) {
+          if (table.connectionId === connectionId) {
+            newVirtualTables.delete(key);
+          }
+        }
+        
+        // Remove schemas for this connection
+        const newSchemas = new Map(state.postgresSchemas);
+        newSchemas.delete(connectionId);
+        
+        return {
+          postgresConnections: newConnections,
+          postgresActiveConnections: newActiveConnections,
+          postgresVirtualTables: newVirtualTables,
+          postgresSchemas: newSchemas,
+        };
+      });
+      
+      console.log(`[DuckDBStore] Disconnected from PostgreSQL: ${connectionId}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to disconnect from PostgreSQL';
+      set({ postgresError: errorMessage });
+      throw err;
+    }
+  },
+
+  addVirtualPostgreSQLTable: (connectionId: string, table: PostgreSQLTable, columns = []) => {
+    const tableKey = `${connectionId}.${table.schemaName}.${table.tableName}`;
+    
+    set((state) => {
+      const newVirtualTables = new Map(state.postgresVirtualTables);
+      newVirtualTables.set(tableKey, {
+        connectionId,
+        schemaName: table.schemaName,
+        tableName: table.tableName,
+        tableType: table.tableType as 'table' | 'view',
+        columns: columns.length > 0 ? columns : table.columns?.map(col => ({
+          name: col.columnName,
+          type: col.dataType
+        })) || [],
+        isImported: false,
+        estimatedSize: table.size ? parseInt(table.size.replace(/[^0-9]/g, '')) || 0 : 0,
+      });
+      
+      return { postgresVirtualTables: newVirtualTables };
+    });
+    
+    console.log(`[DuckDBStore] Added virtual PostgreSQL table: ${tableKey}`);
+  },
+
+  removeVirtualPostgreSQLTable: (tableKey: string) => {
+    set((state) => {
+      const newVirtualTables = new Map(state.postgresVirtualTables);
+      newVirtualTables.delete(tableKey);
+      return { postgresVirtualTables: newVirtualTables };
+    });
+    
+    console.log(`[DuckDBStore] Removed virtual PostgreSQL table: ${tableKey}`);
+  },
+
+  refreshPostgreSQLVirtualSchemas: async (connectionId: string) => {
+    try {
+      const { postgreSQLService } = await import('@/lib/api/postgresService');
+      const schemas = await postgreSQLService.getSchemas(connectionId);
+      const allTables = await postgreSQLService.getAllTables(connectionId);
+      
+      // Convert to our schema format
+      const schemaMap = new Map();
+      allTables.forEach(table => {
+        const schemaName = table.schemaName;
+        if (!schemaMap.has(schemaName)) {
+          schemaMap.set(schemaName, []);
+        }
+        schemaMap.get(schemaName).push({
+          name: table.tableName,
+          type: table.tableType,
+          tableType: table.tableType
+        });
+      });
+      
+      set((state) => {
+        const newSchemas = new Map(state.postgresSchemas);
+        for (const [schemaName, tables] of schemaMap) {
+          newSchemas.set(`${connectionId}.${schemaName}`, tables);
+        }
+        return { postgresSchemas: newSchemas };
+      });
+      
+      console.log(`[DuckDBStore] Refreshed PostgreSQL schemas for connection: ${connectionId}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh PostgreSQL schemas';
+      set({ postgresError: errorMessage });
+      throw err;
+    }
+  },
+
+  executePostgreSQLQuery: async (sql: string, connectionId: string) => {
+    try {
+      const { postgreSQLService } = await import('@/lib/api/postgresService');
+      const result = await postgreSQLService.executeQuery(connectionId, { sql });
+      return result;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'PostgreSQL query execution failed';
+      set({ postgresError: errorMessage });
+      throw err;
+    }
+  },
+
+  getAllAvailableTablesWithPostgreSQL: () => {
+    const state = get();
+    const tables = [];
+    
+    // Add local tables
+    const localTables = state.getAvailableTables();
+    localTables.forEach(tableName => {
+      tables.push({
+        name: tableName,
+        source: "local" as const,
+      });
+    });
+    
+    // Add MotherDuck tables (if connected)
+    if (state.motherDuckConnected) {
+      state.motherDuckDatabases.forEach(db => {
+        const schemas = state.motherDuckSchemas.get(db.name) || [];
+        schemas.forEach(schema => {
+          tables.push({
+            name: `${db.name}.${schema.name}`,
+            source: "motherduck" as const,
+            database: db.name,
+          });
+        });
+      });
+    }
+    
+    // Add PostgreSQL virtual tables
+    state.postgresVirtualTables.forEach((table, tableKey) => {
+      tables.push({
+        name: `${table.schemaName}.${table.tableName}`,
+        source: "postgresql" as const,
+        connectionId: table.connectionId,
+        isVirtual: !table.isImported,
+      });
+    });
+    
+    return tables;
+  },
+
+  isPostgreSQLQuery: (sql: string) => {
+    const state = get();
+    const sqlLower = sql.toLowerCase();
+    
+    const localTables: string[] = [];
+    const postgreSQLTables: Array<{ name: string; connectionId: string; schemaName: string }> = [];
+    
+    // Extract table references from SQL
+    const tableReferences = state.extractTableReferences(sql);
+    
+    for (const ref of tableReferences) {
+      // Check if it's a virtual PostgreSQL table
+      let foundPostgres = false;
+      for (const [tableKey, table] of state.postgresVirtualTables) {
+        if (ref.name === table.tableName || ref.name === `${table.schemaName}.${table.tableName}`) {
+          postgreSQLTables.push({
+            name: ref.name,
+            connectionId: table.connectionId,
+            schemaName: table.schemaName
+          });
+          foundPostgres = true;
+          break;
+        }
+      }
+      
+      if (!foundPostgres && state.getAvailableTables().includes(ref.name)) {
+        localTables.push(ref.name);
+      }
+    }
+    
+    const isPostgreSQL = postgreSQLTables.length > 0;
+    const isHybrid = postgreSQLTables.length > 0 && localTables.length > 0;
+    const targetConnection = postgreSQLTables.length > 0 ? postgreSQLTables[0].connectionId : undefined;
+    
+    return {
+      isPostgreSQL,
+      targetConnection,
+      localTables,
+      postgreSQLTables,
+      isHybrid
+    };
+  },
+
+  setPostgreSQLAutoImportThreshold: (bytes: number) => {
+    set({ postgresAutoImportThreshold: bytes });
+    console.log(`[DuckDBStore] PostgreSQL auto-import threshold set to ${bytes} bytes`);
+  },
+
+  importPostgreSQLTableData: async (tableKey: string, forceImport = false) => {
+    const state = get();
+    const virtualTable = state.postgresVirtualTables.get(tableKey);
+    
+    if (!virtualTable) {
+      throw new Error(`Virtual table ${tableKey} not found`);
+    }
+    
+    if (virtualTable.isImported && !forceImport) {
+      console.log(`[DuckDBStore] Table ${tableKey} already imported`);
+      return;
+    }
+    
+    try {
+      const { postgreSQLService } = await import('@/lib/api/postgresService');
+      
+      // Check if we should auto-import based on size threshold
+      const shouldAutoImport = !virtualTable.estimatedSize || 
+        virtualTable.estimatedSize <= state.postgresAutoImportThreshold || 
+        forceImport;
+      
+      if (shouldAutoImport) {
+        console.log(`[DuckDBStore] Importing PostgreSQL table data: ${tableKey}`);
+        
+        // Fetch table data
+        const tableData = await postgreSQLService.fetchTableDataForImport(
+          virtualTable.connectionId,
+          virtualTable.schemaName,
+          virtualTable.tableName,
+          { sampleOnly: !forceImport }
+        );
+        
+        // Generate local table name
+        const localTableName = `pg_${virtualTable.connectionId}_${virtualTable.schemaName}_${virtualTable.tableName}`
+          .replace(/[^a-zA-Z0-9_]/g, '_');
+        
+        // Create table in DuckDB
+        await state.createTable(
+          localTableName, 
+          tableData.columns.map(col => col.name),
+          tableData.columns.map(() => ColumnType.Text) // Use text for all initially
+        );
+        
+        // Insert data if available
+        if (tableData.data.length > 1) {
+          const dataRows = tableData.data.slice(1); // Remove header row
+          await state.insertData(localTableName, dataRows);
+        }
+        
+        // Mark as imported
+        set((state) => {
+          const newVirtualTables = new Map(state.postgresVirtualTables);
+          const updatedTable = { ...virtualTable, isImported: true, localTableName };
+          newVirtualTables.set(tableKey, updatedTable);
+          return { postgresVirtualTables: newVirtualTables };
+        });
+        
+        console.log(`[DuckDBStore] Successfully imported PostgreSQL table: ${tableKey} -> ${localTableName}`);
+      } else {
+        console.log(`[DuckDBStore] Table ${tableKey} exceeds auto-import threshold (${virtualTable.estimatedSize} bytes)`);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to import PostgreSQL table data';
+      set({ postgresError: errorMessage });
       throw err;
     }
   },

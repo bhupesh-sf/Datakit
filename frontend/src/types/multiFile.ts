@@ -25,9 +25,21 @@ export interface GoogleSheetsMetadata {
 }
 
 /**
+ * PostgreSQL specific metadata
+ */
+export interface PostgreSQLMetadata {
+  connectionId: string;
+  connectionName: string;
+  schema: string;
+  table: string;
+  originalRowCount?: number;
+  queryUsed?: string;
+}
+
+/**
  * Remote source providers
  */
-export type RemoteSourceProvider = "web" | "s3" | "gcs" | "google_sheets";
+export type RemoteSourceProvider = "web" | "s3" | "gcs" | "google_sheets" | "postgresql";
 
 /**
  * Individual data file/dataset
@@ -67,6 +79,8 @@ export interface DataFile {
   remoteProvider?: RemoteSourceProvider;
   /** Google Sheets specific metadata */
   googleSheets?: GoogleSheetsMetadata;
+  /** PostgreSQL specific metadata */
+  postgresql?: PostgreSQLMetadata;
   
   // Timestamps
   /** When the file was imported */
@@ -118,4 +132,5 @@ export interface DataLoadWithDuckDBResult {
   remoteURL?: string;
   remoteProvider?: RemoteSourceProvider;
   googleSheets?: GoogleSheetsMetadata;
+  postgresql?: PostgreSQLMetadata;
 }

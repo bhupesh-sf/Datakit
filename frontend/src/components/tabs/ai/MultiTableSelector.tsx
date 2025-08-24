@@ -8,6 +8,8 @@ import { useDuckDBStore } from '@/store/duckDBStore';
 import { useAIStore } from '@/store/aiStore';
 import { useAppStore } from '@/store/appStore';
 
+import PostgreSQLIcon from '@/assets/postgres.png';
+
 interface MultiTableSelectorProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,7 +21,7 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
   onClose,
   onTablesSelected,
 }) => {
-  const { registeredTables, getTableSchema } = useDuckDBStore();
+  const { getTableSchema, getAllAvailableTablesWithPostgreSQL } = useDuckDBStore();
   const { files } = useAppStore();
   const {
     multiTableContexts,
@@ -126,14 +128,23 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
     onClose();
   };
 
+  // Get all available tables (including PostgreSQL)
+  const allAvailableTables = getAllAvailableTablesWithPostgreSQL();
+  
   // Filter tables based on search
-  const filteredTables = Array.from(registeredTables.entries()).filter(
-    ([name]) => name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTables = allAvailableTables.filter(
+    (table) => table.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Get icon for table based on source
-  const getTableIcon = (tableName: string) => {
-    const file = files.find((f) => f.tableName === tableName);
+  const getTableIcon = (table: typeof allAvailableTables[0]) => {
+    if (table.source === 'postgresql') {
+      return <Link2 className="h-4 w-4" />;
+    } else if (table.source === 'motherduck') {
+      return <Link2 className="h-4 w-4" />;
+    }
+    // For local tables, check file source
+    const file = files.find((f) => f.tableName === table.name);
     if (file?.source === 'remote') {
       return <Link2 className="h-4 w-4" />;
     } else if (file?.source === 'file') {
@@ -143,14 +154,20 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
   };
 
   // Get source label
-  const getSourceLabel = (tableName: string) => {
-    const file = files.find((f) => f.tableName === tableName);
+  const getSourceLabel = (table: typeof allAvailableTables[0]) => {
+    if (table.source === 'postgresql') {
+      return <div className="flex flex-row gap-2" ><span>PostgreSQL</span>  <img src={PostgreSQLIcon} className="h-5 w-5" alt="PostgreSQL" /> </div>;
+    } else if (table.source === 'motherduck') {
+      return 'MotherDuck';
+    }
+    // For local tables, check file source
+    const file = files.find((f) => f.tableName === table.name);
     if (file?.source === 'remote') {
       return file.remoteSource?.type || 'Remote';
     } else if (file?.source === 'file') {
       return 'Local File';
     }
-    return 'Table';
+    return 'Local Table';
   };
 
   if (!isOpen) return null;
@@ -215,13 +232,13 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {filteredTables.map(([tableName, tableInfo]) => {
-                    const isSelected = selectedTables.has(tableName);
-                    const file = files.find((f) => f.tableName === tableName);
+                  {filteredTables.map((table) => {
+                    const isSelected = selectedTables.has(table.name);
+                    const file = files.find((f) => f.tableName === table.name);
 
                     return (
                       <motion.div
-                        key={tableName}
+                        key={table.name}
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={`p-4 rounded-lg border transition-all cursor-pointer ${
@@ -229,7 +246,7 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
                             ? 'bg-primary/10 border-primary/50'
                             : 'bg-white/5 border-white/10 hover:bg-white/10'
                         }`}
-                        onClick={() => handleToggleTable(tableName)}
+                        onClick={() => handleToggleTable(table.name)}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex items-start gap-3 flex-1">
@@ -246,23 +263,24 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
                                 <div className="text-white/60">
-                                  {getTableIcon(tableName)}
+                                  {getTableIcon(table)}
                                 </div>
                                 <span className="font-medium text-white">
-                                  {tableName}
+                                  {table.name}
                                 </span>
                                 <span className="px-2 py-0.5 bg-white/10 text-white/60 text-xs rounded">
-                                  {getSourceLabel(tableName)}
+                                  {getSourceLabel(table)}
                                 </span>
                               </div>
 
                               {file && (
                                 <div className="mt-2 flex items-center gap-4 text-sm text-white/50">
-                                  {file.rowCount && (
+                                  {/* TODO: Do we need to have row count on this iteration? */}
+                                  {/* {file.rowCount && (
                                     <span>
                                       {file.rowCount.toLocaleString()} rows
                                     </span>
-                                  )}
+                                  )} */}
                                   {file.columnCount && (
                                     <span>{file.columnCount} columns</span>
                                   )}

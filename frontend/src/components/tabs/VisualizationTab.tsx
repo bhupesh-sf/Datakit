@@ -8,11 +8,11 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Database,
   FileText,
   Settings,
   Copy,
   ArrowRight,
+  Link2,
 } from "lucide-react";
 
 import { useAppStore } from "@/store/appStore";
@@ -25,13 +25,21 @@ import ChartConfigPanel from "./visualization/ChartConfigPanel";
 import ExportModal from "./visualization/ExportModal";
 import ChartGallery from "./visualization/ChartGallery";
 
+// TODO: Postgres and motherduck should get in place later on depending on the future of this tab
+//
 interface DataSource {
-  type: "file";
+  type: "file" | "postgresql";
   fileId: string;
   fileName: string;
   data: any[][];
   columns: string[];
   rowCount: number;
+  // PostgreSQL specific fields
+  postgresql?: {
+    connectionId: string;
+    schema: string;
+    table: string;
+  };
 }
 
 /**
@@ -43,18 +51,39 @@ const DataSourceDropdown: React.FC<{
 }> = ({ selectedSource, onSourceChange }) => {
   const { files } = useAppStore();
   const [isOpen, setIsOpen] = useState(false);
+  const [showPostgresNotification, setShowPostgresNotification] = useState(false);
 
   const dataSources = useMemo(() => {
-    return files
-      .filter((file) => file.data && file.data.length > 1)
-      .map((file) => ({
-        type: "file" as const,
-        fileId: file.id,
-        fileName: file.fileName,
-        data: file.data,
-        columns: file.data[0],
-        rowCount: file.data.length - 1,
-      }));
+    const sources: DataSource[] = [];
+    
+    // Add regular files with data
+    files.forEach((file) => {
+      // Regular CSV/Excel files with 2D array data
+      if (file.data && Array.isArray(file.data) && file.data.length > 1 && file.data[0]) {
+        sources.push({
+          type: "file",
+          fileId: file.id,
+          fileName: file.fileName,
+          data: file.data,
+          columns: file.data[0],
+          rowCount: file.data.length - 1,
+        });
+      }
+      // PostgreSQL tables (remote tables with column metadata)
+      else if (file.isRemote && file.remoteProvider === 'postgresql' && file.columnTypes) {
+        sources.push({
+          type: "postgresql",
+          fileId: file.id,
+          fileName: file.fileName,
+          data: [], // Will be loaded on-demand
+          columns: file.columnTypes.map(col => col.name),
+          rowCount: file.rowCount || 0,
+          postgresql: file.postgresql,
+        });
+      }
+    });
+    
+    return sources;
   }, [files]);
 
   return (
@@ -63,7 +92,11 @@ const DataSourceDropdown: React.FC<{
         className="flex items-center gap-2 px-3 py-1.5 bg-darkNav border border-white/10 rounded text-sm hover:bg-white/5 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <FileText className="w-4 h-4 text-white/70" />
+        {selectedSource?.type === "postgresql" ? (
+          <Link2 className="w-4 h-4 text-white/70" />
+        ) : (
+          <FileText className="w-4 h-4 text-white/70" />
+        )}
         <span className="text-white/90 truncate">
           {selectedSource ? selectedSource.fileName : "Select file"}
         </span>
@@ -81,19 +114,47 @@ const DataSourceDropdown: React.FC<{
               key={source.fileId}
               className="w-full px-3 py-2 text-left text-sm text-white/80 hover:text-white flex items-center gap-2 cursor-pointer"
               onClick={() => {
-                onSourceChange(source);
-                setIsOpen(false);
+                if (source.type === "postgresql") {
+                  // Show notification for PostgreSQL tables
+                  setShowPostgresNotification(true);
+                  setIsOpen(false);
+                  // Hide notification after 3 seconds
+                  setTimeout(() => {
+                    setShowPostgresNotification(false);
+                  }, 3000);
+                } else {
+                  // Allow selection for regular files
+                  onSourceChange(source);
+                  setIsOpen(false);
+                }
               }}
             >
-              <FileText className="w-3 h-3 text-white/50" />
+              {source.type === "postgresql" ? (
+                <Link2 className="w-3 h-3 text-blue-400" />
+              ) : (
+                <FileText className="w-3 h-3 text-white/50" />
+              )}
               <div className="flex-1 min-w-0">
                 <div className="truncate">{source.fileName}</div>
                 <div className="text-xs text-white/50">
-                  {source.rowCount} rows
+                  {source.type === "postgresql" ? "PostgreSQL Table" : `${source.rowCount} rows`}
                 </div>
               </div>
             </button>
           ))}
+        </div>
+      )}
+      
+      {/* PostgreSQL notification */}
+      {showPostgresNotification && (
+        <div className="absolute top-full left-0 mt-1 bg-blue-500/90 text-white text-sm px-3 py-2 rounded shadow-lg z-50 max-w-xs">
+          <div className="flex items-center gap-2">
+            <Link2 className="w-4 h-4 flex-shrink-0" />
+            <div>
+              <div className="font-medium">PostgreSQL Visualization</div>
+              <div className="text-blue-100 text-xs">Coming soon! We're working on chart support for PostgreSQL tables.</div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -167,9 +228,18 @@ const VisualizationTab: React.FC = () => {
   // Auto-select first file
   useEffect(() => {
     if (!selectedDataSource && files.length > 0) {
-      const firstFileWithData = files.find(
-        (file) => file.id === activeFileId
+      // Only auto-select regular CSV/Excel files with data array
+      let firstFileWithData = files.find(
+        (file) => file.id === activeFileId && file.data && Array.isArray(file.data) && file.data.length > 1 && file.data[0]
       );
+      
+      // If active file doesn't have data, try to find any file with data
+      if (!firstFileWithData) {
+        firstFileWithData = files.find(
+          (file) => file.data && Array.isArray(file.data) && file.data.length > 1 && file.data[0]
+        );
+      }
+      
       if (firstFileWithData) {
         const source: DataSource = {
           type: "file",
@@ -350,7 +420,6 @@ const VisualizationTab: React.FC = () => {
           {!selectedDataSource ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <Database className="w-12 h-12 text-white/30 mx-auto mb-3" />
                 <p className="text-white/70">Select a data source to begin</p>
               </div>
             </div>

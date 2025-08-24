@@ -506,7 +506,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                     !showSetupPrompt && handleSuggestionClick(suggestion.prompt)
                   }
                   disabled={showSetupPrompt}
-                  className={`w-full text-left p-3 border rounded-lg transition-all ${
+                  className={`w-full text-left p-3 border rounded-lg transition-all cursor-pointer ${
                     showSetupPrompt
                       ? 'bg-white/3 border-white/5 cursor-not-allowed opacity-50'
                       : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20 group'

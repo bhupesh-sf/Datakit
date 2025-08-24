@@ -3,6 +3,7 @@ import { useDuckDBStore } from '@/store/duckDBStore';
 import { useAppStore } from '@/store/appStore';
 import { useDataPreviewStore } from '@/store/dataPreviewStore';
 import { selectActiveFile } from '@/store/selectors/appSelectors';
+import { postgreSQLService } from '@/lib/api/postgresService';
 
 interface DataPreviewResult {
   // Data state
@@ -93,6 +94,73 @@ export const useDataPreview = (targetFileId?: string): DataPreviewResult => {
       });
       
       const tableName = currentFile.tableName;
+      
+      // Check if this is a remote PostgreSQL table
+      if (currentFile.isRemote && currentFile.remoteProvider === 'postgresql') {
+        console.log(`[useDataPreview] Loading remote PostgreSQL data for ${currentFile.fileName}`);
+        
+        // Extract PostgreSQL connection info from the file metadata
+        const postgresqlInfo = (currentFile as any).postgresql;
+        if (!postgresqlInfo) {
+          throw new Error('PostgreSQL connection information not found');
+        }
+        
+        const { connectionId, schema, table: tableNameOnly } = postgresqlInfo;
+        
+        if (!schema || !tableNameOnly) {
+          throw new Error(`Invalid PostgreSQL table metadata: schema="${schema}", table="${tableNameOnly}"`);
+        }
+        const pageSize = fileState.rowsPerPage || 1000;
+        
+        // Execute query through backend PostgreSQL proxy
+        const query = {
+          sql: `SELECT * FROM "${schema}"."${tableNameOnly}" LIMIT ${pageSize}`,
+          timeout: 30000,
+        };
+        
+        console.log(`[useDataPreview] Executing PostgreSQL query:`, query.sql);
+        
+        const result = await postgreSQLService.executeQuery(connectionId, query);
+        
+        if (result.success && result.data) {
+          // Transform PostgreSQL API response to data grid format
+          const headers = result.columns?.map(col => col.name) || [];
+          const dataRows = result.data || [];
+          
+          // Convert PostgreSQL result objects to string arrays
+          const dataWithRowNumbers = dataRows.map((rowObj, index) => {
+            const rowArray = headers.map(header => String(rowObj[header] || ''));
+            return [(index + 1).toString(), ...rowArray];
+          });
+          
+          // Add header row with row number column
+          const fullData = [
+            [' ', ...headers],
+            ...dataWithRowNumbers
+          ];
+          
+          updateFileState(fileId, {
+            data: fullData,
+            columns: headers,
+            totalRows: result.metadata?.rowCount || dataRows.length,
+            totalPages: Math.ceil((result.metadata?.rowCount || dataRows.length) / pageSize),
+            currentPage: 1,
+            isLoading: false,
+            lastFetchTime: Date.now(),
+          });
+          
+          console.log(`[useDataPreview] PostgreSQL data loaded: ${dataRows.length} rows, ${headers.length} columns`);
+        } else {
+          throw new Error(result.error?.message || 'Failed to execute PostgreSQL query');
+        }
+        return;
+      }
+      
+      // For non-PostgreSQL tables, ensure we have a valid tableName
+      if (!tableName || tableName.trim() === '') {
+        throw new Error('Invalid table name for DuckDB query');
+      }
+      
       const query = `SELECT * FROM "${tableName}"`;
       
       console.log(`[useDataPreview] Loading initial data for ${tableName}`);
@@ -221,36 +289,85 @@ export const useDataPreview = (targetFileId?: string): DataPreviewResult => {
       updateFileState(activeFile.id, { error: null });
       
       const tableName = activeFile.tableName;
-      const query = `SELECT * FROM "${tableName}"`;
       
-      console.log(`[useDataPreview] Changing to page ${newPage}`);
-      
-      const result = await executePaginatedQuery(
-        query,
-        newPage,
-        currentState.rowsPerPage,
-        true,  // applyPagination
-        false  // don't count again, we already have it
-      );
-      
-      if (result) {
-        // Process data with row numbers - convert objects to string arrays
+      // Check if this is a remote PostgreSQL table
+      if (activeFile.isRemote && activeFile.remoteProvider === 'postgresql') {
+        console.log(`[useDataPreview] Changing PostgreSQL page to ${newPage}`);
+        
+        const postgresqlInfo = (activeFile as any).postgresql;
+        if (!postgresqlInfo) {
+          throw new Error('PostgreSQL connection information not found');
+        }
+        
+        const { connectionId, schema, table: tableNameOnly } = postgresqlInfo;
         const offset = (newPage - 1) * currentState.rowsPerPage;
-        const dataWithRowNumbers = result.data.map((rowObj, index) => {
-          const rowArray = result.columns.map(header => String(rowObj[header] || ''));
-          return [(offset + index + 1).toString(), ...rowArray];
-        });
         
-        const fullData = [
-          [' ', ...result.columns],
-          ...dataWithRowNumbers
-        ];
+        const query = {
+          sql: `SELECT * FROM "${schema}"."${tableNameOnly}" LIMIT ${currentState.rowsPerPage} OFFSET ${offset}`,
+          timeout: 30000,
+        };
         
-        updateFileState(activeFile.id, {
-          data: fullData,
-          currentPage: newPage,
-          lastFetchTime: Date.now(),
-        });
+        const result = await postgreSQLService.executeQuery(connectionId, query);
+        
+        if (result.success && result.data) {
+          const headers = result.columns?.map(col => col.name) || [];
+          const dataRows = result.data || [];
+          
+          const dataWithRowNumbers = dataRows.map((rowObj, index) => {
+            const rowArray = headers.map(header => String(rowObj[header] || ''));
+            return [(offset + index + 1).toString(), ...rowArray];
+          });
+          
+          const fullData = [
+            [' ', ...headers],
+            ...dataWithRowNumbers
+          ];
+          
+          updateFileState(activeFile.id, {
+            data: fullData,
+            currentPage: newPage,
+            lastFetchTime: Date.now(),
+          });
+        } else {
+          throw new Error(result.error?.message || 'Failed to execute PostgreSQL query');
+        }
+      } else {
+        // Regular DuckDB table pagination
+        if (!tableName || tableName.trim() === '') {
+          throw new Error('Invalid table name for DuckDB query');
+        }
+        
+        const query = `SELECT * FROM "${tableName}"`;
+        
+        console.log(`[useDataPreview] Changing to page ${newPage}`);
+        
+        const result = await executePaginatedQuery(
+          query,
+          newPage,
+          currentState.rowsPerPage,
+          true,  // applyPagination
+          false  // don't count again, we already have it
+        );
+      
+        if (result) {
+          // Process data with row numbers - convert objects to string arrays
+          const offset = (newPage - 1) * currentState.rowsPerPage;
+          const dataWithRowNumbers = result.data.map((rowObj, index) => {
+            const rowArray = result.columns.map(header => String(rowObj[header] || ''));
+            return [(offset + index + 1).toString(), ...rowArray];
+          });
+          
+          const fullData = [
+            [' ', ...result.columns],
+            ...dataWithRowNumbers
+          ];
+          
+          updateFileState(activeFile.id, {
+            data: fullData,
+            currentPage: newPage,
+            lastFetchTime: Date.now(),
+          });
+        }
       }
     } catch (err) {
       console.error('[useDataPreview] Page change error:', err);
@@ -276,40 +393,93 @@ export const useDataPreview = (targetFileId?: string): DataPreviewResult => {
       });
       
       const tableName = activeFile.tableName;
-      const query = `SELECT * FROM "${tableName}"`;
       
-      console.log(`[useDataPreview] Changing rows per page to ${newRowsPerPage}`);
-      
-      const result = await executePaginatedQuery(
-        query, 
-        1, 
-        newRowsPerPage,
-        true,  // applyPagination
-        false  // don't recount, use existing count
-      );
-      
-      if (result) {
-        // Process data with row numbers - convert objects to string arrays
-        const dataWithRowNumbers = result.data.map((rowObj, index) => {
-          const rowArray = result.columns.map(header => String(rowObj[header] || ''));
-          return [(index + 1).toString(), ...rowArray];
-        });
+      // Check if this is a remote PostgreSQL table
+      if (activeFile.isRemote && activeFile.remoteProvider === 'postgresql') {
+        console.log(`[useDataPreview] Changing PostgreSQL rows per page to ${newRowsPerPage}`);
         
-        const fullData = [
-          [' ', ...result.columns],
-          ...dataWithRowNumbers
-        ];
+        const postgresqlInfo = (activeFile as any).postgresql;
+        if (!postgresqlInfo) {
+          throw new Error('PostgreSQL connection information not found');
+        }
         
-        const currentState = getFileState(activeFile.id);
-        const existingTotalRows = currentState?.totalRows || 0;
+        const { connectionId, schema, table: tableNameOnly } = postgresqlInfo;
         
-        updateFileState(activeFile.id, {
-          data: fullData,
-          columns: result.columns,
-          totalPages: existingTotalRows > 0 ? Math.ceil(existingTotalRows / newRowsPerPage) : 0,
-          currentPage: 1,
-          lastFetchTime: Date.now(),
-        });
+        const query = {
+          sql: `SELECT * FROM "${schema}"."${tableNameOnly}" LIMIT ${newRowsPerPage}`,
+          timeout: 30000,
+        };
+        
+        const result = await postgreSQLService.executeQuery(connectionId, query);
+        
+        if (result.success && result.data) {
+          const headers = result.columns?.map(col => col.name) || [];
+          const dataRows = result.data || [];
+          
+          const dataWithRowNumbers = dataRows.map((rowObj, index) => {
+            const rowArray = headers.map(header => String(rowObj[header] || ''));
+            return [(index + 1).toString(), ...rowArray];
+          });
+          
+          const fullData = [
+            [' ', ...headers],
+            ...dataWithRowNumbers
+          ];
+          
+          const currentState = getFileState(activeFile.id);
+          const existingTotalRows = currentState?.totalRows || 0;
+          
+          updateFileState(activeFile.id, {
+            data: fullData,
+            columns: headers,
+            totalPages: existingTotalRows > 0 ? Math.ceil(existingTotalRows / newRowsPerPage) : 0,
+            currentPage: 1,
+            lastFetchTime: Date.now(),
+          });
+        } else {
+          throw new Error(result.error?.message || 'Failed to execute PostgreSQL query');
+        }
+      } else {
+        // Regular DuckDB table pagination
+        if (!tableName || tableName.trim() === '') {
+          throw new Error('Invalid table name for DuckDB query');
+        }
+        
+        const query = `SELECT * FROM "${tableName}"`;
+        
+        console.log(`[useDataPreview] Changing rows per page to ${newRowsPerPage}`);
+        
+        const result = await executePaginatedQuery(
+          query, 
+          1, 
+          newRowsPerPage,
+          true,  // applyPagination
+          false  // don't recount, use existing count
+        );
+        
+        if (result) {
+          // Process data with row numbers - convert objects to string arrays
+          const dataWithRowNumbers = result.data.map((rowObj, index) => {
+            const rowArray = result.columns.map(header => String(rowObj[header] || ''));
+            return [(index + 1).toString(), ...rowArray];
+          });
+          
+          const fullData = [
+            [' ', ...result.columns],
+            ...dataWithRowNumbers
+          ];
+          
+          const currentState = getFileState(activeFile.id);
+          const existingTotalRows = currentState?.totalRows || 0;
+          
+          updateFileState(activeFile.id, {
+            data: fullData,
+            columns: result.columns,
+            totalPages: existingTotalRows > 0 ? Math.ceil(existingTotalRows / newRowsPerPage) : 0,
+            currentPage: 1,
+            lastFetchTime: Date.now(),
+          });
+        }
       }
     } catch (err) {
       console.error('[useDataPreview] Rows per page change error:', err);
@@ -319,7 +489,7 @@ export const useDataPreview = (targetFileId?: string): DataPreviewResult => {
     } finally {
       setIsChangingPage(false);
     }
-  }, [activeFile, executePaginatedQuery, updateFileState]);
+  }, [activeFile, executePaginatedQuery, updateFileState, getFileState]);
   
   /**
    * Refresh current page data

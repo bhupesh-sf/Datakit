@@ -5,8 +5,8 @@ import { SourceTypeSelector } from './SourceTypeSelector';
 import { File, Cloud } from 'lucide-react';
 import s3Logo from '@/assets/s3.png';
 import huggingfaceLogo from '@/assets/huggingface.png';
-import motherDuckLogo from '@/assets/motherduck.png';
-import googleDriveLogo from '@/assets/drive.svg';
+import postgresLogo from '@/assets/postgres.png';
+import motherDuckLogo from '@/assets/md.png';
 import xlsxLogo from '@/assets/xlsx.png';
 
 export type SourceType = 'file' | 'cloud';
@@ -90,29 +90,29 @@ export const DataSourceManager: React.FC<DataSourceManagerProps> = ({
               </h3>
 
               {/* Provider logos - 4 smaller icons */}
-              <div className="flex items-center gap-2 relative z-10">
+              <div className="flex items-center gap-4 relative z-10">
                 <img
                   src={s3Logo}
                   alt="S3"
                   className="h-5 w-5 object-contain opacity-40 group-hover:opacity-100 transition-opacity duration-300"
                 />
                 <img
+                  src={postgresLogo}
+                  alt="Postgres"
+                  className="h-5 w-5 object-contain opacity-40 group-hover:opacity-100 transition-opacity duration-300"
+                />
+                <img
                   src={motherDuckLogo}
                   alt="Motherduck"
-                  className="h-10 w-10 opacity-40 group-hover:opacity-100 transition-opacity duration-300"
+                  className="h-5 w-5 opacity-40 group-hover:opacity-100 transition-opacity duration-300"
                 />
-             
+
                 <img
                   src={huggingfaceLogo}
                   alt="Hugging Face"
                   className="h-5 w-5 opacity-40 group-hover:opacity-100 transition-opacity duration-300"
                 />
                 <img
-                  src={googleDriveLogo}
-                  alt="Google Drive"
-                  className="h-10 w-10 object-contain opacity-40 group-hover:opacity-100 transition-opacity duration-300"
-                />
-                   <img
                   src={xlsxLogo}
                   alt="Xlsx"
                   className="h-6 w-6 opacity-40 group-hover:opacity-100 transition-opacity duration-300"

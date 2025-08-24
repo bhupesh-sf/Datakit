@@ -329,6 +329,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       remoteURL: fileData.remoteURL,
       remoteProvider: fileData.remoteProvider,
       googleSheets: fileData.googleSheets,
+      postgresql: fileData.postgresql,
       importedAt: Date.now(),
       lastAccessedAt: Date.now(),
     };

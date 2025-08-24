@@ -1,3 +1,6 @@
+# 0.4.0
+Allowing PostgreSQL connection
+
 # 0.3.92
 Passing custom image from docker side
 docker run -p 8080:80 -e VITE_CUSTOM_LOGO_URL=https://company.com/logo.png datakit/app:latest

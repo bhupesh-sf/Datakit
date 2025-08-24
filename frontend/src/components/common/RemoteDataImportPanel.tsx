@@ -1,36 +1,39 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Link } from "lucide-react";
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Link } from 'lucide-react';
 
-import { useAppStore } from "@/store/appStore";
+import { useAppStore } from '@/store/appStore';
+import { useAuth } from '@/hooks/auth/useAuth';
 
-import { Button } from "@/components/ui/Button";
-import GoogleSheetsIcon from "@/components/icons/GoogleSheetsIcon";
+import { Button } from '@/components/ui/Button';
+import GoogleSheetsIcon from '@/components/icons/GoogleSheetsIcon';
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
-import S3ImportPanel from "./import-modal/S3ImportPanel";
-import { CustomURLPanel } from "./import-modal/CustomURLPanel";
-import GoogleSheetsPanel from "./import-modal/GoogleSheetsPanel";
-import HuggingFacePanel from "./import-modal/HuggingFacePanel";
-import MotherDuckPanel from "./import-modal/MotherDuckPanel";
+import S3ImportPanel from './import-modal/S3ImportPanel';
+import { CustomURLPanel } from './import-modal/CustomURLPanel';
+import GoogleSheetsPanel from './import-modal/GoogleSheetsPanel';
+import HuggingFacePanel from './import-modal/HuggingFacePanel';
+import MotherDuckPanel from './import-modal/MotherDuckPanel';
+import PostgreSQLPanel from './import-modal/PostgreSQLPanel';
 
-import GCSImportPanel from "./import-modal/GCSImportPanel";
-import GoogleDrivePanel from "./import-modal/GoogleDrivePanel";
+import GCSImportPanel from './import-modal/GCSImportPanel';
+import GoogleDrivePanel from './import-modal/GoogleDrivePanel';
+import AuthModal from '@/components/auth/AuthModal';
 
-import S3 from "@/assets/s3.png";
-import GCS from "@/assets/gcs.svg";
-import Drive from "@/assets/drive.svg";
-import HuggingFace from "@/assets/huggingface.png";
-import MotherDuckIcon from "@/assets/motherduck.png";
-import { ImportProvider } from "@/types/remoteImport";
+import S3 from '@/assets/s3.png';
+import GCS from '@/assets/gcs.svg';
+import Drive from '@/assets/drive.svg';
+import HuggingFace from '@/assets/huggingface.png';
+import MotherDuckIcon from '@/assets/md.png';
+import PostgreSQLIcon from '@/assets/postgres.png';
+import { ImportProvider } from '@/types/remoteImport';
 
 export interface RemoteDataImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: (result: any) => void;
 }
-
 
 interface ProviderTab {
   id: ImportProvider;
@@ -39,52 +42,62 @@ interface ProviderTab {
   description: string;
   comingSoon?: boolean;
   featured?: boolean;
+  requiresAuth?: boolean;
 }
 
 const PROVIDER_TABS: ProviderTab[] = [
   {
-    id: "custom-url",
-    label: "Custom URL",
+    id: 'custom-url',
+    label: 'Custom URL',
     icon: <Link color="white" className="h-4 w-4" />,
-    description: "Import from any public URL",
+    description: 'Import from any public URL',
   },
   {
-    id: "s3",
-    label: "Amazon S3",
+    id: 's3',
+    label: 'Amazon S3',
     icon: <img src={S3} className="h-4 w-4" />,
-    description: "Public S3 buckets",
+    description: 'Public S3 buckets',
   },
   {
-    id: "huggingface", // Add HF as first tab (featured)
-    label: "HuggingFace",
+    id: 'huggingface',
+    label: 'HuggingFace',
     icon: <img src={HuggingFace} className="h-5 w-5" />,
-    description: "ML datasets",
+    description: 'ML datasets',
   },
   {
-    id: "motherduck", // Position MotherDuck first as main cloud option
-    label: "MotherDuck",
-    icon: <img src={MotherDuckIcon} className="h-8 w-8" alt="MotherDuck" />,
-    description: "Cloud DuckDB",
+    id: 'motherduck',
+    label: 'MotherDuck',
+    icon: <img src={MotherDuckIcon} className="h-5 w-5" alt="MotherDuck" />,
+    description: 'Cloud DuckDB',
     featured: true,
+    requiresAuth: false,
   },
   {
-    id: "google-sheets",
-    label: "Google Sheets",
+    id: 'postgresql',
+    label: 'PostgreSQL',
+    icon: <img src={PostgreSQLIcon} className="h-5 w-5" alt="PostgreSQL" />,
+    description: 'PG databases',
+    featured: true,
+    requiresAuth: true,
+  },
+  {
+    id: 'google-sheets',
+    label: 'Google Sheets',
     icon: <GoogleSheetsIcon className="h-5 w-5" />,
-    description: "Published Google Sheets",
+    description: 'Published Google Sheets',
   },
   {
-    id: "gcs",
-    label: "Google Cloud",
+    id: 'gcs',
+    label: 'Google Cloud',
     icon: <img src={GCS} className="h-6 w-6" />,
-    description: "Public GCS buckets",
+    description: 'Public GCS buckets',
     comingSoon: true,
   },
   {
-    id: "google-drive",
-    label: "Google Drive",
+    id: 'google-drive',
+    label: 'Google Drive',
     icon: <img src={Drive} className="h-6 w-6" />,
-    description: "Files from Google Drive",
+    description: 'Files from Google Drive',
     comingSoon: true,
   },
 ];
@@ -99,10 +112,11 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
     setActiveProviderRemoteModal: setActiveProvider,
   } = useAppStore();
 
+  const { isAuthenticated } = useAuth();
 
   // Load last used provider from localStorage
   React.useEffect(() => {
-    const saved = localStorage.getItem("datakit-last-import-provider");
+    const saved = localStorage.getItem('datakit-last-import-provider');
     if (saved && PROVIDER_TABS.find((tab) => tab.id === saved)) {
       setActiveProvider(saved as ImportProvider);
     }
@@ -110,11 +124,14 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
 
   // Save provider choice to localStorage
   const handleProviderChange = (provider: ImportProvider) => {
-    if (PROVIDER_TABS.find((tab) => tab.id === provider)?.comingSoon) {
+    const providerTab = PROVIDER_TABS.find((tab) => tab.id === provider);
+
+    if (providerTab?.comingSoon) {
       return; // Don't allow switching to coming soon providers
     }
+
     setActiveProvider(provider);
-    localStorage.setItem("datakit-last-import-provider", provider);
+    localStorage.setItem('datakit-last-import-provider', provider);
   };
 
   const handleImportSuccess = (result: any) => {
@@ -124,16 +141,18 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
 
   const renderProviderPanel = () => {
     switch (activeProvider) {
-      case "huggingface": // Add HF case
+      case 'huggingface': // Add HF case
         return <HuggingFacePanel onImport={handleImportSuccess} />;
-      case "s3":
+      case 's3':
         return <S3ImportPanel onImport={handleImportSuccess} />;
-      case "custom-url":
+      case 'custom-url':
         return <CustomURLPanel onImport={handleImportSuccess} />;
-      case "google-sheets":
+      case 'google-sheets':
         return <GoogleSheetsPanel onImport={handleImportSuccess} />;
-      case "motherduck":
+      case 'motherduck':
         return <MotherDuckPanel onImport={onClose} />;
+      case 'postgresql':
+        return <PostgreSQLPanel onImport={handleImportSuccess} />;
       default:
         return (
           <div className="p-8 text-center text-white/60">
@@ -185,52 +204,55 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                       onClick={() => handleProviderChange(tab.id)}
                       disabled={tab.comingSoon}
                       className={cn(
-                        "w-full text-left p-3 rounded-lg mb-1 transition-all duration-200 group relative",
+                        'w-full text-left p-3 rounded-lg mb-1 transition-all duration-200 group relative',
                         activeProvider === tab.id && !tab.comingSoon
-                          ? tab.id === "huggingface"
-                          
-                            ? "bg-yellow-400/10 border border-yellow-400/20 text-white" // HF yellow
-                            : tab.id === "s3"
-                            ? "bg-orange-500/10 border border-orange-500/20 text-white" // AWS orange
-                            : tab.id === "google-sheets"
-                            ? "bg-green-500/15 border border-green-500/20 text-white" // Google green
-                            : tab.id === "custom-url"
-                            ? "bg-blue-500/15 border border-blue-500/20 text-white" // Generic blue
-                            : tab.id === "gcs"
-                            ? "bg-sky-500/15 border border-sky-500/20 text-white" // Google Cloud blue
-                            : tab.id === "google-drive"
-                            ? "bg-blue-600/20 border border-blue-600/30 text-white" // Drive blue
-                           : tab.id === "motherduck"
-                            ? "bg-orange-300/10 border border-orange-300/20 text-white" // Light orange
-                            : "bg-primary/20 border border-primary/30 text-white"
+                          ? tab.id === 'huggingface'
+                            ? 'bg-yellow-400/10 border border-yellow-400/20 text-white' // HF yellow
+                            : tab.id === 's3'
+                            ? 'bg-orange-500/10 border border-orange-500/20 text-white' // AWS orange
+                            : tab.id === 'google-sheets'
+                            ? 'bg-green-500/15 border border-green-500/20 text-white' // Google green
+                            : tab.id === 'custom-url'
+                            ? 'bg-blue-500/15 border border-blue-500/20 text-white' // Generic blue
+                            : tab.id === 'gcs'
+                            ? 'bg-sky-500/15 border border-sky-500/20 text-white' // Google Cloud blue
+                            : tab.id === 'google-drive'
+                            ? 'bg-blue-600/20 border border-blue-600/30 text-white' // Drive blue
+                            : tab.id === 'motherduck'
+                            ? 'bg-orange-300/10 border border-orange-300/20 text-white' // Light orange
+                            : tab.id === 'postgresql'
+                            ? 'bg-blue-600/10 border border-blue-600/20 text-white' // PostgreSQL blue
+                            : 'bg-primary/20 border border-primary/30 text-white'
                           : tab.comingSoon
-                          ? "text-white/40 cursor-not-allowed"
-                          : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent"
+                          ? 'text-white/40 cursor-not-allowed'
+                          : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
                       )}
                     >
                       <div className="flex items-center">
                         <div
                           className={cn(
-                            "h-8 w-8 rounded-md flex items-center justify-center mr-3 border",
+                            'h-8 w-8 rounded-md flex items-center justify-center mr-3 border',
                             activeProvider === tab.id && !tab.comingSoon
-                              ? tab.id === "huggingface"
-                                ? "border-yellow-400/50 text-yellow-400"
-                                : tab.id === "s3"
-                                ? "border-orange-500/50 text-orange-500"
-                                : tab.id === "google-sheets"
-                                ? "bg-green-500/30 border-green-500/50 text-green-500"
-                                : tab.id === "custom-url"
-                                ? "bg-blue-500/30 border-blue-500/50 text-blue-500"
-                                : tab.id === "gcs"
-                                ? "bg-sky-500/30 border-sky-500/50 text-sky-500"
-                                : tab.id === "google-drive"
-                                ? "bg-blue-600/30 border-blue-600/50 text-blue-600"
-                                : tab.id === "motherduck"
-                                ? "border-orange-300/50 text-orange-300"
-                                : "bg-primary/30 border-primary/50 text-primary"
+                              ? tab.id === 'huggingface'
+                                ? 'border-yellow-400/50 text-yellow-400'
+                                : tab.id === 's3'
+                                ? 'border-orange-500/50 text-orange-500'
+                                : tab.id === 'google-sheets'
+                                ? 'bg-green-500/30 border-green-500/50 text-green-500'
+                                : tab.id === 'custom-url'
+                                ? 'bg-blue-500/30 border-blue-500/50 text-blue-500'
+                                : tab.id === 'gcs'
+                                ? 'bg-sky-500/30 border-sky-500/50 text-sky-500'
+                                : tab.id === 'google-drive'
+                                ? 'bg-blue-600/30 border-blue-600/50 text-blue-600'
+                                : tab.id === 'motherduck'
+                                ? 'border-orange-300/50 text-orange-300'
+                                : tab.id === 'postgresql'
+                                ? 'border-blue-600/50 text-blue-600'
+                                : 'bg-primary/30 border-primary/50 text-primary'
                               : tab.comingSoon
-                              ? "bg-white/5 border-white/10 text-white/40"
-                              : "bg-white/5 border-white/10 text-white/60 group-hover:border-white/20"
+                              ? 'bg-white/5 border-white/10 text-white/40'
+                              : 'bg-white/5 border-white/10 text-white/60 group-hover:border-white/20'
                           )}
                         >
                           {tab.icon}
@@ -248,6 +270,12 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                           </div>
                           <p className="text-xs mt-0.5 truncate opacity-80">
                             {tab.description}
+                            {tab.requiresAuth && !isAuthenticated && (
+                              <span className="text-[10px] text-amber-400/60">
+                                {' '}
+                                • Sign in required
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -257,25 +285,27 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                         <motion.div
                           layoutId="activeProvider"
                           className={cn(
-                            "absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 rounded-r",
-                            tab.id === "huggingface"
-                              ? "bg-yellow-400"
-                              : tab.id === "s3"
-                              ? "bg-orange-500"
-                              : tab.id === "google-sheets"
-                              ? "bg-green-500"
-                              : tab.id === "custom-url"
-                              ? "bg-blue-500"
-                              : tab.id === "gcs"
-                              ? "bg-sky-500"
-                              : tab.id === "google-drive"
-                              ? "bg-blue-600"
-                              : tab.id === "motherduck"
-                              ? "bg-orange-300"
-                              : "bg-primary"
+                            'absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 rounded-r',
+                            tab.id === 'huggingface'
+                              ? 'bg-yellow-400'
+                              : tab.id === 's3'
+                              ? 'bg-orange-500'
+                              : tab.id === 'google-sheets'
+                              ? 'bg-green-500'
+                              : tab.id === 'custom-url'
+                              ? 'bg-blue-500'
+                              : tab.id === 'gcs'
+                              ? 'bg-sky-500'
+                              : tab.id === 'google-drive'
+                              ? 'bg-blue-600'
+                              : tab.id === 'motherduck'
+                              ? 'bg-orange-300'
+                              : tab.id === 'postgresql'
+                              ? 'bg-blue-600'
+                              : 'bg-primary'
                           )}
                           transition={{
-                            type: "spring",
+                            type: 'spring',
                             stiffness: 300,
                             damping: 30,
                           }}
@@ -294,22 +324,24 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                 <div className="flex items-center">
                   <div
                     className={cn(
-                      "h-8 w-8 rounded-md flex items-center justify-center mr-3 border",
-                      activeProvider === "huggingface"
-                        ? "border-yellow-400/30"
-                        : activeProvider === "s3"
-                        ? "border-orange-500/30"
-                        : activeProvider === "google-sheets"
-                        ? "bg-green-500/20 border-green-500/30"
-                        : activeProvider === "custom-url"
-                        ? "bg-blue-500/20 border-blue-500/30"
-                        : activeProvider === "gcs"
-                        ? "bg-sky-500/20 border-sky-500/30"
-                        : activeProvider === "google-drive"
-                        ? "bg-blue-600/20 border-blue-600/30"
-                        : activeProvider === "motherduck"
-                        ? "border-orange-300/50"
-                        : "bg-primary/20 border-primary/30"
+                      'h-8 w-8 rounded-md flex items-center justify-center mr-3 border',
+                      activeProvider === 'huggingface'
+                        ? 'border-yellow-400/30'
+                        : activeProvider === 's3'
+                        ? 'border-orange-500/30'
+                        : activeProvider === 'google-sheets'
+                        ? 'bg-green-500/20 border-green-500/30'
+                        : activeProvider === 'custom-url'
+                        ? 'bg-blue-500/20 border-blue-500/30'
+                        : activeProvider === 'gcs'
+                        ? 'bg-sky-500/20 border-sky-500/30'
+                        : activeProvider === 'google-drive'
+                        ? 'bg-blue-600/20 border-blue-600/30'
+                        : activeProvider === 'motherduck'
+                        ? 'border-orange-300/50'
+                        : activeProvider === 'postgresql'
+                        ? 'bg-blue-600/20 border-blue-600/30'
+                        : 'bg-primary/20 border-primary/30'
                     )}
                   >
                     {
