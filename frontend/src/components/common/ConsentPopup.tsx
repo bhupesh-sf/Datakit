@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
-import Plausible from 'plausible-tracker';
+import { usePostHog } from 'posthog-js/react';
 
 interface ConsentPopupProps {
   onAccept: () => void;
@@ -77,7 +77,7 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
               {/* Content */}
               <div className="mb-4">
                 <p className="text-white/70 text-xs leading-relaxed mb-3">
-                  We use privacy-friendly analytics to understand app usage. Your data files never leave the browser.
+                  We collect basic anonymous metrics to improve app stability. With your consent, we can enable enhanced analytics for better features. Your data files never leave the browser.
                 </p>
                 
                 {/* Dropdown */}
@@ -105,12 +105,22 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
                       <div className="bg-white/5 rounded p-3 mb-3">
                         <div className="space-y-2">
                           <div>
-                            <p className="text-white/80 text-xs font-medium mb-1">We collect:</p>
+                            <p className="text-white/80 text-xs font-medium mb-1">Basic (No Consent Needed):</p>
                             <ul className="text-white/60 text-xs space-y-0.5 pl-2">
-                              <li>• Feature usage (query, charts)</li>
+                              <li>• Page views & navigation</li>
                               <li>• Performance metrics</li>
                               <li>• Error reports (to fix bugs)</li>
+                              <li>• Session recordings (heavily masked)</li>
+                            </ul>
+                          </div>
+                          
+                          <div>
+                            <p className="text-white/80 text-xs font-medium mb-1">Advanced (With Consent):</p>
+                            <ul className="text-white/60 text-xs space-y-0.5 pl-2">
+                              <li>• Detailed feature usage</li>
+                              <li>• Session recordings</li>
                               <li>• File types & sizes (not content)</li>
+                              <li>• User journey tracking</li>
                             </ul>
                           </div>
                           
@@ -159,16 +169,12 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
   );
 };
 
-// Initialize Plausible instance (but don't enable tracking yet)
-const plausible = Plausible({
-  domain: 'datakit.page',
-  trackLocalhost: true, // Set to true if you want to track localhost
-});
 
 export const useConsentManager = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
+  const posthog = usePostHog();
 
   useEffect(() => {
     // Check if user has already made a choice
@@ -178,10 +184,52 @@ export const useConsentManager = () => {
       setHasInteracted(true);
       if (consent === 'true') {
         setAnalyticsEnabled(true);
-        // Enable tracking immediately if consent was previously given
-        plausible.enableAutoPageviews();
+        // Enable enhanced tracking if consent was previously given
+        if (posthog) {
+          posthog.set_config({
+            autocapture: true,
+            capture_pageview: true,
+            // Less masking for consented users
+            session_recording: {
+              maskAllInputs: false,
+              maskAllText: false,
+              maskAllImages: false,
+              blockAllMedia: false,
+              maskTextSelector: '',
+              maskInputOptions: {
+                password: true, // Still mask passwords
+                email: true, // Still mask emails for privacy
+              },
+            },
+          });
+          // Track enhanced pageview
+          posthog.capture('$pageview', { tracking_level: 'enhanced' });
+        }
+      } else {
+        // User declined - keep heavy masking
+        if (posthog) {
+          posthog.set_config({
+            autocapture: false,
+            capture_pageview: false,
+            // Keep heavy masking for non-consented users
+            session_recording: {
+              maskAllInputs: true,
+              maskAllText: true,
+              maskAllImages: true,
+              blockAllMedia: true,
+              maskTextSelector: '*',
+            },
+          });
+        }
       }
       return;
+    }
+
+    // For new users, track basic pageview immediately (no consent needed)
+    if (posthog && !hasInteracted) {
+      posthog.capture('$pageview', {
+        tracking_level: 'basic',
+      });
     }
 
     // Show popup after 3 seconds if no previous interaction
@@ -192,12 +240,42 @@ export const useConsentManager = () => {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [hasInteracted]);
+  }, [hasInteracted, posthog]);
 
   const handleAccept = () => {
     localStorage.setItem('datakit-analytics-consent', 'true');
     setAnalyticsEnabled(true);
-    plausible.enableAutoPageviews();
+    
+    if (posthog) {
+      // Enable enhanced tracking with less masking
+      posthog.set_config({
+        autocapture: true,
+        capture_pageview: true,
+        // Less masking for consented users
+        session_recording: {
+          maskAllInputs: false,
+          maskAllText: false,
+          maskAllImages: false,
+          blockAllMedia: false,
+          maskTextSelector: '',
+          maskInputOptions: {
+            password: true, // Still mask passwords
+            email: true, // Still mask emails
+          },
+        },
+      });
+      
+      // Track consent granted
+      posthog.capture('consent_granted', {
+        timestamp: new Date().toISOString(),
+      });
+      
+      // Session recording already started, just less masked now
+      
+      // Track enhanced pageview
+      posthog.capture('$pageview', { tracking_level: 'enhanced' });
+    }
+    
     setShowPopup(false);
     setHasInteracted(true);
   };
@@ -205,6 +283,31 @@ export const useConsentManager = () => {
   const handleDecline = () => {
     localStorage.setItem('datakit-analytics-consent', 'false');
     setAnalyticsEnabled(false);
+    
+    if (posthog) {
+      // Keep heavy masking for non-consented users
+      posthog.set_config({
+        autocapture: false,
+        capture_pageview: false,
+        // Keep heavy masking
+        session_recording: {
+          maskAllInputs: true,
+          maskAllText: true,
+          maskAllImages: true,
+          blockAllMedia: true,
+          maskTextSelector: '*',
+        },
+      });
+      
+      // Track consent declined (basic event)
+      posthog.capture('consent_declined', {
+        timestamp: new Date().toISOString(),
+        tracking_level: 'basic',
+      });
+      
+      // Session recording continues but heavily masked
+    }
+    
     setShowPopup(false);
     setHasInteracted(true);
   };
@@ -213,19 +316,48 @@ export const useConsentManager = () => {
     setShowPopup(false);
   };
 
-  // Utility function to track custom events (only if consent given)
-  const trackEvent = (eventName: string, data?: Record<string, any>) => {
-    if (analyticsEnabled) {
-      plausible.trackEvent(eventName, { props: {...data} })
-    }
-  };
+  // Basic events that don't require consent
+  const BASIC_EVENTS = [
+    'app_loaded',
+    'page_view', 
+    'feature_accessed',
+    'error_occurred',
+    'performance_metric',
+  ];
 
-  // Utility function to track page views manually (only if consent given)
-  const trackPageview = (path?: string) => {
-    if (analyticsEnabled) {
-      plausible.trackPageview({ url: path });
+  // Utility function to track custom events (two-tiered)
+  const trackEvent = useCallback((eventName: string, data?: Record<string, any>) => {
+    if (!posthog) return;
+    
+    const isBasicEvent = BASIC_EVENTS.some(event => eventName.includes(event));
+    
+    if (isBasicEvent) {
+      // Track basic events without consent
+      posthog.capture(eventName, {
+        ...data,
+        tracking_level: 'basic',
+        timestamp: new Date().toISOString(),
+      });
+    } else if (analyticsEnabled) {
+      // Track enhanced events only with consent
+      posthog.capture(eventName, {
+        ...data,
+        tracking_level: 'enhanced',
+        timestamp: new Date().toISOString(),
+      });
     }
-  };
+  }, [posthog, analyticsEnabled]);
+
+  // Utility function to track page views manually
+  const trackPageview = useCallback((path?: string) => {
+    if (!posthog) return;
+    
+    // Page views are basic events - always track
+    posthog.capture('$pageview', {
+      $current_url: path || window.location.href,
+      tracking_level: analyticsEnabled ? 'enhanced' : 'basic',
+    });
+  }, [posthog, analyticsEnabled]);
 
   return {
     showPopup,

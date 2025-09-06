@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useConsentManager } from "@/components/common/ConsentPopup";
 import { NotificationProvider } from "@/hooks/useNotifications";
 import { useSignupPrompt } from "@/hooks/useSignupPrompt";
+import { usePostHogIdentification } from "@/hooks/usePostHogIdentification";
 
 import Home from "@/pages/Home";
 import Privacy from "@/pages/Privacy";
@@ -88,6 +89,9 @@ const AppContent = () => {
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const { ConsentPopup } = useConsentManager();
   const { SignupPrompt } = useSignupPrompt();
+  
+  // Automatically identify users in PostHog when they log in
+  usePostHogIdentification();
 
   useEffect(() => {
     initialize();

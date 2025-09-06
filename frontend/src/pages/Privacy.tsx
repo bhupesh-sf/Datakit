@@ -47,15 +47,28 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white mb-3">What We Track (With Your Consent)</h2>
-              <p className="mb-3">When you consent to analytics, we collect:</p>
+              <h2 className="text-lg font-semibold text-white mb-3">Our Two-Tiered Analytics System</h2>
+              <p className="mb-3">We use a privacy-first approach with two levels of analytics:</p>
               
               <div className="bg-white/5 rounded-lg p-4 mb-4">
-                <h3 className="font-medium text-white mb-2">What We Collect:</h3>
+                <h3 className="font-medium text-white mb-2">Basic Analytics (Always Active, No Consent Required):</h3>
                 <ul className="space-y-1 text-sm">
-                  <li>• Feature usage (which tabs you visit, chart types you create)</li>
+                  <li>• Page views and basic navigation</li>
                   <li>• Performance metrics (query execution times, file load speeds)</li>
                   <li>• Error reports (JavaScript errors to help us fix bugs)</li>
+                  <li>• Feature access patterns (anonymous)</li>
+                </ul>
+                <p className="text-xs text-white/60 mt-2">
+                  These metrics help us understand app stability and performance without any personal data.
+                </p>
+              </div>
+
+              <div className="bg-white/5 rounded-lg p-4 mb-4">
+                <h3 className="font-medium text-white mb-2">Advanced Analytics (With Your Consent):</h3>
+                <ul className="space-y-1 text-sm">
+                  <li>• Detailed feature usage (which tabs you visit, chart types you create)</li>
+                  <li>• Session recordings (with sensitive data masked)</li>
+                  <li>• User journey tracking</li>
                   <li>• File metadata (file types and sizes, not content)</li>
                 </ul>
               </div>
@@ -66,7 +79,7 @@ const Privacy = () => {
                   <li>• Your uploaded files or their content (actual data rows)</li>
                   <li>• SQL queries or code you write</li>
                   <li>• Personal information or identifying data</li>
-                  <li>• IP addresses (anonymized by Plausible)</li>
+                  <li>• Unmasked sensitive form inputs</li>
                 </ul>
                 <p className="text-xs text-white/60 mt-3">
                   <em>Note: When using DataKit AI models, only column schemas (names and types) are processed by our AI service - never your actual data.</em>
@@ -81,8 +94,10 @@ const Privacy = () => {
                 <div>
                   <h3 className="font-medium text-white mb-2">Analytics Provider</h3>
                   <p className="text-sm">
-                    We use Plausible Analytics, a privacy-focused service based in the EU. 
-                    Plausible doesn't use cookies, anonymizes IP addresses, and is fully GDPR compliant.
+                    We use PostHog for analytics, a product analytics platform. 
+                    PostHog helps us understand how you use DataKit while respecting your privacy through 
+                    our two-tiered consent system. Basic anonymous metrics are collected to improve app 
+                    stability, while advanced tracking requires your explicit consent.
                   </p>
                 </div>
                 
