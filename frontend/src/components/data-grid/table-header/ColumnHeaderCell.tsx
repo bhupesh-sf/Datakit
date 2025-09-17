@@ -75,7 +75,7 @@ const ColumnHeaderCell: React.FC<ColumnHeaderCellProps> = ({
           {!isRowNumberColumn && (
             <TypeIndicator type={columnType} size={12} />
           )}
-          <span className="text-xs font-semibold text-white truncate">
+          <span className="text-sm font-semibold text-white truncate">
             {columnName}
           </span>
         </div>
