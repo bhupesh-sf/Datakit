@@ -10,6 +10,8 @@ interface UnifiedGridProps extends GridProps {
   isRemoteSource?: boolean;
   showStats?: boolean;
   onStatsToggle?: () => void;
+  currentPage?: number;
+  rowsPerPage?: number;
   editingCell?: { row: number; col: number } | null;
   editValue?: string;
   onCellClick?: (row: number, col: number) => void;
@@ -43,6 +45,8 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
   isRemoteSource = false,
   showStats: propShowStats,
   onStatsToggle,
+  currentPage = 1,
+  rowsPerPage = 1000,
   columnTypes = [],
   isDataMode = false,
   onCellEdit,
@@ -233,12 +237,14 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
 
     // Row number cells
     if (isRowNumberColumn) {
+      // Calculate actual row number based on current page
+      const actualRowNumber = ((currentPage - 1) * rowsPerPage) + rowIndex + 1;
       return (
         <div 
           style={adjustedStyle}
           className="grid-cell csv-grid-row-number"
         >
-          {rowIndex + 1}
+          {actualRowNumber}
         </div>
       );
     }
@@ -298,6 +304,8 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
     handleResizeStart,
     getColumnStats,
     columnCount,
+    currentPage,
+    rowsPerPage,
   ]);
 
 

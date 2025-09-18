@@ -378,6 +378,8 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
               isRemoteSource={targetFile?.isRemote || false}
               showStats={showStats}
               onStatsToggle={() => setShowStats(!showStats)}
+              currentPage={currentPage}
+              rowsPerPage={rowsPerPage}
               columnTypes={targetFile?.columnTypes || []}
               isDataMode={
                 !isLoading && !isChangingPage && displayData.length > 0
