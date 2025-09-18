@@ -309,6 +309,48 @@
     color: var(--primary);
   }
 
+  /* Table header with stats styling */
+  .table-header-stats {
+    background: linear-gradient(180deg, 
+      var(--dark-nav) 0%, 
+      color-mix(in srgb, var(--dark-nav) 95%, var(--background) 5%) 100%
+    );
+    border-bottom: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
+    backdrop-filter: blur(10px);
+    transform: translateZ(0); /* Force hardware acceleration */
+    will-change: transform; /* Optimize for transforms */
+  }
+
+  .column-header-cell {
+    transition: all 200ms ease;
+    /* border-right removed - virtual-cell already provides it */
+  }
+
+  .column-header-cell:hover {
+    background: color-mix(in srgb, var(--primary) 5%, transparent);
+  }
+
+  .column-header-cell.sorted {
+    background: linear-gradient(to bottom, 
+      color-mix(in srgb, var(--primary) 12%, transparent) 0%,
+      color-mix(in srgb, var(--primary) 6%, transparent) 50%,
+      var(--dark-nav) 100%
+    );
+    border-bottom: 2px solid color-mix(in srgb, var(--primary) 60%, transparent);
+  }
+
+  .mini-histogram {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  }
+
+  .type-indicator {
+    transition: transform 150ms ease;
+  }
+
+  .column-header-cell:hover .type-indicator {
+    transform: scale(1.1);
+  }
+
   .performance-grid-container {
     height: 100%;
     width: 100%;
@@ -481,6 +523,107 @@
 
   .performance-grid-container ::-webkit-scrollbar-thumb:hover {
     background: color-mix(in srgb, var(--primary) 60%, transparent);
+  }
+
+  /* Virtual Grid Styles */
+  .virtual-grid-container {
+    height: 100%;
+    width: 100%;
+    contain: strict;
+    overflow: hidden;
+    background-color: var(--background);
+    display: flex;
+    flex-direction: column;
+    /* Debug: Enable to see alignment issues */
+    /* .virtual-cell { border: 1px solid red !important; }
+       .virtual-cell.header-cell { border: 1px solid blue !important; } */
+  }
+
+  .virtual-grid-scroll {
+    overscroll-behavior: contain;
+    scroll-behavior: auto; /* Immediate scrolling for performance */
+    position: relative;
+  }
+
+  .virtual-grid-header {
+    border-bottom: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+
+  .virtual-grid-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .virtual-grid-scroll::-webkit-scrollbar-track {
+    background: color-mix(in srgb, var(--background) 80%, transparent);
+    border-radius: 4px;
+  }
+
+  .virtual-grid-scroll::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--primary) 40%, transparent);
+    border-radius: 4px;
+    transition: background-color 200ms ease;
+  }
+
+  .virtual-grid-scroll::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--primary) 60%, transparent);
+  }
+
+  .virtual-row {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .virtual-row.header-row {
+    background-color: var(--dark-nav);
+    border-bottom: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+
+  .virtual-cell {
+    display: flex;
+    align-items: stretch;
+    background-color: var(--background);
+    border-right: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+    box-sizing: border-box; /* Ensure consistent box model */
+  }
+
+  .virtual-cell.header-cell {
+    background-color: var(--dark-nav);
+  }
+
+  .virtual-cell.row-number-cell {
+    background-color: color-mix(in srgb, var(--dark-nav) 95%, var(--background) 5%);
+    border-right: 2px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  }
+
+  .virtual-cell.header-cell.row-number-cell {
+    background-color: var(--dark-nav);
+    border-right: 2px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  }
+
+  /* Virtual Grid Resize Handle */
+  .virtual-grid-container .resize-handle {
+    transition: background-color 150ms ease;
+  }
+
+  .virtual-grid-container .resize-handle:hover,
+  .virtual-grid-container .resize-handle:active {
+    background-color: var(--primary) !important;
+  }
+
+  /* Ensure consistent alignment between header and body cells */
+  .column-header-wrapper {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none; /* Remove any inherited borders */
+  }
+
+  .grid-cell {
+    box-sizing: border-box;
   }
 }
 

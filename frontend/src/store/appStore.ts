@@ -83,6 +83,8 @@ interface AppState {
   sidebarCollapsed: boolean;
   /** Whether the app is running inside an iframe */
   isInIframe: boolean;
+  /** Whether to show column stats in data grid */
+  showColumnStats: boolean;
 
   // Query history state
   /** Array of recent queries */
@@ -139,6 +141,10 @@ interface AppState {
   setSidebarCollapsed: (collapsed: boolean) => void;
   /** Set iframe state */
   setIsInIframe: (isInIframe: boolean) => void;
+  /** Toggle column stats visibility */
+  toggleColumnStats: () => void;
+  /** Set column stats visibility */
+  setShowColumnStats: (show: boolean) => void;
   isRemoteModalOpen: boolean;
   activeProviderRemoteModal: ImportProvider;
 
@@ -215,6 +221,7 @@ const initialState = {
   jsonViewMode: "table" as const,
   sidebarCollapsed: false,
   isInIframe: false,
+  showColumnStats: false,
 
   // Query history state
   recentQueries: [],
@@ -288,6 +295,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   ...initialState,
   sidebarCollapsed: getSavedSidebarState(),
   isInIframe: detectIframe(),
+  showColumnStats: localStorage.getItem("show-column-stats") === "true",
   
   // Initialize workspaces on store creation
   ...((() => {
@@ -436,6 +444,17 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setIsInIframe: (isInIframe) => {
     set({ isInIframe });
+  },
+  
+  toggleColumnStats: () => {
+    const newState = !get().showColumnStats;
+    localStorage.setItem("show-column-stats", String(newState));
+    set({ showColumnStats: newState });
+  },
+  
+  setShowColumnStats: (show) => {
+    localStorage.setItem("show-column-stats", String(show));
+    set({ showColumnStats: show });
   },
 
   // Split view actions

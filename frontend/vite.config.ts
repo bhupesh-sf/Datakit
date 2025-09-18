@@ -44,6 +44,9 @@ export default defineConfig({
       },
     },
   },
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
   server: {
     headers: {
       // Required headers for MotherDuck WASM client (SharedArrayBuffer support)

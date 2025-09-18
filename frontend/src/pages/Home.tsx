@@ -42,7 +42,7 @@ const Home = () => {
 
   // Define available tabs
   const tabs: Tab[] = [
-    { id: "preview", label: "Data Preview", icon: <Table size={16} /> },
+    { id: "preview", label: "Preview", icon: <Table size={16} /> },
     { id: "query", label: "Query", icon: <Database size={16} /> },
     { id: "scripts", label: "Notebook", icon: <Notebook size={16} /> },
     { id: "visualization", label: "Visualize", icon: <BarChart size={16} /> },

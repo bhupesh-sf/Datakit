@@ -1,3 +1,6 @@
+# 0.4.15 
+Introducing ColumnStats on Preview
+
 # 0.4.11
 Introducing Studio (link on navbar)
 Improving SEO
