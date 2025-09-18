@@ -23,13 +23,12 @@ interface DataPreviewGridProps {
 
 const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = false }) => {
   const activeFile = useAppStore(selectActiveFile);
-  const { setActiveTab } = useAppStore();
+  const { setActiveTab, showColumnStats, setShowColumnStats } = useAppStore();
   const { openPanel, analyzeFile } = useInspectorStore();
   const { getObjectType } = useDuckDBStore();
   
   // Ref to UnifiedGrid for accessing stats functionality
   const gridRef = useRef<UnifiedGridRef>(null);
-  const [showStats, setShowStats] = useState(false);
   const [isView, setIsView] = useState(false);
 
   // Use provided fileId or fall back to active file
@@ -160,13 +159,13 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
     
     if (columnStats.length > 0) {
       // Toggle visibility if we already have data
-      setShowStats(!showStats);
+      setShowColumnStats(!showColumnStats);
     } else {
       // Load stats for first time
-      setShowStats(true);
+      setShowColumnStats(true);
       triggerAnalysis();
     }
-  }, [showStats]);
+  }, [showColumnStats, setShowColumnStats]);
 
   const renderHeader = () => {
     if (!activeFile && !isLoading) return null;
@@ -261,14 +260,14 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
                   </svg>
                 ) : (
                   <BarChart3 className={`h-4 w-4 transition-colors ${
-                    showStats && gridRef.current?.columnStats?.length > 0
+                    showColumnStats && gridRef.current?.columnStats?.length > 0
                       ? 'text-green-400'
                       : 'text-white/60'
                   }`} />
                 )}
                 <span className="text-white/90 group-hover:text-white font-medium">
                   {gridRef.current?.columnStats?.length > 0 
-                    ? (showStats ? 'Hide Stats' : 'Show Stats')
+                    ? (showColumnStats ? 'Hide Stats' : 'Show Stats')
                     : 'Column Stats'
                   }
                 </span>
@@ -376,8 +375,8 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
               data={displayData}
               fileId={targetFileId}
               isRemoteSource={targetFile?.isRemote || false}
-              showStats={showStats}
-              onStatsToggle={() => setShowStats(!showStats)}
+              showStats={showColumnStats}
+              onStatsToggle={() => setShowColumnStats(!showColumnStats)}
               currentPage={currentPage}
               rowsPerPage={rowsPerPage}
               columnTypes={targetFile?.columnTypes || []}
