@@ -326,6 +326,7 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
           className="flex transition-all duration-300 ease-in-out"
           style={{ 
             minWidth: '100%',
+            height: '100%',
             width: Math.max(totalWidth, 800), // Ensure header is always wide enough
             transform: `translateX(-${scrollLeft}px)`
           }}
