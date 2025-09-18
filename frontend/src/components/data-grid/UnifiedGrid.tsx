@@ -374,8 +374,8 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
                 {/* Resize handle */}
                 {columnIndex < columnCount - 1 && (
                   <div
-                    className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-primary/50 transition-colors"
-                    style={{ zIndex: 40 }}
+                    className="absolute right-0 top-0 w-2 h-full cursor-col-resize group flex items-center justify-center hover:bg-primary/50 transition-colors"
+                    style={{ zIndex: 40, transform: 'translateX(50%)' }}
                     onMouseDown={(e) => handleResizeStart(columnIndex, e)}
                   />
                 )}
