@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { Search, BarChart3 } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useInspectorStore } from '@/store/inspectorStore';
+import { useDuckDBStore } from '@/store/duckDBStore';
 import { selectActiveFile } from '@/store/selectors/appSelectors';
 import { useDataPreview } from '@/hooks/useDataPreview';
 
@@ -24,13 +25,20 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
   const activeFile = useAppStore(selectActiveFile);
   const { setActiveTab } = useAppStore();
   const { openPanel, analyzeFile } = useInspectorStore();
+  const { getObjectType } = useDuckDBStore();
   
   // Ref to UnifiedGrid for accessing stats functionality
   const gridRef = useRef<UnifiedGridRef>(null);
   const [showStats, setShowStats] = useState(false);
+  const [isView, setIsView] = useState(false);
 
   // Use provided fileId or fall back to active file
   const targetFileId = fileId || activeFile?.id;
+  
+  // Get target file for proper column types and other checks
+  const targetFile = targetFileId 
+    ? useAppStore.getState().files.find(f => f.id === targetFileId)
+    : activeFile;
 
   const {
     results: gridData,
@@ -55,6 +63,26 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
     }
   }, [targetFileId, loadInitialData]);
 
+  // Check if the table is a view when file changes
+  useEffect(() => {
+    const checkIfView = async () => {
+      if (targetFile?.tableName) {
+        try {
+          const objectType = await getObjectType(targetFile.tableName);
+          setIsView(objectType === 'view');
+        } catch (error) {
+          console.error('Error checking object type:', error);
+          setIsView(false);
+        }
+      } else {
+        // Reset to false if no table name (e.g., remote files)
+        setIsView(false);
+      }
+    };
+    
+    checkIfView();
+  }, [targetFile?.tableName, getObjectType]);
+
   // Column sorting functionality
   const { sortedData, sortState, sortData, clearSort } = useColumnSorting(
     gridData || []
@@ -73,10 +101,6 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
     closeContextMenu,
   } = useCellInteraction();
 
-  // Get target file for proper column types
-  const targetFile = targetFileId 
-    ? useAppStore.getState().files.find(f => f.id === targetFileId)
-    : activeFile;
 
   // Cell formatting with skeleton support
   const { formatCellValue: originalFormatCellValue, getCellClass } =
@@ -207,8 +231,8 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Column Analysis Button - only show for local files */}
-          {targetFile && !targetFile.isRemote && (
+          {/* Column Analysis Button - only show for local files that are not views */}
+          {targetFile && !targetFile.isRemote && !isView && (
             <>
               <Button
                 variant="outline"
