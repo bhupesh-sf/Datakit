@@ -12,7 +12,7 @@ const TypeIndicator: React.FC<TypeIndicatorProps> = ({
   size = 12,
   className = ''
 }) => {
-  const normalizedType = type.toLowerCase();
+  const normalizedType = (typeof type === 'string' ? type : String(type || '')).toLowerCase();
   
   // Determine icon and color based on type
   const getTypeIcon = () => {

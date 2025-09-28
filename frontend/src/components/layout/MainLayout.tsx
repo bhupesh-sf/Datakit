@@ -1,20 +1,43 @@
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
+import { Table, BarChart, Database, UserPen, Notebook } from "lucide-react";
 
 import { useAppStore } from "@/store/appStore";
+import TabNavigation, { Tab } from "@/components/navigation/TabNavigation";
+import ActionButtons from "@/components/common/ActionButtons";
 
 import Sidebar, { DataLoadWithDuckDBResult } from "./Sidebar";
 
 interface MainLayoutProps {
   children: React.ReactNode;
   onDataLoad?: (result: DataLoadWithDuckDBResult) => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+  feedbackContext?: string;
+  showTabs?: boolean;
 }
 
 /**
  * Main layout component containing the sidebar and main content area
  */
-const MainLayout: React.FC<MainLayoutProps> = ({ children, onDataLoad }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ 
+  children, 
+  onDataLoad, 
+  activeTab = "preview",
+  onTabChange,
+  feedbackContext,
+  showTabs = true
+}) => {
   const { sidebarCollapsed } = useAppStore();
+
+  // Define available tabs
+  const tabs: Tab[] = [
+    { id: "preview", label: "Preview", icon: <Table size={16} /> },
+    { id: "query", label: "Query", icon: <Database size={16} /> },
+    { id: "scripts", label: "Notebook", icon: <Notebook size={16} /> },
+    { id: "visualization", label: "Visualize", icon: <BarChart size={16} /> },
+    { id: "ai", label: "Assistant", icon: <UserPen size={16} /> }
+  ];
 
 
   // Add keyboard shortcut for toggling sidebar
@@ -53,13 +76,32 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, onDataLoad }) => {
 
       {/* Main content area */}
       <motion.main
-        className="flex-1 h-full overflow-hidden relative z-10"
+        className="flex-1 h-full overflow-hidden relative z-10 flex flex-col"
         initial={sidebarCollapsed ? "sidebarCollapsed" : "sidebarExpanded"}
         animate={sidebarCollapsed ? "sidebarCollapsed" : "sidebarExpanded"}
         variants={contentVariants}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        {children}
+        {/* Header with tabs on left and action buttons on right */}
+        {showTabs && (
+          <div className="relative px-6 pt-6 pb-2">
+            <TabNavigation
+              tabs={tabs}
+              activeTab={activeTab}
+              onChange={onTabChange}
+              className=""
+            />
+            {/* Action Buttons positioned absolutely on the right */}
+            <div className="absolute right-6 top-6">
+              <ActionButtons feedbackContext={feedbackContext} />
+            </div>
+          </div>
+        )}
+        
+        {/* Content area */}
+        <div className="flex-1 overflow-hidden">
+          {children}
+        </div>
       </motion.main>
     </div>
   );

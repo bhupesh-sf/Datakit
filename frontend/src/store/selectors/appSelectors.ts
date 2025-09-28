@@ -111,16 +111,6 @@ export const selectActiveFileInfo = (state: AppState) => {
   return activeFile;
 };
 
-export const selectStatusText = (state: AppState) => {
-  const activeFile = selectActiveFile(state);
-
-  if (!activeFile) {
-    return 'Bring a CSV, PARQUET, XLSX or JSON file to get started.';
-  }
-
-  return '';
-};
-
 // Split view selectors
 export const selectSplitView = (state: AppState) => state.splitView;
 

@@ -3,7 +3,6 @@ import useDirectFileImport from './useDirectFileImport'
 import { useAppStore } from '@/store/appStore'
 import {
   selectActiveFileInfo,
-  selectStatusText,
   selectFileName,
   selectSourceType,
   selectJsonSchema,
@@ -21,7 +20,6 @@ export const useHomePageLogic = () => {
 
   // Use selectors for reactive data access
   const activeFileInfo = useAppStore(selectActiveFileInfo)
-  const statusText = useAppStore(selectStatusText)
   const fileName = useAppStore(selectFileName)
   const sourceType = useAppStore(selectSourceType)
   const jsonSchema = useAppStore(selectJsonSchema)
@@ -54,7 +52,6 @@ export const useHomePageLogic = () => {
   return {
     // Store data
     activeFileInfo,
-    statusText,
     fileName,
     sourceType,
     jsonSchema,

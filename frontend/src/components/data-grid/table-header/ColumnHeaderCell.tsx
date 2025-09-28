@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, MoreVertical } from 'lucide-react';
 import MiniHistogram from './MiniHistogram';
 import TypeIndicator from './TypeIndicator';
 import { ColumnMetrics } from '@/store/inspectorStore';
@@ -17,6 +17,9 @@ interface ColumnHeaderCellProps {
     direction: 'asc' | 'desc' | null;
   };
   onSort?: (columnIndex: number, direction: 'asc' | 'desc') => void;
+  onColumnAction?: (columnName: string, columnType: string, position: { x: number; y: number }) => void;
+  tableName?: string;
+  isView?: boolean;
 }
 
 const ColumnHeaderCell: React.FC<ColumnHeaderCellProps> = ({
@@ -29,6 +32,9 @@ const ColumnHeaderCell: React.FC<ColumnHeaderCellProps> = ({
   shouldLoadStats = false,
   sortState,
   onSort,
+  onColumnAction,
+  tableName,
+  isView = false,
 }) => {
   const [isHovered, setIsHovered] = React.useState(false);
   
@@ -39,6 +45,19 @@ const ColumnHeaderCell: React.FC<ColumnHeaderCellProps> = ({
         ? 'desc' 
         : 'asc';
     onSort(columnIndex, newDirection);
+  };
+
+  const handleColumnAction = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent sort from triggering
+    if (!onColumnAction || isRowNumberColumn || isView) return;
+    
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const position = {
+      x: rect.left,
+      y: rect.bottom + 4
+    };
+    
+    onColumnAction(columnName, columnType, position);
   };
 
   // Format percentage
@@ -80,20 +99,37 @@ const ColumnHeaderCell: React.FC<ColumnHeaderCellProps> = ({
           </span>
         </div>
         
-        {/* Sort indicator */}
+        {/* Action buttons */}
         {!isRowNumberColumn && (
-          <div className={`transition-all duration-200 ${
-            isHovered || isSorted ? 'opacity-90' : 'opacity-30'
-          }`}>
-            {isSorted ? (
-              sortState.direction === 'asc' ? (
-                <ArrowUp size={14} className={`${isSorted ? 'text-white drop-shadow-sm' : 'text-primary'}`} />
+          <div className="flex items-center gap-1">
+            {/* TODO: To be added on next iterations */}
+            {/* Column actions button - only for tables, not views */}
+            {/* {onColumnAction && !isView && (
+              <button
+                onClick={handleColumnAction}
+                className={`p-1 rounded hover:bg-white/10 transition-all duration-200 ${
+                  isHovered ? 'opacity-100' : 'opacity-40'
+                }`}
+                title="AI Column Actions"
+              >
+                <MoreVertical size={14} className="text-white/80 hover:text-primary" />
+              </button>
+            )} */}
+            
+            {/* Sort indicator */}
+            <div className={`transition-all duration-200 ${
+              isHovered || isSorted ? 'opacity-90' : 'opacity-30'
+            }`}>
+              {isSorted ? (
+                sortState.direction === 'asc' ? (
+                  <ArrowUp size={14} className={`${isSorted ? 'text-white drop-shadow-sm' : 'text-primary'}`} />
+                ) : (
+                  <ArrowDown size={14} className={`${isSorted ? 'text-white drop-shadow-sm' : 'text-primary'}`} />
+                )
               ) : (
-                <ArrowDown size={14} className={`${isSorted ? 'text-white drop-shadow-sm' : 'text-primary'}`} />
-              )
-            ) : (
-              <ArrowUpDown size={12} className="text-white/60" />
-            )}
+                <ArrowUpDown size={12} className="text-white/60" />
+              )}
+            </div>
           </div>
         )}
       </div>

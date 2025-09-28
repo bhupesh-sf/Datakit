@@ -46,6 +46,17 @@ interface AIState {
   currentConversation: AIMessage[];
   conversationId: string | null;
   currentMessageIndex: number;
+  
+  // File-aware conversations - maps fileId to conversation
+  fileConversations: Map<string, AIMessage[]>;
+  
+  // File-aware response state - maps fileId to response state
+  fileResponseStates: Map<string, {
+    currentResponse: string | null;
+    streamingResponse: string;
+    currentError: string | null;
+    isProcessing: boolean;
+  }>;
 
   // Multiple table contexts
   multiTableContexts: Array<{
@@ -116,6 +127,11 @@ interface AIState {
   navigateToMessage: (index: number) => void;
   navigateToNextMessage: () => void;
   navigateToPreviousMessage: () => void;
+  
+  // File-aware conversation actions
+  setActiveFileConversation: (fileId: string | null) => void;
+  addMessageToFileConversation: (fileId: string, message: AIMessage) => void;
+  clearFileConversation: (fileId: string) => void;
 
   // Model Actions
   downloadLocalModel: (modelId: string) => Promise<void>;
@@ -324,6 +340,9 @@ export const useAIStore = create<AIState>()(
       currentConversation: [],
       conversationId: null,
       currentMessageIndex: -1,
+      
+      fileConversations: new Map(),
+      fileResponseStates: new Map(),
 
       multiTableContexts: [],
       systemPrompt:
@@ -418,19 +437,115 @@ export const useAIStore = create<AIState>()(
 
       clearQueryHistory: () => set({ queryHistory: [] }),
 
-      setProcessing: (isProcessing) => set({ isProcessing }),
+      setProcessing: (isProcessing) => {
+        set((state) => {
+          // Update global state
+          const updates: any = { isProcessing };
+          
+          // Also update current file's response state if we have an active file
+          if (state.conversationId?.startsWith('file_')) {
+            const fileId = state.conversationId.replace('file_', '');
+            const updatedFileResponseStates = new Map(state.fileResponseStates);
+            const currentFileState = updatedFileResponseStates.get(fileId) || {
+              currentResponse: null,
+              streamingResponse: "",
+              currentError: null,
+              isProcessing: false,
+            };
+            updatedFileResponseStates.set(fileId, {
+              ...currentFileState,
+              isProcessing,
+            });
+            updates.fileResponseStates = updatedFileResponseStates;
+          }
+          
+          return updates;
+        });
+      },
 
       setQueryResults: (results) => set({ queryResults: results }),
 
-      setCurrentResponse: (response) => set({ currentResponse: response }),
+      setCurrentResponse: (response) => {
+        set((state) => {
+          // Update global state
+          const updates: any = { currentResponse: response };
+          
+          // Also update current file's response state if we have an active file
+          if (state.conversationId?.startsWith('file_')) {
+            const fileId = state.conversationId.replace('file_', '');
+            const updatedFileResponseStates = new Map(state.fileResponseStates);
+            const currentFileState = updatedFileResponseStates.get(fileId) || {
+              currentResponse: null,
+              streamingResponse: "",
+              currentError: null,
+              isProcessing: false,
+            };
+            updatedFileResponseStates.set(fileId, {
+              ...currentFileState,
+              currentResponse: response,
+            });
+            updates.fileResponseStates = updatedFileResponseStates;
+          }
+          
+          return updates;
+        });
+      },
 
-      setStreamingResponse: (response) => set({ streamingResponse: response }),
+      setStreamingResponse: (response) => {
+        set((state) => {
+          // Update global state
+          const updates: any = { streamingResponse: response };
+          
+          // Also update current file's response state if we have an active file
+          if (state.conversationId?.startsWith('file_')) {
+            const fileId = state.conversationId.replace('file_', '');
+            const updatedFileResponseStates = new Map(state.fileResponseStates);
+            const currentFileState = updatedFileResponseStates.get(fileId) || {
+              currentResponse: null,
+              streamingResponse: "",
+              currentError: null,
+              isProcessing: false,
+            };
+            updatedFileResponseStates.set(fileId, {
+              ...currentFileState,
+              streamingResponse: response,
+            });
+            updates.fileResponseStates = updatedFileResponseStates;
+          }
+          
+          return updates;
+        });
+      },
 
       setCurrentTokenUsage: (usage) => set({ currentTokenUsage: usage }),
       setVisualizationTokenUsage: (usage) =>
         set({ visualizationTokenUsage: usage }),
 
-      setCurrentError: (error) => set({ currentError: error }),
+      setCurrentError: (error) => {
+        set((state) => {
+          // Update global state
+          const updates: any = { currentError: error };
+          
+          // Also update current file's response state if we have an active file
+          if (state.conversationId?.startsWith('file_')) {
+            const fileId = state.conversationId.replace('file_', '');
+            const updatedFileResponseStates = new Map(state.fileResponseStates);
+            const currentFileState = updatedFileResponseStates.get(fileId) || {
+              currentResponse: null,
+              streamingResponse: "",
+              currentError: null,
+              isProcessing: false,
+            };
+            updatedFileResponseStates.set(fileId, {
+              ...currentFileState,
+              currentError: error,
+            });
+            updates.fileResponseStates = updatedFileResponseStates;
+          }
+          
+          return updates;
+        });
+      },
 
       addTableContext: (context) => {
         set((state) => {
@@ -492,13 +607,25 @@ export const useAIStore = create<AIState>()(
       },
 
       clearConversation: () => {
-        set({
-          currentConversation: [],
-          conversationId: null,
-          currentResponse: null,
-          streamingResponse: '',
-          currentError: null,
-          currentMessageIndex: -1,
+        set((state) => {
+          const updates: any = {
+            currentConversation: [],
+            conversationId: null,
+            currentResponse: null,
+            streamingResponse: '',
+            currentError: null,
+            currentMessageIndex: -1,
+          };
+          
+          // If we're clearing a file conversation, also clear its response state
+          if (state.conversationId?.startsWith('file_')) {
+            const fileId = state.conversationId.replace('file_', '');
+            const updatedFileResponseStates = new Map(state.fileResponseStates);
+            updatedFileResponseStates.delete(fileId);
+            updates.fileResponseStates = updatedFileResponseStates;
+          }
+          
+          return updates;
         });
       },
 
@@ -537,6 +664,107 @@ export const useAIStore = create<AIState>()(
             return { currentMessageIndex: state.currentMessageIndex - 1 };
           }
           return state;
+        });
+      },
+
+      // File-aware conversation actions
+      setActiveFileConversation: (fileId) => {
+        set((state) => {
+          if (!fileId) {
+            return {
+              currentConversation: [],
+              conversationId: null,
+              currentMessageIndex: -1,
+              currentResponse: null,
+              streamingResponse: "",
+              currentError: null,
+              isProcessing: false,
+            };
+          }
+          
+          const fileConversation = state.fileConversations.get(fileId) || [];
+          const fileResponseState = state.fileResponseStates.get(fileId) || {
+            currentResponse: null,
+            streamingResponse: "",
+            currentError: null,
+            isProcessing: false,
+          };
+          
+          return {
+            currentConversation: fileConversation,
+            conversationId: `file_${fileId}`,
+            currentMessageIndex: fileConversation.filter(msg => msg.role === 'user').length,
+            currentResponse: fileResponseState.currentResponse,
+            streamingResponse: fileResponseState.streamingResponse,
+            currentError: fileResponseState.currentError,
+            isProcessing: fileResponseState.isProcessing,
+          };
+        });
+      },
+
+      addMessageToFileConversation: (fileId, message) => {
+        set((state) => {
+          const updatedFileConversations = new Map(state.fileConversations);
+          const currentConversation = updatedFileConversations.get(fileId) || [];
+          const newConversation = [...currentConversation, message];
+          
+          // Keep conversation manageable (last 20 messages = ~10 exchanges)
+          if (newConversation.length > 20) {
+            newConversation.splice(0, newConversation.length - 20);
+          }
+          
+          updatedFileConversations.set(fileId, newConversation);
+          
+          // If this is the active file, also update current conversation
+          const isActiveFile = state.conversationId === `file_${fileId}`;
+          let updates: any = { fileConversations: updatedFileConversations };
+          
+          if (isActiveFile) {
+            let newMessageIndex = state.currentMessageIndex;
+            if (message.role === 'user') {
+              const userMessages = newConversation.filter(msg => msg.role === 'user');
+              newMessageIndex = userMessages.length;
+            }
+            
+            updates = {
+              ...updates,
+              currentConversation: newConversation,
+              currentMessageIndex: newMessageIndex,
+            };
+          }
+          
+          return updates;
+        });
+      },
+
+      clearFileConversation: (fileId) => {
+        set((state) => {
+          const updatedFileConversations = new Map(state.fileConversations);
+          const updatedFileResponseStates = new Map(state.fileResponseStates);
+          
+          updatedFileConversations.delete(fileId);
+          updatedFileResponseStates.delete(fileId);
+          
+          // If this is the active file, also clear current conversation
+          const isActiveFile = state.conversationId === `file_${fileId}`;
+          let updates: any = { 
+            fileConversations: updatedFileConversations,
+            fileResponseStates: updatedFileResponseStates,
+          };
+          
+          if (isActiveFile) {
+            updates = {
+              ...updates,
+              currentConversation: [],
+              currentMessageIndex: -1,
+              currentResponse: null,
+              streamingResponse: '',
+              currentError: null,
+              isProcessing: false,
+            };
+          }
+          
+          return updates;
         });
       },
 

@@ -361,13 +361,15 @@ const VisualizationTab: React.FC = () => {
           </button>
 
           {/* Data source selection */}
-          <DataSourceDropdown
+          {/* // TODO: Do we need this? */}
+          {/*  */}
+          {/* <DataSourceDropdown
             selectedSource={selectedDataSource}
             onSourceChange={(file) => {
               setSelectedDataSource(file);
               setActiveFile(file.fileId);
             }}
-          />
+          /> */}
 
           {/* Chart type selection */}
           <ChartTypeRow />

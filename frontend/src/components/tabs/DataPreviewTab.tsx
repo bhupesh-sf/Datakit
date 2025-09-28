@@ -3,7 +3,6 @@ import React from 'react';
 import { useAppStore } from '@/store/appStore';
 import {
   selectActiveFile,
-  selectFileTabs,
   selectHasFiles,
   selectRemoteURL,
   selectRemoteProvider,
@@ -11,7 +10,6 @@ import {
 } from '@/store/selectors/appSelectors';
 
 import DataPreviewGrid from '@/components/data-grid/DataPreviewGrid';
-import FileTabs from '@/components/data-grid/FileTabs';
 import EmptyDataState from '@/components/data-grid/EmptyDataState';
 import GoogleSheetsMetadata from '@/components/common/GoogleSheetsMetadata';
 import SplitViewContainer from '@/components/layout/SplitViewContainer';
@@ -22,36 +20,12 @@ const DataPreviewTab: React.FC = () => {
   const { setIsRemoteModalOpen, setActiveProviderRemoteModal } = useAppStore();
   const hasFiles = useAppStore(selectHasFiles);
   const activeFile = useAppStore(selectActiveFile);
-  const fileTabs = useAppStore(selectFileTabs);
   const remoteURL = useAppStore(selectRemoteURL);
   const remoteProvider = useAppStore(selectRemoteProvider);
   const googleSheets = useAppStore(selectGoogleSheets);
 
   // Check if active file has split view
   const activeFileSplitView = activeFile?.splitView;
-
-  const {
-    setActiveFile,
-    removeFile,
-    closeAllFiles,
-    closeOthersFiles,
-  } = useAppStore();
-
-  const handleTabClick = (fileId: string) => {
-    setActiveFile(fileId);
-  };
-
-  const handleTabClose = (fileId: string) => {
-    removeFile(fileId);
-  };
-
-  const handleCloseAll = () => {
-    closeAllFiles();
-  };
-
-  const handleCloseOthers = (keepFileId: string) => {
-    closeOthersFiles(keepFileId);
-  };
 
   const handleImportOptionClick = (val: ImportProvider) => {
     setIsRemoteModalOpen(true);
@@ -63,18 +37,9 @@ const DataPreviewTab: React.FC = () => {
     return <EmptyDataState onImportOptionClick={handleImportOptionClick} />;
   }
 
-  // Show file tabs and active file content
+  // Show active file content
   return (
     <div className="h-full flex flex-col">
-      {/* File Tabs */}
-      <FileTabs
-        tabs={fileTabs}
-        onTabClick={handleTabClick}
-        onTabClose={handleTabClose}
-        onCloseAll={handleCloseAll}
-        onCloseOthers={handleCloseOthers}
-      />
-
       {/* Split View or Regular View */}
       {activeFileSplitView?.isActive ? (
         <SplitViewContainer className="flex-1" />

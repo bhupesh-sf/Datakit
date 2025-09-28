@@ -142,7 +142,9 @@ const AppContent = () => {
             <>
               <Home /> 
               <ConsentPopup />
-              <SignupPrompt />
+              {/* // TOOD: To think what we are going to do on having better signup prompt  */}
+              {/*  */}
+              {/* <SignupPrompt /> */}
             </>
           }
         />

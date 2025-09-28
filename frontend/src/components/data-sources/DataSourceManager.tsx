@@ -42,7 +42,7 @@ export const DataSourceManager: React.FC<DataSourceManagerProps> = ({
     },
     {
       type: 'cloud' as SourceType,
-      label: 'Cloud',
+      label: 'Remote',
       icon: Cloud,
       description: 'Remote data',
     },

@@ -1,5 +1,4 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
-import { Search, BarChart3 } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useInspectorStore } from '@/store/inspectorStore';
 import { useDuckDBStore } from '@/store/duckDBStore';
@@ -9,7 +8,6 @@ import { useDataPreview } from '@/hooks/useDataPreview';
 import UnifiedGrid, { UnifiedGridRef } from './UnifiedGrid';
 import InspectorPanel from '@/components/tabs/preview/inspector/InspectorPanel';
 import DataPreviewPagination from './DataPreviewPagination';
-import { Button } from '../ui/Button';
 
 import { useCellFormatting } from './hooks/useCellFormatting';
 import { useColumnSorting } from './hooks/useColumnSorting';
@@ -23,9 +21,9 @@ interface DataPreviewGridProps {
 
 const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = false }) => {
   const activeFile = useAppStore(selectActiveFile);
-  const { setActiveTab, showColumnStats, setShowColumnStats } = useAppStore();
+  const { showColumnStats, setShowColumnStats } = useAppStore();
   const { openPanel, analyzeFile } = useInspectorStore();
-  const { getObjectType } = useDuckDBStore();
+  const { getObjectType, executeQuery } = useDuckDBStore();
   
   // Ref to UnifiedGrid for accessing stats functionality
   const gridRef = useRef<UnifiedGridRef>(null);
@@ -135,13 +133,13 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
     return originalValue;
   };
 
-  // Handle context menu
+  // Handle context menu - removed setActiveTab reference
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
-      setActiveTab('query');
+      // Could add other context menu actions here
     },
-    [setActiveTab]
+    []
   );
 
   const handleInspectorClick = useCallback(() => {
@@ -167,155 +165,84 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
     }
   }, [showColumnStats, setShowColumnStats]);
 
-  const renderHeader = () => {
-    if (!activeFile && !isLoading) return null;
+  // Handle SQL execution for column actions
+  const handleExecuteSQL = useCallback(async (sql: string) => {
+    try {
+      const result = await executeQuery(sql);
+      return result;
+    } catch (error) {
+      console.error('SQL execution failed:', error);
+      throw error;
+    }
+  }, [executeQuery]);
 
-    const columnCount = columns?.length || 0;
-    const displayRows = isCountLoading ? (
-      <div className="flex items-center gap-1">
-        <svg
-          className="w-3 h-3 text-primary animate-spin"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          ></circle>
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        <span className="animate-pulse">Counting...</span>
-      </div>
-    ) : (
-      totalRows.toLocaleString()
-    );
+  // Handle new table creation
+  const handleTableCreate = useCallback(async (tableName: string) => {
+    console.log('New table created:', tableName);
+    
+    try {
+      // First, verify the table exists and get its structure
+      const checkResult = await executeQuery(`SELECT COUNT(*) as count FROM ${tableName} LIMIT 1`);
+      const exists = checkResult && checkResult.numRows > 0;
+      
+      if (exists) {
+        // Get column info for the new table
+        const columnsResult = await executeQuery(`DESCRIBE ${tableName}`);
+        const columnsArray = columnsResult?.toArray() || [];
+        
+        const columnTypes = columnsArray.map((col: any) => ({
+          name: col.column_name,
+          type: col.column_type,
+        }));
+        
+        // Get row count
+        const countResult = await executeQuery(`SELECT COUNT(*) as count FROM ${tableName}`);
+        const rowCount = countResult?.toArray()?.[0]?.count || 0;
+        
+        // Register the table in DuckDB store so it appears in SchemaBrowser
+        const duckDBState = useDuckDBStore.getState();
+        const newTables = new Map(duckDBState.registeredTables);
+        const escapedTableName = `"${tableName}"`; // Escape table name for SQL queries
+        newTables.set(tableName, escapedTableName);
+        
+        // Update DuckDB store with new table
+        useDuckDBStore.setState({ 
+          registeredTables: newTables,
+          lastTableRefresh: Date.now() // Trigger refresh in SchemaBrowser
+        });
+        
+        // Add to app store as a new file
+        const { addFile, setActiveFileId } = useAppStore.getState();
+        
+        const newFileData = {
+          data: [], // Empty data array since we'll load it via preview
+          totalRows: rowCount,
+          columnTypes,
+          tableName,
+          fileName: `${tableName}.sql`, // Virtual filename
+          fileSize: 0,
+          loadTime: Date.now(),
+        };
+        
+        const newFileId = addFile(newFileData);
+        
+        // Switch to the new table
+        setActiveFileId(newFileId);
+        
+        console.log(`Successfully added table ${tableName} to workspace with ${rowCount} rows`);
+      } else {
+        console.error(`Table ${tableName} was not found after creation`);
+      }
+    } catch (error) {
+      console.error('Error adding new table to workspace:', error);
+    }
+  }, [executeQuery]);
 
-    return (
-      <div className="flex justify-between items-center px-4 py-2.5 bg-dark-nav">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            {totalRows !== -1 && (
-              <>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-medium text-white">
-                    {displayRows}
-                  </span>
-                  <span className="text-xs text-white/60">
-                    {isCountLoading ? 'rows' : 'total rows'}
-                  </span>
-                </div>
-                <div className="w-px h-3 bg-white/20" />
-              </>
-            )}
+  // Handle data refresh after column actions
+  const handleDataRefresh = useCallback(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
-            {columnCount > 0 && (
-              <>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-medium text-white/90">
-                    {columnCount}
-                  </span>
-                  <span className="text-xs text-white/60">columns</span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Column Analysis Button - only show for local files that are not views */}
-          {targetFile && !targetFile.isRemote && !isView && (
-            <>
-              <Button
-                variant="outline"
-                onClick={handleColumnAnalysisToggle}
-                className="group relative flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg border border-white/20 hover:border-primary/40 bg-black/20 hover:bg-primary/10 transition-all duration-200"
-              >
-                {gridRef.current?.isLoadingStats ? (
-                  <svg 
-                    className="w-4 h-4 text-primary animate-spin" 
-                    fill="none" 
-                    viewBox="0 0 24 24"
-                  >
-                    <circle 
-                      className="opacity-25" 
-                      cx="12" 
-                      cy="12" 
-                      r="10" 
-                      stroke="currentColor" 
-                      strokeWidth="4"
-                    />
-                    <path 
-                      className="opacity-75" 
-                      fill="currentColor" 
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                ) : (
-                  <BarChart3 className={`h-4 w-4 transition-colors ${
-                    showColumnStats && gridRef.current?.columnStats?.length > 0
-                      ? 'text-green-400'
-                      : 'text-white/60'
-                  }`} />
-                )}
-                <span className="text-white/90 group-hover:text-white font-medium">
-                  {gridRef.current?.columnStats?.length > 0 
-                    ? (showColumnStats ? 'Hide Stats' : 'Show Stats')
-                    : 'Column Stats'
-                  }
-                </span>
-              </Button>
-              <div className="w-px h-3 bg-white/20" />
-            </>
-          )}
-          
-          <Button
-            variant="outline"
-            onClick={handleInspectorClick}
-            data-inspector-trigger
-            className="group relative flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 to-secondary/10 hover:from-primary/20 hover:to-secondary/20 transition-all duration-300 hover:scale-105"
-          >
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 rounded-full blur-sm group-hover:blur-md transition-all duration-300" />
-              <Search className="h-4 w-4 text-primary relative z-10 group-hover:text-primary-foreground transition-colors" />
-            </div>
-            <span className="text-white/90 group-hover:text-white font-medium">Inspector</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-secondary/0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </Button>
-
-          <div className="w-px h-3 bg-white/20" />
-
-          <Button
-            variant="outline"
-            onClick={() => setActiveTab('query')}
-            className="flex items-center gap-1 px-2 py-1 text-xs hover:bg-white/5 rounded transition-all duration-150"
-          >
-            <span>Query</span>
-            <svg
-              className="h-3 w-3"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </Button>
-        </div>
-      </div>
-    );
-  };
 
   // Generate loading skeleton data
   const getLoadingData = () => {
@@ -362,7 +289,7 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
   return (
     <>
       <div className="csv-grid-container relative h-full flex flex-col">
-        {!hideHeader && renderHeader()}
+        {/* Header is now handled by the main layout, so we hide it by default */}
 
         <div className="flex-1 overflow-hidden">
           <div
@@ -403,6 +330,11 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
               onCellContextMenu={handleCellContextMenu}
               onSort={sortData}
               sortState={sortState}
+              tableName={targetFile?.tableName}
+              isView={isView}
+              onExecuteSQL={handleExecuteSQL}
+              onTableCreate={handleTableCreate}
+              onDataRefresh={handleDataRefresh}
             />
           </div>
         </div>
@@ -410,6 +342,7 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
         {/* Pagination footer - show when we have an active file */}
         {activeFile && (
           <DataPreviewPagination
+            columnCount={columns?.length}
             currentPage={currentPage}
             totalPages={totalPages}
             totalRows={totalRows}

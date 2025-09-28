@@ -20,26 +20,23 @@ import {
 } from "lucide-react";
 
 import {
-  useInitialQuery,
+  useFileAwareQueryOrchestrator,
   useDuckDBInitialization,
-  usePendingQuery,
+  usePendingQuery
 } from "@/hooks/query/useQueryInitialization";
 
 import SchemaBrowser from "./SchemaBrowser";
 import MonacoEditor from "./MonacoEditor";
 import QueryHistory from "./QueryHistory";
 import QueryResults from "./query-results/QueryResults";
-import QueryAssistant from "./assistant/QueryAssistant";
+import { DraftBadge } from "@/components/tabs/query/DraftBadge";
 import { Button } from "@/components/ui/Button";
 
-import { useSchemaInfo } from "@/hooks/query/useSchemaInfo";
 import { useResizable } from "@/hooks/useResizable";
 import { useQueryExecution } from "@/hooks/query/useQueryExecution";
 import { useQueryHistory } from "@/hooks/query/useQueryHistory";
 import { useQueryOptimization } from "@/hooks/query/useQueryOptimization";
 import { useWorkspaceUIState } from "./useWorkspaceUIState";
-import { useAppStore } from "@/store/appStore";
-import { selectTableName } from "@/store/selectors/appSelectors";
 
 // Constants for panel dimensions
 const DEFAULT_PANEL_WIDTH = 260;
@@ -57,14 +54,32 @@ const QueryWorkspace: React.FC = () => {
     retry,
   } = useDuckDBInitialization();
 
-  const tableName = useAppStore(selectTableName) || "employees_sample";
-
-  const { query, setQuery, canExecuteQueries, hasUserTables } =
-    useInitialQuery();
-
+  // Get file-aware query state with imperative API
+  const { 
+    query, 
+    setQuery, 
+    hasUnsavedChanges,
+    isDirty,
+    saveCurrentQuery,
+    canExecuteQueries, 
+    hasUserTables, 
+    addToHistory,
+    markAsClean,
+    setQueryAndMarkDirty,
+    activeFile 
+  } = useFileAwareQueryOrchestrator();
+  
+  // Handle pending queries from AI tab with high priority
   usePendingQuery(setQuery);
-
-  const { tableSchema } = useSchemaInfo(tableName);
+  
+  useEffect(() => {
+    return () => {
+      if (hasUnsavedChanges) {
+        console.log('[QueryWorkspace] Saving query before unmount');
+        saveCurrentQuery();
+      }
+    };
+  }, [hasUnsavedChanges, saveCurrentQuery]);
 
   const {
     showSchemaBrowser,
@@ -99,7 +114,13 @@ const QueryWorkspace: React.FC = () => {
     changeRowsPerPage,
     optimizeQuery: applyLimitOptimization,
     dismissWarning,
-  } = useQueryExecution(query, setQuery);
+    clearResults,
+  } = useQueryExecution(query, setQuery, activeFile);
+
+  // Clear results when switching files to prevent showing stale data
+  useEffect(() => {
+    clearResults();
+  }, [activeFile?.id, clearResults]);
 
   const { selectQuery, saveQuery, isLoadingQueries } = useQueryHistory(
     (selectedQuery) => setQuery(selectedQuery)
@@ -208,11 +229,23 @@ const QueryWorkspace: React.FC = () => {
   };
 
   // Memoized event handlers to prevent unnecessary re-renders
-  const handleExecuteQuery = useCallback(() => {
+  const handleExecuteQuery = useCallback(async () => {
     if (canExecuteQueries && query.trim()) {
-      executeQuery();
+      try {
+        await executeQuery();
+        
+        // After successful execution, mark query as clean (not dirty)
+        markAsClean();
+        
+        // Add to history without modifying the current query
+        addToHistory(query, executionTime);
+        
+        console.log('[QueryWorkspace] Query executed successfully, marked as clean');
+      } catch (error) {
+        console.error('[QueryWorkspace] Query execution failed:', error);
+      }
     }
-  }, [canExecuteQueries, query, executeQuery]);
+  }, [canExecuteQueries, query, executeQuery, addToHistory, executionTime, markAsClean]);
 
   const keyboardHandlers = useMemo(
     () => ({
@@ -374,7 +407,7 @@ const QueryWorkspace: React.FC = () => {
             <div className="flex-1 overflow-hidden">
               <MonacoEditor
                 value={query}
-                onChange={setQuery}
+                onChange={setQueryAndMarkDirty}
                 onExecute={keyboardHandlers.executeQuery}
               />
             </div>
@@ -523,10 +556,8 @@ const QueryWorkspace: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-2">
-              <QueryAssistant
-                onQueryGenerated={(sql) => setQuery(sql)}
-                tableSchema={[{ name: tableName, columns: tableSchema }]}
-              />
+              {/* Draft badge - shows when query has been modified */}
+              <DraftBadge isDirty={isDirty} />
 
               <Button
                 variant="ghost"
@@ -577,7 +608,7 @@ const QueryWorkspace: React.FC = () => {
           <div className="flex-1 overflow-hidden">
             <MonacoEditor
               value={query}
-              onChange={setQuery}
+              onChange={setQueryAndMarkDirty}
               onExecute={keyboardHandlers.executeQuery}
             />
           </div>
