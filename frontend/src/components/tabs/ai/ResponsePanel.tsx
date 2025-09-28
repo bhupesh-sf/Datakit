@@ -30,6 +30,8 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
     currentResponse,
     streamingResponse,
     showCostEstimates,
+    conversationId,
+    fileResponseStates,
   } = useAIStore();
   const { extractSQLQueries } = useAIOperations();
   const { getCostBreakdown, hasUsage } = useTokenUsage();
@@ -37,8 +39,21 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Get file-specific response state if available
+  let effectiveCurrentResponse = currentResponse;
+  let effectiveStreamingResponse = streamingResponse;
+  
+  if (conversationId?.startsWith('file_')) {
+    const fileId = conversationId.replace('file_', '');
+    const fileResponseState = fileResponseStates?.get?.(fileId);
+    if (fileResponseState) {
+      effectiveCurrentResponse = fileResponseState.currentResponse;
+      effectiveStreamingResponse = fileResponseState.streamingResponse;
+    }
+  }
+
   // Use streaming response if available, otherwise use current response
-  const displayResponse = streamingResponse || currentResponse;
+  const displayResponse = effectiveStreamingResponse || effectiveCurrentResponse;
 
   // Auto-scroll to bottom when new content arrives
   useEffect(() => {

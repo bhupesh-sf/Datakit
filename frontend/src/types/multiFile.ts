@@ -1,5 +1,6 @@
 import { ColumnType } from "@/types/csv";
 import { DataSourceType } from "@/types/json";
+import { ViewMode } from "@/components/navigation/ViewModeSelector";
 
 /**
  * Interface representing JSON schema information
@@ -88,12 +89,93 @@ export interface DataFile {
   /** When the file was last accessed/viewed */
   lastAccessedAt: number;
   
+  // View mode
+  /** Current view mode for this file */
+  viewMode?: ViewMode;
+  
   // Split view configuration
   /** Split view configuration for this file */
   splitView?: {
     isActive: boolean;
     partnerId: string | null;
     position: 'left' | 'right';
+  };
+  
+  // File-specific workspace states
+  /** SQL workspace state for this file */
+  sqlState?: {
+    query: string;
+    lastExecutedQuery?: string;
+    history: Array<{
+      id: string;
+      query: string;
+      timestamp: number;
+      executionTime?: number;
+    }>;
+    lastExecutedAt?: number;
+  };
+  
+  /** Notebook workspace state for this file */
+  notebookState?: {
+    cells: any[]; // Python notebook cells
+    kernelId?: string;
+    lastExecutedAt?: number;
+  };
+  
+  /** AI workspace state for this file */
+  aiState?: {
+    // Conversation history
+    messages: Array<{
+      role: 'system' | 'user' | 'assistant';
+      content: string;
+    }>;
+    conversationId: string;
+    
+    // Current streaming/response state
+    currentResponse: string | null;
+    streamingResponse: string;
+    isProcessing: boolean;
+    currentError: string | null;
+    
+    // Token usage tracking
+    currentTokenUsage: { input: number; output: number } | null;
+    visualizationTokenUsage: { input: number; output: number } | null;
+    
+    // Query results
+    queryResults: {
+      data: any[] | null;
+      columns: string[] | null;
+      isLoading: boolean;
+      error: string | null;
+      totalRows: number;
+      currentPage: number;
+      totalPages: number;
+      rowsPerPage: number;
+    } | null;
+    
+    // Visualization state
+    activeVisualizationId?: string;
+    visualizations?: Array<{
+      id: string;
+      data: any[];
+      config: any;
+      chartType: string;
+      sql: string;
+      insights?: any[];
+    }>;
+    
+    // Context and metadata
+    tableContext?: {
+      tableName: string;
+      schema: Array<{ name: string; type: string }>;
+      rowCount?: number;
+      description?: string;
+    };
+    
+    // Timestamps
+    createdAt: number;
+    lastMessageAt?: number;
+    lastSavedAt?: number;
   };
 }
 

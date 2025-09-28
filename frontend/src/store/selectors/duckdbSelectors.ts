@@ -99,57 +99,6 @@ export const selectDuckDBStatus = (state: DuckDBState) => {
   }`;
 };
 
-// Memoized cache for default query to prevent infinite loops
-let cachedDefaultQuery = "";
-let lastQueryCacheKey = "";
-
-// For integration with app store - get default query based on available tables
-export const selectDefaultQuery = (state: DuckDBState) => {
-  // Create a cache key based on relevant state
-  const cacheKey = `${state.isInitialized}-${state.registeredTables.size}-${Array.from(state.registeredTables.keys()).sort().join(",")}-${state.hasSampleTable}`;
-  
-  // Return cached result if nothing relevant has changed
-  if (cacheKey === lastQueryCacheKey) {
-    return cachedDefaultQuery;
-  }
-  
-  // Update cache
-  lastQueryCacheKey = cacheKey;
-  
-  if (!state.isInitialized || state.registeredTables.size === 0) {
-    cachedDefaultQuery = `-- DuckDB is initializing or no tables available
--- Import a file to get started`;
-    return cachedDefaultQuery;
-  }
-  
-  const userTables = selectUserTables(state);
-  
-  // If user has uploaded tables, prioritize the first user table
-  if (userTables.length > 0) {
-    const primaryTable = userTables[userTables.length - 1];
-    cachedDefaultQuery = `-- Querying your data
--- Write your SQL query here
-SELECT *
-FROM "${primaryTable}"
-LIMIT 10;`;
-    return cachedDefaultQuery;
-  }
-  
-  // Fall back to sample table
-  if (state.hasSampleTable) {
-    cachedDefaultQuery = `-- Sample employee data is available for testing
--- Import your own files to query your data
-SELECT *
-FROM "${state.sampleTableName}"
-LIMIT 10;`;
-    return cachedDefaultQuery;
-  }
-  
-  cachedDefaultQuery = `-- Import a CSV, JSON, or Parquet file to get started
--- Your SQL queries will appear here`;
-  return cachedDefaultQuery;
-};
-
 // Selector for available tables with metadata
 export const selectTablesWithMetadata = (state: DuckDBState) => {
   return Array.from(state.registeredTables.keys()).map(tableName => ({

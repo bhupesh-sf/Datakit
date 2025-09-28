@@ -17,6 +17,7 @@ interface DataPreviewPaginationProps {
   onRowsPerPageChange: (rowsPerPage: number) => void;
   disabled?: boolean;
   compact?: boolean;
+  columnCount?: number;
 }
 
 const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
@@ -26,6 +27,7 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
   rowsPerPage,
   isCountLoading,
   onPageChange,
+  columnCount,
   onRowsPerPageChange,
   disabled = false,
   compact = false,
@@ -147,14 +149,34 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
             }`}>({compact ? 'large' : 'large file'})</span>
           </span>
         ) : (
-          <span className={`font-medium text-white/90 ${
+          <div className={`flex items-center ${
             compact 
-              ? 'text-xs' 
-              : 'text-sm'
+              ? 'space-x-2' 
+              : 'space-x-3'
           }`}>
-            {startRow.toLocaleString()} - {endRow.toLocaleString()}<span className={compact ? 'hidden md:inline' : 'hidden sm:inline'}> of{" "}
-            <span className="text-white font-semibold">{totalRows.toLocaleString()}</span> rows</span>
-          </span>
+            <span className={`font-medium text-white/90 ${
+              compact 
+                ? 'text-xs' 
+                : 'text-sm'
+            }`}>
+              {startRow.toLocaleString()} - {endRow.toLocaleString()}<span className={compact ? 'hidden md:inline' : 'hidden sm:inline'}> of{" "}
+              <span className="text-white font-semibold">{totalRows.toLocaleString()}</span> rows</span>
+            </span>
+            
+            {columnCount && columnCount > 0 && (
+              <>
+                <span className="text-white/30">•</span>
+                <span className={`flex items-center gap-1 ${
+                  compact 
+                    ? 'text-xs' 
+                    : 'text-sm'
+                }`}>
+                  <span className="font-semibold text-white">{columnCount}</span>
+                  <span className="text-white/60">columns</span>
+                </span>
+              </>
+            )}
+          </div>
         )}
       </div>
 

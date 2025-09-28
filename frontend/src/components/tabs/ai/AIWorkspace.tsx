@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 
 import { useAIStore } from "@/store/aiStore";
+import { useAppStore } from "@/store/appStore";
+import { selectActiveFile } from "@/store/selectors/appSelectors";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useAIVisualization } from "@/hooks/ai/useAIVisualization";
 
@@ -27,9 +29,7 @@ const AIWorkspace: React.FC = () => {
   const [resultsPanelHeight, setResultsPanelHeight] = useState(300);
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<"login" | "signup">(
-    "signup"
-  );
+  const [authModalMode, setAuthModalMode] = useState<"login" | "signup">("signup");
   
   // Visualization state
   const [activeVizId, setActiveVizId] = useState<string | null>(null);
@@ -41,7 +41,8 @@ const AIWorkspace: React.FC = () => {
   // Live chart configuration state
   const [liveConfig, setLiveConfig] = useState<any>(null);
 
-  const { queryResults, activeProvider, setActiveProvider, apiKeys } = useAIStore();
+  const { activeProvider, setActiveProvider, apiKeys, queryResults } = useAIStore();
+  const activeFile = useAppStore(selectActiveFile);
   const { isAuthenticated } = useAuth();
   const { getVisualization, clearVisualization, exportVisualization, generateVisualization, isGenerating } = useAIVisualization();
 
@@ -57,6 +58,11 @@ const AIWorkspace: React.FC = () => {
       setResultsExpanded(true);
     }
   }, [queryResults]);
+
+  // Hide results panel when changing file
+  useEffect(() => {
+      setResultsExpanded(false);
+  }, [activeFile?.id]); 
 
   // Focus prompt on mount
   useEffect(() => {
@@ -143,8 +149,6 @@ const AIWorkspace: React.FC = () => {
     setActiveVizId(vizId);
     setVizExpanded(true);
   };
-
-
 
   const handleVisualizationToggle = () => {
     setVizExpanded(!vizExpanded);
@@ -313,7 +317,6 @@ const AIWorkspace: React.FC = () => {
         </div>
       </div>
 
-
       {/* Bottom: Results Panel - Collapsible */}
       <AnimatePresence>
         {resultsExpanded && (
@@ -363,7 +366,6 @@ const AIWorkspace: React.FC = () => {
         defaultMode={authModalMode}
         onLoginSuccess={() => setActiveProvider('datakit')}
       />
-
 
       {/* Fullscreen Export Modal */}
       {activeViz && (

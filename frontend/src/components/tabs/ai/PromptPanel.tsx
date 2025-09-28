@@ -16,7 +16,7 @@ import { useAIStore } from '@/store/aiStore';
 import { useAIOperations } from '@/hooks/ai/useAIOperations';
 import { useAppStore } from '@/store/appStore';
 import { useDuckDBStore } from '@/store/duckDBStore';
-import { selectTableName } from '@/store/selectors/appSelectors';
+import { selectTableName, selectActiveFile } from '@/store/selectors/appSelectors';
 
 import ModelSelector from './ModelSelector';
 import { Button } from '@/components/ui/Button';
@@ -66,11 +66,13 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(true);
 
   const tableName = useAppStore(selectTableName);
+  const activeFile = useAppStore(selectActiveFile);
   const { registeredTables } = useDuckDBStore();
   const {
     isProcessing,
-    clearQueryHistory,
     clearConversation,
+    clearFileConversation,
+    setQueryResults,
     currentConversation,
     currentError,
     setCurrentError,
@@ -199,8 +201,16 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
   };
 
   const handleRefreshChat = () => {
-    clearQueryHistory();
-    clearConversation();
+    if (activeFile?.id) {
+      // File-aware: clear only the current file's conversation
+      clearFileConversation(activeFile.id);
+    } else {
+      // Fallback: clear global conversation if no active file
+      clearConversation();
+    }
+    
+    // Clear query results and other UI state
+    setQueryResults(null);
     setPrompt('');
     setShowSuggestions(true);
     setCurrentError(null);

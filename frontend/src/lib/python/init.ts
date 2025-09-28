@@ -56,40 +56,42 @@ export async function initializePyodide(): Promise<PyodideInterface> {
     // Install additional packages via micropip (optional)
     try {
       console.log("[Python] Installing additional packages...");
-      await pyodide.runPythonAsync(`
-        import micropip
+      // TODO: Do we need this from very beginning?
+      //
+      // await pyodide.runPythonAsync(`
+      //   import micropip
         
-        async def install_additional_packages():
-            try:
-                # Install basic packages first
-                await micropip.install(['plotly', 'seaborn'])
+      //   async def install_additional_packages():
+      //       try:
+      //           # Install basic packages first
+      //           await micropip.install(['plotly', 'seaborn'])
 
-                # Try to install and setup transformers-js-py
-                try:
-                    await micropip.install('transformers-js-py')
+      //           # Try to install and setup transformers-js-py
+      //           try:
+      //               await micropip.install('transformers-js-py')
                     
-                    # Try to load transformers.js
-                    from transformers_js_py import import_transformers_js
-                    transformers = await import_transformers_js()
+      //               # Try to load transformers.js
+      //               from transformers_js_py import import_transformers_js
+      //               transformers = await import_transformers_js()
                     
-                    # Make it globally available
-                    import builtins
-                    builtins.transformers = transformers
-                    builtins.transformers_available = True
+      //               # Make it globally available
+      //               import builtins
+      //               builtins.transformers = transformers
+      //               builtins.transformers_available = True
                   
-                except Exception as tf_error:
-                    print(f"⚠️ transformers-js-py setup failed: {tf_error}")
-                    print("   Hugging Face models will not be available")
-                    import builtins
-                    builtins.transformers = None
-                    builtins.transformers_available = False
+      //           except Exception as tf_error:
+      //               print(f"⚠️ transformers-js-py setup failed: {tf_error}")
+      //               print("   Hugging Face models will not be available")
+      //               import builtins
+      //               builtins.transformers = None
+      //               builtins.transformers_available = False
                     
-            except Exception as e:
-                print(f"⚠️ Some packages failed to install: {e}")
+      //       except Exception as e:
+      //           print(f"⚠️ Some packages failed to install: {e}")
         
-        # Install packages
-        await install_additional_packages()
-      `);
+      //   # Install packages
+      //   await install_additional_packages()
+      // `);
       console.log("[Python] Additional packages installed successfully");
     } catch (error) {
       console.warn("[Python] Failed to install additional packages (non-critical):", error);

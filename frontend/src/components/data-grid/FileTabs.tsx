@@ -9,6 +9,7 @@ import {
   BarChart3,
   Plus,
   ChevronLeft,
+  ChevronRight,
   MoreHorizontal,
   Database,
   SplitSquareVertical,
@@ -16,12 +17,14 @@ import {
   Braces,
   Package,
   Cloud,
+  Upload,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import GoogleSheetsIcon from '@/components/icons/GoogleSheetsIcon';
 import { FileTab } from '@/types/multiFile';
 import { DataSourceType } from '@/types/json';
 import { useAppStore } from '@/store/appStore';
+import { useFileUpload } from '@/components/data-grid/hooks';
 import DropZonesOverlay from './DropZonesOverlay';
 
 interface FileTabsProps {
@@ -30,7 +33,6 @@ interface FileTabsProps {
   onTabClose: (fileId: string) => void;
   onCloseAll: () => void;
   onCloseOthers: (fileId: string) => void;
-  onNewFile?: () => void;
   className?: string;
   maxVisibleTabs?: number;
 }
@@ -132,8 +134,8 @@ const FileTabItem: React.FC<{
       }}
       className={cn(
         'group relative flex items-center h-11 px-3 py-2 border-b-2 transition-all duration-200 cursor-pointer select-none',
-        'hover:bg-white/5 min-w-0 rounded-t-lg mx-0.5',
-        isOverflowing ? 'max-w-32' : 'max-w-64',
+        'hover:bg-white/5 rounded-t-lg mx-0.5',
+        isOverflowing ? 'min-w-fit' : 'min-w-0 max-w-64',
         getTabStyles()
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -157,8 +159,8 @@ const FileTabItem: React.FC<{
         onDragEnd();
       }}
     >
-      {/* File Icon with enhanced styling */}
-      {getFileIcon(tab.sourceType, tab.remoteProvider, tab.isActive)}
+      {/* File Icon with enhanced styling - hide when overflowing */}
+      {!isOverflowing && getFileIcon(tab.sourceType, tab.remoteProvider, tab.isActive)}
 
       {/* File Name with better typography */}
       <div className="flex flex-col flex-1 min-w-0">
@@ -459,11 +461,11 @@ const FileTabs: React.FC<FileTabsProps> = ({
   onTabClose,
   onCloseAll,
   onCloseOthers,
-  onNewFile,
   className = '',
   maxVisibleTabs = 8,
 }) => {
   const { setSplitView } = useAppStore();
+  const { fileInputRef, handleButtonClick, handleFileSelect, isProcessing } = useFileUpload();
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     isOpen: false,
     position: { x: 0, y: 0 },
@@ -499,9 +501,12 @@ const FileTabs: React.FC<FileTabsProps> = ({
     return grouped;
   }, [tabs]);
 
-  // Split tabs into visible and hidden
-  const visibleTabs = groupedTabs.slice(0, maxVisibleTabs);
-  const hiddenTabs = groupedTabs.slice(maxVisibleTabs);
+  // Determine if we should show compact mode (many tabs)
+  const isCompactMode = groupedTabs.length > 6; // Trigger compact mode with more than 6 tabs
+  
+  // In compact mode, show all tabs scrollable, otherwise use the old system
+  const visibleTabs = isCompactMode ? groupedTabs : groupedTabs.slice(0, maxVisibleTabs);
+  const hiddenTabs = isCompactMode ? [] : groupedTabs.slice(maxVisibleTabs);
 
   const handleContextMenu = (e: React.MouseEvent, fileId: string) => {
     e.preventDefault();
@@ -579,13 +584,13 @@ const FileTabs: React.FC<FileTabsProps> = ({
           className
         )}
       >
-        {/* Scroll left button */}
-        {scrollPosition > 0 && (
+        {/* Scroll left button - only show in compact mode */}
+        {isCompactMode && scrollPosition > 0 && (
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             onClick={() => handleScroll('left')}
-            className="p-2 text-white/60 hover:text-white transition-colors"
+            className="p-2 text-white/60 hover:text-white transition-colors flex-shrink-0"
           >
             <ChevronLeft className="h-4 w-4" />
           </motion.button>
@@ -594,8 +599,16 @@ const FileTabs: React.FC<FileTabsProps> = ({
         {/* Tabs container */}
         <div
           ref={scrollRef}
-          className="flex items-center overflow-x-auto scrollbar-none flex-1"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          className={cn(
+            "flex items-center overflow-x-auto scrollbar-none flex-1",
+            isCompactMode && "scroll-smooth"
+          )}
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            // Add some padding for better scroll experience
+            paddingRight: isCompactMode ? '8px' : '0'
+          }}
         >
           <AnimatePresence mode="popLayout">
             {visibleTabs.map((tab, index) => {
@@ -615,34 +628,81 @@ const FileTabs: React.FC<FileTabsProps> = ({
                   onContextMenu={handleContextMenu}
                   onDragStart={handleDragStart}
                   onDragEnd={handleDragEnd}
-                  isOverflowing={hiddenTabs.length > 0}
+                  isOverflowing={isCompactMode}
                 />
               );
             })}
           </AnimatePresence>
+          
+          {/* Import file button - positioned right after the last tab */}
+          <motion.button
+            onClick={handleButtonClick}
+            disabled={isProcessing}
+            whileHover={{ 
+              scale: 1.02,
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              borderColor: 'rgba(255, 255, 255, 0.25)'
+            }}
+            whileTap={{ scale: 0.98 }}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className={cn(
+              "group relative flex items-center gap-2 ml-2 text-xs rounded-lg bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm border border-white/15 shadow-lg transition-all duration-300 cursor-pointer disabled:opacity-50 hover:shadow-xl flex-shrink-0",
+              isCompactMode ? "px-2.5 py-1.5" : "px-3 py-1.5"
+            )}
+            type="button"
+          >
+            {/* Background glow effect */}
+            <motion.div
+              className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              layoutId="importButtonGlow"
+            />
+            
+            <motion.div
+              animate={isProcessing ? { rotate: 360 } : { rotate: 0 }}
+              transition={{ duration: 0.8, repeat: isProcessing ? Infinity : 0, ease: "linear" }}
+            >
+              <Plus className="h-4 w-4 text-white/70 group-hover:text-white relative z-10 transition-colors duration-200" />
+            </motion.div>
+            {!isCompactMode && (
+              <span className="text-white/70 group-hover:text-white relative z-10 font-medium transition-colors duration-200">
+                {isProcessing ? 'Loading...' : 'Import'}
+              </span>
+            )}
+          </motion.button>
+          
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept=".csv,.json,.xlsx,.xls,.parquet,.duckdb"
+            onChange={handleFileSelect}
+            disabled={isProcessing}
+          />
         </div>
 
-        {/* Overflow menu */}
-        {hiddenTabs.length > 0 && (
+        {/* Scroll right button - only show in compact mode */}
+        {isCompactMode && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => handleScroll('right')}
+            className="p-2 text-white/60 hover:text-white transition-colors flex-shrink-0"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </motion.button>
+        )}
+
+        {/* Overflow menu - only show when not in compact mode */}
+        {!isCompactMode && hiddenTabs.length > 0 && (
           <OverflowMenu
             hiddenTabs={hiddenTabs}
             onTabClick={onTabClick}
             isOpen={overflowMenuOpen}
             onToggle={() => setOverflowMenuOpen(!overflowMenuOpen)}
           />
-        )}
-
-        {/* New file button */}
-        {onNewFile && (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onNewFile}
-            className="ml-2 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            title="Import new file"
-          >
-            <Plus className="h-4 w-4" />
-          </motion.button>
         )}
       </div>
 

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useAppStore } from "@/store/appStore";
+import React, { useState } from "react";
 import { SavedQuery } from "@/store/appStore";
+import { useQueryHistory } from "@/hooks/query/useQueryHistory";
 import {
   Clock,
   Star,
@@ -26,12 +26,7 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
     savedQueries,
     saveQuery,
     deleteQuery,
-    loadQueriesFromStorage,
-  } = useAppStore();
-
-  useEffect(() => {
-    loadQueriesFromStorage();
-  }, [loadQueriesFromStorage]);
+  } = useQueryHistory(onSelectQuery);
 
   const [activeTab, setActiveTab] = useState<"recent" | "saved">("recent");
   const [copiedId, setCopiedId] = useState<string | null>(null);

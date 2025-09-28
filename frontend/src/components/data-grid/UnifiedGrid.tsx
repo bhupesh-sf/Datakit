@@ -4,6 +4,8 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { GridProps } from '@/types/grid';
 import { useColumnStats } from '@/hooks/useColumnStats';
 import ColumnHeaderCell from './table-header/ColumnHeaderCell';
+import SimpleColumnActionPanel from './column-actions/SimpleColumnActionPanel';
+import { columnActionService } from '@/lib/columnActions/columnActionService';
 
 interface UnifiedGridProps extends GridProps {
   fileId?: string;
@@ -31,6 +33,11 @@ interface UnifiedGridProps extends GridProps {
     columnIndex: number | null;
     direction: 'asc' | 'desc' | null;
   };
+  tableName?: string;
+  isView?: boolean;
+  onExecuteSQL?: (sql: string) => Promise<any>;
+  onTableCreate?: (tableName: string) => void;
+  onDataRefresh?: () => void;
 }
 
 export interface UnifiedGridRef {
@@ -65,6 +72,11 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
   onCellContextMenu,
   onSort,
   sortState,
+  tableName,
+  isView = false,
+  onExecuteSQL,
+  onTableCreate,
+  onDataRefresh,
 }, ref) => {
   // Get column stats with manual trigger
   const { columnStats, isLoading: isLoadingStats, shouldLoadStats, triggerAnalysis } = useColumnStats({
@@ -126,6 +138,14 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
   }, []);
   
   const [scrollLeft, setScrollLeft] = useState(0);
+  
+  // Column action state
+  const [columnActionPanel, setColumnActionPanel] = useState<{
+    isOpen: boolean;
+    columnName: string;
+    columnType: string;
+    position: { x: number; y: number };
+  } | null>(null);
   
   // Calculate total width for consistency
   const totalWidth = useMemo(() => {
@@ -223,6 +243,124 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
   const getColumnStats = useCallback((columnName: string) => {
     return columnStats.find(stat => stat.name === columnName);
   }, [columnStats]);
+
+  // Column action handlers
+  const handleColumnAction = useCallback((columnName: string, columnType: string, position: { x: number; y: number }) => {
+    setColumnActionPanel({
+      isOpen: true,
+      columnName,
+      columnType,
+      position
+    });
+  }, []);
+
+  const handleAIPromptExecute = useCallback(async (prompt: string) => {
+    if (!columnActionPanel || !tableName || !onExecuteSQL) {
+      console.error('Missing required parameters for AI action');
+      return;
+    }
+    
+    try {
+      console.log('Executing AI action:', {
+        prompt,
+        columnName: columnActionPanel.columnName,
+        columnType: columnActionPanel.columnType,
+        tableName
+      });
+
+      // Create a custom AI action
+      const customAction = {
+        id: 'custom-ai',
+        label: 'Custom AI Request',
+        description: 'AI-powered custom operation',
+        icon: 'Sparkles',
+        category: 'generate' as const,
+        strategy: 'new-table' as const,
+        requiresInput: true,
+        aiPromptTemplate: 'Generate SQL for DuckDB to work with column {columnName} of type {columnType} in table {tableName}. User request: {customPrompt}. Return only valid DuckDB SQL.'
+      };
+
+      // Build schema from headers and columnTypes for context
+      const schema = headers
+        .slice(1) // Skip the row number column
+        .map((header, index) => {
+          const colType = columnTypes[index];
+          const type = typeof colType === 'object' && colType?.type ? colType.type : 
+                       typeof colType === 'string' ? colType : 'VARCHAR';
+          return {
+            name: header,
+            type: type
+          };
+        });
+
+      // Create a detailed schema string for the prompt
+      const schemaString = schema.map(col => `${col.name} (${col.type})`).join(', ');
+      
+      console.log('Column action schema info:', {
+        schema,
+        schemaString,
+        columnTypes,
+        headers: headers.slice(1)
+      });
+
+      const result = await columnActionService.generateSQL({
+        action: customAction,
+        columnName: columnActionPanel.columnName,
+        columnType: columnActionPanel.columnType,
+        tableName,
+        customPrompt: prompt,
+        parameters: {
+          allColumns: headers.slice(1).join(', '), // Pass all column names
+          schema: schemaString, // Pass schema in readable format
+          fullSchema: JSON.stringify(schema) // Pass full schema as JSON
+        }
+      }, onExecuteSQL); // Pass executeQuery for version tracking
+      
+      console.log('Generated SQL:', result.sql);
+      
+      // Execute the action with metadata tracking
+      const executionResult = await columnActionService.executeAction(
+        result,
+        onExecuteSQL,
+        (message) => console.log(message),
+        {
+          prompt,
+          columnName: columnActionPanel.columnName,
+          columnType: columnActionPanel.columnType,
+          parentTable: tableName
+        }
+      );
+      
+      if (executionResult.success) {
+        console.log('Transformation successful:', executionResult.message);
+        
+        // Handle new table creation
+        if (executionResult.newTableName) {
+          onTableCreate?.(executionResult.newTableName);
+          // Show success message (could use a toast here)
+          alert(`Success! Created new table: ${executionResult.newTableName}`);
+        }
+        
+        // Refresh data
+        onDataRefresh?.();
+        
+        // Close panel
+        setColumnActionPanel(null);
+      } else {
+        throw new Error(executionResult.message);
+      }
+      
+    } catch (error: any) {
+      console.error('AI action failed:', error);
+      
+      // Check if it's an authentication error
+      if (error?.response?.status === 401 || error?.message?.includes('authenticate')) {
+        alert('Please sign in to use AI-powered column actions with Datakit Smart.');
+      } else {
+        alert(`AI action failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+  }, [columnActionPanel, tableName, onExecuteSQL, onTableCreate, onDataRefresh]);
 
   // Cell renderer for data cells only (no header)
   const Cell = useCallback(({ columnIndex, rowIndex, style }: any) => {
@@ -346,7 +484,7 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
               flexShrink: 0,
               background: 'var(--dark-nav)'
             }}
-            className="grid-cell csv-grid-header csv-grid-row-number border-r border-white/15 relative"
+            className="grid-cell"
           />
           
           {/* Column headers */}
@@ -370,6 +508,9 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
                   shouldLoadStats={showStats}
                   sortState={sortState}
                   onSort={onSort}
+                  onColumnAction={tableName && !isView ? handleColumnAction : undefined}
+                  tableName={tableName}
+                  isView={isView}
                 />
                 {/* Resize handle */}
                 {columnIndex < columnCount - 1 && (
@@ -417,6 +558,19 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
           )}
         </AutoSizer>
       </div>
+      
+      {/* Column Action Panel */}
+      {columnActionPanel && (
+        <SimpleColumnActionPanel
+          isOpen={columnActionPanel.isOpen}
+          onClose={() => setColumnActionPanel(null)}
+          columnName={columnActionPanel.columnName}
+          columnType={columnActionPanel.columnType}
+          tableName={tableName || 'unknown'}
+          position={columnActionPanel.position}
+          onExecute={handleAIPromptExecute}
+        />
+      )}
     </div>
   );
 });

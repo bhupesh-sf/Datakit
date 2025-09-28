@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useAIStore } from "@/store/aiStore";
 import { useDuckDBStore } from "@/store/duckDBStore";
 import { useAppStore } from "@/store/appStore";
-import { selectTableName, selectActiveFileInfo } from "@/store/selectors/appSelectors";
+import { selectTableName, selectActiveFileInfo, selectActiveFile } from "@/store/selectors/appSelectors";
 import { useAIQueryExecution } from "./useAIQueryExecution";
 import { aiService } from "@/lib/ai/aiService";
 import { DataKitProvider } from "@/lib/ai/providers/datakit";
@@ -30,13 +30,25 @@ export const useAIOperations = () => {
     setVisualizationTokenUsage,
     setCurrentError,
     multiTableContexts,
+    // File-aware conversation methods
+    setActiveFileConversation,
+    addMessageToFileConversation,
   } = useAIStore();
 
   const { executeQuery, executePaginatedQuery } = useDuckDBStore();
   const { executeAIGeneratedSQL, previewSQL, validateSQL } = useAIQueryExecution();
   const tableName = useAppStore(selectTableName);
   const activeFileInfo = useAppStore(selectActiveFileInfo);
+  const activeFile = useAppStore(selectActiveFile);
   const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (activeFile?.id) {
+      setActiveFileConversation(activeFile.id);
+    } else {
+      setActiveFileConversation(null);
+    }
+  }, [activeFile?.id, setActiveFileConversation]);
 
   // Initialize AI service with API keys and DataKit provider
   useEffect(() => {
@@ -303,12 +315,21 @@ export const useAIOperations = () => {
             // Stream completed
             const executionTime = Date.now() - startTime;
             
-            // Add messages to conversation
-            addMessageToConversation(userMessage);
-            addMessageToConversation({
-              role: 'assistant',
-              content: fullResponse,
-            });
+            // Add messages to file-aware conversation if we have an active file
+            if (activeFile?.id) {
+              addMessageToFileConversation(activeFile.id, userMessage);
+              addMessageToFileConversation(activeFile.id, {
+                role: 'assistant',
+                content: fullResponse,
+              });
+            } else {
+              // Fallback to global conversation
+              addMessageToConversation(userMessage);
+              addMessageToConversation({
+                role: 'assistant',
+                content: fullResponse,
+              });
+            }
             
             const query: AIQuery = {
               id: Date.now().toString(),
@@ -386,8 +407,10 @@ export const useAIOperations = () => {
   }, [
     activeProvider,
     activeModel,
+    activeFile,
     currentConversation,
     addMessageToConversation,
+    addMessageToFileConversation,
     getMultiTableContext,
     addQueryToHistory,
     setProcessing,
@@ -397,7 +420,6 @@ export const useAIOperations = () => {
     setCurrentError,
     autoExecuteSQL,
     extractSQLQueries,
-    executePaginatedQuery,
   ]);
 
   const executeGeneratedSQL = useCallback(async (sql: string, switchToQueryTab = true) => {

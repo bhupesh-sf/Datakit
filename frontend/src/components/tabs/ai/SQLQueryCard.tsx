@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Play, Copy, Check, Code, PenSquare, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-sql';
 
@@ -37,8 +36,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const navigate = useNavigate();
-  const { setActiveTab, setPendingQuery } = useAppStore();
+  const { setPendingQuery, changeViewMode } = useAppStore();
   const { isAuthenticated } = useAuth();
   const { handleRunSQL } = useAIOperations();
 
@@ -60,9 +58,14 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
   };
 
   const handleEdit = () => {
+    // Set the pending query first
     setPendingQuery(query);
-    setActiveTab('query');
-    navigate('/');
+    
+    // Small delay to ensure pending query is set before view change
+    setTimeout(() => {
+      console.log('[SQLQueryCard] Switching to query mode using store function');
+      changeViewMode('query');
+    }, 50);
   };
 
   const handleVisualize = async () => {

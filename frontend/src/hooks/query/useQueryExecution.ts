@@ -28,6 +28,7 @@ interface QueryExecutionResult {
   changeRowsPerPage: (newRowsPerPage: number) => Promise<void>;
   optimizeQuery: () => void;
   dismissWarning: () => void;
+  clearResults: () => void;
 }
 
 interface UseQueryExecutionOptions {
@@ -40,12 +41,14 @@ interface UseQueryExecutionOptions {
  * 
  * @param query - The SQL query to execute
  * @param setQuery - Function to update the query
+ * @param activeFile - The currently active file for updating lastExecutedQuery
  * @param options - Configuration options
  * @returns State and functions for query execution and navigation
  */
 export const useQueryExecution = (
   query: string,
   setQuery: (query: string) => void,
+  activeFile: any = null,
   options: UseQueryExecutionOptions = {}
 ): QueryExecutionResult => {
   const { 
@@ -131,22 +134,63 @@ export const useQueryExecution = (
       
       console.log(`[useQueryExecution] Executing query (page: 1, size: ${rowsPerPage})`);
       const paginatedResult = await executePaginatedQuery(query, 1, rowsPerPage);
-      
+    
       if (paginatedResult) {
-        console.log(`[useQueryExecution] Query returned ${paginatedResult.totalRows} total rows`);
-        console.log(`[useQueryExecution] Current page has ${paginatedResult.data.length} rows`);
-        
-        // Set pagination metadata
-        setTotalRows(paginatedResult.totalRows);
-        setTotalPages(paginatedResult.totalPages);
-        
-        // Set data
-        setResults(paginatedResult.data);
-        setColumns(paginatedResult.columns);
-        setExecutionTime(paginatedResult.queryTime);
-        
-        // Add to recent queries
-        addRecentQuery(query);
+        try {
+          console.log(`[useQueryExecution] Query returned ${paginatedResult.totalRows} total rows`);
+          console.log(`[useQueryExecution] Current page has ${paginatedResult.data.length} rows`);
+          
+          // Set pagination metadata
+          setTotalRows(paginatedResult.totalRows);
+          setTotalPages(paginatedResult.totalPages);
+          
+          // Set data
+          setResults(paginatedResult.data);
+          setColumns(paginatedResult.columns);
+          setExecutionTime(paginatedResult.queryTime);
+          
+          // Add to recent queries
+          addRecentQuery(query);
+          
+          console.log('[useQueryExecution] About to update lastExecutedQuery for draft tracking');
+          console.log('[useQueryExecution] Received activeFile:', !!activeFile, activeFile?.id, activeFile?.fileName);
+          
+          // Update the file's lastExecutedQuery for draft tracking
+          const { updateFile } = useAppStore.getState();
+          if (activeFile) {
+            const currentSqlState = activeFile.sqlState || {
+              query: '',
+              history: [],
+              lastExecutedAt: undefined,
+            };
+            
+            console.log('[useQueryExecution] About to update lastExecutedQuery:', {
+              query: query,
+              queryLength: query.length,
+              queryPreview: query.substring(0, 100),
+              fileId: activeFile.id
+            });
+            
+            updateFile(activeFile.id, {
+              sqlState: {
+                ...currentSqlState,
+                query: query,  // Update the main query field to match what was executed
+                lastExecutedQuery: query,
+                lastExecutedAt: Date.now(),
+              },
+            });
+            
+            // Sync the current query state with what was executed
+            // This ensures the "current" query IS the executed query
+            setQuery(query);
+            
+            console.log('[useQueryExecution] Successfully updated lastExecutedQuery and synced current query');
+          } else {
+            console.log('[useQueryExecution] No activeFile found for updating lastExecutedQuery');
+          }
+        } catch (error) {
+          console.error('[useQueryExecution] Error in success block:', error);
+        }
       } else {
         // Reset state on empty result
         setResults([]);
@@ -246,6 +290,20 @@ export const useQueryExecution = (
   const dismissWarning = useCallback(() => {
     setShowLargeDataWarning(false);
   }, []);
+
+  /**
+   * Clear all query results (useful when switching files)
+   */
+  const clearResults = useCallback(() => {
+    setResults(null);
+    setColumns(null);
+    setError(null);
+    setExecutionTime(null);
+    setTotalRows(0);
+    setCurrentPage(1);
+    setTotalPages(0);
+    setShowLargeDataWarning(false);
+  }, []);
   
   // Update warning if result set is particularly large
   useEffect(() => {
@@ -279,6 +337,7 @@ export const useQueryExecution = (
     changePage,
     changeRowsPerPage,
     optimizeQuery,
-    dismissWarning
+    dismissWarning,
+    clearResults
   };
 };

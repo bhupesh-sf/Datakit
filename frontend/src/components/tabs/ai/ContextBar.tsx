@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database, Zap, Settings, Plus, X } from 'lucide-react';
 
 import { useAIStore } from '@/store/aiStore';
+import { useAppStore } from '@/store/appStore';
+import { useDuckDBStore } from '@/store/duckDBStore';
+import { selectActiveFile, selectTableName } from '@/store/selectors/appSelectors';
 
 import { useAuth } from '@/hooks/auth/useAuth';
 
@@ -53,7 +56,7 @@ const MultiTableContextDisplay: React.FC<{
           </div>
         </>
       ) : (
-        <span className="text-xs text-white/50">No tables in context</span>
+        <span className="text-sm text-white/50">No tables in context</span>
       )}
 
       <button
@@ -68,11 +71,41 @@ const MultiTableContextDisplay: React.FC<{
 };
 
 const ContextBar: React.FC<ContextBarProps> = ({ onOpenApiKeyModal }) => {
-  const { autoExecuteSQL, updateSettings } = useAIStore();
-
+  const { autoExecuteSQL, updateSettings, addTableContext, clearTableContexts } = useAIStore();
+  const activeFile = useAppStore(selectActiveFile);
+  const activeTableName = useAppStore(selectTableName);
+  const { getTableSchema } = useDuckDBStore();
   const { isAuthenticated } = useAuth();
 
   const [showMultiTableSelector, setShowMultiTableSelector] = useState(false);
+
+  // Each file has its table automatically selected
+  // When switching files, clear previous and add only the current file's table
+  useEffect(() => {
+    const setActiveTableContext = async () => {
+      if (!activeTableName || !activeFile) return;
+      
+      // Clear all previous table contexts
+      clearTableContexts();
+      
+      // Add only the active file's table
+      try {
+        const schema = await getTableSchema(activeTableName);
+        if (schema) {
+          addTableContext({
+            tableName: activeTableName,
+            schema,
+            rowCount: activeFile.rowCount,
+            description: activeFile.fileName || activeTableName,
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to set table ${activeTableName} in context:`, error);
+      }
+    };
+    
+    setActiveTableContext();
+  }, [activeTableName, activeFile, getTableSchema, addTableContext, clearTableContexts]);
 
   return (
     <>

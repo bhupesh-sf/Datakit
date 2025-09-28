@@ -14,16 +14,17 @@ import {
   ChevronUp,
   Check,
   Clock,
-  AlertCircle,
-  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 
 import { usePythonStore } from '@/store/pythonStore';
 import { useDuckDBStore } from '@/store/duckDBStore';
+import { useAppStore } from '@/store/appStore';
 import { useResizablePanels } from '@/hooks/useResizablePanels';
 import { useWorkspaceShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { usePanelNavigation } from '@/hooks/notebooks/usePanelNavigation';
 import { useNotebooksActions } from '@/hooks/notebooks/useNotebooksActions';
+import { useFileAwareNotebook } from '@/hooks/notebooks/useFileAwareNotebook';
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { SaveDialog } from '@/components/ui/SaveDialog';
@@ -74,11 +75,20 @@ const NotebooksWorkspace: React.FC = () => {
     toggleTemplates,
     createNewScript,
     toggleVariableInspector,
-    clearAllCells,
-    clearPythonNamespace,
+    // clearAllCells,
+    // clearPythonNamespace,
   } = usePythonStore();
 
   const { isInitialized: isDuckDBInitialized } = useDuckDBStore();
+  const { pendingNotebookCode, setPendingNotebookCode } = useAppStore();
+  
+  // Use file-aware notebook management
+  const {
+    initializeFileNotebook,
+    updateLastExecutedAt,
+    activeFile,
+  } = useFileAwareNotebook();
+  
 
   // UI State
   const [showSchemaBrowser, setShowSchemaBrowser] = useState(false);
@@ -124,7 +134,6 @@ const NotebooksWorkspace: React.FC = () => {
   const {
     showSaveDialog,
     showSaveConfirm,
-    hasUnsavedChanges,
     saveStatus,
     handleSaveScript,
     handleCreateNewNotebook,
@@ -151,20 +160,47 @@ const NotebooksWorkspace: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Initialize with welcome notebook when app opens
+  // Initialize notebook for the active file when first opened
   useEffect(() => {
-    if (cells.length === 0 && !currentScript) {
-      // Create a proper initial notebook instead of just setting cells
+    if (activeFile && (!activeFile.notebookState || !activeFile.notebookState.cells)) {
+      // File exists but no notebook state - initialize with file-specific template
+      console.log('[NotebooksWorkspace] Initializing file-specific notebook for:', activeFile.fileName);
+      initializeFileNotebook();
+    } else if (!activeFile && cells.length === 0 && !currentScript) {
+      // No file active and no existing notebook - create default notebook
+      console.log('[NotebooksWorkspace] Creating default notebook');
       createNewScript('Untitled Notebook');
-      // Then add welcome cells after the script is created
       setTimeout(() => {
         const welcomeCells = createWelcomeCells();
         usePythonStore.setState({ cells: welcomeCells });
-        // Update the last saved state to include the welcome cells
         usePythonStore.getState().updateLastSavedState();
       }, 50);
     }
-  }, [createNewScript, cells.length, currentScript]);
+  }, [activeFile?.id, activeFile?.notebookState?.cells, initializeFileNotebook, createNewScript, cells.length, currentScript]);
+
+  // Handle pending notebook code from view mode toggle
+  useEffect(() => {
+    if (pendingNotebookCode && pyodide.isInitialized) {
+      // Create a new code cell with the pending code
+      const cellId = createCell('code');
+      if (cellId) {
+        // Update the cell with the pending code
+        usePythonStore.setState((state) => ({
+          cells: state.cells.map((cell) =>
+            cell.id === cellId
+              ? { ...cell, source: pendingNotebookCode }
+              : cell
+          ),
+        }));
+        
+        // Clear the pending code
+        setPendingNotebookCode(null);
+        
+        // Set this cell as active
+        setActiveCellId(cellId);
+      }
+    }
+  }, [pendingNotebookCode, pyodide.isInitialized, createCell, setPendingNotebookCode, setActiveCellId]);
 
   // Use panel navigation hook for exclusive panel behavior
   const { handlePanelToggle } = usePanelNavigation({
@@ -243,8 +279,16 @@ const NotebooksWorkspace: React.FC = () => {
 
   // Use workspace shortcuts hook
   useWorkspaceShortcuts({
-    onExecuteCell: () => activeCellId && executeCell(activeCellId),
-    onExecuteAll: executeAllCells,
+    onExecuteCell: async () => {
+      if (activeCellId) {
+        await executeCell(activeCellId);
+        updateLastExecutedAt();
+      }
+    },
+    onExecuteAll: async () => {
+      await executeAllCells();
+      updateLastExecutedAt();
+    },
     onSave: handleSaveScript,
     onEscape: () => fullScreenMode !== 'none' && setFullScreenMode('none'),
     canExecuteCell: !!activeCellId,
@@ -275,14 +319,14 @@ const NotebooksWorkspace: React.FC = () => {
   };
 
   // Restart notebook function
-  const handleRestartNotebook = async () => {
-    if (confirm('Are you sure you want to restart the notebook? This will clear all variables and outputs.')) {
-      // Clear all cell outputs
-      clearAllCells();
-      // Clear Python namespace (variables)
-      await clearPythonNamespace();
-    }
-  };
+  // const handleRestartNotebook = async () => {
+  //   if (confirm('Are you sure you want to restart the notebook? This will clear all variables and outputs.')) {
+  //     // Clear all cell outputs
+  //     clearAllCells();
+  //     // Clear Python namespace (variables)
+  //     await clearPythonNamespace();
+  //   }
+  // };
 
   // Show initialization state
   if (!pyodide.isInitialized) {
@@ -323,7 +367,7 @@ const NotebooksWorkspace: React.FC = () => {
           <div className="text-sm text-white/60">
             <div className="flex items-center justify-center gap-2">
               <Package className="w-4 h-4 text-secondary" />
-              <span>Loading pandas, plotly, matplotlib, transformers...</span>
+              <span>Loading pandas, numpy...</span>
             </div>
           </div>
         </div>

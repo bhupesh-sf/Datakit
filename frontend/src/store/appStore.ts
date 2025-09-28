@@ -9,7 +9,7 @@ import {
 import { DataSourceType } from "@/types/json";
 import { DataFile, DataLoadWithDuckDBResult } from "@/types/multiFile";
 import { ImportProvider } from "@/types/remoteImport";
-import { DucklakeCatalog } from "@/lib/duckdb/ducklake";
+import { ViewMode } from "@/components/navigation/ViewModeSelector";
 import { WorkspaceFile } from "@/components/workspace/FileTreeView";
 
 /**
@@ -85,6 +85,8 @@ interface AppState {
   isInIframe: boolean;
   /** Whether to show column stats in data grid */
   showColumnStats: boolean;
+  /** View mode when no files are active */
+  emptyStateViewMode: ViewMode;
 
   // Query history state
   /** Array of recent queries */
@@ -93,6 +95,8 @@ interface AppState {
   savedQueries: SavedQuery[];
   /** Pending query to be loaded in query tab */
   pendingQuery: string | null;
+  /** Pending notebook code to be loaded in notebook tab */
+  pendingNotebookCode: string | null;
 
   // Workspace state
   /** Array of all workspaces */
@@ -145,6 +149,8 @@ interface AppState {
   toggleColumnStats: () => void;
   /** Set column stats visibility */
   setShowColumnStats: (show: boolean) => void;
+  /** Change view mode for active file or empty state */
+  changeViewMode: (mode: ViewMode) => void;
   isRemoteModalOpen: boolean;
   activeProviderRemoteModal: ImportProvider;
 
@@ -168,6 +174,8 @@ interface AppState {
   setActiveProviderRemoteModal: (val: ImportProvider) => void;
   /** Set a pending query to be loaded in query tab */
   setPendingQuery: (query: string | null) => void;
+  /** Set a pending notebook code to be loaded in notebook tab */
+  setPendingNotebookCode: (code: string | null) => void;
 
   // Workspace actions
   /** Create a new workspace */
@@ -222,11 +230,13 @@ const initialState = {
   sidebarCollapsed: false,
   isInIframe: false,
   showColumnStats: false,
+  emptyStateViewMode: 'preview' as ViewMode,
 
   // Query history state
   recentQueries: [],
   savedQueries: [],
   pendingQuery: null,
+  pendingNotebookCode: null,
   isRemoteModalOpen: false,
   activeProviderRemoteModal: 'huggingface' as ImportProvider,
 
@@ -340,6 +350,34 @@ export const useAppStore = create<AppState>((set, get) => ({
       postgresql: fileData.postgresql,
       importedAt: Date.now(),
       lastAccessedAt: Date.now(),
+      // Initialize workspace states with default query
+      sqlState: {
+        query: `SELECT * FROM ${tableName} LIMIT 100`,
+        history: [],
+        lastExecutedAt: undefined,
+      },
+      // Initialize AI state for this file
+      aiState: {
+        messages: [],
+        conversationId: `conv_${fileId}_${Date.now()}`,
+        currentResponse: null,
+        streamingResponse: "",
+        isProcessing: false,
+        currentError: null,
+        currentTokenUsage: null,
+        visualizationTokenUsage: null,
+        queryResults: null,
+        visualizations: [],
+        tableContext: {
+          tableName: tableName,
+          schema: [],
+          rowCount: fileData.rowCount,
+          description: `${fileData.fileName} - ${fileData.columnCount} columns`,
+        },
+        createdAt: Date.now(),
+        lastMessageAt: undefined,
+        lastSavedAt: Date.now(),
+      },
     };
 
     set((state) => ({
@@ -393,10 +431,51 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setActiveFile: (fileId: string) => {
     set((state) => {
-      // Update last accessed time
-      const updatedFiles = state.files.map((file) =>
-        file.id === fileId ? { ...file, lastAccessedAt: Date.now() } : file
-      );
+      // Update last accessed time and initialize workspace states if needed
+      const updatedFiles = state.files.map((file) => {
+        if (file.id === fileId) {
+          const updates: Partial<DataFile> = { 
+            lastAccessedAt: Date.now() 
+          };
+          
+          // Initialize sqlState if it doesn't exist
+          if (!file.sqlState) {
+            updates.sqlState = {
+              query: "",
+              history: [],
+              lastExecutedAt: undefined,
+            };
+          }
+          
+          // Initialize aiState if it doesn't exist
+          if (!file.aiState) {
+            updates.aiState = {
+              messages: [],
+              conversationId: `conv_${fileId}_${Date.now()}`,
+              currentResponse: null,
+              streamingResponse: "",
+              isProcessing: false,
+              currentError: null,
+              currentTokenUsage: null,
+              visualizationTokenUsage: null,
+              queryResults: null,
+              visualizations: [],
+              tableContext: {
+                tableName: file.tableName,
+                schema: [],
+                rowCount: file.rowCount,
+                description: `${file.fileName} - ${file.columnCount} columns`,
+              },
+              createdAt: Date.now(),
+              lastMessageAt: undefined,
+              lastSavedAt: Date.now(),
+            };
+          }
+          
+          return { ...file, ...updates };
+        }
+        return file;
+      });
 
       return {
         files: updatedFiles,
@@ -455,6 +534,41 @@ export const useAppStore = create<AppState>((set, get) => ({
   setShowColumnStats: (show) => {
     localStorage.setItem("show-column-stats", String(show));
     set({ showColumnStats: show });
+  },
+
+  // View mode change logic (reusable across components)
+  changeViewMode: (mode: ViewMode) => {
+    const { activeFileId, updateFile } = get();
+    
+    if (activeFileId) {
+      // If there's an active file, update its view mode
+      updateFile(activeFileId, { viewMode: mode });
+      
+      // Only pre-populate on initial query mode access, not when switching between view modes
+      const activeFile = get().files.find(f => f.id === activeFileId);
+      const currentState = get();
+      if (mode === 'query' && activeFile?.tableName && !currentState.pendingQuery && !activeFile.sqlState?.query) {
+        // Only set default query if the file has no existing SQL state
+        const query = `SELECT * FROM ${activeFile.tableName} LIMIT 100`;
+        get().setPendingQuery(query);
+      } else if (mode === 'notebook' && activeFile?.tableName) {
+        const pythonCode = `import pandas as pd
+import duckdb
+
+# Query the table
+con = duckdb.connect()
+df = con.execute("SELECT * FROM ${activeFile.tableName} LIMIT 100").df()
+
+# Display basic information
+print(f"Shape: {df.shape}")
+print(f"\\nFirst 5 rows:")
+df.head()`;
+        get().setPendingNotebookCode(pythonCode);
+      }
+    } else {
+      // If no active file, update empty state view mode
+      set({ emptyStateViewMode: mode });
+    }
   },
 
   // Split view actions
@@ -718,6 +832,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   
   setPendingQuery: (query) => {
     set({ pendingQuery: query });
+  },
+  
+  setPendingNotebookCode: (code) => {
+    set({ pendingNotebookCode: code });
   },
 
   // Workspace actions
