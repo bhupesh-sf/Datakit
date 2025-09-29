@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   BarChart4,
   LineChart,
@@ -48,12 +49,14 @@ interface DataSource {
 const ChartTypeRow: React.FC = () => {
   const { currentChart, updateCurrentChart } = useChartsStore();
 
+  const { t } = useTranslation();
+  
   const chartTypes = [
-    { type: "bar", icon: BarChart4, label: "Bar" },
-    { type: "line", icon: LineChart, label: "Line" },
-    { type: "area", icon: TrendingUp, label: "Area" },
-    { type: "pie", icon: PieChart, label: "Pie" },
-    { type: "scatter", icon: ScatterChart, label: "Scatter" },
+    { type: "bar", icon: BarChart4, label: t('tabs.visualization.chartTypes.bar') },
+    { type: "line", icon: LineChart, label: t('tabs.visualization.chartTypes.line') },
+    { type: "area", icon: TrendingUp, label: t('tabs.visualization.chartTypes.area') },
+    { type: "pie", icon: PieChart, label: t('tabs.visualization.chartTypes.pie') },
+    { type: "scatter", icon: ScatterChart, label: t('tabs.visualization.chartTypes.scatter') },
   ];
 
   if (!currentChart) return null;
@@ -86,6 +89,7 @@ const ChartTypeRow: React.FC = () => {
  * Main visualization component - clean and minimal
  */
 const VisualizationTab: React.FC = () => {
+  const { t } = useTranslation();
   const hasFiles = useAppStore(selectHasFiles);
   const { setActiveTab, activeFileId, setActiveFile, files } = useAppStore();
   const {
@@ -177,10 +181,10 @@ const VisualizationTab: React.FC = () => {
         <div className="text-center max-w-md">
           <BarChart4 className="w-16 h-16 text-white/30 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-white mb-2">
-            No Data Available
+            {t('tabs.visualization.noDataAvailable')}
           </h3>
           <p className="text-white/70 mb-4">
-            Import data files to create visualizations.
+            {t('tabs.visualization.importDataMessage')}
           </p>
         </div>
       </div>
@@ -228,7 +232,7 @@ const VisualizationTab: React.FC = () => {
           <button
             onClick={() => setShowLeftPanel(!showLeftPanel)}
             className="p-1 hover:bg-white/10 rounded cursor-pointer"
-            title={showLeftPanel ? "Hide panel" : "Show panel"}
+            title={showLeftPanel ? t('tabs.visualization.hidePanel') : t('tabs.visualization.showPanel')}
           >
             {showLeftPanel ? (
               <ChevronLeft className="w-4 h-4 text-white/70" />
@@ -257,7 +261,7 @@ const VisualizationTab: React.FC = () => {
           {hasVisualizationData && (
             <>
               <span className="text-xs text-white/50">
-                {filteredData?.length} points
+                {t('tabs.visualization.pointsCount', { count: filteredData?.length })}
               </span>
               <Button
                 variant="ghost"
@@ -265,7 +269,7 @@ const VisualizationTab: React.FC = () => {
                 onClick={() => toggleExportModal(true)}
               >
                 <Copy className="w-4 h-4 mr-1" />
-                Export
+                {t('tabs.visualization.export')}
               </Button>
             </>
           )}
@@ -282,7 +286,7 @@ const VisualizationTab: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Settings className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium text-white">
-                  Chart Configuration
+                  {t('tabs.visualization.chartConfiguration')}
                 </span>
               </div>
             </div>
@@ -299,14 +303,14 @@ const VisualizationTab: React.FC = () => {
           {!selectedDataSource ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-white/70">Select a data source to begin</p>
+                <p className="text-white/70">{t('tabs.visualization.selectDataSource')}</p>
               </div>
             </div>
           ) : !hasVisualizationData ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <BarChart4 className="w-12 h-12 text-white/30 mx-auto mb-3" />
-                <p className="text-white/70">Select columns to visualize</p>
+                <p className="text-white/70">{t('tabs.visualization.selectColumns')}</p>
               </div>
             </div>
           ) : (

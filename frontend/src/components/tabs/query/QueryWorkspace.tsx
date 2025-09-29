@@ -18,6 +18,7 @@ import {
   Zap,
   Command,
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 import {
   useFileAwareQueryOrchestrator,
@@ -49,6 +50,7 @@ const MAX_PANEL_WIDTH = 400;
  * Main container for the enhanced query tab with resizable panels
  */
 const QueryWorkspace: React.FC = () => {
+  const { t } = useTranslation();
   const {
     isInitialized,
     isInitializing,
@@ -323,11 +325,11 @@ const QueryWorkspace: React.FC = () => {
               </div>
             </div>
             <h3 className="text-lg font-heading font-medium text-white mb-2">
-              DuckDB Initialization Failed
+              {t('query.workspace.errors.initFailed')}
             </h3>
             <p className="text-white/70 mb-4">{initError}</p>
             <Button onClick={retry} variant="primary">
-              Retry Initialization
+              {t('query.workspace.actions.retryInit')}
             </Button>
           </div>
         </div>
@@ -343,17 +345,17 @@ const QueryWorkspace: React.FC = () => {
             </div>
           </div>
           <h3 className="text-lg font-heading font-medium text-white mb-2">
-            {isInitializing ? "Initializing DuckDB" : "DuckDB Not Ready"}
+            {isInitializing ? t('query.workspace.status.initializing') : t('query.workspace.status.notReady')}
           </h3>
           <p className="text-white/70 mb-4">
             {isInitializing
-              ? "Setting up your in-browser SQL database..."
-              : "Preparing your data analysis environment..."}
+              ? t('query.workspace.status.settingUp')
+              : t('query.workspace.status.preparing')}
           </p>
           <div className="text-sm text-white/60">
             <div className="flex items-center justify-center gap-2">
               <Zap className="w-4 h-4 text-secondary" />
-              <span>Powered by WebAssembly</span>
+              <span>{t('query.workspace.poweredBy')}</span>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -14,6 +15,7 @@ import SubscriptionSettings from "@/components/settings/SubscriptionSettings";
 import { SEO } from "@/components/common/SEO";
 
 const Settings: React.FC = () => {
+  const { t } = useTranslation();
   const { user, updateProfile, updateSettings, settings, isLoading } =
     useAuth();
   const { currentWorkspace } = useAuthStore();
@@ -101,12 +103,12 @@ const Settings: React.FC = () => {
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium text-white mb-4">
-                Profile Information
+                {t('settings.profile.title')}
               </h3>
               <form onSubmit={handleProfileUpdate} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-white/90 mb-2">
-                    Full Name
+                    {t('common.labels.fullName')}
                   </label>
                   <input
                     type="text"
@@ -123,7 +125,7 @@ const Settings: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-white/90 mb-2">
-                    Email Address
+                    {t('auth.fields.emailAddress')}
                   </label>
                   <input
                     type="email"
@@ -132,12 +134,12 @@ const Settings: React.FC = () => {
                     className="w-full px-3 py-2 bg-background/10 border border-white/10 rounded-md text-white/60 cursor-not-allowed"
                   />
                   <p className="text-xs text-white/50 mt-1">
-                    Email cannot be changed. Contact support if needed.
+                    {t('settings.profile.emailNote')}
                   </p>
                 </div>
 
                 <Button variant="outline" type="submit" disabled={isLoading}>
-                  {isLoading ? "Saving..." : "Save Changes"}
+                  {isLoading ? t('common.loading.saving') : t('settings.profile.saveChanges')}
                 </Button>
               </form>
             </div>
@@ -158,16 +160,16 @@ const Settings: React.FC = () => {
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium text-white mb-4">
-                Notification Preferences
+                {t('settings.notifications.title')}
               </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm font-medium text-white">
-                      Email Notifications
+                      {t('settings.notifications.email.title')}
                     </div>
                     <div className="text-xs text-white/60">
-                      Receive updates about new features and announcements
+                      {t('settings.notifications.email.description')}
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -189,10 +191,10 @@ const Settings: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm font-medium text-white">
-                      Usage Alerts
+                      {t('settings.notifications.usage.title')}
                     </div>
                     <div className="text-xs text-white/60">
-                      Get notified when you're close to your credit limit
+                      {t('settings.notifications.usage.description')}
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -216,7 +218,7 @@ const Settings: React.FC = () => {
                   onClick={handlePreferencesUpdate}
                   disabled={isLoading}
                 >
-                  {isLoading ? "Saving..." : "Save Notification Settings"}
+                  {isLoading ? t('common.loading.saving') : t('settings.notifications.saveSettings')}
                 </Button>
               </div>
             </div>
@@ -235,9 +237,9 @@ const Settings: React.FC = () => {
     <ProtectedRoute>
       <>
         <SEO
-          title="Settings - DataKit"
-          description="Manage your DataKit account settings, AI preferences, notifications, and subscription"
-          keywords="settings, profile, ai settings, notifications, subscription, datakit"
+          title={`${t('settings.title')} - ${t('seo.title')}`}
+          description={t('seo.description')}
+          keywords={t('seo.keywords')}
         />
 
         <div className="flex h-screen bg-background overflow-hidden">

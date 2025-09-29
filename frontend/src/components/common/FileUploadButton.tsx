@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Upload, FileSpreadsheet, FileText, Database, Package, Braces } from "lucide-react";
 import duckdb from "@/assets/duckdb.svg";
@@ -21,6 +22,7 @@ export const FileUploadButton = ({
   className = "",
   supportLargeFiles = true,
 }: FileUploadButtonProps) => {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -39,7 +41,7 @@ export const FileUploadButton = ({
         const pickerOpts = {
           types: [
             {
-              description: "Data Files",
+              description: t('fileUpload.dataFiles'),
               accept: {
                 "text/csv": [".csv"],
                 "application/json": [".json"],
@@ -76,10 +78,9 @@ export const FileUploadButton = ({
           // ⚠️ Legacy support: For large files, warn user
           if (fileSizeMB > 800) {
             const proceed = confirm(
-              `This file is ${fileSizeMB.toFixed(
-                2
-              )}MB which may cause memory issues. ` +
-                `Continue anyway? (Consider using Chrome to have a better experience.)`
+              t('fileUpload.largeSizeWarning', { 
+                size: fileSizeMB.toFixed(2) 
+              })
             );
             if (!proceed) return;
           }
@@ -115,10 +116,9 @@ export const FileUploadButton = ({
     // For large files through regular input, warn user
     if (fileSizeMB > 900) {
       alert(
-        `This file is ${fileSizeMB.toFixed(
-          2
-        )}MB. For better performance with large files, ` +
-          `use a modern browser (Chrome/Edge) with streaming support.`
+        t('fileUpload.modernBrowserWarning', { 
+          size: fileSizeMB.toFixed(2) 
+        })
       );
     }
 
@@ -156,7 +156,7 @@ export const FileUploadButton = ({
     const validExtensions = ["csv", "json", "xlsx", "xls", "parquet", "duckdb", "db", "txt"];
 
     if (!validExtensions.includes(fileExt || "")) {
-      alert("Please import a CSV, JSON, Excel, Parquet, TXT, or DuckDB database file");
+      alert(t('fileUpload.invalidFileType'));
       return;
     }
 
@@ -193,8 +193,9 @@ export const FileUploadButton = ({
     // Fallback to regular file handling
     if (fileSizeMB > 500) {
       alert(
-        `This file is ${fileSizeMB.toFixed(2)}MB. For better performance, ` +
-          `try using the file picker instead of drag-and-drop for large files.`
+        t('fileUpload.dragDropLargeFileWarning', { 
+          size: fileSizeMB.toFixed(2) 
+        })
       );
     }
 
@@ -221,10 +222,10 @@ export const FileUploadButton = ({
           
           <div className="text-center px-2">
             <p className="text-primary font-semibold text-xs mb-1">
-              Drop your file here
+{t('fileUpload.dropHere')}
             </p>
             <p className="text-[10px] text-primary/70">
-              Ready to import
+{t('fileUpload.readyToImport')}
             </p>
           </div>
         </div>
@@ -241,17 +242,17 @@ export const FileUploadButton = ({
               {isLoading ? (
                 <div className="flex flex-col items-center">
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mb-2" />
-                  <span className="text-sm">Processing...</span>
+                  <span className="text-sm">{t('fileUpload.processing')}</span>
                 </div>
               ) : (
                 <>
                   <div className="flex flex-col items-center">
                     <div className="text-center mb-4 px-4">
                       <p className="text-sm font-medium text-white mb-2">
-                        Drop files here or click
+{t('fileUpload.dropOrClick')}
                       </p>
                       <p className="text-xs text-white/60">
-                        Supports large data files
+{t('fileUpload.supportsLargeFiles')}
                       </p>
                     </div>
 

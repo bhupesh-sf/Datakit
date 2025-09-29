@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Database, Zap, Settings, Plus, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useAIStore } from '@/store/aiStore';
 import { useAppStore } from '@/store/appStore';
@@ -20,6 +21,7 @@ interface ContextBarProps {
 const MultiTableContextDisplay: React.FC<{
   onOpenSelector: () => void;
 }> = ({ onOpenSelector }) => {
+  const { t } = useTranslation();
   const { multiTableContexts, removeTableContext } = useAIStore();
 
   const selectedTables = multiTableContexts.filter((ctx) => ctx.isSelected);
@@ -28,7 +30,7 @@ const MultiTableContextDisplay: React.FC<{
     <div className="flex items-center gap-2">
       {selectedTables.length > 0 ? (
         <>
-          <span className="text-xs text-white/50">Context:</span>
+          <span className="text-xs text-white/50">{t('ai.context.label', { defaultValue: 'Context' })}:</span>
           <div className="flex items-center gap-1">
             {selectedTables.slice(0, 3).map((ctx) => (
               <div
@@ -50,13 +52,13 @@ const MultiTableContextDisplay: React.FC<{
             ))}
             {selectedTables.length > 3 && (
               <span className="px-2 py-0.5 bg-white/10 rounded text-xs text-white/60">
-                +{selectedTables.length - 3} more
+                +{selectedTables.length - 3} {t('ai.context.more', { defaultValue: 'more' })}
               </span>
             )}
           </div>
         </>
       ) : (
-        <span className="text-sm text-white/50">No tables in context</span>
+        <span className="text-sm text-white/50">{t('ai.context.noTables', { defaultValue: 'No tables in context' })}</span>
       )}
 
       <button
@@ -64,13 +66,14 @@ const MultiTableContextDisplay: React.FC<{
         className="flex items-center gap-1 px-2 py-0.5 bg-white/5 border border-white/10 rounded text-xs text-white/60 hover:bg-white/10 hover:text-white transition-colors"
       >
         <Plus className="h-3 w-3" />
-        Add Tables
+        {t('ai.context.addTables', { defaultValue: 'Add Tables' })}
       </button>
     </div>
   );
 };
 
 const ContextBar: React.FC<ContextBarProps> = ({ onOpenApiKeyModal }) => {
+  const { t } = useTranslation();
   const { autoExecuteSQL, updateSettings, addTableContext, clearTableContexts } = useAIStore();
   const activeFile = useAppStore(selectActiveFile);
   const activeTableName = useAppStore(selectTableName);
@@ -125,7 +128,7 @@ const ContextBar: React.FC<ContextBarProps> = ({ onOpenApiKeyModal }) => {
               className="flex items-center gap-2 px-3 py-1 rounded-md text-sm bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 transition-colors"
             >
               <Settings className="h-3.5 w-3.5" />
-              <span>Models</span>
+              <span>{t('ai.context.models', { defaultValue: 'Models' })}</span>
             </button>
           )}
 
@@ -142,7 +145,7 @@ const ContextBar: React.FC<ContextBarProps> = ({ onOpenApiKeyModal }) => {
               }`}
             >
               <Zap className="h-3.5 w-3.5" />
-              <span>Auto-execute: {autoExecuteSQL ? 'ON' : 'OFF'}</span>
+              <span>{t('ai.context.autoExecute', { defaultValue: 'Auto-execute' })}: {autoExecuteSQL ? t('common.on', { defaultValue: 'ON' }) : t('common.off', { defaultValue: 'OFF' })}</span>
             </button>
           )}
         </div>

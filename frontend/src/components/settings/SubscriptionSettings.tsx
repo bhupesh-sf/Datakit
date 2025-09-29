@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check, Bell } from 'lucide-react';
 import GlareHover from '@/components/ui/GlareHover';
 import { useAuth } from '@/hooks/auth/useAuth';
@@ -61,7 +62,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
           ))}
           {features.length > 4 && (
             <li className="text-xs text-white/60 ml-5">
-              +{features.length - 4} more features
+              {t('settings.subscription.moreFeatures', { defaultValue: '+{count} more features', count: features.length - 4 })}
             </li>
           )}
         </ul>
@@ -77,13 +78,13 @@ const PricingCard: React.FC<PricingCardProps> = ({
       {/* Floating badges - positioned outside the card */}
       {isEarlyAdopter && !isComingSoon && (
         <div className="absolute -top-4 -left-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-medium px-3 py-1 rounded-full z-30 shadow-lg">
-          Early Adopter: 20% OFF
+          {t('settings.subscription.badges.earlyAdopter', { defaultValue: 'Early Adopter: 20% OFF' })}
         </div>
       )}
 
       {isComingSoon && title !== 'Pro' && (
         <div className="absolute -top-4 -right-2 bg-gradient-to-r from-sky-800 to-green-800 text-white text-xs font-medium px-3 py-1 rounded-full z-30 shadow-lg">
-          Coming Soon
+          {t('settings.subscription.badges.comingSoon', { defaultValue: 'Coming Soon' })}
         </div>
       )}
 
@@ -91,13 +92,13 @@ const PricingCard: React.FC<PricingCardProps> = ({
       {title === 'Pro' && isComingSoon && (
         <div className="absolute -top-4 -right-2 bg-gradient-to-r from-sky-600 via-sky-700 to-cyan-700 text-white text-xs font-medium px-3 py-1 rounded-full z-30 shadow-lg flex items-center gap-1">
           <img src={AnthropicLogo} className="h-3 w-3" alt="Anthropic" />
-          <span>More credits soon!</span>
+          <span>{t('settings.subscription.badges.moreCredits', { defaultValue: 'More credits soon!' })}</span>
         </div>
       )}
 
       {isCurrentPlan && (
         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-primary/80 text-white text-xs font-medium px-4 py-1 rounded-full z-30 shadow-lg">
-          Current Plan
+          {t('settings.subscription.badges.currentPlan', { defaultValue: 'Current Plan' })}
         </div>
       )}
 
@@ -137,6 +138,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
 };
 
 const SubscriptionSettings: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { creditsRemaining } = useCredits();
   const { showSuccess } = useNotifications();
@@ -148,31 +150,31 @@ const SubscriptionSettings: React.FC = () => {
 
   const plans = [
     {
-      title: 'Free',
+      title: t('settings.subscription.plans.free.title', { defaultValue: 'Free' }),
       price: 0,
-      period: 'month',
-      description: 'Perfect for getting started',
+      period: t('settings.subscription.plans.period.month', { defaultValue: 'month' }),
+      description: t('settings.subscription.plans.free.description', { defaultValue: 'Perfect for getting started' }),
       features: [
-        '315 credits per month',
-        'Powered by Anthropic models',
-        'Personal workspace',
-        'Basic data analysis',
-        'Community support',
+        t('settings.subscription.plans.free.features.credits', { defaultValue: '315 credits per month' }),
+        t('settings.subscription.plans.free.features.anthropicModels', { defaultValue: 'Powered by Anthropic models' }),
+        t('settings.subscription.plans.free.features.personalWorkspace', { defaultValue: 'Personal workspace' }),
+        t('settings.subscription.plans.free.features.basicAnalysis', { defaultValue: 'Basic data analysis' }),
+        t('settings.subscription.plans.free.features.communitySupport', { defaultValue: 'Community support' }),
       ],
       isCurrentPlan: currentPlan === 'free',
       icon: <></>,
     },
     {
-      title: 'Pro',
+      title: t('settings.subscription.plans.pro.title', { defaultValue: 'Pro' }),
       price: 19,
-      period: 'month',
-      description: 'With more Anthropic credits',
+      period: t('settings.subscription.plans.period.month', { defaultValue: 'month' }),
+      description: t('settings.subscription.plans.pro.description', { defaultValue: 'With more Anthropic credits' }),
       features: [
-        '1500 credits per month',
-        'Advanced analytics',
-        'Priority support',
-        'More export capabilities',
-        'Advanced integrations',
+        t('settings.subscription.plans.pro.features.credits', { defaultValue: '1500 credits per month' }),
+        t('settings.subscription.plans.pro.features.advancedAnalytics', { defaultValue: 'Advanced analytics' }),
+        t('settings.subscription.plans.pro.features.prioritySupport', { defaultValue: 'Priority support' }),
+        t('settings.subscription.plans.pro.features.exportCapabilities', { defaultValue: 'More export capabilities' }),
+        t('settings.subscription.plans.pro.features.advancedIntegrations', { defaultValue: 'Advanced integrations' }),
       ],
       isCurrentPlan: currentPlan === 'pro',
       isPopular: true,
@@ -180,18 +182,18 @@ const SubscriptionSettings: React.FC = () => {
       icon: <img src={AnthropicLogo} className="h-4 w-4" alt="Anthropic" />,
     },
     {
-      title: 'Team',
-      price: 'Custom',
-      description: 'For growing teams',
+      title: t('settings.subscription.plans.team.title', { defaultValue: 'Team' }),
+      price: t('settings.subscription.plans.team.price', { defaultValue: 'Custom' }),
+      description: t('settings.subscription.plans.team.description', { defaultValue: 'For growing teams' }),
       features: [
-        'Unlimited credits',
-        'Team collaboration',
-        'Multiple Workspaces',
-        'Member management',
-        'Premium support',
-        'Custom integrations',
-        'Advanced security',
-        'Dedicated account manager',
+        t('settings.subscription.plans.team.features.unlimitedCredits', { defaultValue: 'Unlimited credits' }),
+        t('settings.subscription.plans.team.features.teamCollaboration', { defaultValue: 'Team collaboration' }),
+        t('settings.subscription.plans.team.features.multipleWorkspaces', { defaultValue: 'Multiple Workspaces' }),
+        t('settings.subscription.plans.team.features.memberManagement', { defaultValue: 'Member management' }),
+        t('settings.subscription.plans.team.features.premiumSupport', { defaultValue: 'Premium support' }),
+        t('settings.subscription.plans.team.features.customIntegrations', { defaultValue: 'Custom integrations' }),
+        t('settings.subscription.plans.team.features.advancedSecurity', { defaultValue: 'Advanced security' }),
+        t('settings.subscription.plans.team.features.accountManager', { defaultValue: 'Dedicated account manager' }),
       ],
       isCurrentPlan: currentPlan === 'team',
       isComingSoon: true,
@@ -217,8 +219,8 @@ const SubscriptionSettings: React.FC = () => {
       
       // Show success notification
       showSuccess(
-        "You're on the waitlist!",
-        `We'll let you know at ${email} when ${featureName} features roll out.`
+        t('settings.subscription.waitlist.successTitle', { defaultValue: "You're on the waitlist!" }),
+        t('settings.subscription.waitlist.successMessage', { defaultValue: `We'll let you know at ${email} when ${featureName} features roll out.` })
       );
       
       // Reset modal state
@@ -226,7 +228,7 @@ const SubscriptionSettings: React.FC = () => {
       setWaitlistEmail('');
     } catch (error) {
       console.error('Waitlist signup failed:', error);
-      alert('Something went wrong. Please try again.');
+      alert(t('settings.subscription.waitlist.error', { defaultValue: 'Something went wrong. Please try again.' }));
     } finally {
       setIsWaitlistLoading(false);
     }
@@ -243,10 +245,10 @@ console.log('creditsRemaining', creditsRemaining);
       {/* Compact Header */}
       <div className="mb-6">
         <h2 className="text-xl font-bold text-white mb-1">
-          Subscription Plans
+          {t('settings.subscription.title', { defaultValue: 'Subscription Plans' })}
         </h2>
         <p className="text-sm text-white/70">
-          Choose the plan that fits your needs
+          {t('settings.subscription.description', { defaultValue: 'Choose the plan that fits your needs' })}
         </p>
       </div>
 
@@ -256,20 +258,20 @@ console.log('creditsRemaining', creditsRemaining);
         <div className="lg:col-span-1 lg:mr-4">
           <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-xl p-4 h-full">
             <h3 className="text-sm font-semibold text-white mb-4">
-              Current Usage
+              {t('settings.subscription.currentUsage.title', { defaultValue: 'Current Usage' })}
             </h3>
             <div className="space-y-4">
               <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
                 <div className="text-xl font-bold text-primary">
                   {creditsRemaining === -1 ? '∞' : Number(creditsRemaining).toFixed(2) || 0}
                 </div>
-                <div className="text-xs text-white/60">Credits Remaining</div>
+                <div className="text-xs text-white/60">{t('settings.subscription.currentUsage.creditsRemaining', { defaultValue: 'Credits Remaining' })}</div>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
                 <div className="text-xl font-bold text-white">
                   {user?.subscription?.planType?.toUpperCase() || 'FREE'}
                 </div>
-                <div className="text-xs text-white/60">Current Plan</div>
+                <div className="text-xs text-white/60">{t('settings.subscription.currentUsage.currentPlan', { defaultValue: 'Current Plan' })}</div>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
                 <div className="text-sm font-bold text-white">
@@ -282,7 +284,7 @@ console.log('creditsRemaining', creditsRemaining);
                       })
                     : 'N/A'}
                 </div>
-                <div className="text-xs text-white/60">Next Reset</div>
+                <div className="text-xs text-white/60">{t('settings.subscription.currentUsage.nextReset', { defaultValue: 'Next Reset' })}</div>
               </div>
             </div>
           </div>
@@ -316,7 +318,7 @@ console.log('creditsRemaining', creditsRemaining);
                       className="group flex items-center gap-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 text-primary font-medium text-sm px-4 py-2 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 shadow-sm hover:shadow-md"
                     >
                       <Bell className="h-4 w-4 group-hover:animate-pulse" />
-                      {isWaitlistLoading ? 'Joining...' : 'Get notified'}
+                      {isWaitlistLoading ? t('settings.subscription.waitlist.joining', { defaultValue: 'Joining...' }) : t('settings.subscription.waitlist.getNotified', { defaultValue: 'Get notified' })}
                     </button>
                   ) : (
                     <div className="h-10"></div>
@@ -332,15 +334,15 @@ console.log('creditsRemaining', creditsRemaining);
       {showEmailModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-gray-900 border border-white/10 rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-white mb-4">Join Waitlist</h3>
+            <h3 className="text-lg font-bold text-white mb-4">{t('settings.subscription.waitlist.modalTitle', { defaultValue: 'Join Waitlist' })}</h3>
             <p className="text-white/70 text-sm mb-4">
-              Enter your email to get notified when Pro features are released.
+              {t('settings.subscription.waitlist.modalDescription', { defaultValue: 'Enter your email to get notified when Pro features are released.' })}
             </p>
             <input
               type="email"
               value={waitlistEmail}
               onChange={(e) => setWaitlistEmail(e.target.value)}
-              placeholder="your.email@example.com"
+              placeholder={t('settings.subscription.waitlist.emailPlaceholder', { defaultValue: 'your.email@example.com' })}
               className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm mb-4 focus:outline-none focus:border-primary"
             />
             <div className="flex gap-3">
@@ -348,14 +350,14 @@ console.log('creditsRemaining', creditsRemaining);
                 onClick={() => setShowEmailModal(false)}
                 className="flex-1 bg-white/5 border border-white/10 text-white text-sm py-2 rounded-lg hover:bg-white/10 transition-colors"
               >
-                Cancel
+                {t('settings.subscription.waitlist.cancel', { defaultValue: 'Cancel' })}
               </button>
               <button
                 onClick={handleEmailSubmit}
                 disabled={!waitlistEmail || isWaitlistLoading}
                 className="flex-1 bg-primary text-white text-sm py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
-                {isWaitlistLoading ? 'Joining...' : 'Join Waitlist'}
+                {isWaitlistLoading ? t('settings.subscription.waitlist.joining', { defaultValue: 'Joining...' }) : t('settings.subscription.waitlist.joinWaitlist', { defaultValue: 'Join Waitlist' })}
               </button>
             </div>
           </div>

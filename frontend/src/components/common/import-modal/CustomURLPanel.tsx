@@ -12,6 +12,7 @@ import {
   ChevronRight,
   ExternalLink,
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ interface CustomURLPanelProps {
 }
 
 const URLDatasetCard = ({ dataset, onImport, isImporting }) => {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -36,7 +38,7 @@ const URLDatasetCard = ({ dataset, onImport, isImporting }) => {
           </h4>
           {dataset.featured && (
             <span className="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded">
-              Featured
+              {t('import.customUrl.dataset.featured', { defaultValue: 'Featured' })}
             </span>
           )}
         </div>
@@ -72,12 +74,12 @@ const URLDatasetCard = ({ dataset, onImport, isImporting }) => {
         {isImporting ? (
           <>
             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-            Importing
+            {t('import.customUrl.dataset.importing', { defaultValue: 'Importing' })}
           </>
         ) : (
           <>
             <Download className="h-3 w-3 mr-1" />
-            Import Dataset
+            {t('import.customUrl.dataset.import', { defaultValue: 'Import Dataset' })}
           </>
         )}
       </Button>
@@ -86,6 +88,7 @@ const URLDatasetCard = ({ dataset, onImport, isImporting }) => {
 };
 
 const CustomURLPanel = ({ onImport }) => {
+  const { t } = useTranslation();
   const [customUrl, setCustomUrl] = useState("");
   const [inputError, setInputError] = useState(null);
 
@@ -107,13 +110,13 @@ const CustomURLPanel = ({ onImport }) => {
     setInputError(null);
 
     if (!url.trim()) {
-      setInputError("Please enter a URL");
+      setInputError(t('import.customUrl.validation.enterUrl', { defaultValue: 'Please enter a URL' }));
       return false;
     }
 
     const validation = validateURL(url);
     if (!validation.isValid) {
-      setInputError(validation.error || "Please enter a valid URL");
+      setInputError(validation.error || t('import.customUrl.validation.validUrl', { defaultValue: 'Please enter a valid URL' }));
       return false;
     }
 
@@ -158,13 +161,13 @@ const CustomURLPanel = ({ onImport }) => {
               htmlFor="custom-url"
               className="block text-sm font-medium text-white/80 mb-2"
             >
-              File URL (public access)
+              {t('import.customUrl.form.fileUrlLabel', { defaultValue: 'File URL (public access)' })}
             </label>
             <div className="relative">
               <input
                 id="custom-url"
                 type="text"
-                placeholder="https://raw.githubusercontent.com/user/repo/main/data.csv"
+                placeholder={t('import.customUrl.form.placeholder', { defaultValue: 'https://raw.githubusercontent.com/user/repo/main/data.csv' })}
                 className={cn(
                   "w-full px-3 py-3 h-12 bg-black/30 border border-white/20 rounded-lg text-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 placeholder:text-white/40 transition-all",
                   inputError &&
@@ -216,8 +219,10 @@ const CustomURLPanel = ({ onImport }) => {
                   <div className="flex items-center text-sm text-white/90 mb-2">
                     <FileText className="h-4 w-4 mr-2 text-green-500" />
                     <span className="font-medium">
-                      {urlValidation.detectedFormat?.toUpperCase()} file
-                      detected
+                      {t('import.customUrl.validation.fileDetected', { 
+                        format: urlValidation.detectedFormat?.toUpperCase(),
+                        defaultValue: '{{format}} file detected' 
+                      })}
                     </span>
                     {urlValidation.source && (
                       <span className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded">
@@ -228,7 +233,7 @@ const CustomURLPanel = ({ onImport }) => {
 
                   <div className="flex items-center text-xs text-white/70">
                     <CheckCircle className="h-3.5 w-3.5 mr-1.5 text-white/50" />
-                    <span>Valid URL - ready to import</span>
+                    <span>{t('import.customUrl.validation.readyToImport', { defaultValue: 'Valid URL - ready to import' })}</span>
                   </div>
 
                   {/* Preview link */}
@@ -240,7 +245,7 @@ const CustomURLPanel = ({ onImport }) => {
                       className="text-xs text-green-400 hover:text-green-300 flex items-center"
                     >
                       <ExternalLink className="h-3 w-3 mr-1" />
-                      Open file URL
+                      {t('import.customUrl.actions.openFileUrl', { defaultValue: 'Open file URL' })}
                     </a>
                   </div>
                 </div>
@@ -262,11 +267,11 @@ const CustomURLPanel = ({ onImport }) => {
               {isImporting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Importing
+                  {t('import.customUrl.actions.importing', { defaultValue: 'Importing' })}
                 </>
               ) : (
                 <>
-                  Import from URL
+                  {t('import.customUrl.actions.importFromUrl', { defaultValue: 'Import from URL' })}
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </>
               )}
@@ -294,17 +299,17 @@ const CustomURLPanel = ({ onImport }) => {
         <div className="border-t border-white/10 pt-6">
           <div className="mb-4">
             <h4 className="text-base font-medium text-white mb-2 flex items-center">
-              Example Datasets
+              {t('import.customUrl.examples.title', { defaultValue: 'Example Datasets' })}
             </h4>
             <p className="text-sm text-white/60">
-              Try these curated public datasets from GitHub
+              {t('import.customUrl.examples.subtitle', { defaultValue: 'Try these curated public datasets from GitHub' })}
             </p>
           </div>
 
           {datasetsLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
-              <span className="text-white/60">Loading datasets...</span>
+              <span className="text-white/60">{t('import.customUrl.examples.loading', { defaultValue: 'Loading datasets...' })}</span>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -328,16 +333,16 @@ const CustomURLPanel = ({ onImport }) => {
         <div className="text-xs text-white/60">
           <div className="flex items-center mb-2">
             <Link className="h-3 w-3 mr-1.5 text-primary" />
-            <span className="font-medium text-white/80">Supported URLs:</span>
+            <span className="font-medium text-white/80">{t('import.customUrl.footer.supportedUrls', { defaultValue: 'Supported URLs:' })}</span>
           </div>
           <ul className="space-y-1 ml-4">
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Direct file URLs (CSV, JSON, Parquet, Excel)
+              {t('import.customUrl.footer.directFiles', { defaultValue: 'Direct file URLs (CSV, JSON, Parquet, Excel)' })}
             </li>
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Public data repositories and APIs
+              {t('import.customUrl.footer.publicRepos', { defaultValue: 'Public data repositories and APIs' })}
             </li>
           </ul>
         </div>

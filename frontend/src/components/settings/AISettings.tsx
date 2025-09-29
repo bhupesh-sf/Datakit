@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   Crown,
   Key,
@@ -86,6 +87,7 @@ interface AISettingsProps {
 }
 
 const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
+  const { t } = useTranslation();
   const { currentWorkspace } = useAuthStore();
   const {
     apiKeys,
@@ -125,18 +127,18 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
   };
 
   const formatCredits = (credits: number): string => {
-    if (credits === -1) return "Unlimited";
+    if (credits === -1) return t('settings.ai.unlimited', { defaultValue: 'Unlimited' });
     return credits.toLocaleString();
   };
 
   const getCreditStatus = () => {
     if (creditsRemaining === -1)
-      return { color: "text-green-400", label: "Unlimited" };
+      return { color: "text-green-400", label: t('settings.ai.unlimited', { defaultValue: 'Unlimited' }) };
     if (creditsRemaining > 50)
-      return { color: "text-green-400", label: "Good" };
+      return { color: "text-green-400", label: t('settings.ai.creditStatus.good', { defaultValue: 'Good' }) };
     if (creditsRemaining > 10)
-      return { color: "text-yellow-400", label: "Low" };
-    return { color: "text-red-400", label: "Very Low" };
+      return { color: "text-yellow-400", label: t('settings.ai.creditStatus.low', { defaultValue: 'Low' }) };
+    return { color: "text-red-400", label: t('settings.ai.creditStatus.veryLow', { defaultValue: 'Very Low' }) };
   };
 
   const creditStatus = getCreditStatus();
@@ -198,13 +200,13 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
   const getStatusText = (status: string) => {
     switch (status) {
       case "available":
-        return "Available";
+        return t('settings.ai.providerStatus.available', { defaultValue: 'Available' });
       case "configured":
-        return "Configured";
+        return t('settings.ai.providerStatus.configured', { defaultValue: 'Configured' });
       case "upgrade":
-        return "Pro/Team Required";
+        return t('settings.ai.providerStatus.upgradeRequired', { defaultValue: 'Pro/Team Required' });
       case "setup":
-        return "Setup Required";
+        return t('settings.ai.providerStatus.setupRequired', { defaultValue: 'Setup Required' });
       default:
         return "";
     }
@@ -214,8 +216,8 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
     <div className="h-full flex flex-col">
       {/* Compact Header */}
       <div className="mb-5">
-        <h3 className="text-lg font-medium text-white">AI Configuration</h3>
-        <p className="text-sm text-white/60">Choose how DataKit processes your data with AI</p>
+        <h3 className="text-lg font-medium text-white">{t('settings.ai.title', { defaultValue: 'AI Configuration' })}</h3>
+        <p className="text-sm text-white/60">{t('settings.ai.description', { defaultValue: 'Choose how DataKit processes your data with AI' })}</p>
       </div>
 
       {/* Split View - Main Content */}
@@ -240,16 +242,16 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
               
               <div className="mb-3">
                 <h4 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-                  DataKit Models
+                  {t('settings.ai.datakitModels.title', { defaultValue: 'DataKit Models' })}
                 </h4>
                 <p className="text-xs text-white/70 leading-relaxed">
-                  Premium AI models optimized for data analysis. No API keys needed.
+                  {t('settings.ai.datakitModels.description', { defaultValue: 'Premium AI models optimized for data analysis. No API keys needed.' })}
                 </p>
                 
                 {/* Anthropic Badge */}
                 <div className="mt-2 inline-flex items-center gap-2 px-2 py-1 bg-white/5 border border-white/10 rounded-full">
                   <img src={AnthropicLogo} className="h-3 w-3" alt="Anthropic" />
-                  <span className="text-xs text-white/70">Powered by Anthropic</span>
+                  <span className="text-xs text-white/70">{t('settings.ai.datakitModels.poweredBy', { defaultValue: 'Powered by Anthropic' })}</span>
                 </div>
               </div>
 
@@ -257,15 +259,15 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
               <div className="space-y-1.5 mb-4">
                 <div className="flex items-center gap-2 text-xs text-white/70">
                   <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                  <span>Pre-tuned for SQL & data transformation</span>
+                  <span>{t('settings.ai.datakitModels.features.preTuned', { defaultValue: 'Pre-tuned for SQL & data transformation' })}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-white/70">
                   <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                  <span>Claude 3.5 Sonnet & Haiku included</span>
+                  <span>{t('settings.ai.datakitModels.features.claudeModels', { defaultValue: 'Claude 3.5 Sonnet & Haiku included' })}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-white/70">
                   <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                  <span>Zero configuration required</span>
+                  <span>{t('settings.ai.datakitModels.features.zeroConfig', { defaultValue: 'Zero configuration required' })}</span>
                 </div>
               </div>
 
@@ -275,21 +277,21 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                      <span className="text-xs text-white">Active</span>
+                      <span className="text-xs text-white">{t('settings.ai.datakitModels.active', { defaultValue: 'Active' })}</span>
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <div className="bg-white/5 rounded p-2 border border-white/10 flex items-center justify-between">
-                    <span className="text-xs text-white/70">Pro Plan</span>
+                    <span className="text-xs text-white/70">{t('settings.ai.datakitModels.proPlan', { defaultValue: 'Pro Plan' })}</span>
                     <span className="text-xs text-white font-medium">$19/mo</span>
                   </div>
                   <button 
                     onClick={handleUpgrade}
                     className="w-full text-white py-2 px-3 rounded-lg font-medium text-sm transition-colors cursor-pointer"
                   >
-                    View All Plans →
+                    {t('settings.ai.datakitModels.viewPlans', { defaultValue: 'View All Plans →' })}
                   </button>
                 </div>
               )}
@@ -301,7 +303,7 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-3 w-3 text-blue-400" />
-                <span className="text-xs text-white">Credits</span>
+                <span className="text-xs text-white">{t('settings.ai.credits.title', { defaultValue: 'Credits' })}</span>
               </div>
               <div className="text-right">
                 <span className={`text-sm font-bold ${creditStatus.color}`}>
@@ -330,8 +332,8 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
         {/* Right Column: Alternative Providers */}
         <div className="flex flex-col">
           <div className="mb-3">
-            <h4 className="text-sm font-medium text-white/80">Alternative Providers</h4>
-            <p className="text-xs text-white/60">Use your own API keys for these providers</p>
+            <h4 className="text-sm font-medium text-white/80">{t('settings.ai.alternativeProviders.title', { defaultValue: 'Alternative Providers' })}</h4>
+            <p className="text-xs text-white/60">{t('settings.ai.alternativeProviders.description', { defaultValue: 'Use your own API keys for these providers' })}</p>
           </div>
 
           <div className="flex-1 space-y-2.5 overflow-y-auto pr-2">
@@ -399,7 +401,7 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
                           window.open(config.websiteUrl!, "_blank");
                         }}
                         className="p-0.5 text-white/40 hover:text-white/80 rounded transition-colors"
-                        title="Get API key"
+                        title={t('settings.ai.providers.getApiKey', { defaultValue: 'Get API key' })}
                       >
                         <ExternalLink className="h-3 w-3" />
                       </button>
@@ -419,7 +421,7 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
                         }}
                         className="text-xs text-white/50 hover:text-white/80 px-1"
                       >
-                        Edit
+                        {t('settings.ai.providers.edit', { defaultValue: 'Edit' })}
                       </button>
                     </div>
                   )}
@@ -444,7 +446,7 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
                           }}
                           className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded hover:bg-primary/30 flex-1"
                         >
-                          Save
+                          {t('settings.ai.providers.save', { defaultValue: 'Save' })}
                         </button>
                         <button
                           onClick={(e) => {
@@ -453,7 +455,7 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
                           }}
                           className="px-2 py-0.5 text-xs text-white/60 hover:text-white/80"
                         >
-                          Cancel
+                          {t('settings.ai.providers.cancel', { defaultValue: 'Cancel' })}
                         </button>
                       </div>
                     </div>
@@ -478,7 +480,7 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
                         disabled={!keyInputs.get(provider)?.trim()}
                         className="w-full px-2 py-0.5 text-xs text-white/50 rounded hover:border border-primary/30 disabled:opacity-50 transition-colors"
                       >
-                        Activate
+                        {t('settings.ai.providers.activate', { defaultValue: 'Activate' })}
                       </button>
                     </div>
                   )}
@@ -487,7 +489,7 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
                   {isActive && (
                     <div className="mt-1 flex items-center gap-1 text-xs text-primary">
                       <div className="w-1 h-1 bg-primary rounded-full"></div>
-                      Active
+                      {t('settings.ai.providers.active', { defaultValue: 'Active' })}
                     </div>
                   )}
                 </div>
@@ -498,26 +500,26 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
           {/* Why DataKit AI */}
           {!isProOrTeam && (
             <div className="border border-primary/20 rounded-lg p-3 mt-3">
-              <h5 className="text-xs font-medium text-white mb-1.5">Why DataKit Models?</h5>
+              <h5 className="text-xs font-medium text-white mb-1.5">{t('settings.ai.whyDatakit.title', { defaultValue: 'Why DataKit Models?' })}</h5>
               <ul className="space-y-1 text-xs text-white/70">
                 <li className="flex items-start gap-1.5">
                   <span className="text-primary mt-0.5">•</span>
-                  <span>No API keys to manage</span>
+                  <span>{t('settings.ai.whyDatakit.features.noApiKeys', { defaultValue: 'No API keys to manage' })}</span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <span className="text-primary mt-0.5">•</span>
-                  <span>Credits monthly</span>
+                  <span>{t('settings.ai.whyDatakit.features.monthlyCredits', { defaultValue: 'Credits monthly' })}</span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <span className="text-primary mt-0.5">•</span>
-                  <span>Optimized for data tasks</span>
+                  <span>{t('settings.ai.whyDatakit.features.optimized', { defaultValue: 'Optimized for data tasks' })}</span>
                 </li>
               </ul>
               <button 
                 onClick={handleUpgrade}
                 className="mt-2 text-xs text-primary hover:text-primary/80 font-medium"
               >
-                Learn More →
+                {t('settings.ai.whyDatakit.learnMore', { defaultValue: 'Learn More →' })}
               </button>
             </div>
           )}
@@ -531,9 +533,9 @@ const AISettings: React.FC<AISettingsProps> = ({ onTabChange }) => {
             <SettingsIcon className="h-3 w-3 text-white/60" />
             <div>
               <label className="text-xs text-white/80 font-medium">
-                Auto-execute SQL
+                {t('settings.ai.autoExecuteSql.title', { defaultValue: 'Auto-execute SQL' })}
               </label>
-              <p className="text-xs text-white/50">Run AI queries automatically</p>
+              <p className="text-xs text-white/50">{t('settings.ai.autoExecuteSql.description', { defaultValue: 'Run AI queries automatically' })}</p>
             </div>
           </div>
           <button

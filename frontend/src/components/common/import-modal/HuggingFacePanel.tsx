@@ -19,6 +19,7 @@ import {
   Settings,
   Info,
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 import { Button } from "@/components/ui/Button";
 
@@ -56,6 +57,7 @@ const ConfigSplitSelector = ({
   disabled?: boolean;
   loading?: boolean;
 }) => {
+  const { t } = useTranslation();
   const availableSplits = selectedConfig 
     ? splits.filter(s => s.config === selectedConfig)
     : splits;
@@ -63,7 +65,7 @@ const ConfigSplitSelector = ({
   if (loading) {
     return (
       <div className="flex items-center space-x-2 p-3 bg-white/5 rounded-lg border border-white/10">
-        <span className="text-sm text-white/60">Loading configurations...</span>
+        <span className="text-sm text-white/60">{t('importModal.huggingface.loading.configurations')}</span>
       </div>
     );
   }
@@ -80,14 +82,14 @@ const ConfigSplitSelector = ({
     >
       <div className="flex items-center text-sm text-white/80 mb-2">
         <Settings className="h-4 w-4 mr-2" />
-        <span className="font-medium">Dataset Configuration</span>
+        <span className="font-medium">{t('importModal.huggingface.config.title')}</span>
       </div>
 
       {/* Config Selector */}
       {configs.length > 1 && (
         <div>
           <label className="block text-xs text-white/60 mb-1">
-            Configuration (Subset)
+            {t('importModal.huggingface.config.configuration')}
           </label>
           <select
             value={selectedConfig || configs[0]?.config_name || ""}
@@ -106,7 +108,7 @@ const ConfigSplitSelector = ({
           {selectedConfig && (
             <div className="mt-2 p-2 bg-black/20 rounded text-xs text-white/70">
               <div className="flex items-center justify-between">
-                <span>Available splits:</span>
+                <span>{t('importModal.huggingface.config.availableSplits')}:</span>
                 <span className="text-primary">
                   {configs.find(c => c.config_name === selectedConfig)?.splits.join(", ")}
                 </span>
@@ -120,7 +122,7 @@ const ConfigSplitSelector = ({
       {availableSplits.length > 1 && (
         <div>
           <label className="block text-xs text-white/60 mb-1">
-            Split
+            {t('importModal.huggingface.config.split')}
           </label>
           <select
             value={selectedSplit || availableSplits[0]?.split || ""}
@@ -144,7 +146,7 @@ const ConfigSplitSelector = ({
       <div className="flex items-center text-xs text-white/60 pt-1">
         <Info className="h-3 w-3 mr-1" />
         <span>
-          Will import: <span className="text-white/80 font-medium">
+          {t('importModal.huggingface.config.willImport')}: <span className="text-white/80 font-medium">
             {selectedConfig || configs[0]?.config_name || "default"}/
             {selectedSplit || availableSplits[0]?.split || "train"}
           </span>
@@ -174,7 +176,7 @@ const DatasetIdInput = ({
   isValid: boolean;
   error?: string;
 }) => {
-
+  const { t } = useTranslation();
 
   // Parse the input to detect config/split
   useEffect(() => {
@@ -217,7 +219,7 @@ const DatasetIdInput = ({
     <div>
       <div className="flex items-center justify-between mb-2">
         <label htmlFor="dataset-id" className="block text-sm font-medium text-white/80">
-          Dataset ID
+          {t('importModal.huggingface.datasetId.label')}
         </label>
       
       </div>
@@ -226,7 +228,7 @@ const DatasetIdInput = ({
         <input
           id="dataset-id"
           type="text"
-          placeholder="microsoft/DialoGPT-medium or yandex/yambda:SelfRC/train"
+          placeholder={t('importModal.huggingface.datasetId.placeholder')}
           className={cn(
             "w-full px-3 py-3 h-12 bg-black/30 border border-white/20 rounded-lg text-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 placeholder:text-white/40 transition-all",
             error && "border-destructive focus:ring-destructive/50 focus:border-destructive",
@@ -271,6 +273,7 @@ const DatasetIdInput = ({
 };
 
 const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -284,7 +287,7 @@ const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
           </h4>
           {dataset.featured && (
             <span className="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded">
-              Featured
+              {t('importModal.huggingface.dataset.featured')}
             </span>
           )}
           {dataset.gated && <Lock className="h-3 w-3 text-yellow-500 ml-1" />}
@@ -306,7 +309,7 @@ const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center text-xs text-white/60">
           <Calendar className="h-3 w-3 mr-1" />
-          <span>Updated {dataset.lastModified || "Recently"}</span>
+          <span>{t('importModal.huggingface.dataset.updated')} {dataset.lastModified || t('importModal.huggingface.dataset.recently')}</span>
         </div>
         {dataset.likes && (
           <div className="flex items-center text-xs text-white/60">
@@ -325,12 +328,12 @@ const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
         {isImporting ? (
           <>
             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-            Importing
+            {t('importModal.huggingface.dataset.importing')}
           </>
         ) : (
           <>
             <Download className="h-3 w-3 mr-1" />
-            Import Dataset
+            {t('importModal.huggingface.dataset.import')}
           </>
         )}
       </Button>
@@ -339,21 +342,22 @@ const HFDatasetCard = ({ dataset, onImport, isImporting }) => {
 };
 
 const ImportStrategyIndicator = ({ strategy, status }) => {
+  const { t } = useTranslation();
   const strategyConfig = {
     "Direct Streaming": {
       icon: <Zap className="h-3 w-3" />,
       color: "text-blue-400",
-      description: "Fastest, no download required",
+      description: t('importModal.huggingface.strategy.directStreaming'),
     },
     "Parquet Download": {
       icon: <Download className="h-3 w-3" />,
       color: "text-green-400",
-      description: "Reliable, full dataset download",
+      description: t('importModal.huggingface.strategy.parquetDownload'),
     },
     "Alternative Format": {
       icon: <RefreshCw className="h-3 w-3" />,
       color: "text-yellow-400",
-      description: "Fallback to CSV/JSON format",
+      description: t('importModal.huggingface.strategy.alternativeFormat'),
     },
   };
 
@@ -371,6 +375,7 @@ const ImportStrategyIndicator = ({ strategy, status }) => {
 };
 
 const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
+  const { t } = useTranslation();
   const [datasetId, setDatasetId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [authToken, setAuthToken] = useState("");
@@ -490,13 +495,13 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
     setInputError(null);
 
     if (!id.trim()) {
-      setInputError("Please enter a dataset ID");
+      setInputError(t('importModal.huggingface.validation.datasetIdRequired'));
       return false;
     }
 
     const validation = validateDatasetId(id);
     if (!validation.isValid) {
-      setInputError(validation.error || "Please enter a valid dataset ID");
+      setInputError(validation.error || t('importModal.huggingface.validation.invalidDatasetId'));
       return false;
     }
 
@@ -598,7 +603,7 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
               <div className="flex items-start">
                 <AlertTriangle className="h-4 w-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-red-400">
-                  <p className="font-medium">Import Failed</p>
+                  <p className="font-medium">{t('importModal.huggingface.error.importFailed')}</p>
                   <p className="text-xs text-red-400/80 mt-1">
                     {importError}
                   </p>
@@ -627,13 +632,13 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
                     className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded flex items-center hover:bg-green-500/30"
                   >
                     <Eye className="h-3 w-3 mr-1" />
-                    View
+                    {t('importModal.huggingface.actions.view')}
                   </a>
                 </div>
 
                 <div className="flex items-center text-xs text-white/70">
                   <CheckCircle className="h-3.5 w-3.5 mr-1.5 text-white/50" />
-                  <span>Valid dataset ID - ready to import</span>
+                  <span>{t('importModal.huggingface.status.validDatasetId')}</span>
                 </div>
               </div>
 
@@ -657,7 +662,7 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
               <div className="flex items-center">
                 <Key className="h-4 w-4 mr-2 text-yellow-500" />
                 <span className="text-sm font-medium text-white">
-                  Authentication (Optional)
+                  {t('importModal.huggingface.auth.title')}
                 </span>
               </div>
               <button
@@ -665,7 +670,7 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
                 onClick={() => setShowAuth(!showAuth)}
                 className="text-xs text-primary hover:text-primary-foreground"
               >
-                {showAuth ? "Hide" : "Show"}
+                {showAuth ? t('importModal.huggingface.auth.hide') : t('importModal.huggingface.auth.show')}
               </button>
             </div>
 
@@ -678,19 +683,19 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
                   className="overflow-hidden"
                 >
                   <p className="text-xs text-white/60 mb-3">
-                    Required for private or gated datasets. Get your token from{" "}
+                    {t('importModal.huggingface.auth.description')}{" "}
                     <a
                       href="https://huggingface.co/settings/tokens"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"
                     >
-                      HuggingFace Settings
+                      {t('importModal.huggingface.auth.settingsLink')}
                     </a>
                   </p>
                   <input
                     type="password"
-                    placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxx"
+                    placeholder={t('importModal.huggingface.auth.tokenPlaceholder')}
                     className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded text-white/90 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-white/40"
                     value={authToken}
                     onChange={(e) => setAuthToken(e.target.value)}
@@ -716,11 +721,11 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
               {isImporting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Importing
+                  {t('importModal.huggingface.actions.importing')}
                 </>
               ) : (
                 <>
-                  Import Dataset
+                  {t('importModal.huggingface.actions.importDataset')}
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </>
               )}
@@ -761,8 +766,8 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
 
                   <p className="text-xs text-primary/80">
                     {importProgress > 0
-                      ? `${Math.round(importProgress * 100)}% complete`
-                      : "Initializing..."}
+                      ? `${Math.round(importProgress * 100)}% ${t('importModal.huggingface.progress.complete')}`
+                      : t('importModal.huggingface.progress.initializing')}
                   </p>
                 </div>
               </motion.div>
@@ -774,12 +779,12 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
         <div className="border-t border-white/10 pt-6 mb-6">
           <div className="mb-4">
             <h4 className="text-base font-medium text-white mb-2 flex items-center">
-              Search Datasets
+              {t('importModal.huggingface.search.title')}
             </h4>
             <form onSubmit={handleSearch} className="flex gap-2">
               <input
                 type="text"
-                placeholder="Search datasets by name, task, or description..."
+                placeholder={t('importModal.huggingface.search.placeholder')}
                 className="flex-1 px-3 py-2 bg-black/30 border border-white/20 rounded text-white/90 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-white/40"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -804,7 +809,7 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
           {searchResults.length > 0 && (
             <div className="mb-6">
               <h5 className="text-sm font-medium text-white/80 mb-3">
-                Search Results ({searchResults.length})
+                {t('importModal.huggingface.search.results')} ({searchResults.length})
               </h5>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {searchResults.slice(0, 9).map((dataset) => (
@@ -824,17 +829,17 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
         <div className="border-t border-white/10 pt-6">
           <div className="mb-4">
             <h4 className="text-base font-medium text-white mb-2 flex items-center">
-              Featured Datasets
+              {t('importModal.huggingface.featured.title')}
             </h4>
             <p className="text-sm text-white/60">
-              Popular datasets to get you started
+              {t('importModal.huggingface.featured.description')}
             </p>
           </div>
 
           {datasetsLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
-              <span className="text-white/60">Loading datasets...</span>
+              <span className="text-white/60">{t('importModal.huggingface.loading.datasets')}</span>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -857,17 +862,17 @@ const HuggingFacePanel: FC<HuggingFacePanelProps> = ({ onImport }) => {
           <div className="flex items-center mb-2">
          
             <span className="font-medium text-white/80">
-              HuggingFace Integration:
+              {t('importModal.huggingface.footer.title')}:
             </span>
           </div>
           <ul className="space-y-1 ml-4">
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Memory-efficient processing for large datasets
+              {t('importModal.huggingface.footer.memoryEfficient')}
             </li>
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Multi-format support (Parquet, CSV, JSON, XLSX, TXT)
+              {t('importModal.huggingface.footer.multiFormat')}
             </li>
           </ul>
         </div>

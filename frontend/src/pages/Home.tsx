@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useCallback, } from "react";
 import { Search, BarChart3 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import MainLayout from "@/components/layout/MainLayout";
 import DataPreviewTab from "@/components/tabs/DataPreviewTab";
@@ -27,6 +28,7 @@ import { ImportProvider } from "@/types/remoteImport";
  * Main application home page component with file-centric navigation
  */
 const Home = () => {
+  const { t } = useTranslation();
   const {
     // Store data
     sourceType,
@@ -132,9 +134,9 @@ const Home = () => {
   return (
     <>
       <SEO 
-        title="DataKit"
-        description="Your data, your choice. Process locally for complete privacy or leverage cloud when you need to collaborate. The modern data analysis platform that adapts to you."
-        keywords="data analysis, privacy-first analytics, local data processing, WebAssembly, DuckDB, data visualization, SQL queries, CSV analysis, Excel processing, data science, business intelligence, secure analytics, DataKit"
+        title={t('seo.title')}
+        description={t('seo.description')}
+        keywords={t('seo.keywords')}
         url="/"
       />
       <MainLayout 
@@ -226,8 +228,8 @@ const Home = () => {
                     showColumnStats && columnStats.length > 0 ? 'text-white' : 'text-white/50'
                   }`}>
                     {columnStats.length > 0 
-                      ? (showColumnStats ? 'Hide Stats' : 'Show Stats')
-                      : 'Column Stats'
+                      ? (showColumnStats ? t('dataGrid.stats.hideStats') : t('dataGrid.stats.showStats'))
+                      : t('dataGrid.stats.columnStats')
                     }
                   </span>
                 </motion.button>
@@ -240,7 +242,7 @@ const Home = () => {
                   whileTap={{ scale: 0.98 }}
                 >
                   <Search className="h-4 w-4 text-white/50 hover:text-white/70 relative z-10" />
-                  <span className="text-white/50 hover:text-white/70 relative z-10 font-medium">Inspector</span>
+                  <span className="text-white/50 hover:text-white/70 relative z-10 font-medium">{t('dataGrid.inspector')}</span>
                 </motion.button>
               </motion.div>
             )}
@@ -258,7 +260,7 @@ const Home = () => {
                   } transition-colors`}
                   onClick={() => setJsonViewMode("table")}
                 >
-                  Table
+                  {t('dataGrid.jsonView.table')}
                 </button>
                 <button
                   className={`px-3 py-1 text-xs ${
@@ -268,7 +270,7 @@ const Home = () => {
                   } transition-colors`}
                   onClick={() => setJsonViewMode("tree")}
                 >
-                  Tree
+                  {t('dataGrid.jsonView.tree')}
                 </button>
               </div>
             </div>

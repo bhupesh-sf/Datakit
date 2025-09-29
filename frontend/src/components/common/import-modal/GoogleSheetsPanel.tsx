@@ -9,6 +9,7 @@ import {
   ChevronRight,
   ExternalLink,
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import GoogleSheetsIcon from "@/components/icons/GoogleSheetsIcon";
@@ -21,6 +22,7 @@ interface GoogleSheetsPanelProps {
 }
 
 const GoogleSheetsPanel: React.FC<GoogleSheetsPanelProps> = ({ onImport }) => {
+  const { t } = useTranslation();
   const [url, setUrl] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
 
@@ -64,7 +66,7 @@ const GoogleSheetsPanel: React.FC<GoogleSheetsPanelProps> = ({ onImport }) => {
 
     // Basic URL validation
     if (!url.trim()) {
-      setInputError("Please enter a Google Sheets URL");
+      setInputError(t('importModal.googleSheets.validation.urlRequired'));
       return false;
     }
 
@@ -75,14 +77,14 @@ const GoogleSheetsPanel: React.FC<GoogleSheetsPanelProps> = ({ onImport }) => {
       // Validate for Google Sheets URL
       if (!isGoogleSheet) {
         setInputError(
-          "Please enter a valid Google Sheets URL that's published to the web"
+          t('importModal.googleSheets.validation.invalidPublishedUrl')
         );
         return false;
       }
 
       return true;
     } catch (err) {
-      setInputError("Please enter a valid URL");
+      setInputError(t('importModal.googleSheets.validation.invalidUrl'));
       return false;
     }
   };
@@ -126,13 +128,13 @@ const GoogleSheetsPanel: React.FC<GoogleSheetsPanelProps> = ({ onImport }) => {
               htmlFor="google-sheets-url"
               className="block text-sm font-medium text-white/80 mb-2"
             >
-              Google Sheets URL (published to the web)
+              {t('importModal.googleSheets.urlLabel')}
             </label>
             <div className="relative">
               <input
                 id="google-sheets-url"
                 type="text"
-                placeholder="https://docs.google.com/spreadsheets/d/e/2PACX..."
+                placeholder={t('importModal.googleSheets.urlPlaceholder')}
                 className={cn(
                   "w-full px-3 py-3 h-12 bg-black/30 border border-white/20 rounded-lg text-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 placeholder:text-white/40 transition-all",
                   inputError &&
@@ -195,7 +197,7 @@ const GoogleSheetsPanel: React.FC<GoogleSheetsPanelProps> = ({ onImport }) => {
 
                   <div className="flex items-center text-xs text-white/70">
                     <Table className="h-3.5 w-3.5 mr-1.5 text-white/50" />
-                    <span>Published sheet - ready to import</span>
+                    <span>{t('importModal.googleSheets.status.readyToImport')}</span>
                   </div>
 
                   {/* Preview link */}
@@ -207,7 +209,7 @@ const GoogleSheetsPanel: React.FC<GoogleSheetsPanelProps> = ({ onImport }) => {
                       className="text-xs text-green-400 hover:text-green-300 flex items-center"
                     >
                       <ExternalLink className="h-3 w-3 mr-1" />
-                      Open in Google Sheets
+                      {t('importModal.googleSheets.actions.openInSheets')}
                     </a>
                   </div>
                 </div>
@@ -231,11 +233,11 @@ const GoogleSheetsPanel: React.FC<GoogleSheetsPanelProps> = ({ onImport }) => {
               {isImporting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Importing
+                  {t('importModal.googleSheets.actions.importing')}
                 </>
               ) : (
                 <>
-                  Import Sheet
+                  {t('importModal.googleSheets.actions.importSheet')}
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </>
               )}
@@ -302,20 +304,20 @@ const GoogleSheetsPanel: React.FC<GoogleSheetsPanelProps> = ({ onImport }) => {
         <div className="text-xs text-white/60">
           <div className="flex items-center mb-2">
             <GoogleSheetsIcon className="h-3 w-3 mr-1.5 text-green-500" />
-            <span className="font-medium text-white/80">Requirements:</span>
+            <span className="font-medium text-white/80">{t('importModal.googleSheets.requirements.title')}:</span>
           </div>
           <ul className="space-y-1 ml-4">
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Sheet must be published to the web
+              {t('importModal.googleSheets.requirements.published')}
             </li>
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Supports CSV, Excel, and web page formats
+              {t('importModal.googleSheets.requirements.formats')}
             </li>
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              No authentication required for published sheets
+              {t('importModal.googleSheets.requirements.noAuth')}
             </li>
           </ul>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 
@@ -24,6 +25,7 @@ import SplitResizeHandle from "./SplitResizeHandle";
 
 
 const AIWorkspace: React.FC = () => {
+  const { t } = useTranslation();
   const [schemaBrowserOpen, setSchemaBrowserOpen] = useState(false);
   const [resultsExpanded, setResultsExpanded] = useState(false);
   const [resultsPanelHeight, setResultsPanelHeight] = useState(300);
@@ -160,7 +162,7 @@ const AIWorkspace: React.FC = () => {
     if (activeViz) {
       setLiveConfig({
         ...activeViz.config,
-        title: 'AI Generated Visualization'
+        title: t('ai.workspace.aiGeneratedVisualization')
       });
     }
   };
@@ -306,7 +308,7 @@ const AIWorkspace: React.FC = () => {
                   chartType={activeViz.chartType}
                   sql={activeViz.sql}
                   insights={activeViz.insights}
-                  title={vizCustomizeMode ? liveConfig?.title : undefined}
+                  title={vizCustomizeMode ? (liveConfig?.title || t('ai.workspace.aiGeneratedVisualization')) : undefined}
                   onExpand={handleVisualizationExpand}
                   onExport={handleVisualizationExport}
                   onToggle={vizCustomizeMode ? handleVisualizationExitCustomize : handleVisualizationToggle}

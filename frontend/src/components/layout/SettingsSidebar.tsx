@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 
   User, 
@@ -27,6 +28,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   activeTab,
   onTabChange,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { showSuccess } = useNotifications();
@@ -39,8 +41,8 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
       
       // Show success notification for signout
       showSuccess(
-        "Signed out successfully",
-        "You've been securely signed out of DataKit.",
+        t('settings.signout.successTitle', { defaultValue: 'Signed out successfully' }),
+        t('settings.signout.successMessage', { defaultValue: "You've been securely signed out of DataKit." }),
         { 
           icon: 'shield',
           duration: 3000
@@ -52,12 +54,12 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   };
 
   const tabs = [
-    { id: "profile", name: "Profile", icon: User },
-    { id: "workspace", name: "Workspace & Team", icon: Users },
-    { id: "ai", name: "AI assistant settings", icon: Trees },
-    { id: "appearance", name: "Appearance", icon: Palette },
-    { id: "notifications", name: "Notifications", icon: Bell },
-    { id: "subscription", name: "Subscription", icon: CreditCard },
+    { id: "profile", name: t('settings.tabs.profile', { defaultValue: 'Profile' }), icon: User },
+    { id: "workspace", name: t('settings.tabs.workspace', { defaultValue: 'Workspace & Team' }), icon: Users },
+    { id: "ai", name: t('settings.tabs.ai', { defaultValue: 'AI assistant settings' }), icon: Trees },
+    { id: "appearance", name: t('settings.tabs.appearance', { defaultValue: 'Appearance' }), icon: Palette },
+    { id: "notifications", name: t('settings.tabs.notifications', { defaultValue: 'Notifications' }), icon: Bell },
+    { id: "subscription", name: t('settings.tabs.subscription', { defaultValue: 'Subscription' }), icon: CreditCard },
   ];
 
   const toggleSidebar = () => {
@@ -105,7 +107,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         <button
           onClick={() => navigate("/")}
           className="w-full flex items-center justify-center p-2 text-white/60 hover:text-white hover:bg-white/5 rounded transition-custom"
-          title="Back to DataKit"
+          title={t('settings.navigation.backToDataKit', { defaultValue: 'Back to DataKit' })}
         >
           <Home size={16} />
         </button>
@@ -113,7 +115,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         <button
           onClick={handleLogout}
           className="w-full flex items-center justify-center p-2 text-red-400/60 hover:text-red-400 hover:bg-red-400/5 rounded transition-custom"
-          title="Sign Out"
+          title={t('settings.navigation.signOut', { defaultValue: 'Sign Out' })}
         >
           <LogOut size={16} />
         </button>
@@ -136,9 +138,9 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
           </button>
           <div>
             <h1 className="text-white font-heading font-medium text-lg">
-              Settings
+              {t('settings.header.title', { defaultValue: 'Settings' })}
             </h1>
-            <p className="text-xs text-white/50">Manage your account</p>
+            <p className="text-xs text-white/50">{t('settings.header.subtitle', { defaultValue: 'Manage your account' })}</p>
           </div>
         </div>
       </div>
@@ -175,7 +177,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
       {/* Sign Out Button */}
       <div className="px-5 py-3 border-t border-white border-opacity-10">
         <Button
-        variant="outline"
+          variant="outline"
           onClick={handleLogout}
           className="w-full flex items-center p-3 rounded text-sm text-white text-opacity-80 hover:bg-background hover:bg-opacity-30 transition-custom"
         >
@@ -183,20 +185,20 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
             size={16}
             className="mr-1 flex-shrink-0 text-white/50"
           />
-          <span className="font-medium">Sign Out</span>
+          <span className="font-medium">{t('settings.signout.button', { defaultValue: 'Sign Out' })}</span>
         </Button>
       </div>
 
       <div className="px-4 py-3 text-center border-t border-white border-opacity-5">
         <p className="text-xs text-white text-opacity-50">
-          Powered by DuckDB {" | "}
+          {t('settings.footer.poweredBy', { defaultValue: 'Powered by DuckDB' })} {" | "}
           <a
             href="https://amin.contact"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline"
           >
-            built
+            {t('settings.footer.built', { defaultValue: 'built' })}
           </a>
           {" @ "}
           <a
@@ -205,7 +207,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
             rel="noopener noreferrer"
             className="text-primary hover:underline"
           >
-            DataKit
+            {t('settings.footer.company', { defaultValue: 'DataKit' })}
           </a>
         </p>
       </div>
@@ -228,7 +230,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
       <button
         onClick={toggleSidebar}
         className="absolute top-4 -right-3 w-6 h-6 bg-black border border-white/100 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:border/10 transition-colors z-100 shadow-lg"
-        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        aria-label={isCollapsed ? t('settings.sidebar.expand', { defaultValue: 'Expand sidebar' }) : t('settings.sidebar.collapse', { defaultValue: 'Collapse sidebar' })}
       >
         {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>

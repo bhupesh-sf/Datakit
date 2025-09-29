@@ -1,5 +1,6 @@
 import React from 'react';
 import { Download, TableIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { useQueryColumnFormatting } from './useQueryColumnFormatting';
@@ -25,6 +26,7 @@ const QueryResultsHeader: React.FC<QueryResultsHeaderProps> = ({
   onImportAsTable,
   isImporting = false
 }) => {
+  const { t } = useTranslation();
   const { formatCellValue } = useQueryColumnFormatting({
     results,
     columns,
@@ -68,10 +70,10 @@ const QueryResultsHeader: React.FC<QueryResultsHeaderProps> = ({
   return (
     <div className="flex justify-between items-center p-3 border-b border-white/10">
       <div className="text-xs text-white text-opacity-70">
-        <span className="font-medium">{totalRows.toLocaleString()}</span> rows returned
+        <span className="font-medium">{totalRows.toLocaleString()}</span> {t('queryResults.header.rowsReturned', { defaultValue: 'rows returned' })}
         {totalRows > rowsPerPage && (
           <span className="ml-2">
-            (showing page {currentPage} of {totalPages})
+            ({t('queryResults.header.showingPage', { defaultValue: 'showing page {{current}} of {{total}}', current: currentPage, total: totalPages })})
           </span>
         )}
       </div>
@@ -101,7 +103,7 @@ const QueryResultsHeader: React.FC<QueryResultsHeaderProps> = ({
           onClick={downloadCSV}
         >
           <Download size={12} className="mr-1" />
-          <span>Download CSV</span>
+          <span>{t('queryResults.header.downloadCSV', { defaultValue: 'Download CSV' })}</span>
         </Button>
       </div>
     </div>

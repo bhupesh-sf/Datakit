@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { Table, AlertCircle } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 import { useAIStore } from "@/store/aiStore";
 import { useQueryResultsImport } from "@/hooks/query/useQueryResultsImport";
@@ -16,6 +17,7 @@ interface ResultsPanelProps {
 }
 
 const ResultsPanel: React.FC<ResultsPanelProps> = ({ height, activeFile }) => {
+  const { t } = useTranslation();
   const { queryResults } = useAIStore();
   const { isImporting, importQueryResultsAsTable } = useQueryResultsImport();
   const [showSaveAsTableModal, setShowSaveAsTableModal] = useState(false);
@@ -50,7 +52,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({ height, activeFile }) => {
       <div className="h-full flex items-center justify-center">
         <div className="text-center text-white/50">
           <Table className="h-12 w-12 mx-auto mb-3 opacity-20" />
-          <p className="text-sm">Query results will appear here</p>
+          <p className="text-sm">{t('ai.results.placeholder', { defaultValue: 'Query results will appear here' })}</p>
         </div>
       </div>
     );
@@ -61,7 +63,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({ height, activeFile }) => {
       <div className="h-full flex items-center justify-center p-8">
         <div className="text-center max-w-md">
           <AlertCircle className="h-12 w-12 mx-auto mb-3 text-red-400" />
-          <h3 className="text-sm font-medium text-white mb-2">Query Error</h3>
+          <h3 className="text-sm font-medium text-white mb-2">{t('ai.results.error.title', { defaultValue: 'Query Error' })}</h3>
           <p className="text-xs text-white/60">{queryResults.error}</p>
         </div>
       </div>

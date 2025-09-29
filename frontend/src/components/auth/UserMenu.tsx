@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   User,
   Settings,
@@ -27,6 +28,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
   variant = 'header',
   className = '',
 }) => {
+  const { t } = useTranslation();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const { setActiveProvider } = useAIStore();
   const { showSuccess } = useNotifications();
@@ -59,8 +61,8 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
     // Show success notification for signout
     showSuccess(
-      'Signed out successfully',
-      "You've been securely signed out of DataKit.",
+      t('auth.userMenu.signOutSuccess', { defaultValue: 'Signed out successfully' }),
+      t('auth.userMenu.signOutMessage', { defaultValue: "You've been securely signed out of DataKit." }),
       {
         icon: 'shield',
         duration: 3000,
@@ -89,7 +91,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             whileTap={{ scale: 0.95 }}
             onClick={() => handleOpenAuthModal('login')}
             className={`p-2 text-white/70 hover:text-white hover:bg-white/5 rounded transition-colors ${className}`}
-            title="Sign In"
+            title={t('auth.userMenu.signIn', { defaultValue: 'Sign In' })}
           >
             <LogIn size={14} />
           </motion.button>
@@ -102,7 +104,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             whileTap={{ scale: 0.95 }}
             onClick={() => handleOpenAuthModal('signup')}
             className="p-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 rounded transition-all duration-200"
-            title="Sign Up"
+            title={t('auth.userMenu.signUp', { defaultValue: 'Sign Up' })}
           >
             <UserPlus size={14} className="text-primary" />
           </motion.button>
@@ -132,7 +134,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
         >
           <div className="flex items-center justify-center">
             <span className="text-xs font-medium text-white group-hover:text-purple-100 transition-colors cursor-pointer">
-              Get Started Free
+              {t('auth.userMenu.getStartedFree', { defaultValue: 'Get Started Free' })}
             </span>
           </div>
         </motion.button>
@@ -149,7 +151,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
           ) : (
             <LogIn size={14} className="mr-1" />
           )}
-          <span className="text-xs">{isLoading ? '' : 'Sign In'}</span>
+          <span className="text-xs">{isLoading ? '' : t('auth.userMenu.signIn', { defaultValue: 'Sign In' })}</span>
         </Button>
 
         <AuthModal
@@ -225,7 +227,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
               >
                 <div className="px-3 py-2 border-b border-white/10">
                   <div className="text-sm font-medium text-white">
-                    {user?.name || 'User'}
+                    {user?.name || t('auth.userMenu.user', { defaultValue: 'User' })}
                   </div>
                   <div className="text-xs text-white/60">{user?.email}</div>
                 </div>
@@ -237,7 +239,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
                 >
                   <Settings size={14} />
-                  Settings
+                  {t('auth.userMenu.settings', { defaultValue: 'Settings' })}
                 </motion.button>
 
                 <hr className="border-white/10 my-1" />
@@ -249,7 +251,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
                 >
                   <LogOut size={14} />
-                  Sign Out
+                  {t('auth.userMenu.signOut', { defaultValue: 'Sign Out' })}
                 </motion.button>
               </motion.div>
             </>
@@ -281,7 +283,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
           <div className="flex-1 text-left min-w-0">
             <div className="text-sm font-medium truncate">
-              {user?.name || 'User'}
+              {user?.name || t('auth.userMenu.user', { defaultValue: 'User' })}
             </div>
             <div className="text-xs text-white/60 truncate">{user?.email}</div>
           </div>
@@ -328,7 +330,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors cursor-pointer"
                 >
                   <Settings size={14} />
-                  Settings
+                  {t('auth.userMenu.settings', { defaultValue: 'Settings' })}
                 </motion.button>
 
                 <hr className="border-white/10 my-1" />
@@ -340,7 +342,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors cursor-pointer"
                 >
                   <LogOut size={14} />
-                  Sign Out
+                  {t('auth.userMenu.signOut', { defaultValue: 'Sign Out' })}
                 </motion.button>
               </motion.div>
             </>
@@ -405,7 +407,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             >
               <div className="px-3 py-2 border-b border-white/10">
                 <div className="text-sm font-medium text-white">
-                  {user?.name || 'User'}
+                  {user?.name || t('auth.userMenu.user', { defaultValue: 'User' })}
                 </div>
                 <div className="text-xs text-white/60">{user?.email}</div>
               </div>
@@ -417,7 +419,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
               >
                 <Settings size={14} />
-                Settings
+                {t('auth.userMenu.settings', { defaultValue: 'Settings' })}
               </motion.button>
 
               <motion.button
@@ -430,7 +432,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
               >
                 <CreditCard size={14} />
-                Billing
+                {t('auth.userMenu.billing', { defaultValue: 'Billing' })}
               </motion.button>
 
               <hr className="border-white/10 my-1" />
@@ -442,7 +444,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
               >
                 <LogOut size={14} />
-                Sign Out
+                {t('auth.userMenu.signOut', { defaultValue: 'Sign Out' })}
               </motion.button>
             </motion.div>
           </>

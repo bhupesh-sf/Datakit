@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown, MoreVertical } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import MiniHistogram from './MiniHistogram';
 import TypeIndicator from './TypeIndicator';
 import { ColumnMetrics } from '@/store/inspectorStore';
@@ -36,6 +37,7 @@ const ColumnHeaderCell: React.FC<ColumnHeaderCellProps> = ({
   tableName,
   isView = false,
 }) => {
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = React.useState(false);
   
   const handleSort = () => {
@@ -110,7 +112,7 @@ const ColumnHeaderCell: React.FC<ColumnHeaderCellProps> = ({
                 className={`p-1 rounded hover:bg-white/10 transition-all duration-200 ${
                   isHovered ? 'opacity-100' : 'opacity-40'
                 }`}
-                title="AI Column Actions"
+                title={t('dataGrid.columnHeader.aiActions', { defaultValue: 'AI Column Actions' })}
               >
                 <MoreVertical size={14} className="text-white/80 hover:text-primary" />
               </button>
@@ -165,12 +167,12 @@ const ColumnHeaderCell: React.FC<ColumnHeaderCellProps> = ({
               <>
                 {stats.nullPercentage > 0 && (
                   <span className="whitespace-nowrap">
-                    null: {formatPercent(stats.nullPercentage)}
+                    {t('dataGrid.columnHeader.stats.null', { percentage: formatPercent(stats.nullPercentage), defaultValue: 'null: {{percentage}}' })}
                   </span>
                 )}
                 {stats.uniqueCount > 0 && (
                   <span className="whitespace-nowrap">
-                    uniq: {formatCount(stats.uniqueCount)}
+                    {t('dataGrid.columnHeader.stats.unique', { count: formatCount(stats.uniqueCount), defaultValue: 'uniq: {{count}}' })}
                   </span>
                 )}
                 {stats.numericStats && (
@@ -184,7 +186,7 @@ const ColumnHeaderCell: React.FC<ColumnHeaderCellProps> = ({
                 )}
               </>
             ) : (
-              <span className="text-white/20 text-[8px]">no stats</span>
+              <span className="text-white/20 text-[8px]">{t('dataGrid.columnHeader.stats.noStats', { defaultValue: 'no stats' })}</span>
             )}
           </div>
         </div>

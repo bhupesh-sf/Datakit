@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Download, X, Image, FileText, Clipboard } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toPng, toJpeg, toSvg } from 'html-to-image';
@@ -18,6 +19,7 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
   title = 'Visualization',
   data
 }) => {
+  const { t } = useTranslation();
   const [format, setFormat] = useState<'png' | 'jpeg' | 'svg' | 'csv'>('png');
   const [quality, setQuality] = useState<number>(0.92);
   const [includeTitle, setIncludeTitle] = useState<boolean>(true);
@@ -89,7 +91,7 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
     const chartElement = getVisualizationElement();
     if (!chartElement) {
       console.error('Chart element not found for export');
-      alert('Could not find chart element to export. Please try again.');
+      alert(t('ai.visualization.export.chartNotFound', { defaultValue: 'Could not find chart element to export. Please try again.' }));
       return;
     }
     
@@ -149,7 +151,7 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
       onClose();
     } catch (error) {
       console.error('Error exporting chart:', error);
-      alert('Failed to export chart. Please try again.');
+      alert(t('ai.visualization.export.exportFailed', { defaultValue: 'Failed to export chart. Please try again.' }));
     } finally {
       setIsExporting(false);
     }
@@ -189,7 +191,7 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
       console.error('Error copying chart to clipboard:', error);
-      alert('Failed to copy chart to clipboard.');
+      alert(t('ai.visualization.export.copyFailed', { defaultValue: 'Failed to copy chart to clipboard.' }));
     } finally {
       setIsExporting(false);
     }
@@ -199,7 +201,7 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
     <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50">
       <div className="bg-black p-6 rounded-lg shadow-lg w-96 border border-white/10">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-white">Export Visualization</h3>
+          <h3 className="text-lg font-medium text-white">{t('ai.visualization.export.title', { defaultValue: 'Export Visualization' })}</h3>
           <Button
             variant="ghost"
             size="sm"
@@ -213,7 +215,7 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
         <div className="space-y-4">
           {/* Format selection */}
           <div>
-            <label className="block text-sm font-medium mb-2 text-white/80">Export Format</label>
+            <label className="block text-sm font-medium mb-2 text-white/80">{t('ai.visualization.export.format', { defaultValue: 'Export Format' })}</label>
             <div className="grid grid-cols-4 gap-2">
               <FormatOption 
                 id="png" 
@@ -250,7 +252,7 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
           {(format === 'png' || format === 'jpeg') && (
             <div>
               <label className="block text-sm font-medium mb-2 text-white/80">
-                Quality: {Math.round(quality * 100)}%
+                {t('ai.visualization.export.quality', { defaultValue: 'Quality: {percent}%', percent: Math.round(quality * 100) })}
               </label>
               <input
                 type="range"
@@ -267,7 +269,7 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
           {/* Options */}
           {format !== 'csv' && (
             <div>
-              <label className="block text-sm font-medium mb-2 text-white/80">Options</label>
+              <label className="block text-sm font-medium mb-2 text-white/80">{t('ai.visualization.export.options', { defaultValue: 'Options' })}</label>
               <div className="space-y-2">
                 <div className="flex items-center">
                   <input
@@ -277,7 +279,7 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
                     onChange={(e) => setIncludeTitle(e.target.checked)}
                     className="mr-2 cursor-pointer accent-primary" 
                   />
-                  <label htmlFor="include-title" className="text-sm text-white/70">Include title</label>
+                  <label htmlFor="include-title" className="text-sm text-white/70">{t('ai.visualization.export.includeTitle', { defaultValue: 'Include title' })}</label>
                 </div>
                 <div className="flex items-center">
                   <input
@@ -287,7 +289,7 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
                     onChange={(e) => setIncludeBackground(e.target.checked)}
                     className="mr-2 cursor-pointer accent-primary"
                   />
-                  <label htmlFor="include-background" className="text-sm text-white/70">Include background</label>
+                  <label htmlFor="include-background" className="text-sm text-white/70">{t('ai.visualization.export.includeBackground', { defaultValue: 'Include background' })}</label>
                 </div>
               </div>
             </div>
@@ -302,7 +304,7 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
             disabled={isExporting}
           >
             <Download size={16} className="mr-1" />
-            {isExporting ? 'Exporting...' : `Export ${format.toUpperCase()}`}
+            {isExporting ? t('ai.visualization.export.exporting', { defaultValue: 'Exporting...' }) : t('ai.visualization.export.exportFormat', { defaultValue: 'Export {format}', format: format.toUpperCase() })}
           </Button>
           
           {format !== 'csv' && (
@@ -314,12 +316,12 @@ const VisualizationExportModal: React.FC<VisualizationExportModalProps> = ({
               {copySuccess ? (
                 <>
                   <Clipboard size={16} className="mr-1 text-primary" />
-                  Copied!
+                  {t('ai.visualization.export.copied', { defaultValue: 'Copied!' })}
                 </>
               ) : (
                 <>
                   <Clipboard size={16} className="mr-1" />
-                  Copy
+                  {t('ai.visualization.export.copy', { defaultValue: 'Copy' })}
                 </>
               )}
             </Button>

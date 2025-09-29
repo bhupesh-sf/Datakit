@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Download,
@@ -95,6 +96,7 @@ const OllamaModelManager: React.FC<OllamaModelManagerProps> = ({
   onModelSelect,
   selectedModel,
 }) => {
+  const { t } = useTranslation();
   const [installedModels, setInstalledModels] = useState<OllamaModel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -127,7 +129,7 @@ const OllamaModelManager: React.FC<OllamaModelManagerProps> = ({
         const models = await aiService.getOllamaModels();
         setInstalledModels(models);
       } else {
-        setConnectionError(`Cannot connect to Ollama at ${baseUrl}. Make sure Ollama is running.`);
+        setConnectionError(t('ai.ollama.connectionFailed', { defaultValue: `Cannot connect to Ollama at ${baseUrl}. Make sure Ollama is running.`, baseUrl }));
       }
     } catch (error) {
       console.error('Failed to connect to Ollama:', error);
@@ -195,7 +197,7 @@ const OllamaModelManager: React.FC<OllamaModelManagerProps> = ({
     return (
       <div className="flex flex-col items-center justify-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-white/70">Connecting to Ollama...</p>
+        <p className="text-white/70">{t('ai.ollama.connecting', { defaultValue: 'Connecting to Ollama...' })}</p>
       </div>
     );
   }
@@ -206,40 +208,39 @@ const OllamaModelManager: React.FC<OllamaModelManagerProps> = ({
         <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
           <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-white">Connection Failed</p>
+            <p className="text-sm font-medium text-white">{t('ai.ollama.connectionFailedTitle', { defaultValue: 'Connection Failed' })}</p>
             <p className="text-xs text-white/70 mt-1">
-              {connectionError || "Cannot connect to Ollama"}
+              {connectionError || t('ai.ollama.cannotConnect', { defaultValue: 'Cannot connect to Ollama' })}
             </p>
           </div>
         </div>
 
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-white">How to fix this:</h4>
+          <h4 className="text-sm font-medium text-white">{t('ai.ollama.howToFix', { defaultValue: 'How to fix this:' })}</h4>
           <ul className="text-xs text-white/70 space-y-2">
             <li className="flex items-start gap-2">
               <Circle className="h-1 w-1 mt-1.5 flex-shrink-0" />
-              <span>Install Ollama from <a href="https://ollama.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">ollama.com</a></span>
+              <span>{t('ai.ollama.installStep', { defaultValue: 'Install Ollama from' })} <a href="https://ollama.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">ollama.com</a></span>
             </li>
             <li className="flex items-start gap-2">
               <Circle className="h-1 w-1 mt-1.5 flex-shrink-0" />
-              <span>Run <code className="bg-white/10 px-1 rounded">OLLAMA_ORIGINS="https://datakit.page" ollama serve</code> in terminal</span>
+              <span>{t('ai.ollama.runCommand', { defaultValue: 'Run' })} <code className="bg-white/10 px-1 rounded">OLLAMA_ORIGINS="https://datakit.page" ollama serve</code> {t('ai.ollama.inTerminal', { defaultValue: 'in terminal' })}</span>
             </li>
             <li className="flex items-start gap-2">
               <Circle className="h-1 w-1 mt-1.5 flex-shrink-0" />
-              <span>Make sure it's running on {baseUrl}</span>
+              <span>{t('ai.ollama.makeSureRunning', { defaultValue: 'Make sure it\'s running on {baseUrl}', baseUrl })}</span>
             </li>
           </ul>
           
           <div className="mt-3 p-2 rounded-lg">
-            <p className="text-xs font-medium mb-1">Browser Compatibility Note:</p>
+            <p className="text-xs font-medium mb-1">{t('ai.ollama.browserCompatibility', { defaultValue: 'Browser Compatibility Note:' })}</p>
             <a
               href="https://firefox.com"
               target="_blank"
               rel="noopener noreferrer"
             >
             <p className="text-xs text-white/60">
-              If connection still fails, try using <span className="text-orange-300">Firefox</span> as it has better 
-              support for localhost connections from HTTPS sites.
+              {t('ai.ollama.firefoxNote', { defaultValue: 'If connection still fails, try using Firefox as it has better support for localhost connections from HTTPS sites.' })}
             </p>
             </a>
           </div>
@@ -252,7 +253,7 @@ const OllamaModelManager: React.FC<OllamaModelManagerProps> = ({
           className="w-full"
         >
           <RefreshCw className="h-4 w-4 mr-2" />
-          Try Again
+          {t('ai.ollama.tryAgain', { defaultValue: 'Try Again' })}
         </Button>
       </div>
     );
@@ -264,7 +265,7 @@ const OllamaModelManager: React.FC<OllamaModelManagerProps> = ({
       <div className="flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
         <CheckCircle className="h-4 w-4 text-green-400" />
         <div className="flex-1">
-          <p className="text-sm font-medium text-white">Connected to Ollama</p>
+          <p className="text-sm font-medium text-white">{t('ai.ollama.connected', { defaultValue: 'Connected to Ollama' })}</p>
           <p className="text-xs text-white/70">{baseUrl}</p>
         </div>
         <Button
@@ -281,16 +282,16 @@ const OllamaModelManager: React.FC<OllamaModelManagerProps> = ({
       <div>
         <div className="flex items-center justify-between mb-4">
           <h4 className="text-sm font-medium text-white">
-            Installed Models ({installedModels.length})
+            {t('ai.ollama.installedModels', { defaultValue: 'Installed Models ({count})', count: installedModels.length })}
           </h4>
         </div>
 
         {installedModels.length === 0 ? (
           <div className="text-center py-8">
             <Server className="h-8 w-8 text-white/30 mx-auto mb-3" />
-            <p className="text-sm text-white/70 mb-2">No models installed</p>
+            <p className="text-sm text-white/70 mb-2">{t('ai.ollama.noModels', { defaultValue: 'No models installed' })}</p>
             <p className="text-xs text-white/50">
-              Pull a model below to get started
+              {t('ai.ollama.pullModelToStart', { defaultValue: 'Pull a model below to get started' })}
             </p>
           </div>
         ) : (
@@ -436,16 +437,16 @@ const OllamaModelManager: React.FC<OllamaModelManagerProps> = ({
         <div className="flex items-start gap-2">
           <Server className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
           <div className="text-xs text-white/70">
-            <p className="mb-1">Models run entirely on your machine for complete privacy.</p>
+            <p className="mb-1">{t('ai.ollama.privacyNote', { defaultValue: 'Models run entirely on your machine for complete privacy.' })}</p>
             <p>
-              Need more models? Visit{' '}
+              {t('ai.ollama.needMoreModels', { defaultValue: 'Need more models? Visit' })}{' '}
               <a
                 href="https://ollama.com/library"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:underline inline-flex items-center gap-1"
               >
-                Ollama Library
+                {t('ai.ollama.ollamaLibrary', { defaultValue: 'Ollama Library' })}
                 <ExternalLink className="h-3 w-3" />
               </a>
             </p>

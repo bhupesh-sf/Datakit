@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import AuthModal from './AuthModal';
 import { Button } from '../ui/Button';
 import { useAIStore } from '@/store/aiStore';
@@ -10,6 +11,7 @@ interface SignupPromptPopupProps {
 }
 
 const SignupPromptPopup: React.FC<SignupPromptPopupProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
 
@@ -51,7 +53,7 @@ const SignupPromptPopup: React.FC<SignupPromptPopupProps> = ({ onClose }) => {
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <h3 className="font-medium text-sm text-white">
-              The data platform that works your way
+              {t('signup.popup.title')}
             </h3>
             <button
               onClick={onClose}
@@ -64,37 +66,37 @@ const SignupPromptPopup: React.FC<SignupPromptPopupProps> = ({ onClose }) => {
           {/* Content */}
           <div className="mb-4">
             <p className="text-white/70 text-xs leading-relaxed mb-4">
-              Your data, your choice. Process locally for complete privacy or leverage cloud when you need to collaborate.
+              {t('signup.popup.description')}
             </p>
 
             {/* Simplified benefit showcase */}
             <div className="bg-gradient-to-r from-cyan-500/10 to-teal-500/10 rounded-md p-3 border border-cyan-500/20 mb-3">
               <span className="text-xs font-medium text-white/90 block mb-2">
-                What you get free
+                {t('signup.popup.freeFeatures')}
               </span>
               <ul className="text-xs text-white/70 space-y-1">
-                <li>• All cloud connectors</li>
-                <li>• $3 DataKit Assistant credits</li>
-                <li>• Unlimited local projects</li>
-                <li>• Export & visualizations</li>
+                <li>• {t('signup.popup.features.cloudConnectors')}</li>
+                <li>• {t('signup.popup.features.credits')}</li>
+                <li>• {t('signup.popup.features.localProjects')}</li>
+                <li>• {t('signup.popup.features.exportViz')}</li>
               </ul>
             </div>
 
             {/* Team/Enterprise teaser */}
             <div className="px-3 py-2 bg-white/5 rounded-md border border-white/10">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium text-white/80">Enterprise ready</span>
+                <span className="text-xs font-medium text-white/80">{t('signup.popup.enterprise.title')}</span>
                 <a
                   href="https://datakit.studio/contact"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
                 >
-                  Contact us →
+{t('signup.popup.enterprise.contact')}
                 </a>
               </div>
               <p className="text-xs text-white/60">
-                Deploy on-premise for complete control or hybrid cloud for flexibility. SOC2 compliant infrastructure.
+                {t('signup.popup.enterprise.description')}
               </p>
             </div>
           </div>
@@ -106,14 +108,14 @@ const SignupPromptPopup: React.FC<SignupPromptPopupProps> = ({ onClose }) => {
               onClick={handleSignupClick}
               className="w-full px-4 py-2.5 text-sm bg-gradient-to-r from-cyan-500/10 to-teal-500/10 text-white border border-cyan-500/30 hover:border-cyan-500/50 rounded transition-all font-medium hover:shadow-lg hover:shadow-cyan-500/10"
             >
-              Start free with $3 credits →
+{t('signup.popup.startFree')}
             </Button>
             <Button
               variant="outline"
               onClick={handleLoginClick}
               className="w-full px-3 py-2 text-xs text-white/60 hover:text-white border border-white/10 hover:border-white/20 rounded transition-colors"
             >
-              Already have an account? Sign in
+{t('signup.popup.existingAccount')}
             </Button>
           </div>
         </div>

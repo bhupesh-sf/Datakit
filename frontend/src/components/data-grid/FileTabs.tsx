@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   X,
   XCircle,
@@ -103,6 +104,7 @@ const FileTabItem: React.FC<{
   onDragEnd,
   isOverflowing = false,
 }) => {
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -182,7 +184,7 @@ const FileTabItem: React.FC<{
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               className="flex-shrink-0"
-              title={`Split with ${tab.splitView.partnerId}`}
+              title={t('fileTabs.splitWith', { partner: tab.splitView.partnerId })}
             >
               <SplitSquareVertical className="h-3 w-3 text-primary" />
             </motion.div>
@@ -214,7 +216,7 @@ const FileTabItem: React.FC<{
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             className="w-2 h-2 rounded-full bg-green-400 shadow-lg"
-            title="Google Sheets"
+            title={t('fileTabs.googleSheets')}
           />
         )}
 
@@ -242,7 +244,7 @@ const FileTabItem: React.FC<{
           onTabClose(tab.id);
         }}
         className="ml-2 p-1 rounded-full text-white/60 hover:primary flex-shrink-0 transition-colors"
-        title="Close file"
+        title={t('fileTabs.closeFile')}
       >
         <X className="h-3 w-3" />
       </motion.button>
@@ -291,6 +293,7 @@ const ContextMenu: React.FC<{
   onDuplicate,
   onRename,
 }) => {
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -311,26 +314,26 @@ const ContextMenu: React.FC<{
 
   const menuItems = [
     {
-      label: 'Rename',
+      label: t('fileTabs.contextMenu.rename'),
       icon: FileText,
       action: () => onRename?.(tab.id),
       disabled: true,
     },
     {
-      label: 'Duplicate',
+      label: t('fileTabs.contextMenu.duplicate'),
       icon: Plus,
       action: () => onDuplicate?.(tab.id),
       disabled: true,
     },
     { type: 'separator' },
     {
-      label: 'Close Others',
+      label: t('fileTabs.contextMenu.closeOthers'),
       icon: Users,
       action: onCloseOthers,
       disabled: false,
     },
     {
-      label: 'Close All',
+      label: t('fileTabs.contextMenu.closeAll'),
       icon: XCircle,
       action: onCloseAll,
       disabled: false,
@@ -395,6 +398,7 @@ const OverflowMenu: React.FC<{
   isOpen: boolean;
   onToggle: () => void;
 }> = ({ hiddenTabs, onTabClick, isOpen, onToggle }) => {
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -418,7 +422,7 @@ const OverflowMenu: React.FC<{
         whileTap={{ scale: 0.95 }}
         onClick={onToggle}
         className="flex items-center h-11 px-2 text-white/70 hover:text-white rounded-lg"
-        title={`${hiddenTabs.length} more tabs`}
+        title={t('fileTabs.moreTabs', { count: hiddenTabs.length })}
       >
         <MoreHorizontal className="h-4 w-4" />
         <span className="ml-1 text-xs">{hiddenTabs.length}</span>
@@ -468,6 +472,7 @@ const FileTabs: React.FC<FileTabsProps> = ({
   className = '',
   maxVisibleTabs = 8,
 }) => {
+  const { t } = useTranslation();
   const { setSplitView } = useAppStore();
   const { fileInputRef, handleButtonClick, handleFileSelect, isProcessing } = useFileUpload();
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -671,7 +676,7 @@ const FileTabs: React.FC<FileTabsProps> = ({
             </motion.div>
             {!isCompactMode && (
               <span className="text-white/70 group-hover:text-white relative z-10 font-medium transition-colors duration-200">
-                {isProcessing ? 'Loading...' : 'Import'}
+                {isProcessing ? t('fileTabs.loading') : t('fileTabs.import')}
               </span>
             )}
           </motion.button>

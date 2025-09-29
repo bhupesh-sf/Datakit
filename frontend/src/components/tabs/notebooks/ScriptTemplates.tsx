@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FileText,
   Search,
@@ -20,27 +21,28 @@ import { SCRIPT_TEMPLATES, searchTemplates } from '@/lib/python/templates';
 import type { ScriptTemplate } from '@/lib/python/types';
 
 // Category icons and labels
-const CATEGORY_CONFIG = {
+const getCategoryConfig = (t: any) => ({
   data_analysis: {
     icon: BarChart3,
-    label: 'Data Analysis',
+    label: t('notebooks.templates.categories.dataAnalysis', { defaultValue: 'Data Analysis' }),
     color: 'text-blue-400',
   },
   visualization: {
     icon: BarChart3,
-    label: 'Visualization',
+    label: t('notebooks.templates.categories.visualization', { defaultValue: 'Visualization' }),
     color: 'text-green-400',
   },
-  ml: { icon: Brain, label: 'Machine Learning', color: 'text-purple-400' },
-  hf: { icon: null, label: 'Hugging Face', color: 'text-orange-400' },
-  stats: { icon: Calculator, label: 'Statistics', color: 'text-orange-400' },
-  utils: { icon: Settings, label: 'Utilities', color: 'text-gray-400' },
-} as const;
+  ml: { icon: Brain, label: t('notebooks.templates.categories.machineLearning', { defaultValue: 'Machine Learning' }), color: 'text-purple-400' },
+  hf: { icon: null, label: t('notebooks.templates.categories.huggingFace', { defaultValue: 'Hugging Face' }), color: 'text-orange-400' },
+  stats: { icon: Calculator, label: t('notebooks.templates.categories.statistics', { defaultValue: 'Statistics' }), color: 'text-orange-400' },
+  utils: { icon: Settings, label: t('notebooks.templates.categories.utilities', { defaultValue: 'Utilities' }), color: 'text-gray-400' },
+});
 
 /**
  * Script templates component for selecting and inserting code templates
  */
 const ScriptTemplates: React.FC = () => {
+  const { t } = useTranslation();
   const { createCell, setActiveCellId } = usePythonStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,10 +71,11 @@ const ScriptTemplates: React.FC = () => {
   const filteredTemplates = getFilteredTemplates();
 
   // Group templates by category
+  const CATEGORY_CONFIG = getCategoryConfig(t);
   const templatesByCategory = Object.keys(CATEGORY_CONFIG).reduce(
     (acc, category) => {
       const categoryTemplates = filteredTemplates.filter(
-        (t) => t.category === category
+        (template) => template.category === category
       );
       if (categoryTemplates.length > 0) {
         acc[category as keyof typeof CATEGORY_CONFIG] = categoryTemplates;
@@ -90,11 +93,11 @@ ${template.description}
 
 ${
   template.requiredPackages
-    ? `**Required packages:** ${template.requiredPackages.join(', ')}\n`
+    ? `**${t('notebooks.templates.requiredPackages', { defaultValue: 'Required packages' })}:** ${template.requiredPackages.join(', ')}\n`
     : ''
 }
 
-Run the code cell below to execute this template.`;
+${t('notebooks.templates.runCodeBelow', { defaultValue: 'Run the code cell below to execute this template.' })}.`;
 
     createCell('markdown', markdownContent);
 
@@ -124,7 +127,7 @@ Run the code cell below to execute this template.`;
       <div className="p-4 border-b border-white/10">
         <div className="flex items-center gap-2 mb-3">
           <FileText className="w-5 h-5 text-primary" />
-          <h3 className="font-medium text-white">Templates</h3>
+          <h3 className="font-medium text-white">{t('notebooks.templates.title', { defaultValue: 'Templates' })}</h3>
         </div>
 
         {/* Search */}
@@ -132,7 +135,7 @@ Run the code cell below to execute this template.`;
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
           <input
             type="text"
-            placeholder="Search templates..."
+            placeholder={t('notebooks.templates.searchPlaceholder', { defaultValue: 'Search templates...' })}
             className="w-full pl-10 pr-4 py-2 bg-background border border-white/10 rounded text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-primary/50"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -149,7 +152,7 @@ Run the code cell below to execute this template.`;
             }`}
             onClick={() => setSelectedCategory(null)}
           >
-            All
+            {t('notebooks.templates.filters.all', { defaultValue: 'All' })}
           </button>
           {categories.map((category) => {
             const config = CATEGORY_CONFIG[category];
@@ -180,7 +183,7 @@ Run the code cell below to execute this template.`;
           <div className="p-4 text-center">
             <FileText className="w-8 h-8 text-white/30 mx-auto mb-2" />
             <p className="text-sm text-white/60">
-              {searchQuery ? 'No templates found' : 'No templates available'}
+              {searchQuery ? t('notebooks.templates.noTemplatesFound', { defaultValue: 'No templates found' }) : t('notebooks.templates.noTemplatesAvailable', { defaultValue: 'No templates available' })}
             </p>
           </div>
         ) : (
@@ -230,7 +233,7 @@ Run the code cell below to execute this template.`;
                                 size="sm"
                                 className="h-7 px-2 text-xs"
                                 onClick={() => handleCopyTemplate(template)}
-                                title="Copy to clipboard"
+                                title={t('notebooks.templates.copyToClipboard', { defaultValue: 'Copy to clipboard' })}
                               >
                                 <Copy className="w-3 h-3" />
                               </Button>
@@ -242,7 +245,7 @@ Run the code cell below to execute this template.`;
                                 onClick={() => handleUseTemplate(template)}
                               >
                                 <Play className="w-3 h-3 mr-1" />
-                                Use
+                                {t('notebooks.templates.use', { defaultValue: 'Use' })}
                               </Button>
                             </div>
                           </div>
@@ -253,7 +256,7 @@ Run the code cell below to execute this template.`;
                               <div className="flex items-center gap-1 mb-2">
                                 <Package className="w-3 h-3 text-secondary" />
                                 <span className="text-xs text-white/60">
-                                  Requires:{' '}
+                                  {t('notebooks.templates.requires', { defaultValue: 'Requires' })}:{' '}
                                   {template.requiredPackages.join(', ')}
                                 </span>
                               </div>
@@ -279,9 +282,9 @@ Run the code cell below to execute this template.`;
                             />
                             <Code2 className="w-3 h-3" />
                             {expandedTemplate === template.id
-                              ? 'Hide'
-                              : 'Show'}{' '}
-                            code
+                              ? t('notebooks.templates.hideCode', { defaultValue: 'Hide' })
+                              : t('notebooks.templates.showCode', { defaultValue: 'Show' })}{' '}
+                            {t('notebooks.templates.code', { defaultValue: 'code' })}
                           </button>
                         </div>
 
@@ -307,9 +310,12 @@ Run the code cell below to execute this template.`;
       <div className="border-t border-white/10 p-3">
         <div className="flex items-center justify-between text-xs text-white/50">
           <span>
-            {filteredTemplates.length} templates
+            {t('notebooks.templates.templateCount', { 
+              defaultValue: '{{count}} templates',
+              count: filteredTemplates.length
+            })}
             {selectedCategory &&
-              ` in ${
+              ` ${t('notebooks.templates.inCategory', { defaultValue: 'in' })} ${
                 CATEGORY_CONFIG[
                   selectedCategory as keyof typeof CATEGORY_CONFIG
                 ].label
@@ -321,7 +327,7 @@ Run the code cell below to execute this template.`;
               onClick={() => setSearchQuery('')}
               className="text-primary hover:text-primary/80 transition-colors"
             >
-              Clear search
+              {t('notebooks.templates.clearSearch', { defaultValue: 'Clear search' })}
             </button>
           )}
         </div>

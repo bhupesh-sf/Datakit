@@ -10,6 +10,7 @@ import {
   X,
   Check
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { InspectorMetrics } from '@/store/inspectorStore';
 import { useAuth } from '@/hooks/auth/useAuth';
@@ -46,6 +47,7 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
   onExportProblems,
   onAuthRequired
 }) => {
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<ProblemFilter>('all');
@@ -72,8 +74,12 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
         id: 'duplicates',
         type: 'duplicates',
         severity: metrics.duplicatePercentage > 10 ? 'critical' : metrics.duplicatePercentage > 5 ? 'warning' : 'info',
-        title: 'Duplicate Rows',
-        description: `${metrics.duplicateRows} duplicate rows found (${metrics.duplicatePercentage.toFixed(1)}% of total)`,
+        title: t('inspector.problems.duplicateRows.title', { defaultValue: 'Duplicate Rows' }),
+        description: t('inspector.problems.duplicateRows.description', { 
+          count: metrics.duplicateRows, 
+          percentage: metrics.duplicatePercentage.toFixed(1),
+          defaultValue: '{{count}} duplicate rows found ({{percentage}}% of total)'
+        }),
         count: metrics.duplicateRows,
         percentage: metrics.duplicatePercentage
       });
@@ -87,8 +93,15 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
           id: `nulls-${column.name}`,
           type: 'nulls',
           severity: nullPercentage > 20 ? 'critical' : nullPercentage > 10 ? 'warning' : 'info',
-          title: `Missing Values in ${column.name}`,
-          description: `${column.nullCount} null values (${nullPercentage.toFixed(1)}% of column)`,
+          title: t('inspector.problems.missingValues.title', { 
+            columnName: column.name,
+            defaultValue: 'Missing Values in {{columnName}}'
+          }),
+          description: t('inspector.problems.missingValues.description', {
+            count: column.nullCount,
+            percentage: nullPercentage.toFixed(1),
+            defaultValue: '{{count}} null values ({{percentage}}% of column)'
+          }),
           count: column.nullCount,
           column: column.name,
           percentage: nullPercentage
@@ -102,8 +115,15 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
         id: `type-${issue.column}-${index}`,
         type: 'type_issue',
         severity: issue.severity === 'high' ? 'critical' : issue.severity === 'medium' ? 'warning' : 'info',
-        title: `${issue.issue} in ${issue.column}`,
-        description: `${issue.count} problematic values found`,
+        title: t('inspector.problems.typeIssue.title', {
+          issue: issue.issue,
+          columnName: issue.column,
+          defaultValue: '{{issue}} in {{columnName}}'
+        }),
+        description: t('inspector.problems.typeIssue.description', {
+          count: issue.count,
+          defaultValue: '{{count}} problematic values found'
+        }),
         count: issue.count,
         column: issue.column,
         examples: issue.examples
@@ -212,12 +232,12 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
         <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
           <AlertTriangle className="h-8 w-8 text-emerald-400" />
         </div>
-        <h3 className="text-lg font-medium text-white mb-2">No Problems Found!</h3>
+        <h3 className="text-lg font-medium text-white mb-2">{t('inspector.problems.noProblems.title', { defaultValue: 'No Problems Found!' })}</h3>
         <p className="text-sm text-white/60 mb-4">
-          Your data appears to be clean with no critical issues detected.
+          {t('inspector.problems.noProblems.description', { defaultValue: 'Your data appears to be clean with no critical issues detected.' })}
         </p>
         <div className="text-xs text-white/50">
-          Health Score: {metrics.healthScore}%
+          {t('inspector.problems.noProblems.healthScore', { score: metrics.healthScore, defaultValue: 'Health Score: {{score}}%' })}
         </div>
       </motion.div>
     );
@@ -231,10 +251,14 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">Data Quality Issues</h3>
+        <h3 className="text-lg font-semibold text-white">{t('inspector.problems.title', { defaultValue: 'Data Quality Issues' })}</h3>
         <div className="flex items-center gap-2">
           <div className="text-xs text-white/60">
-            {filteredItems.length} of {problemItems.length} issues
+            {t('inspector.problems.issueCount', { 
+              filtered: filteredItems.length, 
+              total: problemItems.length,
+              defaultValue: '{{filtered}} of {{total}} issues'
+            })}
           </div>
         </div>
       </div>
@@ -252,7 +276,7 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
         >
           <div className="flex items-center gap-2 mb-1">
             <AlertCircle className="h-4 w-4 text-red-400" />
-            <span className="text-sm font-medium text-red-400">Critical</span>
+            <span className="text-sm font-medium text-red-400">{t('inspector.problems.severity.critical', { defaultValue: 'Critical' })}</span>
           </div>
           <div className="text-lg font-bold text-white">{criticalCount}</div>
         </button>
@@ -268,7 +292,7 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
         >
           <div className="flex items-center gap-2 mb-1">
             <AlertTriangle className="h-4 w-4 text-yellow-400" />
-            <span className="text-sm font-medium text-yellow-400">Warning</span>
+            <span className="text-sm font-medium text-yellow-400">{t('inspector.problems.severity.warning', { defaultValue: 'Warning' })}</span>
           </div>
           <div className="text-lg font-bold text-white">{warningCount}</div>
         </button>
@@ -284,7 +308,7 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
         >
           <div className="flex items-center gap-2 mb-1">
             <Info className="h-4 w-4 text-blue-400" />
-            <span className="text-sm font-medium text-blue-400">Info</span>
+            <span className="text-sm font-medium text-blue-400">{t('inspector.problems.severity.info', { defaultValue: 'Info' })}</span>
           </div>
           <div className="text-lg font-bold text-white">{infoCount}</div>
         </button>
@@ -293,7 +317,7 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
       {/* Filter Reset */}
       {filter !== 'all' && (
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-sm text-white/60">Filtered by:</span>
+          <span className="text-sm text-white/60">{t('inspector.problems.filteredBy', { defaultValue: 'Filtered by:' })}</span>
           <button
             onClick={() => setFilter('all')}
             className="flex items-center gap-1 px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-sm text-white/80 transition-colors"
@@ -343,7 +367,7 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
                 <button
                   onClick={() => handleViewAction(item)}
                   className="p-1 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors"
-                  title="View details"
+                  title={t('inspector.problems.actions.viewDetails', { defaultValue: 'View details' })}
                 >
                   <Eye className="h-4 w-4" />
                 </button>
@@ -362,12 +386,12 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
                   )}
                   title={
                     exportingItems.has(item.id)
-                      ? "Exporting..."
+                      ? t('inspector.problems.actions.exporting', { defaultValue: 'Exporting...' })
                       : exportedItems.has(item.id)
-                      ? "Export completed!"
+                      ? t('inspector.problems.actions.exportCompleted', { defaultValue: 'Export completed!' })
                       : isAuthenticated 
-                      ? "Export data" 
-                      : "Sign in to export data"
+                      ? t('inspector.problems.actions.exportData', { defaultValue: 'Export data' })
+                      : t('inspector.problems.actions.signInToExport', { defaultValue: 'Sign in to export data' })
                   }
                 >
                   {exportingItems.has(item.id) ? (
@@ -396,7 +420,7 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
                     <div className="pt-3">
                       {item.examples && item.examples.length > 0 && (
                         <div className="mb-3">
-                          <div className="text-xs text-white/60 mb-2">Examples:</div>
+                          <div className="text-xs text-white/60 mb-2">{t('inspector.problems.details.examples', { defaultValue: 'Examples:' })}</div>
                           <div className="space-y-1">
                             {item.examples.map((example, i) => (
                               <div
@@ -411,12 +435,12 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
                       )}
                       
                       <div className="flex items-center gap-4 text-xs text-white/60">
-                        <div>Count: {item.count.toLocaleString()}</div>
+                        <div>{t('inspector.problems.details.count', { count: item.count.toLocaleString(), defaultValue: 'Count: {{count}}' })}</div>
                         {item.percentage && (
-                          <div>Percentage: {item.percentage.toFixed(1)}%</div>
+                          <div>{t('inspector.problems.details.percentage', { percentage: item.percentage.toFixed(1), defaultValue: 'Percentage: {{percentage}}%' })}</div>
                         )}
                         {item.column && (
-                          <div>Column: {item.column}</div>
+                          <div>{t('inspector.problems.details.column', { columnName: item.column, defaultValue: 'Column: {{columnName}}' })}</div>
                         )}
                       </div>
                     </div>
@@ -435,7 +459,7 @@ const ProblemsView: React.FC<ProblemsViewProps> = ({
           className="text-center py-8"
         >
           <div className="text-sm text-white/60">
-            No {filter} issues found
+            {t('inspector.problems.noIssuesFound', { filter, defaultValue: 'No {{filter}} issues found' })}
           </div>
         </motion.div>
       )}

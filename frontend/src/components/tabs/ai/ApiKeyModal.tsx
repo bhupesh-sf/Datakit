@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -25,65 +26,64 @@ import AnthropicLogo from "@/assets/anthropic.webp";
 import OllamaLogo from '@/assets/ollama.webp';
 import GroqLogo from "@/assets/groq.png";
 
-const PROVIDER_CONFIG = {
-  ollama: {
-    name: "Ollama",
-    icon: <img src={OllamaLogo} className="h-4 w-4" />,
-    color: "blue",
-    description: "Local Ollama server - runs models on your machine",
-    websiteUrl: "https://ollama.com",
-    helpText:
-      "Run AI models locally with complete privacy. Requires Ollama to be running at http://localhost:11434",
-    keyFormat: "http://localhost:11434",
-    isUrlInput: true,
-    provider: 'local'
-  },
-  openai: {
-    name: "OpenAI",
-    icon: <img src={OpenAILogo} className="h-5 w-5" />,
-    color: "blue",
-    description: "GPT-4o and GPT-4o Mini models",
-    websiteUrl: "https://platform.openai.com/api-keys",
-    helpText: "Most capable models for complex reasoning and analysis.",
-    keyFormat: "sk-...",
-  },
-  anthropic: {
-    name: "Anthropic",
-    icon: <img src={AnthropicLogo} className="h-4 w-4" />,
-    color: "blue",
-    description: "Claude 3.5 Sonnet and Haiku models",
-    websiteUrl: "https://console.anthropic.com/",
-    helpText:
-      "Excellent for detailed analysis and explanations. Free credits for new users.",
-    keyFormat: "sk-ant-...",
-  },
-  groq: {
-    name: "Groq",
-    icon: <img src={GroqLogo} className="h-4 w-4" />,
-    color: "blue",
-    description: "Ultra-fast Llama 3.1 models with free tier",
-    websiteUrl: "https://console.groq.com/keys",
-    helpText:
-      "Fastest inference speed, perfect for trying AI features. Completely free to start.",
-    keyFormat: "gsk_...",
-  }
-  // local: {
-  //   name: "Local Models",
-  //   icon: <Cpu className="h-5 w-5" />,
-  //   color: "blue",
-  //   description: "Run AI models locally in your browser (no API key required)",
-  //   websiteUrl: null,
-  //   helpText: "Local models run entirely in your browser",
-  //   keyFormat: null,
-  // },
-} as const;
-
 interface ApiKeyModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
+  
+  // Move PROVIDER_CONFIG inside the component where 't' is available
+  const PROVIDER_CONFIG = {
+    ollama: {
+      name: "Ollama",
+      icon: <img src={OllamaLogo} className="h-4 w-4" />,
+      color: "blue",
+      description: t('ai.apiKey.providers.ollama.description'),
+      websiteUrl: "https://ollama.com",
+      helpText: t('ai.apiKey.providers.ollama.helpText'),
+      keyFormat: "http://localhost:11434",
+      isUrlInput: true,
+      provider: 'local'
+    },
+    openai: {
+      name: "OpenAI",
+      icon: <img src={OpenAILogo} className="h-5 w-5" />,
+      color: "blue",
+      description: t('ai.apiKey.providers.openai.description'),
+      websiteUrl: "https://platform.openai.com/api-keys",
+      helpText: t('ai.apiKey.providers.openai.helpText'),
+      keyFormat: "sk-...",
+    },
+    anthropic: {
+      name: "Anthropic",
+      icon: <img src={AnthropicLogo} className="h-4 w-4" />,
+      color: "blue",
+      description: t('ai.apiKey.providers.anthropic.description'),
+      websiteUrl: "https://console.anthropic.com/",
+      helpText: t('ai.apiKey.providers.anthropic.helpText'),
+      keyFormat: "sk-ant-...",
+    },
+    groq: {
+      name: "Groq",
+      icon: <img src={GroqLogo} className="h-4 w-4" />,
+      color: "blue",
+      description: t('ai.apiKey.providers.groq.description'),
+      websiteUrl: "https://console.groq.com/keys",
+      helpText: t('ai.apiKey.providers.groq.helpText'),
+      keyFormat: "gsk_...",
+    }
+    // local: {
+    //   name: "Local Models",
+    //   icon: <Cpu className="h-5 w-5" />,
+    //   color: "blue",
+    //   description: "Run AI models locally in your browser (no API key required)",
+    //   websiteUrl: null,
+    //   helpText: "Local models run entirely in your browser",
+    //   keyFormat: null,
+    // },
+  } as const;
   const [activeProvider, setActiveProvider] = useState<AIProvider>("openai");
   const [keyInputs, setKeyInputs] = useState<Map<AIProvider, string>>(
     new Map()
@@ -182,10 +182,10 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
             <div className="w-64 bg-gradient-to-b from-darkNav to-black border-r border-white/10 flex flex-col">
               <div className="p-4 border-b border-white/10">
                 <h2 className="text-lg font-heading font-medium text-white">
-                  Configuration
+                  {t('ai.apiKey.configuration')}
                 </h2>
                 <p className="text-xs text-white/60 mt-1">
-                  Configure AI providers and settings
+                  {t('ai.apiKey.configureDescription')}
                 </p>
               </div>
 
@@ -242,8 +242,8 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                               </div>
                               <p className="text-xs mt-0.5 truncate opacity-80">
                                 {provider === "local" || provider === "ollama"
-                                  ? "Local"
-                                  : "Cloud API"}
+                                  ? t('ai.apiKey.providerTypes.local')
+                                  : t('ai.apiKey.providerTypes.cloudApi')}
                               </p>
                             </div>
                           </div>
@@ -318,11 +318,11 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                     {/* URL Configuration */}
                     <div>
                       <h4 className="text-sm font-medium text-white mb-3">
-                        Server Configuration
+                        {t('ai.apiKey.serverConfiguration')}
                       </h4>
                       <div>
                         <label className="block text-sm font-medium text-white/80 mb-2">
-                          Ollama Server URL
+                          {t('ai.apiKey.ollamaServerUrl')}
                         </label>
                         <input
                           type="text"
@@ -332,7 +332,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                           className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary/50"
                         />
                         <p className="text-xs text-white/60 mt-1">
-                          The URL where your Ollama server is running
+                          {t('ai.apiKey.ollamaServerUrlDescription')}
                         </p>
                       </div>
                     </div>
@@ -354,13 +354,13 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                   <div className="space-y-6">
                     <div>
                       <h4 className="text-sm font-medium text-white mb-3">
-                        API Key Configuration
+                        {t('ai.apiKey.apiKeyConfiguration')}
                       </h4>
 
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-white/80 mb-2">
-                            {activeProvider === 'ollama' ? 'Ollama Server URL' : 'API Key'}
+                            {activeProvider === 'ollama' ? t('ai.apiKey.ollamaServerUrl') : t('ai.apiKey.apiKey')}
                           </label>
                           <div className="relative">
                             <input
@@ -376,7 +376,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                               placeholder={
                                 activeProvider === 'ollama'
                                   ? "http://localhost:11434"
-                                  : `Enter your ${PROVIDER_CONFIG[activeProvider].name} API key`
+                                  : t('ai.apiKey.enterApiKeyPlaceholder', { provider: PROVIDER_CONFIG[activeProvider].name })
                               }
                               className="w-full px-3 py-2 pr-20 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary/50"
                             />
@@ -407,12 +407,10 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                             <div className="flex items-start gap-3">
                               <div className="flex-1">
                                 <p className="text-sm font-medium text-white mb-1">
-                                  Skip the API keys with DataKit credits
+                                  {t('ai.apiKey.skipApiKeysTitle')}
                                 </p>
                                 <p className="text-xs text-white/70 mb-3">
-                                  Get instant access to powerful AI models
-                                  without managing API keys. Credits included
-                                  with your account.
+                                  {t('ai.apiKey.skipApiKeysDescription')}
                                 </p>
                                 <Button
                                   variant="outline"
@@ -420,7 +418,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                                   onClick={handleUpgradeClick}
                                   className="h-7 bg-primary/20 hover:bg-primary/30 border-primary/50 text-primary"
                                 >
-                                  Sign in to get started
+                                  {t('ai.apiKey.signInToGetStarted')}
                                 </Button>
                               </div>
                             </div>
@@ -448,7 +446,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                                     className="h-7"
                                   >
                                     <ExternalLink className="h-3 w-3 mr-1" />
-                                    Get API Key
+                                    {t('ai.apiKey.getApiKey')}
                                   </Button>
                                 </div>
                               </div>
@@ -462,17 +460,17 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
                     <div className="border-t border-white/10 pt-6">
                       <h4 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
                         <Settings className="h-4 w-4" />
-                        General Settings
+                        {t('ai.apiKey.generalSettings')}
                       </h4>
 
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div>
                             <label className="text-sm text-white/80">
-                              Auto-execute generated SQL
+                              {t('ai.apiKey.autoExecuteSQL')}
                             </label>
                             <p className="text-xs text-white/60">
-                              Automatically run SQL queries generated by AI
+                              {t('ai.apiKey.autoExecuteSQLDescription')}
                             </p>
                           </div>
                           <button
@@ -558,10 +556,10 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
               <div className="p-4 border-t border-white/10 bg-darkNav/30">
                 <div className="flex justify-end gap-3">
                   <Button variant="ghost" onClick={onClose}>
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                   <Button variant="outline" onClick={handleSave}>
-                    Save Configuration
+                    {t('ai.apiKey.saveConfiguration')}
                   </Button>
                 </div>
               </div>

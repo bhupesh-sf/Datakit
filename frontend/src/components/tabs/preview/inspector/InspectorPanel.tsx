@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, FileText, ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 import PostgreSQLIcon from '@/assets/postgres.png';
@@ -44,6 +45,8 @@ interface InspectorPanelProps {
 }
 
 const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
+  const { t } = useTranslation();
+  
   // Store states
   const {
     isOpen,
@@ -474,7 +477,7 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
             >
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-white">
-                  Data Inspector
+                  {t('inspector.title', { defaultValue: 'Data Inspector' })}
                 </h2>
               </div>
               <button
@@ -491,10 +494,10 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
                 <div className="flex flex-col items-center justify-center max-w-md mx-auto">
                   <img src={PostgreSQLIcon} className="h-10 w-10 mb-4" alt="PostgreSQL" />
                   <h3 className="text-lg font-medium text-white mb-2">
-                    PostgreSQL Inspector
+                    {t('inspector.postgresql.title', { defaultValue: 'PostgreSQL Inspector' })}
                   </h3>
                   <p className="text-white/70 text-sm">
-                    Coming soon! We're working on data inspection for PostgreSQL tables.
+                    {t('inspector.postgresql.comingSoon', { defaultValue: 'Coming soon! We\'re working on data inspection for PostgreSQL tables.' })}
                   </p>
                 </div>
               </div>
@@ -524,7 +527,7 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <FileText className="h-4 w-4 text-white/60" />
             <span className="text-sm text-white truncate">
-              {currentFile?.fileName || 'Select file...'}
+              {currentFile?.fileName || t('inspector.fileSelector.placeholder', { defaultValue: 'Select file...' })}
             </span>
           </div>
           <motion.div
@@ -607,7 +610,7 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ className }) => {
           >
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-white">
-                Data Inspector
+                {t('inspector.title', { defaultValue: 'Data Inspector' })}
               </h2>
             </div>
             <button

@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/store/appStore';
 import { useInspectorStore } from '@/store/inspectorStore';
 import { useDuckDBStore } from '@/store/duckDBStore';
@@ -20,6 +21,7 @@ interface DataPreviewGridProps {
 }
 
 const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = false }) => {
+  const { t } = useTranslation();
   const activeFile = useAppStore(selectActiveFile);
   const { showColumnStats, setShowColumnStats } = useAppStore();
   const { openPanel, analyzeFile } = useInspectorStore();
@@ -271,7 +273,7 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center text-white/70">
-          <p className="text-lg mb-2 text-red-400">Error loading data</p>
+          <p className="text-lg mb-2 text-red-400">{t('dataGrid.error.loadingData')}</p>
           <p className="text-sm">{error}</p>
         </div>
       </div>

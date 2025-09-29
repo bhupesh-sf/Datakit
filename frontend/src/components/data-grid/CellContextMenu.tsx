@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, ArrowUp, ArrowDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface CellContextMenuProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ const CellContextMenu: React.FC<CellContextMenuProps> = ({
   onSort,
   cellValue = ''
 }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const handleItemClick = (action: () => void) => {
@@ -59,7 +61,7 @@ const CellContextMenu: React.FC<CellContextMenuProps> = ({
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
               >
                 <ArrowUp size={14} />
-                Sort Ascending
+                {t('dataGrid.contextMenu.sortAscending', { defaultValue: 'Sort Ascending' })}
               </motion.button>
               
               <motion.button
@@ -69,7 +71,7 @@ const CellContextMenu: React.FC<CellContextMenuProps> = ({
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
               >
                 <ArrowDown size={14} />
-                Sort Descending
+                {t('dataGrid.contextMenu.sortDescending', { defaultValue: 'Sort Descending' })}
               </motion.button>
             </>
           ) : (
@@ -81,7 +83,10 @@ const CellContextMenu: React.FC<CellContextMenuProps> = ({
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white transition-colors"
             >
               <Copy size={14} />
-              Copy "{cellValue.length > 15 ? cellValue.substring(0, 15) + '...' : cellValue}"
+              {t('dataGrid.contextMenu.copy', { 
+                value: cellValue.length > 15 ? cellValue.substring(0, 15) + '...' : cellValue,
+                defaultValue: 'Copy "{{value}}"'
+              })}
             </motion.button>
           )}
         </motion.div>

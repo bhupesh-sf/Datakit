@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 import { Database, Play, Sparkles, X} from "lucide-react";
 
@@ -17,6 +18,7 @@ export const NoAnalysisEmptyState: React.FC<NoAnalysisEmptyStateProps> = ({
   fileName,
   className,
 }) => {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -43,11 +45,11 @@ export const NoAnalysisEmptyState: React.FC<NoAnalysisEmptyStateProps> = ({
       </div>
 
       <div className="space-y-2 max-w-sm">
-        <h3 className="text-lg font-semibold text-white">Ready to Analyze</h3>
+        <h3 className="text-lg font-semibold text-white">{t('inspector.emptyStates.noAnalysis.title', { defaultValue: 'Ready to Analyze' })}</h3>
         <p className="text-sm text-white/70">
           {fileName
-            ? `Start analyzing "${fileName}" to discover data quality insights`
-            : "Select a file to start your data quality analysis"}
+            ? t('inspector.emptyStates.noAnalysis.descriptionWithFile', { defaultValue: 'Start analyzing "{{fileName}}" to discover data quality insights', fileName })
+            : t('inspector.emptyStates.noAnalysis.descriptionNoFile', { defaultValue: 'Select a file to start your data quality analysis' })}
         </p>
       </div>
 
@@ -59,12 +61,12 @@ export const NoAnalysisEmptyState: React.FC<NoAnalysisEmptyStateProps> = ({
           className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
         >
           <Play className="h-4 w-4" />
-          Start Analysis
+          {t('inspector.emptyStates.noAnalysis.startButton', { defaultValue: 'Start Analysis' })}
         </motion.button>
       )}
 
       <div className="text-xs text-white/50 max-w-md">
-        Analysis typically takes 10-30 seconds depending on your data size
+        {t('inspector.emptyStates.noAnalysis.timeEstimate', { defaultValue: 'Analysis typically takes 10-30 seconds depending on your data size' })}
       </div>
     </motion.div>
   );
@@ -88,6 +90,7 @@ export const NoColumnsEmptyState: React.FC<NoColumnsEmptyStateProps> = ({
   totalColumns,
   className,
 }) => {
+  const { t } = useTranslation();
   const hasFilters = searchTerm || (filterType && filterType !== "all");
 
   return (
@@ -101,17 +104,17 @@ export const NoColumnsEmptyState: React.FC<NoColumnsEmptyStateProps> = ({
       <div className="relative"></div>
 
       <div className="space-y-2 max-w-sm">
-        <h3 className="text-sm font-medium text-white/90">No Columns Found</h3>
+        <h3 className="text-sm font-medium text-white/90">{t('inspector.emptyStates.noColumns.title', { defaultValue: 'No Columns Found' })}</h3>
         {hasFilters ? (
           <p className="text-xs text-white/60">
             {searchTerm
-              ? `No columns matching "${searchTerm}"`
-              : `No ${filterType} columns found`}
-            {totalColumns && ` in ${totalColumns} total columns`}
+              ? t('inspector.emptyStates.noColumns.noMatchingColumns', { defaultValue: 'No columns matching "{{searchTerm}}"', searchTerm })
+              : t('inspector.emptyStates.noColumns.noFilteredColumns', { defaultValue: 'No {{filterType}} columns found', filterType })}
+            {totalColumns && ` ${t('inspector.emptyStates.noColumns.totalColumns', { defaultValue: 'in {{totalColumns}} total columns', totalColumns })}`}
           </p>
         ) : (
           <p className="text-xs text-white/60">
-            This dataset doesn't have any analyzable columns
+            {t('inspector.emptyStates.noColumns.noAnalyzableColumns', { defaultValue: 'This dataset doesn\'t have any analyzable columns' })}
           </p>
         )}
       </div>
@@ -124,12 +127,12 @@ export const NoColumnsEmptyState: React.FC<NoColumnsEmptyStateProps> = ({
           className="flex items-center gap-2 px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-lg text-sm font-medium transition-colors"
         >
           <X className="h-3 w-3" />
-          Clear Filters
+          {t('inspector.emptyStates.noColumns.clearFiltersButton', { defaultValue: 'Clear Filters' })}
         </motion.button>
       )}
 
       <div className="text-xs text-white/50">
-        Try adjusting your search or filter criteria
+        {t('inspector.emptyStates.noColumns.suggestion', { defaultValue: 'Try adjusting your search or filter criteria' })}
       </div>
     </motion.div>
   );
@@ -206,6 +209,7 @@ export const ErrorEmptyState: React.FC<ErrorEmptyStateProps> = ({
   onReset,
   className,
 }) => {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -223,7 +227,7 @@ export const ErrorEmptyState: React.FC<ErrorEmptyStateProps> = ({
       </motion.div>
 
       <div className="space-y-2 max-w-md">
-        <h3 className="text-lg font-semibold text-white">Analysis Failed</h3>
+        <h3 className="text-lg font-semibold text-white">{t('inspector.emptyStates.error.title', { defaultValue: 'Analysis Failed' })}</h3>
         <p className="text-sm text-white/70">{error}</p>
       </div>
 
@@ -235,7 +239,7 @@ export const ErrorEmptyState: React.FC<ErrorEmptyStateProps> = ({
             onClick={onRetry}
             className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            Try Again
+            {t('inspector.emptyStates.error.tryAgainButton', { defaultValue: 'Try Again' })}
           </motion.button>
         )}
         {onReset && (
@@ -245,13 +249,13 @@ export const ErrorEmptyState: React.FC<ErrorEmptyStateProps> = ({
             onClick={onReset}
             className="px-4 py-2 bg-card/30 hover:bg-card/50 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            Reset
+            {t('inspector.emptyStates.error.resetButton', { defaultValue: 'Reset' })}
           </motion.button>
         )}
       </div>
 
       <div className="text-xs text-white/50 max-w-md">
-        If the problem persists, try with a different file or contact support
+        {t('inspector.emptyStates.error.suggestion', { defaultValue: 'If the problem persists, try with a different file or contact support' })}
       </div>
     </motion.div>
   );

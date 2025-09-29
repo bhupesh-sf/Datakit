@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Play, Copy, Check, Code, PenSquare, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Prism from 'prismjs';
@@ -34,6 +35,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
   isGenerating = false,
   queryRunning,
 }) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { setPendingQuery, changeViewMode } = useAppStore();
@@ -111,10 +113,10 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
           <div className="flex items-center gap-2">
             <Code className="h-4 w-4 text-white/50" />
             <span className="text-xs font-medium text-white/70">
-              Query {index + 1}
+              {t('ai.queryCard.query', { defaultValue: 'Query {index}', index: index + 1 })}
               {isPrimary && (
                 <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
-                  Primary
+                  {t('ai.queryCard.primary', { defaultValue: 'Primary' })}
                 </span>
               )}
             </span>
@@ -122,7 +124,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
 
           {/* Actions */}
           <div className="flex items-center gap-1 opacity-100 transition-opacity">
-            <Tooltip content="Visualize" placement="bottom">
+            <Tooltip content={t('ai.queryCard.visualize', { defaultValue: 'Visualize' })} placement="bottom">
               <Button
                 variant="ghost"
                 size="icon"
@@ -135,7 +137,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
             </Tooltip>
 
             <Tooltip
-              content={copied ? 'Copied!' : 'Copy SQL'}
+              content={copied ? t('ai.queryCard.copied', { defaultValue: 'Copied!' }) : t('ai.queryCard.copySQL', { defaultValue: 'Copy SQL' })}
               placement="bottom"
             >
               <Button
@@ -152,7 +154,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
               </Button>
             </Tooltip>
 
-            <Tooltip content="Edit in Query Tab" placement="bottom">
+            <Tooltip content={t('ai.queryCard.editInQueryTab', { defaultValue: 'Edit in Query Tab' })} placement="bottom">
               <Button
                 variant="ghost"
                 size="icon"
@@ -163,7 +165,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
               </Button>
             </Tooltip>
 
-            <Tooltip content="Run" placement="bottom">
+            <Tooltip content={t('ai.queryCard.run', { defaultValue: 'Run' })} placement="bottom">
               <Button
                 variant="ghost"
                 size="icon"
@@ -200,7 +202,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 bg-purple-400 rounded-full animate-pulse" />
               <span className="text-xs text-purple-300">
-                Generating visualization...
+                {t('ai.queryCard.generatingVisualization', { defaultValue: 'Generating visualization...' })}
               </span>
             </div>
           </motion.div>
@@ -217,7 +219,7 @@ const SQLQueryCardWithViz: React.FC<SQLQueryCardWithVizProps> = ({
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />
               <span className="text-xs text-primary/80">
-                Query is running...
+                {t('ai.queryCard.queryRunning', { defaultValue: 'Query is running...' })}
               </span>
             </div>
           </motion.div>

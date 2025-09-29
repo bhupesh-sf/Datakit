@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useUrlDatasetImport } from "@/hooks/remote/url/useUrlDatasetImport";
 import { extractImportOptionsFromUrl } from "@/utils/datasetUrlHandler";
 import HuggingFace from "@/assets/huggingface.png";
@@ -9,6 +10,7 @@ import HuggingFace from "@/assets/huggingface.png";
  * Supports URLs like: /datasets/HuggingFaceFW/fineweb-2
  */
 const DatasetImport = () => {
+  const { t } = useTranslation();
   const { organization, dataset } = useParams<{
     organization: string;
     dataset: string;
@@ -58,10 +60,10 @@ const DatasetImport = () => {
           <img src={HuggingFace} alt="HuggingFace" className="w-12 h-12 animate-pulse" />
         </div>
         <h2 className="text-xl font-medium text-white mb-2">
-          Importing Dataset
+          {t('datasetImport.importing')}
         </h2>
         <p className="text-white/70">
-          Processing {organization}/{dataset}...
+          {t('datasetImport.processing', { organization, dataset })}
         </p>
       </div>
     </div>

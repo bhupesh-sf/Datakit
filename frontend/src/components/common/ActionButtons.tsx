@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Book, History, ExternalLink, MessageSquare, Menu, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
@@ -38,6 +39,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
   // productHuntUrl = "https://www.producthunt.com/products/datakit",
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { t } = useTranslation();
   
   const {
     showFeedbackModal,
@@ -58,7 +60,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
     return (
       <div className="flex items-center gap-1 bg-dark backdrop-blur-sm rounded-lg">
         {/* Studio Button */}
-        <Tooltip placement="bottom" content="DataKit Studio">
+        <Tooltip placement="bottom" content={t('common.actionButtons.tooltips.datakitStudio', { defaultValue: 'DataKit Studio' })}>
           <Button
             variant="ghost"
             size="sm"
@@ -69,7 +71,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
               href={landingPageUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="DataKit Studio"
+              aria-label={t('common.actionButtons.dataKitStudio', { defaultValue: 'DataKit Studio' })}
             >
               <ExternalLink size={14} />
             </a>
@@ -77,7 +79,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
         </Tooltip>
 
         {/* Feedback Button - Essential CTA */}
-        <Tooltip placement="bottom" content="Feedback">
+        <Tooltip placement="bottom" content={t('common.actionButtons.feedback', { defaultValue: 'Feedback' })}>
           <Button
             variant="ghost"
             size="sm"
@@ -88,7 +90,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
           </Button>
         </Tooltip>
 
-        <Tooltip placement="bottom" content="Documentation">
+        <Tooltip placement="bottom" content={t('common.actionButtons.documentation', { defaultValue: 'Documentation' })}>
           <Button
             variant="ghost"
             size="sm"
@@ -99,14 +101,14 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
               href={docsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="View documentation"
+              aria-label={t('common.actionButtons.viewDocumentation', { defaultValue: 'View documentation' })}
             >
               <Book size={14} />
             </a>
           </Button>
         </Tooltip>
 
-        <Tooltip placement="bottom" content="Discord">
+        <Tooltip placement="bottom" content={t('common.actionButtons.discord', { defaultValue: 'Discord' })}>
           <Button
             variant="ghost"
             size="sm"
@@ -117,11 +119,11 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
               href={discordInviteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Join our Discord"
+              aria-label={t('common.actionButtons.joinDiscord', { defaultValue: 'Join our Discord' })}
             >
               <img
                 src={discord}
-                alt="Discord"
+                alt={t('common.actionButtons.discord', { defaultValue: 'Discord' })}
                 className="w-4 h-4"
               />
             </a>
@@ -135,7 +137,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
     showFeedbackModal && (
       <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50">
         <div className="bg-black p-4 rounded-lg shadow-lg w-96 border border-white/10">
-          <h3 className="text-lg font-medium mb-4">Share Your Feedback</h3>
+          <h3 className="text-lg font-medium mb-4">{t('common.actionButtons.feedbackModal.title', { defaultValue: 'Share Your Feedback' })}</h3>
 
           {feedbackSuccess ? (
             <div className="bg-primary/10 border border-primary/30 rounded p-3 mb-4 text-white text-sm">
@@ -155,7 +157,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
                     <path d="M20 6L9 17l-5-5"></path>
                   </svg>
                 </div>
-                <span>Thank you for your feedback!</span>
+                <span>{t('common.actionButtons.feedbackModal.thankYou', { defaultValue: 'Thank you for your feedback!' })}</span>
               </div>
             </div>
           ) : (
@@ -168,25 +170,25 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
 
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2 text-white">
-                  Email (optional)
+                  {t('common.actionButtons.feedbackModal.emailLabel', { defaultValue: 'Email (optional)' })}
                 </label>
                 <input
                   type="email"
                   value={feedbackEmail}
                   onChange={(e) => setFeedbackEmail(e.target.value)}
-                  placeholder="your.email@example.com"
+                  placeholder={t('common.actionButtons.feedbackModal.emailPlaceholder', { defaultValue: 'your.email@example.com' })}
                   className="w-full p-2 rounded border border-white/20 bg-black/50 text-white placeholder-white/50"
                 />
               </div>
 
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2 text-white">
-                  Message *
+                  {t('common.actionButtons.feedbackModal.messageLabel', { defaultValue: 'Message *' })}
                 </label>
                 <textarea
                   value={feedbackMessage}
                   onChange={(e) => setFeedbackMessage(e.target.value)}
-                  placeholder="Share your thoughts, suggestions, or report issues..."
+                  placeholder={t('common.actionButtons.feedbackModal.messagePlaceholder', { defaultValue: 'Share your thoughts, suggestions, or report issues...' })}
                   rows={4}
                   className="w-full p-2 rounded border border-white/20 bg-black/50 text-white placeholder-white/50 resize-none"
                   required
@@ -202,7 +204,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
               onClick={closeFeedbackModal}
               disabled={isSubmitting}
             >
-              {feedbackSuccess ? 'Close' : 'Cancel'}
+              {feedbackSuccess ? t('common.actionButtons.feedbackModal.close', { defaultValue: 'Close' }) : t('common.actionButtons.feedbackModal.cancel', { defaultValue: 'Cancel' })}
             </Button>
             {!feedbackSuccess && (
               <Button
@@ -211,7 +213,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
                 onClick={handleSubmitFeedback}
                 disabled={isSubmitting || !feedbackMessage.trim()}
               >
-                {isSubmitting ? 'Sending...' : 'Send Feedback'}
+                {isSubmitting ? t('common.actionButtons.feedbackModal.sending', { defaultValue: 'Sending...' }) : t('common.actionButtons.feedbackModal.sendFeedback', { defaultValue: 'Send Feedback' })}
               </Button>
             )}
           </div>
@@ -235,7 +237,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
               className="flex items-center"
             >
               <ExternalLink size={14} className="text-white/80 mr-1.5" />
-              <span className="text-xs bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">DataKit Studio</span>
+              <span className="text-xs bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{t('common.actionButtons.datakitStudio', { defaultValue: 'DataKit Studio' })}</span>
             </a>
           </Button>
 
@@ -244,14 +246,14 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
             context={feedbackContext}
             variant="primary"
             size="sm"
-            text="Feedback"
+            text={t('common.actionButtons.feedback', { defaultValue: 'Feedback' })}
             className="font-medium text-white/90 hover:text-white hover:scale-105 transition-all duration-200 drop-shadow-sm"
           />
         </div>
 
         {/* Icon Actions - Right side */}
         <div className="flex items-center gap-1">
-          <Tooltip placement="bottom" content="Documentation">
+          <Tooltip placement="bottom" content={t('common.actionButtons.documentation', { defaultValue: 'Documentation' })}>
             <Button
               variant="ghost"
               size="sm"
@@ -262,14 +264,14 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
                 href={docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="View documentation"
+                aria-label={t('common.actionButtons.viewDocumentation', { defaultValue: 'View documentation' })}
               >
                 <Book size={14} />
               </a>
             </Button>
           </Tooltip>
 
-          <Tooltip placement="bottom" content="Discord">
+          <Tooltip placement="bottom" content={t('common.actionButtons.discord', { defaultValue: 'Discord' })}>
             <Button
               variant="ghost"
               size="sm"
@@ -280,18 +282,18 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
                 href={discordInviteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Join our Discord"
+                aria-label={t('common.actionButtons.joinDiscord', { defaultValue: 'Join our Discord' })}
               >
                 <img
                   src={discord}
-                  alt="Discord"
+                  alt={t('common.actionButtons.discord', { defaultValue: 'Discord' })}
                   className="w-4 h-4"
                 />
               </a>
             </Button>
           </Tooltip>
 
-          <Tooltip placement="bottom" content="What's New">
+          <Tooltip placement="bottom" content={t('common.actionButtons.whatsNew', { defaultValue: 'What\'s New' })}>
             <Button
               variant="ghost"
               size="sm"
@@ -302,7 +304,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
                 href="https://datakit.canny.io/changelog"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="View changelog"
+                aria-label={t('common.actionButtons.viewChangelog', { defaultValue: 'View changelog' })}
               >
                 <History size={14} />
               </a>
@@ -319,7 +321,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
             context={feedbackContext}
             variant="primary"
             size="sm"
-            text="Feedback"
+            text={t('common.actionButtons.feedback', { defaultValue: 'Feedback' })}
             className="font-medium text-white/90 hover:text-white hover:scale-105 transition-all duration-200 drop-shadow-sm"
           />
           
@@ -346,7 +348,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
                 onClick={() => setIsMenuOpen(false)}
               >
                 <ExternalLink size={16} />
-                DataKit Studio
+                {t('common.actionButtons.datakitStudio', { defaultValue: 'DataKit Studio' })}
               </a>
               
               <a
@@ -357,7 +359,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
                 onClick={() => setIsMenuOpen(false)}
               >
                 <Book size={16} />
-                Documentation
+                {t('common.actionButtons.documentation', { defaultValue: 'Documentation' })}
               </a>
               
               <a
@@ -367,8 +369,8 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
                 className="flex items-center gap-3 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-md transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <img src={discord} alt="Discord" className="w-4 h-4" />
-                Discord
+                <img src={discord} alt={t('common.actionButtons.discord', { defaultValue: 'Discord' })} className="w-4 h-4" />
+                {t('common.actionButtons.discord', { defaultValue: 'Discord' })}
               </a>
               
               <a
@@ -379,7 +381,7 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
                 onClick={() => setIsMenuOpen(false)}
               >
                 <History size={16} />
-                What's New
+                {t('common.actionButtons.whatsNew', { defaultValue: 'What\'s New' })}
               </a>
             </div>
           </div>

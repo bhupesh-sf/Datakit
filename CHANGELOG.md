@@ -1,3 +1,6 @@
+# 0.4.18
+Introducing Multi lang selection in the app
+
 # 0.4.17
 Saving the result of query as a table in the db
 

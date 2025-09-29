@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Table, BarChart, Database, UserPen, Notebook } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { useAppStore } from "@/store/appStore";
 import TabNavigation, { Tab } from "@/components/navigation/TabNavigation";
@@ -29,14 +30,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   showTabs = true
 }) => {
   const { sidebarCollapsed } = useAppStore();
+  const { t } = useTranslation();
 
   // Define available tabs
   const tabs: Tab[] = [
-    { id: "preview", label: "Preview", icon: <Table size={16} /> },
-    { id: "query", label: "Query", icon: <Database size={16} /> },
-    { id: "scripts", label: "Notebook", icon: <Notebook size={16} /> },
-    { id: "visualization", label: "Visualize", icon: <BarChart size={16} /> },
-    { id: "ai", label: "Assistant", icon: <UserPen size={16} /> }
+    { id: "preview", label: t('layout.navigation.tabs.preview'), icon: <Table size={16} /> },
+    { id: "query", label: t('layout.navigation.tabs.query'), icon: <Database size={16} /> },
+    { id: "scripts", label: t('layout.navigation.tabs.notebook'), icon: <Notebook size={16} /> },
+    { id: "visualization", label: t('layout.navigation.tabs.visualization'), icon: <BarChart size={16} /> },
+    { id: "ai", label: t('layout.navigation.tabs.ai'), icon: <UserPen size={16} /> }
   ];
 
 

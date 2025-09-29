@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { PasswordValidator } from '@/lib/duckdb/utils/passwordValidator';
@@ -53,6 +54,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   defaultMode = 'login',
   onLoginSuccess,
 }) => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<'login' | 'signup'>(defaultMode);
 
   // Update mode when defaultMode prop changes
@@ -135,8 +137,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
         // Show success notification for login
         showSuccess(
-          'Welcome back!',
-          "You've successfully signed in to DataKit.",
+          t('auth.messages.welcomeSuccess'),
+          t('auth.messages.welcomeSuccessDesc'),
           {
             icon: 'shield',
             duration: 3000,
@@ -153,8 +155,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
         // Show success notification for signup
         showSuccess(
-          'Welcome to DataKit!',
-          `Your account has been created successfully. You now have access to DataKit models with 3$ to get started.`,
+          t('auth.messages.accountCreated'),
+          t('auth.messages.accountCreatedDesc'),
           {
             icon: 'user',
             duration: 6000,
@@ -222,7 +224,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             <div className="flex items-center justify-between p-6 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-medium text-white">
-                  {mode === 'login' ? 'Welcome Back' : 'Join DataKit'}
+                  {mode === 'login' ? t('auth.modal.welcomeBack') : t('auth.modal.joinDataKit')}
                 </h2>
               </div>
               <button
@@ -245,7 +247,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     transition={{ duration: 0.2 }}
                   >
                     <label className="block text-sm font-medium text-white/90 mb-2">
-                      Full Name
+                      {t('auth.fields.fullName')}
                     </label>
                     <div className="relative">
                       <User
@@ -258,7 +260,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                         value={formData.name}
                         onChange={handleInputChange}
                         className="w-full pl-10 pr-4 py-3 bg-background/20 border border-white/20 rounded-md text-white placeholder-white/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                        placeholder="Enter your full name"
+                        placeholder={t('auth.placeholders.enterName')}
                         required
                       />
                     </div>
@@ -268,7 +270,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 {/* Email field */}
                 <div>
                   <label className="block text-sm font-medium text-white/90 mb-2">
-                    Email Address
+                    {t('auth.fields.emailAddress')}
                   </label>
                   <div className="relative">
                     <Mail
@@ -281,7 +283,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       value={formData.email}
                       onChange={handleInputChange}
                       className="w-full pl-10 pr-4 py-3 bg-background/20 border border-white/20 rounded-md text-white placeholder-white/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                      placeholder="Enter your email"
+                      placeholder={t('auth.placeholders.enterEmail')}
                       required
                     />
                   </div>
@@ -290,7 +292,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 {/* Password field */}
                 <div>
                   <label className="block text-sm font-medium text-white/90 mb-2">
-                    Password
+                    {t('auth.fields.password')}
                   </label>
                   <div className="relative">
                     <Lock
@@ -305,8 +307,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       className="w-full pl-10 pr-10 py-3 bg-background/20 border border-white/20 rounded-md text-white placeholder-white/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                       placeholder={
                         mode === 'login'
-                          ? 'Enter your password'
-                          : 'Create a strong password'
+                          ? t('auth.placeholders.enterPassword')
+                          : t('auth.placeholders.createPassword')
                       }
                       required
                       minLength={mode === 'signup' ? 12 : 6}
@@ -331,36 +333,36 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       {passwordStrength && (
                         <div className="bg-background/10 rounded-md p-3 border border-white/5">
                           <h4 className="text-xs font-medium text-white/90 mb-2">
-                            Security Requirements
+                            {t('auth.password.requirements')}
                           </h4>
                           <div className="space-y-1">
                             <RequirementItem
                               met={passwordStrength.requirements.minLength}
-                              text="At least 12 characters long"
+                              text={t('auth.password.minLength')}
                             />
                             <RequirementItem
                               met={passwordStrength.requirements.hasUppercase}
-                              text="Contains uppercase letter (A-Z)"
+                              text={t('auth.password.hasUppercase')}
                             />
                             <RequirementItem
                               met={passwordStrength.requirements.hasLowercase}
-                              text="Contains lowercase letter (a-z)"
+                              text={t('auth.password.hasLowercase')}
                             />
                             <RequirementItem
                               met={passwordStrength.requirements.hasNumbers}
-                              text="Contains number (0-9)"
+                              text={t('auth.password.hasNumbers')}
                             />
                             <RequirementItem
                               met={
                                 passwordStrength.requirements.hasSpecialChars
                               }
-                              text="Contains special character (!@#$%^&*...)"
+                              text={t('auth.password.hasSpecialChars')}
                             />
                             <RequirementItem
                               met={
                                 passwordStrength.requirements.noCommonPatterns
                               }
-                              text="No common patterns or sequences"
+                              text={t('auth.password.noCommonPatterns')}
                             />
                           </div>
                         </div>
@@ -398,11 +400,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 >
                   {isLoading
                     ? mode === 'login'
-                      ? 'Signing In...'
-                      : 'Creating Account...'
+                      ? t('auth.loading.signingIn')
+                      : t('auth.loading.creatingAccount')
                     : mode === 'login'
-                    ? 'Sign In'
-                    : 'Create Account'}
+                    ? t('auth.modal.signIn')
+                    : t('auth.modal.createAccount')}
                 </Button>
               </form>
 
@@ -410,14 +412,14 @@ const AuthModal: React.FC<AuthModalProps> = ({
               <div className="mt-6 text-center">
                 <span className="text-sm text-white/70">
                   {mode === 'login'
-                    ? "Don't have an account? "
-                    : 'Already have an account? '}
+                    ? t('auth.modal.dontHaveAccount')
+                    : t('auth.modal.alreadyHaveAccount')}
                 </span>
                 <button
                   onClick={toggleMode}
                   className="text-sm text-primary hover:text-primary-foreground transition-colors font-medium cursor-pointer"
                 >
-                  {mode === 'login' ? 'Sign up' : 'Sign in'}
+                  {mode === 'login' ? t('auth.modal.signUp') : t('auth.modal.signIn')}
                 </button>
               </div>
 
@@ -429,13 +431,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   className="mt-4 text-center"
                 >
                   <p className="text-xs text-white/60">
-                    By creating an account, you agree to our{' '}
+                    {t('auth.messages.privacyNotice')}{' '}
                     <a
                       href="/privacy"
                       target="_blank"
                       className="text-primary hover:text-primary-foreground transition-colors inline-flex items-center gap-1"
                     >
-                      Privacy Policy
+                      {t('auth.modal.privacyPolicy')}
                       <ExternalLink size={10} />
                     </a>
                   </p>
@@ -451,27 +453,27 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   className="mt-6 p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-md border border-primary/20"
                 >
                   <h3 className="text-sm font-medium text-white/90 mb-3 flex items-center gap-2">
-                    Why join DataKit?
+                    {t('auth.benefits.title')}
                   </h3>
                   <ul className="text-xs text-white/70 space-y-2">
                     <li className="flex items-center gap-2">
                       <div className="w-1 h-1 bg-primary rounded-full"></div>
-                      Access to DataKit Assistant with built-in credits
+{t('auth.benefits.aiAccess')}
                     </li>
 
                     <li className="flex items-center gap-2">
                       <div className="w-1 h-1 bg-primary rounded-full"></div>
-                      Create unlimited workspaces
+{t('auth.benefits.unlimitedWorkspaces')}
                     </li>
 
                     <li className="flex items-center gap-2">
                       <div className="w-1 h-1 bg-primary rounded-full"></div>
-                      Access to all cloud connectors
+{t('auth.benefits.cloudConnectors')}
                     </li>
 
                     <li className="flex items-center gap-2">
                       <div className="w-1 h-1 bg-primary rounded-full"></div>
-                      Export reports from data inspector
+{t('auth.benefits.exportReports')}
                     </li>
 
                     {/*
@@ -482,7 +484,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     </li> */}
                     <li className="flex items-center gap-2">
                       <div className="w-1 h-1 bg-primary rounded-full"></div>
-                      Priority support and early access to new features
+{t('auth.benefits.prioritySupport')}
                     </li>
                     {/* 
                     TODO:

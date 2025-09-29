@@ -4,6 +4,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { PostHogProvider } from "posthog-js/react";
 import App from "./App.tsx";
 
+import "./lib/i18n";
 import "./index.css";
 
 const posthogOptions = {

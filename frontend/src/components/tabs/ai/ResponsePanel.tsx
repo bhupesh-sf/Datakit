@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coins } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useAIStore } from '@/store/aiStore';
 import { useDuckDBStore } from '@/store/duckDBStore';
@@ -25,6 +26,7 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
   hasActiveVisualization,
   onShowVisualization,
 }) => {
+  const { t } = useTranslation();
   const {
     isProcessing,
     currentResponse,
@@ -148,7 +150,7 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-medium text-white">Response</h3>
+          <h3 className="text-sm font-medium text-white">{t('ai.response.title', { defaultValue: 'Response' })}</h3>
           {/* {hasActiveVisualization && (
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
@@ -165,15 +167,15 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
         {showCostEstimates && hasUsage && (
           <div className="flex items-center gap-3 text-xs text-white/60">
             <div className="flex items-center gap-1">
-              <span>Tokens:</span>
+              <span>{t('ai.response.tokens', { defaultValue: 'Tokens' })}:</span>
               <span className="text-white/80 font-mono">
                 {costBreakdown.total.tokens.toLocaleString()}
               </span>
               {costBreakdown.response.tokens > 0 &&
                 costBreakdown.visualization.tokens > 0 && (
                   <span className="text-white/40">
-                    ({costBreakdown.response.tokens.toLocaleString()} response +{' '}
-                    {costBreakdown.visualization.tokens.toLocaleString()} viz)
+                    ({costBreakdown.response.tokens.toLocaleString()} {t('ai.response.tokensResponse', { defaultValue: 'response' })} +{' '}
+                    {costBreakdown.visualization.tokens.toLocaleString()} {t('ai.response.tokensViz', { defaultValue: 'viz' })})
                   </span>
                 )}
             </div>
@@ -199,7 +201,7 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
             <div className="text-center">
               <div className="mb-3 text-white/20"></div>
               <p className="text-white/50 text-md">
-                Ask a question to see responses here
+                {t('ai.response.placeholder', { defaultValue: 'Ask a question to see responses here' })}
               </p>
             </div>
           </div>
@@ -262,7 +264,7 @@ const ResponsePanel: React.FC<ResponsePanelProps> = ({
                 {isProcessing && (
                   <div className="flex items-center gap-2 text-xs text-white/50 mt-4">
                     <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                    <span>Thinking...</span>
+                    <span>{t('ai.response.thinking', { defaultValue: 'Thinking...' })}</span>
                   </div>
                 )}
               </motion.div>

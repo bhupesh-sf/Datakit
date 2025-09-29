@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { VariableSizeGrid as Grid } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
+import { useTranslation } from 'react-i18next';
 import { GridProps } from '@/types/grid';
 import { useColumnStats } from '@/hooks/useColumnStats';
 import ColumnHeaderCell from './table-header/ColumnHeaderCell';
@@ -78,6 +79,7 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
   onTableCreate,
   onDataRefresh,
 }, ref) => {
+  const { t } = useTranslation();
   // Get column stats with manual trigger
   const { columnStats, isLoading: isLoadingStats, shouldLoadStats, triggerAnalysis } = useColumnStats({
     fileId,
@@ -256,7 +258,7 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
 
   const handleAIPromptExecute = useCallback(async (prompt: string) => {
     if (!columnActionPanel || !tableName || !onExecuteSQL) {
-      console.error('Missing required parameters for AI action');
+      console.error(t('dataGrid.errors.missingParameters', { defaultValue: 'Missing required parameters for AI action' }));
       return;
     }
     
@@ -338,7 +340,10 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
         if (executionResult.newTableName) {
           onTableCreate?.(executionResult.newTableName);
           // Show success message (could use a toast here)
-          alert(`Success! Created new table: ${executionResult.newTableName}`);
+          alert(t('dataGrid.success.tableCreated', { 
+            tableName: executionResult.newTableName,
+            defaultValue: 'Success! Created new table: {{tableName}}'
+          }));
         }
         
         // Refresh data
@@ -351,13 +356,16 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
       }
       
     } catch (error: any) {
-      console.error('AI action failed:', error);
+      console.error(t('dataGrid.errors.aiFailed', { defaultValue: 'AI action failed:' }), error);
       
       // Check if it's an authentication error
       if (error?.response?.status === 401 || error?.message?.includes('authenticate')) {
-        alert('Please sign in to use AI-powered column actions with Datakit Smart.');
+        alert(t('dataGrid.errors.signInRequired', { defaultValue: 'Please sign in to use AI-powered column actions with Datakit Smart.' }));
       } else {
-        alert(`AI action failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        alert(t('dataGrid.errors.actionFailed', { 
+          error: error instanceof Error ? error.message : t('dataGrid.errors.unknownError', { defaultValue: 'Unknown error' }),
+          defaultValue: 'AI action failed: {{error}}'
+        }));
       }
     }
   }, [columnActionPanel, tableName, onExecuteSQL, onTableCreate, onDataRefresh]);
@@ -451,7 +459,7 @@ const UnifiedGrid = React.forwardRef<UnifiedGridRef, UnifiedGridProps>(({
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center text-white/70">
-          <p>No data to display</p>
+          <p>{t('dataGrid.noData', { defaultValue: 'No data to display' })}</p>
         </div>
       </div>
     );

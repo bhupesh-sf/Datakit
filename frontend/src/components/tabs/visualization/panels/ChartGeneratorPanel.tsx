@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ArrowRight, RefreshCw } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 import { Button } from "@/components/ui/Button";
 
@@ -10,6 +11,7 @@ import { useAppStore } from "@/store/appStore";
 import { selectTableName } from "@/store/selectors/appSelectors";
 
 const ChartGenerator: React.FC = () => {
+  const { t } = useTranslation();
   const tableName = useAppStore(selectTableName);
   const { tableSchema } = useSchemaInfo(tableName);
 
@@ -103,13 +105,13 @@ const ChartGenerator: React.FC = () => {
       <div className="space-y-3">
         {/* X-Axis selection */}
         <div>
-          <label className="block text-xs font-medium mb-1">X-Axis Field</label>
+          <label className="block text-xs font-medium mb-1">{t('visualization.generator.xAxisField', { defaultValue: 'X-Axis Field' })}</label>
           <select
             value={dimension}
             onChange={(e) => setDimension(e.target.value)}
             className="w-full p-2 bg-background/50 border border-white/10 rounded text-white text-xs"
           >
-            <option value="">Select field...</option>
+            <option value="">{t('visualization.generator.selectField', { defaultValue: 'Select field...' })}</option>
             {fields.map((field) => (
               <option key={`dim-${field.name}`} value={field.name}>
                 {field.name} ({getFieldTypeLabel(field.type)})
@@ -117,7 +119,7 @@ const ChartGenerator: React.FC = () => {
             ))}
           </select>
           <p className="mt-1 text-xs text-white/60">
-            Categories to group your data by
+            {t('visualization.generator.xAxisHelp', { defaultValue: 'Categories to group your data by' })}
           </p>
         </div>
 
@@ -125,14 +127,14 @@ const ChartGenerator: React.FC = () => {
           {/* Y-Axis selection */}
           <div>
             <label className="block text-xs font-medium mb-1">
-              Y-Axis Field
+              {t('visualization.generator.yAxisField', { defaultValue: 'Y-Axis Field' })}
             </label>
             <select
               value={measure}
               onChange={(e) => setMeasure(e.target.value)}
               className="w-full p-2 bg-background/50 border border-white/10 rounded text-white text-xs"
             >
-              <option value="">Select field...</option>
+              <option value="">{t('visualization.generator.selectField', { defaultValue: 'Select field...' })}</option>
               {fields
                 .filter((f) => isNumericType(f.type) || isDateType(f.type))
                 .map((field) => (
@@ -143,15 +145,15 @@ const ChartGenerator: React.FC = () => {
             </select>
             <p className="mt-1 text-xs text-white/60">
               {isDateType(measureType)
-                ? "Date fields for time analysis"
-                : "Numeric values to measure"}
+                ? t('visualization.generator.yAxisHelpDate', { defaultValue: 'Date fields for time analysis' })
+                : t('visualization.generator.yAxisHelpNumeric', { defaultValue: 'Numeric values to measure' })}
             </p>
           </div>
 
           {/* Aggregation selection */}
           <div>
             <label className="block text-xs font-medium mb-1">
-              Aggregation
+              {t('visualization.generator.aggregation', { defaultValue: 'Aggregation' })}
             </label>
             <select
               value={aggregation}
@@ -161,12 +163,12 @@ const ChartGenerator: React.FC = () => {
             >
               {validAggregations.map((agg) => (
                 <option key={agg} value={agg}>
-                  {getAggregationLabel(agg)}
+                  {getAggregationLabel(agg, t)}
                 </option>
               ))}
             </select>
             <p className="mt-1 text-xs text-white/60">
-              {getAggregationHelpText(measureType)}
+              {getAggregationHelpText(measureType, t)}
             </p>
           </div>
         </div>
@@ -178,10 +180,11 @@ const ChartGenerator: React.FC = () => {
               aggregation,
               measure,
               dimension,
-              measureType
+              measureType,
+              t
             )}
             <p className="mt-1 text-white/50">
-              Using all {tableName} data for visualization
+              {t('visualization.generator.usingAllData', { defaultValue: 'Using all {{tableName}} data for visualization', tableName })}
             </p>
           </div>
         )}
@@ -204,12 +207,12 @@ const ChartGenerator: React.FC = () => {
         {isGenerating ? (
           <>
             <RefreshCw size={14} className="mr-1.5" />
-            Processing...
+            {t('visualization.generator.processing', { defaultValue: 'Processing...' })}
           </>
         ) : (
           <>
             <ArrowRight size={14} className="mr-1.5" />
-            Generate Chart
+            {t('visualization.generator.generateChart', { defaultValue: 'Generate Chart' })}
           </>
         )}
       </Button>
@@ -257,32 +260,32 @@ function getFieldTypeLabel(type: string): string {
 }
 
 // Get user-friendly aggregation labels
-function getAggregationLabel(agg: string): string {
+function getAggregationLabel(agg: string, t: any): string {
   switch (agg) {
     case "sum":
-      return "Sum";
+      return t('visualization.generator.aggregationLabels.sum', { defaultValue: 'Sum' });
     case "avg":
-      return "Average";
+      return t('visualization.generator.aggregationLabels.avg', { defaultValue: 'Average' });
     case "min":
-      return "Minimum";
+      return t('visualization.generator.aggregationLabels.min', { defaultValue: 'Minimum' });
     case "max":
-      return "Maximum";
+      return t('visualization.generator.aggregationLabels.max', { defaultValue: 'Maximum' });
     case "count":
-      return "Count";
+      return t('visualization.generator.aggregationLabels.count', { defaultValue: 'Count' });
     default:
       return agg;
   }
 }
 
 // Get help text for aggregation based on field type
-function getAggregationHelpText(measureType: string): string {
+function getAggregationHelpText(measureType: string, t: any): string {
   if (isDateType(measureType)) {
-    return "Date aggregations: earliest, latest, or count";
+    return t('visualization.generator.aggregationHelpDate', { defaultValue: 'Date aggregations: earliest, latest, or count' });
   }
   if (isNumericType(measureType)) {
-    return "How to calculate the numeric values";
+    return t('visualization.generator.aggregationHelpNumeric', { defaultValue: 'How to calculate the numeric values' });
   }
-  return "How to aggregate the values";
+  return t('visualization.generator.aggregationHelpGeneric', { defaultValue: 'How to aggregate the values' });
 }
 
 // Enhanced aggregation description with type awareness
@@ -290,25 +293,26 @@ function getAggregationDescription(
   aggregation: string,
   measure: string,
   dimension: string,
-  measureType: string
+  measureType: string,
+  t: any
 ): string {
   const isDate = isDateType(measureType);
 
   switch (aggregation) {
     case "sum":
-      return `This chart will show the total sum of "${measure}" for each "${dimension}" category.`;
+      return t('visualization.generator.description.sum', { defaultValue: 'This chart will show the total sum of "{{measure}}" for each "{{dimension}}" category.', measure, dimension });
     case "avg":
-      return `This chart will show the average "${measure}" for each "${dimension}" category.`;
+      return t('visualization.generator.description.avg', { defaultValue: 'This chart will show the average "{{measure}}" for each "{{dimension}}" category.', measure, dimension });
     case "min":
       return isDate
-        ? `This chart will show the earliest "${measure}" date for each "${dimension}" category.`
-        : `This chart will show the minimum "${measure}" value for each "${dimension}" category.`;
+        ? t('visualization.generator.description.minDate', { defaultValue: 'This chart will show the earliest "{{measure}}" date for each "{{dimension}}" category.', measure, dimension })
+        : t('visualization.generator.description.min', { defaultValue: 'This chart will show the minimum "{{measure}}" value for each "{{dimension}}" category.', measure, dimension });
     case "max":
       return isDate
-        ? `This chart will show the latest "${measure}" date for each "${dimension}" category.`
-        : `This chart will show the maximum "${measure}" value for each "${dimension}" category.`;
+        ? t('visualization.generator.description.maxDate', { defaultValue: 'This chart will show the latest "{{measure}}" date for each "{{dimension}}" category.', measure, dimension })
+        : t('visualization.generator.description.max', { defaultValue: 'This chart will show the maximum "{{measure}}" value for each "{{dimension}}" category.', measure, dimension });
     case "count":
-      return `This chart will show the count of items in each "${dimension}" category.`;
+      return t('visualization.generator.description.count', { defaultValue: 'This chart will show the count of items in each "{{dimension}}" category.', dimension });
     default:
       return "";
   }

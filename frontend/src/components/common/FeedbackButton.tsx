@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import { MessageSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/Button';
 
@@ -26,9 +27,10 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
   context,
   size = 'sm',
   variant = 'primary',
-  text = 'Share Feedback?',
+  text,
   className = '',
 }) => {
+  const { t } = useTranslation();
   const {
     showFeedbackModal,
     feedbackEmail,
@@ -55,14 +57,14 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
         className={`flex items-center ${className}`}
       >
         <MessageSquare size={14} className="mr-1.5 text-white" />
-        <span className="text-xs">{text}</span>
+        <span className="text-xs">{text || t('feedback.button.text')}</span>
       </Button>
 
       {/* Feedback Modal */}
       {showFeedbackModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50">
           <div className="bg-black p-4 rounded-lg shadow-lg w-96 border border-white/10">
-            <h3 className="text-lg font-medium mb-4">Share Your Feedback</h3>
+            <h3 className="text-lg font-medium mb-4">{t('feedback.modal.title')}</h3>
 
             {feedbackSuccess ? (
               <div className="bg-primary/10 border border-primary/30 rounded p-3 mb-4 text-white text-sm">
@@ -82,7 +84,7 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
                       <path d="M20 6L9 17l-5-5"></path>
                     </svg>
                   </div>
-                  <span>Thank you for your feedback!</span>
+                  <span>{t('feedback.modal.success')}</span>
                 </div>
               </div>
             ) : (
@@ -98,14 +100,14 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
                     htmlFor="feedback-email"
                     className="block text-sm font-medium text-white/80 mb-1"
                   >
-                    Your Email (optional)
+{t('feedback.modal.emailLabel')}
                   </label>
                   <input
                     id="feedback-email"
                     type="email"
                     value={feedbackEmail}
                     onChange={(e) => setFeedbackEmail(e.target.value)}
-                    placeholder="your@email.com"
+                    placeholder={t('feedback.modal.emailPlaceholder')}
                     className="w-full px-3 py-2 bg-background border border-white/10 rounded-md focus:outline-none focus:border-primary text-sm"
                   />
                 </div>
@@ -115,13 +117,13 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
                     htmlFor="feedback-message"
                     className="block text-sm font-medium text-white/80 mb-1"
                   >
-                    Your Feedback
+{t('feedback.modal.messageLabel')}
                   </label>
                   <textarea
                     id="feedback-message"
                     value={feedbackMessage}
                     onChange={(e) => setFeedbackMessage(e.target.value)}
-                    placeholder="Tell us what you think about DataKit..."
+                    placeholder={t('feedback.modal.messagePlaceholder')}
                     rows={4}
                     className="w-full px-3 py-2 bg-background border border-white/10 rounded-md focus:outline-none focus:border-primary text-sm"
                   />
@@ -133,7 +135,7 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
                     size="sm"
                     onClick={closeFeedbackModal}
                   >
-                    Cancel
+{t('common.buttons.cancel')}
                   </Button>
                   <Button
                     variant="primary"
@@ -164,10 +166,10 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           ></path>
                         </svg>
-                        <span>Sending...</span>
+                        <span>{t('feedback.modal.sending')}</span>
                       </div>
                     ) : (
-                      'Submit'
+                      t('common.buttons.submit')
                     )}
                   </Button>
                 </div>

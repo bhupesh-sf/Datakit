@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { RefreshCw } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 import { useChartsStore } from "@/store/chartsStore";
 
@@ -12,6 +13,7 @@ import ChartStylePanel from "./panels/ChartStylePanel";
  * Component for configuring chart settings
  */
 const ChartConfigPanel: React.FC = () => {
+  const { t } = useTranslation();
   const { currentChart, updateCurrentChart } = useChartsStore();
 
   const [activeTab, setActiveTab] = useState<"data" | "style" | "transforms">(
@@ -21,7 +23,7 @@ const ChartConfigPanel: React.FC = () => {
   if (!currentChart) {
     return (
       <div className="p-4 text-center h-full flex flex-col justify-center">
-        <h3 className="text-lg font-medium mb-2">No Chart Selected</h3>
+        <h3 className="text-lg font-medium mb-2">{t('visualization.config.noChart', { defaultValue: 'No Chart Selected' })}</h3>
       </div>
     );
   }
@@ -31,13 +33,13 @@ const ChartConfigPanel: React.FC = () => {
       {/* Title and description inputs */}
       <div className="space-y-3 mb-3">
         <div>
-          <label className="block text-xs font-medium mb-1">Chart Title</label>
+          <label className="block text-xs font-medium mb-1">{t('visualization.config.chartTitle', { defaultValue: 'Chart Title' })}</label>
           <input
             type="text"
             value={currentChart.title}
             onChange={(e) => updateCurrentChart({ title: e.target.value })}
             className="w-full p-2 bg-background border border-white/10 rounded text-white text-sm"
-            placeholder="Enter chart title"
+            placeholder={t('visualization.config.chartTitlePlaceholder', { defaultValue: 'Enter chart title' })}
           />
         </div>
       </div>
@@ -52,7 +54,7 @@ const ChartConfigPanel: React.FC = () => {
           }`}
           onClick={() => setActiveTab("data")}
         >
-          Data
+          {t('visualization.config.tabs.data', { defaultValue: 'Data' })}
         </button>
         <button
           className={`px-3 py-1.5 text-sm flex items-center cursor-pointer ${
@@ -62,7 +64,7 @@ const ChartConfigPanel: React.FC = () => {
           }`}
           onClick={() => setActiveTab("style")}
         >
-          Style
+          {t('visualization.config.tabs.style', { defaultValue: 'Style' })}
         </button>
         <button
           className={`px-3 py-1.5 text-sm flex items-center cursor-pointer ${
@@ -72,7 +74,7 @@ const ChartConfigPanel: React.FC = () => {
           }`}
           onClick={() => setActiveTab("transforms")}
         >
-          Transform
+          {t('visualization.config.tabs.transform', { defaultValue: 'Transform' })}
         </button>
       </div>
 
@@ -126,7 +128,7 @@ const ChartConfigPanel: React.FC = () => {
           }}
         >
           <RefreshCw size={14} className="mr-1.5" />
-          Reset Chart Settings
+          {t('visualization.config.resetSettings', { defaultValue: 'Reset Chart Settings' })}
         </Button>
       </div>
     </div>

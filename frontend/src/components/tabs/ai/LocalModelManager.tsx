@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { 
   Download, 
   Trash2, 
@@ -23,6 +24,7 @@ interface LocalModelManagerProps {
 }
 
 const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const [availableModels, setAvailableModels] = useState<any[]>([]);
   const [downloadedModels, setDownloadedModels] = useState<LocalModel[]>([]);
   const [storageInfo, setStorageInfo] = useState<ModelStorageInfo | null>(null);
@@ -112,7 +114,7 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
   };
 
   const handleDeleteModel = (modelId: string) => {
-    if (confirm('Are you sure you want to delete this model? This cannot be undone.')) {
+    if (confirm(t('ai.localModels.deleteConfirm', { defaultValue: 'Are you sure you want to delete this model? This cannot be undone.' }))) {
       modelManager.removeModel(modelId);
       // Also unload if it's currently loaded
       const loadedModel = aiService.getLoadedLocalModel();
@@ -174,7 +176,7 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
     return (
       <div className="p-6 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-        <p className="text-white/70">Loading local models...</p>
+        <p className="text-white/70">{t('ai.localModels.loading', { defaultValue: 'Loading local models...' })}</p>
       </div>
     );
   }
@@ -182,9 +184,9 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
   return (
     <div className="p-6 max-h-[80vh] overflow-y-auto">
       <div className="mb-6">
-        <h3 className="text-lg font-medium text-white mb-2">Local AI Models</h3>
+        <h3 className="text-lg font-medium text-white mb-2">{t('ai.localModels.title', { defaultValue: 'Local AI Models' })}</h3>
         <p className="text-sm text-white/70">
-          Run AI models locally in your browser with complete privacy
+          {t('ai.localModels.description', { defaultValue: 'Run AI models locally in your browser with complete privacy' })}
         </p>
       </div>
 
@@ -202,13 +204,13 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
             <AlertCircle className="h-4 w-4 text-red-400" />
           )}
           <span className="text-sm font-medium text-white">
-            WebGPU {webGPUSupported ? 'Supported' : 'Not Supported'}
+            {t('ai.localModels.webgpu.title', { defaultValue: 'WebGPU' })} {webGPUSupported ? t('ai.localModels.webgpu.supported', { defaultValue: 'Supported' }) : t('ai.localModels.webgpu.notSupported', { defaultValue: 'Not Supported' })}
           </span>
         </div>
         <p className="text-xs text-white/70">
           {webGPUSupported 
-            ? "Your browser supports WebGPU acceleration for faster local AI inference."
-            : "WebGPU is required for local models. Please use Chrome 113+, Edge 113+, or Firefox 110+."
+            ? t('ai.localModels.webgpu.supportedDesc', { defaultValue: 'Your browser supports WebGPU acceleration for faster local AI inference.' })
+            : t('ai.localModels.webgpu.notSupportedDesc', { defaultValue: 'WebGPU is required for local models. Please use Chrome 113+, Edge 113+, or Firefox 110+.' })
           }
         </p>
       </div>
@@ -218,15 +220,15 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
         <div className="mb-6 p-4 bg-white/5 border border-white/10 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <HardDrive className="h-4 w-4 text-white/60" />
-            <span className="text-sm font-medium text-white">Storage Usage</span>
+            <span className="text-sm font-medium text-white">{t('ai.localModels.storage.title', { defaultValue: 'Storage Usage' })}</span>
           </div>
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
-              <span className="text-white/60">Downloaded Models:</span>
+              <span className="text-white/60">{t('ai.localModels.storage.downloadedModels', { defaultValue: 'Downloaded Models:' })}</span>
               <span className="text-white ml-2">{storageInfo.totalModels}</span>
             </div>
             <div>
-              <span className="text-white/60">Storage Used:</span>
+              <span className="text-white/60">{t('ai.localModels.storage.storageUsed', { defaultValue: 'Storage Used:' })}</span>
               <span className="text-white ml-2">{formatBytes(storageInfo.totalSizeBytes)}</span>
             </div>
           </div>
@@ -237,7 +239,7 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
       <div className="mb-6">
         <h4 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
           <Download className="h-4 w-4" />
-          Available Models
+          {t('ai.localModels.availableModels', { defaultValue: 'Available Models' })}
         </h4>
         
         <div className="space-y-3">
@@ -254,14 +256,14 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
                       <h5 className="text-sm font-medium text-white">{model.name}</h5>
                       {isCurrent && (
                         <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
-                          Active
+                          {t('ai.localModels.active', { defaultValue: 'Active' })}
                         </span>
                       )}
                     </div>
                     <p className="text-xs text-white/60 mb-2">{model.description}</p>
                     <div className="flex items-center gap-4 text-xs text-white/50">
-                      <span>Size: {formatModelSize(model.size)}</span>
-                      <span>Capabilities: {model.capabilities.join(', ')}</span>
+                      <span>{t('ai.localModels.size', { defaultValue: 'Size' })}: {formatModelSize(model.size)}</span>
+                      <span>{t('ai.localModels.capabilities', { defaultValue: 'Capabilities' })}: {model.capabilities.join(', ')}</span>
                     </div>
                   </div>
                   
@@ -286,7 +288,7 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
                         onClick={() => handleUseModel(model.id)}
                         className="h-7"
                       >
-                        {isCurrent ? 'Current' : 'Use Model'}
+                        {isCurrent ? t('ai.localModels.current', { defaultValue: 'Current' }) : t('ai.localModels.useModel', { defaultValue: 'Use Model' })}
                       </Button>
                     ) : webGPUSupported ? (
                       <Button
@@ -296,10 +298,10 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
                         className="h-7"
                       >
                         <Download className="h-3 w-3 mr-1" />
-                        Download
+                        {t('ai.localModels.download', { defaultValue: 'Download' })}
                       </Button>
                     ) : (
-                      <span className="text-xs text-red-400">WebGPU Required</span>
+                      <span className="text-xs text-red-400">{t('ai.localModels.webgpuRequired', { defaultValue: 'WebGPU Required' })}</span>
                     )}
                   </div>
                 </div>
@@ -314,7 +316,7 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
         <div>
           <h4 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
             <Cpu className="h-4 w-4" />
-            Downloaded Models
+            {t('ai.localModels.downloadedModels', { defaultValue: 'Downloaded Models' })}
           </h4>
           
           <div className="space-y-3">
@@ -329,16 +331,16 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
                         <h5 className="text-sm font-medium text-white">{model.name}</h5>
                         {isCurrent && (
                           <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
-                            Active
+                            {t('ai.localModels.active', { defaultValue: 'Active' })}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-4 text-xs text-white/50">
-                        <span>Size: {formatModelSize(model.size)}</span>
+                        <span>{t('ai.localModels.size', { defaultValue: 'Size' })}: {formatModelSize(model.size)}</span>
                         {model.lastUsed && (
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            Last used: {new Date(model.lastUsed).toLocaleDateString()}
+                            {t('ai.localModels.lastUsed', { defaultValue: 'Last used' })}: {new Date(model.lastUsed).toLocaleDateString()}
                           </span>
                         )}
                       </div>
@@ -352,7 +354,7 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
                         className="h-7"
                         disabled={isCurrent}
                       >
-                        {isCurrent ? 'Current' : 'Use Model'}
+                        {isCurrent ? t('ai.localModels.current', { defaultValue: 'Current' }) : t('ai.localModels.useModel', { defaultValue: 'Use Model' })}
                       </Button>
                       
                       <Button
@@ -381,12 +383,12 @@ const LocalModelManager: React.FC<LocalModelManagerProps> = ({ onClose }) => {
           className="h-7"
         >
           <RefreshCw className="h-3 w-3 mr-1" />
-          Refresh
+          {t('ai.localModels.refresh', { defaultValue: 'Refresh' })}
         </Button>
         
         {onClose && (
           <Button variant="primary" onClick={onClose}>
-            Done
+            {t('ai.localModels.done', { defaultValue: 'Done' })}
           </Button>
         )}
       </div>

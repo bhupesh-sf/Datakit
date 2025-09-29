@@ -1,6 +1,7 @@
 // src/components/tabs/query/results/QueryResultsEmptyState.tsx
 import React from 'react';
 import { AlertCircle, Database, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface QueryResultsEmptyStateProps {
   type: 'loading' | 'error' | 'empty' | 'no-results';
@@ -8,12 +9,13 @@ interface QueryResultsEmptyStateProps {
 }
 
 const QueryResultsEmptyState: React.FC<QueryResultsEmptyStateProps> = ({ type, message }) => {
+  const { t } = useTranslation();
   switch (type) {
     case 'loading':
       return (
         <div className="flex flex-col items-center justify-center h-full py-10 text-white text-opacity-70">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mb-4"></div>
-          <p className="text-sm">Executing query...</p>
+          <p className="text-sm">{t('queryResults.emptyState.executing', { defaultValue: 'Executing query...' })}</p>
         </div>
       );
       
@@ -22,7 +24,7 @@ const QueryResultsEmptyState: React.FC<QueryResultsEmptyStateProps> = ({ type, m
         <div className="bg-destructive/10 border border-destructive/30 rounded p-4 text-white m-3">
           <h4 className="font-medium text-destructive mb-2 flex items-center">
             <AlertCircle size={16} className="mr-2" />
-            Error
+            {t('queryResults.emptyState.error', { defaultValue: 'Error' })}
           </h4>
           <pre className="text-xs bg-background p-3 rounded overflow-auto max-h-60 whitespace-pre-wrap">
             {message}
@@ -33,7 +35,7 @@ const QueryResultsEmptyState: React.FC<QueryResultsEmptyStateProps> = ({ type, m
     case 'empty':
       return (
         <div className="flex flex-col items-center justify-center h-full py-10 text-white text-opacity-70">
-          <p className="text-sm">Execute a query to see results.</p>
+          <p className="text-sm">{t('queryResults.emptyState.empty', { defaultValue: 'Execute a query to see results.' })}</p>
         </div>
       );
       
@@ -41,7 +43,7 @@ const QueryResultsEmptyState: React.FC<QueryResultsEmptyStateProps> = ({ type, m
       return (
         <div className="flex flex-col items-center justify-center h-full py-10 text-white text-opacity-70">
           <Check size={24} className="text-primary mb-4" />
-          <p className="text-sm">Query executed successfully. No results returned.</p>
+          <p className="text-sm">{t('queryResults.emptyState.noResults', { defaultValue: 'Query executed successfully. No results returned.' })}</p>
         </div>
       );
       

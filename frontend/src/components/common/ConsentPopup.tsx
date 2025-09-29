@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { usePostHog } from 'posthog-js/react';
@@ -10,6 +11,7 @@ interface ConsentPopupProps {
 }
 
 const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClose }) => {
+  const { t } = useTranslation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showThanks, setShowThanks] = useState(false);
 
@@ -48,10 +50,10 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
               className="text-center py-2"
             >
               <div className="flex items-center justify-center mb-2">
-                <span className="text-white font-medium text-sm">Thank you!</span>
+                <span className="text-white font-medium text-sm">{t('consent.thanks.title', { defaultValue: 'Thank you!' })}</span>
               </div>
               <p className="text-white/70 text-xs">
-                You help us make DataKit better for everyone.
+                {t('consent.thanks.message', { defaultValue: 'You help us make DataKit better for everyone.' })}
               </p>
             </motion.div>
           ) : (
@@ -64,7 +66,7 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
               {/* Header */}
               <div className="flex items-start justify-between mb-3">
                 <h3 className="font-medium text-sm text-white">
-                  Help us improve DataKit
+                  {t('consent.header.title', { defaultValue: 'Help us improve DataKit' })}
                 </h3>
                 <button
                   onClick={onClose}
@@ -77,7 +79,7 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
               {/* Content */}
               <div className="mb-4">
                 <p className="text-white/70 text-xs leading-relaxed mb-3">
-                  We collect basic anonymous metrics to improve app stability. With your consent, we can enable enhanced analytics for better features. Your data files never leave the browser.
+                  {t('consent.description', { defaultValue: 'We collect basic anonymous metrics to improve app stability. With your consent, we can enable enhanced analytics for better features. Your data files never leave the browser.' })}
                 </p>
                 
                 {/* Dropdown */}
@@ -85,7 +87,7 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center justify-between w-full text-xs text-white/60 hover:text-white/80 transition-colors mb-2"
                 >
-                  <span>What do we collect?</span>
+                  <span>{t('consent.dropdown.title', { defaultValue: 'What do we collect?' })}</span>
                   {isDropdownOpen ? (
                     <ChevronUp className="w-3 h-3" />
                   ) : (
@@ -105,31 +107,31 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
                       <div className="bg-white/5 rounded p-3 mb-3">
                         <div className="space-y-2">
                           <div>
-                            <p className="text-white/80 text-xs font-medium mb-1">Basic (No Consent Needed):</p>
+                            <p className="text-white/80 text-xs font-medium mb-1">{t('consent.collection.basic.title', { defaultValue: 'Basic (No Consent Needed):' })}</p>
                             <ul className="text-white/60 text-xs space-y-0.5 pl-2">
-                              <li>• Page views & navigation</li>
-                              <li>• Performance metrics</li>
-                              <li>• Error reports (to fix bugs)</li>
-                              <li>• Session recordings (heavily masked)</li>
+                              <li>• {t('consent.collection.basic.pageViews', { defaultValue: 'Page views & navigation' })}</li>
+                              <li>• {t('consent.collection.basic.performance', { defaultValue: 'Performance metrics' })}</li>
+                              <li>• {t('consent.collection.basic.errors', { defaultValue: 'Error reports (to fix bugs)' })}</li>
+                              <li>• {t('consent.collection.basic.recordings', { defaultValue: 'Session recordings (heavily masked)' })}</li>
                             </ul>
                           </div>
                           
                           <div>
-                            <p className="text-white/80 text-xs font-medium mb-1">Advanced (With Consent):</p>
+                            <p className="text-white/80 text-xs font-medium mb-1">{t('consent.collection.advanced.title', { defaultValue: 'Advanced (With Consent):' })}</p>
                             <ul className="text-white/60 text-xs space-y-0.5 pl-2">
-                              <li>• Detailed feature usage</li>
-                              <li>• Session recordings</li>
-                              <li>• File types & sizes (not content)</li>
-                              <li>• User journey tracking</li>
+                              <li>• {t('consent.collection.advanced.featureUsage', { defaultValue: 'Detailed feature usage' })}</li>
+                              <li>• {t('consent.collection.advanced.recordings', { defaultValue: 'Session recordings' })}</li>
+                              <li>• {t('consent.collection.advanced.fileTypes', { defaultValue: 'File types & sizes (not content)' })}</li>
+                              <li>• {t('consent.collection.advanced.journeyTracking', { defaultValue: 'User journey tracking' })}</li>
                             </ul>
                           </div>
                           
                           <div>
-                            <p className="text-white/80 text-xs font-medium mb-1">Never collected:</p>
+                            <p className="text-white/80 text-xs font-medium mb-1">{t('consent.collection.never.title', { defaultValue: 'Never collected:' })}</p>
                             <ul className="text-white/60 text-xs space-y-0.5 pl-2">
-                              <li>• Your data files or content</li>
-                              <li>• SQL queries you write</li>
-                              <li>• Personal information</li>
+                              <li>• {t('consent.collection.never.dataFiles', { defaultValue: 'Your data files or content' })}</li>
+                              <li>• {t('consent.collection.never.sqlQueries', { defaultValue: 'SQL queries you write' })}</li>
+                              <li>• {t('consent.collection.never.personalInfo', { defaultValue: 'Personal information' })}</li>
                             </ul>
                           </div>
                         </div>
@@ -138,7 +140,7 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
                           href="/privacy"
                           className="text-xs text-white/50 hover:text-white/70 transition-colors underline mt-2 block"
                         >
-                          View full privacy policy
+                          {t('consent.privacyPolicy', { defaultValue: 'View full privacy policy' })}
                         </a>
                       </div>
                     </motion.div>
@@ -152,13 +154,13 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
                   onClick={onDecline}
                   className="flex-1 px-3 py-1.5 text-xs text-white/70 hover:text-white border border-white/20 hover:border-white/40 rounded transition-colors"
                 >
-                  Decline
+                  {t('consent.buttons.decline', { defaultValue: 'Decline' })}
                 </button>
                 <button
                   onClick={handleAccept}
                   className="flex-1 px-3 py-1.5 text-xs bg-white text-black hover:bg-white/90 rounded transition-colors font-medium"
                 >
-                  Accept
+                  {t('consent.buttons.accept', { defaultValue: 'Accept' })}
                 </button>
               </div>
             </motion.div>
@@ -171,6 +173,7 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
 
 
 export const useConsentManager = () => {
+  const { t } = useTranslation();
   const [showPopup, setShowPopup] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [analyticsEnabled, setAnalyticsEnabled] = useState(false);

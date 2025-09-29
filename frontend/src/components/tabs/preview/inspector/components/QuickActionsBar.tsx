@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
 
@@ -13,6 +14,7 @@ const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
   fileName,
   lastAnalyzed,
 }) => {
+  const { t } = useTranslation();
   const [actionStatus] = useState<{
     action: string;
     status: 'success' | 'error';
@@ -27,7 +29,10 @@ const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
           <div className="text-sm font-medium text-white">{fileName}</div>
           {lastAnalyzed && (
             <div className="text-xs text-white/60">
-              Last analyzed: {lastAnalyzed.toLocaleTimeString()}
+              {t('inspector.quickActions.lastAnalyzed', { 
+                defaultValue: 'Last analyzed: {{time}}', 
+                time: lastAnalyzed.toLocaleTimeString() 
+              })}
             </div>
           )}
         </div>

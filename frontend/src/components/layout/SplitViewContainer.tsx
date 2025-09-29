@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeftRight, GripVertical } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { useAppStore } from '@/store/appStore';
 import { selectActiveFile, selectSplitViewRatio } from '@/store/selectors/appSelectors';
@@ -11,6 +12,7 @@ interface SplitViewContainerProps {
 }
 
 const SplitViewContainer: React.FC<SplitViewContainerProps> = ({ className = '' }) => {
+  const { t } = useTranslation();
   const { updateSplitRatio, swapSplitFiles, setActiveFile, clearFileSplitView } = useAppStore();
   const activeFile = useAppStore(selectActiveFile);
   const splitRatio = useAppStore(selectSplitViewRatio);
@@ -86,7 +88,7 @@ const SplitViewContainer: React.FC<SplitViewContainerProps> = ({ className = '' 
       {/* Split View Header */}
       <div className="flex items-center justify-between p-3 bg-darkNav border-b border-white/10">
         <div className="flex items-center space-x-4">
-          <h2 className="text-sm font-medium text-white">Split View</h2>
+          <h2 className="text-sm font-medium text-white">{t('layout.splitView.title', { defaultValue: 'Split View' })}</h2>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -95,7 +97,7 @@ const SplitViewContainer: React.FC<SplitViewContainerProps> = ({ className = '' 
             size="sm"
             onClick={swapSplitFiles}
             className="h-8 w-8 p-0"
-            title="Swap files"
+            title={t('layout.splitView.swapFiles', { defaultValue: 'Swap files' })}
           >
             <ArrowLeftRight size={14} />
           </Button>
@@ -109,7 +111,7 @@ const SplitViewContainer: React.FC<SplitViewContainerProps> = ({ className = '' 
               }
             }}
             className="h-8 w-8 p-0 hover:bg-red-500/20 hover:text-red-400"
-            title="Close split view"
+            title={t('layout.splitView.close', { defaultValue: 'Close split view' })}
           >
             <X size={14} />
           </Button>
@@ -131,7 +133,7 @@ const SplitViewContainer: React.FC<SplitViewContainerProps> = ({ className = '' 
               <span className="text-sm font-medium text-white truncate">{leftFile.fileName}</span>
             </div>
             <div className="text-xs text-white/50">
-              {leftFile.columnCount} cols
+              {t('layout.splitView.columnCount', { defaultValue: '{{count}} cols', count: leftFile.columnCount })}
             </div>
           </div>
           
@@ -172,7 +174,7 @@ const SplitViewContainer: React.FC<SplitViewContainerProps> = ({ className = '' 
               <span className="text-sm font-medium text-white truncate">{rightFile.fileName}</span>
             </div>
             <div className="text-xs text-white/50">
-              {rightFile.columnCount} cols
+              {t('layout.splitView.columnCount', { defaultValue: '{{count}} cols', count: rightFile.columnCount })}
             </div>
           </div>
           

@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 import { SEO } from "@/components/common/SEO";
 
@@ -8,6 +9,7 @@ import { SEO } from "@/components/common/SEO";
 import packageJson from "../../package.json";
 
 const Info = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleGoBack = () => {
@@ -17,9 +19,9 @@ const Info = () => {
   return (
     <>
       <SEO
-        title="Info - DataKit"
-        description="Version information and application details for DataKit"
-        keywords="datakit, version, info, about"
+        title={`${t('info.title')} - ${t('seo.title')}`}
+        description={t('info.description')}
+        keywords={t('seo.keywords')}
       />
 
       <div className="min-h-screen bg-black text-white">
@@ -29,13 +31,13 @@ const Info = () => {
             <button
               onClick={handleGoBack}
               className="text-white/70 hover:text-white transition-colors p-2 hover:bg-white/5 rounded"
-              title="Go Back"
+              title={t('common.buttons.back')}
             >
               <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-2xl font-bold">App Information</h1>
-              <p className="text-white/60 text-sm">Version and build details</p>
+              <h1 className="text-2xl font-bold">{t('info.title')}</h1>
+              <p className="text-white/60 text-sm">{t('info.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -52,14 +54,14 @@ const Info = () => {
             >
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-white/5">
-                  <span className="text-white/70">Version</span>
+                  <span className="text-white/70">{t('info.version')}</span>
                   <span className="font-mono text-primary">
                     {packageJson.version}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-white/70">Environment</span>
+                  <span className="text-white/70">{t('info.environment')}</span>
                   <span className="font-mono">{import.meta.env.MODE}</span>
                 </div>
               </div>

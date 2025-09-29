@@ -12,6 +12,7 @@ import {
   ArrowRight,
   MapPin,
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import useGCSImport from "@/hooks/remote/gcs/useGCSImport";
@@ -22,19 +23,19 @@ interface GCSImportPanelProps {
 }
 
 const GCS_CATEGORIES = [
-  { id: "all", name: "All Datasets", icon: <Cloud className="h-4 w-4" /> },
+  { id: "all", nameKey: "import.gcs.categories.all", icon: <Cloud className="h-4 w-4" /> },
   {
     id: "earth-observation",
-    name: "Earth Observation",
+    nameKey: "import.gcs.categories.earthObservation",
     icon: <Satellite className="h-4 w-4" />,
   },
-  { id: "climate", name: "Climate Data", icon: <Globe className="h-4 w-4" /> },
+  { id: "climate", nameKey: "import.gcs.categories.climate", icon: <Globe className="h-4 w-4" /> },
   {
     id: "geospatial",
-    name: "Geospatial",
+    nameKey: "import.gcs.categories.geospatial",
     icon: <MapPin className="h-4 w-4" />,
   },
-  { id: "research", name: "Research", icon: <Search className="h-4 w-4" /> },
+  { id: "research", nameKey: "import.gcs.categories.research", icon: <Search className="h-4 w-4" /> },
 ];
 
 const GCS_FEATURED_DATASETS = [
@@ -123,6 +124,7 @@ const DatasetCard: React.FC<{
   onImport: (dataset: any) => void;
   isImporting: boolean;
 }> = ({ dataset, onPreview, onImport, isImporting }) => {
+  const { t } = useTranslation();
   const formatsList =
     dataset.format.slice(0, 2).join(", ") +
     (dataset.format.length > 2 ? ` +${dataset.format.length - 2}` : "");
@@ -141,7 +143,7 @@ const DatasetCard: React.FC<{
             </h4>
             {dataset.featured && (
               <span className="bg-blue-500/20 text-blue-500 text-xs px-1.5 py-0.5 rounded">
-                Featured
+                {t('import.gcs.dataset.featured', { defaultValue: 'Featured' })}
               </span>
             )}
           </div>
@@ -173,7 +175,7 @@ const DatasetCard: React.FC<{
           className="flex-1 text-xs border-white/20 hover:border-white/30"
         >
           <Eye className="h-3 w-3 mr-1" />
-          Preview
+          {t('import.gcs.dataset.preview', { defaultValue: 'Preview' })}
         </Button>
         <Button
           size="sm"
@@ -188,12 +190,12 @@ const DatasetCard: React.FC<{
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 className="h-3 w-3 border border-white border-t-transparent rounded-full mr-1"
               />
-              Importing
+              {t('import.gcs.dataset.importing', { defaultValue: 'Importing' })}
             </>
           ) : (
             <>
               <Download className="h-3 w-3 mr-1" />
-              Import
+              {t('import.gcs.dataset.import', { defaultValue: 'Import' })}
             </>
           )}
         </Button>
@@ -222,6 +224,7 @@ const DatasetPreviewModal: React.FC<{
   onImport: (dataset: any) => void;
   isImporting: boolean;
 }> = ({ dataset, isOpen, onClose, onImport, isImporting }) => {
+  const { t } = useTranslation();
   if (!dataset) return null;
 
   return (
@@ -261,23 +264,23 @@ const DatasetPreviewModal: React.FC<{
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="bg-white/5 p-3 rounded">
-                  <div className="text-xs text-white/60 mb-1">Category</div>
+                  <div className="text-xs text-white/60 mb-1">{t('import.gcs.preview.category', { defaultValue: 'Category' })}</div>
                   <div className="text-sm text-white capitalize">
                     {dataset.category}
                   </div>
                 </div>
                 <div className="bg-white/5 p-3 rounded">
-                  <div className="text-xs text-white/60 mb-1">Size</div>
+                  <div className="text-xs text-white/60 mb-1">{t('import.gcs.preview.size', { defaultValue: 'Size' })}</div>
                   <div className="text-sm text-white">{dataset.size}</div>
                 </div>
                 <div className="bg-white/5 p-3 rounded">
-                  <div className="text-xs text-white/60 mb-1">Formats</div>
+                  <div className="text-xs text-white/60 mb-1">{t('import.gcs.preview.formats', { defaultValue: 'Formats' })}</div>
                   <div className="text-sm text-white">
                     {dataset.format.join(", ")}
                   </div>
                 </div>
                 <div className="bg-white/5 p-3 rounded">
-                  <div className="text-xs text-white/60 mb-1">Last Updated</div>
+                  <div className="text-xs text-white/60 mb-1">{t('import.gcs.preview.lastUpdated', { defaultValue: 'Last Updated' })}</div>
                   <div className="text-sm text-white">
                     {new Date(dataset.lastUpdated).toLocaleDateString()}
                   </div>
@@ -286,7 +289,7 @@ const DatasetPreviewModal: React.FC<{
 
               {dataset.tags.length > 0 && (
                 <div className="mb-4">
-                  <div className="text-xs text-white/60 mb-2">Tags</div>
+                  <div className="text-xs text-white/60 mb-2">{t('import.gcs.preview.tags', { defaultValue: 'Tags' })}</div>
                   <div className="flex flex-wrap gap-1">
                     {dataset.tags.map((tag: string) => (
                       <span
@@ -301,7 +304,7 @@ const DatasetPreviewModal: React.FC<{
               )}
 
               <div className="mb-6">
-                <div className="text-xs text-white/60 mb-2">GCS URL</div>
+                <div className="text-xs text-white/60 mb-2">{t('import.gcs.preview.gcsUrl', { defaultValue: 'GCS URL' })}</div>
                 <div className="bg-black/30 p-2 rounded text-xs text-white/80 font-mono break-all">
                   {dataset.gcsUrl}
                 </div>
@@ -309,7 +312,7 @@ const DatasetPreviewModal: React.FC<{
 
               <div className="flex items-center space-x-3">
                 <Button variant="outline" onClick={onClose} className="flex-1">
-                  Cancel
+                  {t('import.gcs.preview.cancel', { defaultValue: 'Cancel' })}
                 </Button>
                 {dataset.documentation && (
                   <Button
@@ -318,7 +321,7 @@ const DatasetPreviewModal: React.FC<{
                     className="border-blue-500/30 text-blue-400 hover:border-blue-500/50"
                   >
                     <ExternalLink className="h-4 w-4 mr-1" />
-                    Docs
+                    {t('import.gcs.preview.docs', { defaultValue: 'Docs' })}
                   </Button>
                 )}
                 <Button
@@ -326,7 +329,7 @@ const DatasetPreviewModal: React.FC<{
                   disabled={isImporting}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
-                  {isImporting ? "Importing" : "Import Dataset"}
+                  {isImporting ? t('import.gcs.preview.importing', { defaultValue: 'Importing' }) : t('import.gcs.preview.importDataset', { defaultValue: 'Import Dataset' })}
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
@@ -339,6 +342,7 @@ const DatasetPreviewModal: React.FC<{
 };
 
 const GCSImportPanel: React.FC<GCSImportPanelProps> = ({ onImport }) => {
+  const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [previewDataset, setPreviewDataset] = useState<any>(null);
@@ -414,10 +418,10 @@ const GCSImportPanel: React.FC<GCSImportPanelProps> = ({ onImport }) => {
           </div>
           <div>
             <h3 className="text-lg font-medium text-white">
-              Google Cloud Storage
+              {t('import.gcs.header.title', { defaultValue: 'Google Cloud Storage' })}
             </h3>
             <p className="text-sm text-white/70">
-              Access public datasets and earth observation data
+              {t('import.gcs.header.subtitle', { defaultValue: 'Access public datasets and earth observation data' })}
             </p>
           </div>
         </div>
@@ -427,7 +431,7 @@ const GCSImportPanel: React.FC<GCSImportPanelProps> = ({ onImport }) => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40" />
           <input
             type="text"
-            placeholder="Search datasets..."
+            placeholder={t('import.gcs.search.placeholder', { defaultValue: 'Search datasets...' })}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-black/30 border border-white/20 rounded-lg text-white/90 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50 placeholder:text-white/40"
@@ -448,7 +452,7 @@ const GCSImportPanel: React.FC<GCSImportPanelProps> = ({ onImport }) => {
               )}
             >
               {category.icon}
-              <span className="ml-1.5">{category.name}</span>
+              <span className="ml-1.5">{t(category.nameKey, { defaultValue: category.nameKey.split('.').pop() })}</span>
             </button>
           ))}
         </div>
@@ -463,7 +467,7 @@ const GCSImportPanel: React.FC<GCSImportPanelProps> = ({ onImport }) => {
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               className="h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full"
             />
-            <span className="ml-2 text-white/60">Loading datasets...</span>
+            <span className="ml-2 text-white/60">{t('import.gcs.loading.datasets', { defaultValue: 'Loading datasets...' })}</span>
           </div>
         ) : datasetsError ? (
           <div className="p-4 text-center">
@@ -478,7 +482,7 @@ const GCSImportPanel: React.FC<GCSImportPanelProps> = ({ onImport }) => {
               <div className="mb-6">
                 <h4 className="text-sm font-medium text-white/80 mb-3 flex items-center">
                   <Satellite className="h-4 w-4 mr-1.5 text-blue-500" />
-                  Featured Earth Observation
+                  {t('import.gcs.sections.featured', { defaultValue: 'Featured Earth Observation' })}
                 </h4>
                 <div className="grid gap-3">
                   {featuredDatasets.map((dataset) => (
@@ -499,7 +503,7 @@ const GCSImportPanel: React.FC<GCSImportPanelProps> = ({ onImport }) => {
               <div>
                 <h4 className="text-sm font-medium text-white/80 mb-3 flex items-center">
                   <Cloud className="h-4 w-4 mr-1.5 text-white/60" />
-                  All Datasets ({regularDatasets.length})
+                  {t('import.gcs.sections.allDatasets', { count: regularDatasets.length, defaultValue: 'All Datasets ({{count}})' })}
                 </h4>
                 <div className="grid gap-3">
                   {regularDatasets.map((dataset) => (
@@ -518,9 +522,9 @@ const GCSImportPanel: React.FC<GCSImportPanelProps> = ({ onImport }) => {
             {filteredDatasets.length === 0 && !datasetsLoading && (
               <div className="text-center py-8">
                 <Cloud className="h-12 w-12 text-white/20 mx-auto mb-3" />
-                <p className="text-white/60">No datasets found</p>
+                <p className="text-white/60">{t('import.gcs.empty.noDatasets', { defaultValue: 'No datasets found' })}</p>
                 <p className="text-white/40 text-sm">
-                  Try adjusting your search or category filter
+                  {t('import.gcs.empty.tryAdjusting', { defaultValue: 'Try adjusting your search or category filter' })}
                 </p>
               </div>
             )}

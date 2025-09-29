@@ -40,16 +40,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <h3 className="text-lg font-medium text-white mb-2">
-                Authentication Required
+                {t('auth.protectedRoute.authRequired', { defaultValue: 'Authentication Required' })}
               </h3>
               <p className="text-white/70 mb-4">
-                Please sign in to access this feature.
+                {t('auth.protectedRoute.signInMessage', { defaultValue: 'Please sign in to access this feature.' })}
               </p>
               <button
                 onClick={() => setShowAuthModal(true)}
                 className="text-primary hover:text-primary-foreground transition-colors"
               >
-                Sign In
+                {t('auth.protectedRoute.signInButton', { defaultValue: 'Sign In' })}
               </button>
             </div>
           </div>

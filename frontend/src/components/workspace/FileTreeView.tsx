@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   FileText, 
   FileSpreadsheet, 
@@ -46,6 +47,7 @@ export const FileTreeView: React.FC<FileTreeViewProps> = ({
   onFileRename,
   activeFileId
 }) => {
+  const { t } = useTranslation();
   const [contextMenuFileId, setContextMenuFileId] = useState<string | null>(null);
   const [renamingFileId, setRenamingFileId] = useState<string | null>(null);
   const [newFileName, setNewFileName] = useState('');
@@ -102,8 +104,8 @@ export const FileTreeView: React.FC<FileTreeViewProps> = ({
     return (
       <div className="px-5 py-8 text-center">
         <FolderOpen className="h-8 w-8 text-white/20 mx-auto mb-2" />
-        <p className="text-xs text-white/40">No files in workspace</p>
-        <p className="text-[10px] text-white/30 mt-1">Add files using the source panel above</p>
+        <p className="text-xs text-white/40">{t('workspace.fileTree.noFiles', { defaultValue: 'No files in workspace' })}</p>
+        <p className="text-[10px] text-white/30 mt-1">{t('workspace.fileTree.addFilesHint', { defaultValue: 'Add files using the source panel above' })}</p>
       </div>
     );
   }
@@ -111,7 +113,7 @@ export const FileTreeView: React.FC<FileTreeViewProps> = ({
   return (
     <div className="px-3 py-2">
       <div className="text-[10px] text-white/40 uppercase tracking-wider mb-2 px-2">
-        Workspace Files ({files.length})
+        {t('workspace.fileTree.workspaceFiles', { defaultValue: 'Workspace Files ({{count}})', count: files.length })}
       </div>
       
       <div className="space-y-0.5">
@@ -220,7 +222,7 @@ export const FileTreeView: React.FC<FileTreeViewProps> = ({
                           className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 w-full text-left text-xs cursor-pointer"
                         >
                           <Edit2 className="h-3 w-3" />
-                          Rename
+                          {t('workspace.fileTree.rename', { defaultValue: 'Rename' })}
                         </button> */}
                         <button
                           onClick={(e) => {
@@ -231,7 +233,7 @@ export const FileTreeView: React.FC<FileTreeViewProps> = ({
                           className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 w-full text-left text-xs text-red-400 cursor-pointer"
                         >
                           <Trash2 className="h-3 w-3" />
-                          Remove
+                          {t('workspace.fileTree.remove', { defaultValue: 'Remove' })}
                         </button>
                       </motion.div>
                     )}

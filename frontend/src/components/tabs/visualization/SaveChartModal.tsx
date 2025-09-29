@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useChartsStore } from '@/store/chartsStore';
 import { X, Save, Star } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/Button';
  * Modal for saving charts with name and options
  */
 const SaveChartModal: React.FC = () => {
+  const { t } = useTranslation();
   const { 
     isSaveModalOpen, 
     toggleSaveModal, 
@@ -16,7 +18,7 @@ const SaveChartModal: React.FC = () => {
   } = useChartsStore();
   
   const [chartName, setChartName] = useState<string>(
-    currentChart?.title || 'My Chart'
+    currentChart?.title || t('visualization.saveChart.myChart')
   );
   const [chartDescription, setChartDescription] = useState<string>(
     currentChart?.description || ''
@@ -43,7 +45,7 @@ const SaveChartModal: React.FC = () => {
     <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
       <div className="bg-darkNav p-6 rounded-lg shadow-lg w-96 max-w-full">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">Save Chart</h3>
+          <h3 className="text-lg font-medium">{t('visualization.saveChart.title')}</h3>
           <Button
             variant="ghost"
             size="sm"
@@ -56,24 +58,24 @@ const SaveChartModal: React.FC = () => {
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Chart Name</label>
+            <label className="block text-sm font-medium mb-1">{t('visualization.saveChart.chartName')}</label>
             <input
               type="text"
               value={chartName}
               onChange={(e) => setChartName(e.target.value)}
               className="w-full p-2 bg-background border border-white/10 rounded text-white"
-              placeholder="Enter chart name"
+              placeholder={t('visualization.saveChart.enterChartName')}
               autoFocus
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">Description (optional)</label>
+            <label className="block text-sm font-medium mb-1">{t('visualization.saveChart.descriptionOptional')}</label>
             <textarea
               value={chartDescription}
               onChange={(e) => setChartDescription(e.target.value)}
               className="w-full p-2 bg-background border border-white/10 rounded text-white h-20 resize-none"
-              placeholder="Enter chart description"
+              placeholder={t('visualization.saveChart.enterChartDescription')}
             />
           </div>
           
@@ -87,7 +89,7 @@ const SaveChartModal: React.FC = () => {
             />
             <label htmlFor="save-as-template" className="text-sm flex items-center">
               <Star size={14} className="mr-1 text-secondary" />
-              Save as Template
+              {t('visualization.saveChart.saveAsTemplate')}
             </label>
           </div>
         </div>
@@ -97,7 +99,7 @@ const SaveChartModal: React.FC = () => {
             variant="ghost"
             onClick={() => toggleSaveModal(false)}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           
           <Button
@@ -107,7 +109,7 @@ const SaveChartModal: React.FC = () => {
             disabled={!chartName.trim()}
           >
             <Save size={16} className="mr-1" />
-            Save Chart
+            {t('visualization.saveChart.saveChart')}
           </Button>
         </div>
       </div>

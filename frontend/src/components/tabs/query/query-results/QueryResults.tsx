@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import QueryResultsHeader from './QueryResultsHeader';
 import QueryResultsTable from './QueryResultsTable';
@@ -40,6 +41,7 @@ const QueryResults: React.FC<QueryResultsProps> = ({
   onImportAsTable,
   isImporting = false
 }) => {
+  const { t } = useTranslation();
   // Show loading state
   if (isLoading) {
     return <QueryResultsEmptyState type="loading" />;

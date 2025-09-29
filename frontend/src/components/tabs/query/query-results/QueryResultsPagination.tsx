@@ -5,6 +5,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/Button";
 
 interface QueryResultsPaginationProps {
@@ -22,6 +23,7 @@ const QueryResultsPagination: React.FC<QueryResultsPaginationProps> = ({
   onPageChange,
   onRowsPerPageChange,
 }) => {
+  const { t } = useTranslation();
   const handleRowsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newRowsPerPage = Number(e.target.value);
     if (onRowsPerPageChange) {
@@ -32,7 +34,7 @@ const QueryResultsPagination: React.FC<QueryResultsPaginationProps> = ({
   return (
     <div className="flex items-center justify-between p-3 bg-darkNav mt-1 rounded-b">
       <div className="flex items-center space-x-2">
-        <span className="text-xs text-white/70">Rows per page:</span>
+        <span className="text-xs text-white/70">{t('queryResults.pagination.rowsPerPage', { defaultValue: 'Rows per page:' })}</span>
         <select
           value={rowsPerPage}
           onChange={handleRowsPerPageChange}
@@ -55,7 +57,7 @@ const QueryResultsPagination: React.FC<QueryResultsPaginationProps> = ({
           className="h-7 w-7 p-0 flex items-center justify-center"
           disabled={currentPage === 1}
           onClick={() => onPageChange && onPageChange(1)}
-          title="First Page"
+          title={t('queryResults.pagination.firstPage', { defaultValue: 'First Page' })}
         >
           <ChevronsLeft size={14} />
         </Button>
@@ -65,13 +67,13 @@ const QueryResultsPagination: React.FC<QueryResultsPaginationProps> = ({
           className="h-7 w-7 p-0 flex items-center justify-center"
           disabled={currentPage === 1}
           onClick={() => onPageChange && onPageChange(currentPage - 1)}
-          title="Previous Page"
+          title={t('queryResults.pagination.previousPage', { defaultValue: 'Previous Page' })}
         >
           <ChevronLeft size={14} />
         </Button>
 
         <span className="text-xs text-white/70 px-2">
-          Page {currentPage.toLocaleString()} of {totalPages.toLocaleString()}
+          {t('queryResults.pagination.pageOf', { defaultValue: 'Page {{current}} of {{total}}', current: currentPage.toLocaleString(), total: totalPages.toLocaleString() })}
         </span>
 
         <Button
@@ -80,7 +82,7 @@ const QueryResultsPagination: React.FC<QueryResultsPaginationProps> = ({
           className="h-7 w-7 p-0 flex items-center justify-center"
           disabled={currentPage === totalPages}
           onClick={() => onPageChange && onPageChange(currentPage + 1)}
-          title="Next Page"
+          title={t('queryResults.pagination.nextPage', { defaultValue: 'Next Page' })}
         >
           <ChevronRight size={14} />
         </Button>
@@ -90,7 +92,7 @@ const QueryResultsPagination: React.FC<QueryResultsPaginationProps> = ({
           className="h-7 w-7 p-0 flex items-center justify-center"
           disabled={currentPage === totalPages}
           onClick={() => onPageChange && onPageChange(totalPages)}
-          title="Last Page"
+          title={t('queryResults.pagination.lastPage', { defaultValue: 'Last Page' })}
         >
           <ChevronsRight size={14} />
         </Button>
@@ -99,7 +101,7 @@ const QueryResultsPagination: React.FC<QueryResultsPaginationProps> = ({
       {/* Jump to page input for large result sets */}
       {totalPages > 10 && (
         <div className="flex items-center space-x-2">
-          <span className="text-xs text-white/70">Go to:</span>
+          <span className="text-xs text-white/70">{t('queryResults.pagination.goTo', { defaultValue: 'Go to:' })}</span>
           <input
             type="number"
             min={1}

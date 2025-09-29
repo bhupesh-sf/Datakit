@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Link } from 'lucide-react';
 
@@ -17,9 +18,9 @@ import HuggingFacePanel from './import-modal/HuggingFacePanel';
 import MotherDuckPanel from './import-modal/MotherDuckPanel';
 import PostgreSQLPanel from './import-modal/PostgreSQLPanel';
 
-import GCSImportPanel from './import-modal/GCSImportPanel';
-import GoogleDrivePanel from './import-modal/GoogleDrivePanel';
-import AuthModal from '@/components/auth/AuthModal';
+// import GCSImportPanel from './import-modal/GCSImportPanel';
+// import GoogleDrivePanel from './import-modal/GoogleDrivePanel';
+// import AuthModal from '@/components/auth/AuthModal';
 
 import S3 from '@/assets/s3.png';
 import GCS from '@/assets/gcs.svg';
@@ -45,68 +46,69 @@ interface ProviderTab {
   requiresAuth?: boolean;
 }
 
-const PROVIDER_TABS: ProviderTab[] = [
-  {
-    id: 'custom-url',
-    label: 'Custom URL',
-    icon: <Link color="white" className="h-4 w-4" />,
-    description: 'Import from any public URL',
-  },
-  {
-    id: 's3',
-    label: 'Amazon S3',
-    icon: <img src={S3} className="h-4 w-4" />,
-    description: 'Public S3 buckets',
-  },
-  {
-    id: 'huggingface',
-    label: 'HuggingFace',
-    icon: <img src={HuggingFace} className="h-5 w-5" />,
-    description: 'ML datasets',
-  },
-  {
-    id: 'motherduck',
-    label: 'MotherDuck',
-    icon: <img src={MotherDuckIcon} className="h-5 w-5" alt="MotherDuck" />,
-    description: 'Cloud DuckDB',
-    featured: true,
-    requiresAuth: false,
-  },
-  {
-    id: 'postgresql',
-    label: 'PostgreSQL',
-    icon: <img src={PostgreSQLIcon} className="h-5 w-5" alt="PostgreSQL" />,
-    description: 'PG databases',
-    featured: true,
-    requiresAuth: true,
-  },
-  {
-    id: 'google-sheets',
-    label: 'Google Sheets',
-    icon: <GoogleSheetsIcon className="h-5 w-5" />,
-    description: 'Published Google Sheets',
-  },
-  {
-    id: 'gcs',
-    label: 'Google Cloud',
-    icon: <img src={GCS} className="h-6 w-6" />,
-    description: 'Public GCS buckets',
-    comingSoon: true,
-  },
-  {
-    id: 'google-drive',
-    label: 'Google Drive',
-    icon: <img src={Drive} className="h-6 w-6" />,
-    description: 'Files from Google Drive',
-    comingSoon: true,
-  },
-];
-
 const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
   isOpen,
   onClose,
   onImport,
 }) => {
+  const { t } = useTranslation();
+  
+  const PROVIDER_TABS: ProviderTab[] = [
+    {
+      id: 'custom-url',
+      label: t('remoteImport.providers.customUrl.label', { defaultValue: 'Custom URL' }),
+      icon: <Link color="white" className="h-4 w-4" />,
+      description: t('remoteImport.providers.customUrl.description', { defaultValue: 'Import from any public URL' }),
+    },
+    {
+      id: 's3',
+      label: t('remoteImport.providers.s3.label', { defaultValue: 'Amazon S3' }),
+      icon: <img src={S3} className="h-4 w-4" />,
+      description: t('remoteImport.providers.s3.description', { defaultValue: 'Public S3 buckets' }),
+    },
+    {
+      id: 'huggingface',
+      label: t('remoteImport.providers.huggingface.label', { defaultValue: 'HuggingFace' }),
+      icon: <img src={HuggingFace} className="h-5 w-5" />,
+      description: t('remoteImport.providers.huggingface.description', { defaultValue: 'ML datasets' }),
+    },
+    {
+      id: 'motherduck',
+      label: t('remoteImport.providers.motherduck.label', { defaultValue: 'MotherDuck' }),
+      icon: <img src={MotherDuckIcon} className="h-5 w-5" alt="MotherDuck" />,
+      description: t('remoteImport.providers.motherduck.description', { defaultValue: 'Cloud DuckDB' }),
+      featured: true,
+      requiresAuth: false,
+    },
+    {
+      id: 'postgresql',
+      label: t('remoteImport.providers.postgresql.label', { defaultValue: 'PostgreSQL' }),
+      icon: <img src={PostgreSQLIcon} className="h-5 w-5" alt="PostgreSQL" />,
+      description: t('remoteImport.providers.postgresql.description', { defaultValue: 'PG databases' }),
+      featured: true,
+      requiresAuth: true,
+    },
+    {
+      id: 'google-sheets',
+      label: t('remoteImport.providers.googleSheets.label', { defaultValue: 'Google Sheets' }),
+      icon: <GoogleSheetsIcon className="h-5 w-5" />,
+      description: t('remoteImport.providers.googleSheets.description', { defaultValue: 'Published Google Sheets' }),
+    },
+    {
+      id: 'gcs',
+      label: t('remoteImport.providers.gcs.label', { defaultValue: 'Google Cloud' }),
+      icon: <img src={GCS} className="h-6 w-6" />,
+      description: t('remoteImport.providers.gcs.description', { defaultValue: 'Public GCS buckets' }),
+      comingSoon: true,
+    },
+    {
+      id: 'google-drive',
+      label: t('remoteImport.providers.googleDrive.label', { defaultValue: 'Google Drive' }),
+      icon: <img src={Drive} className="h-6 w-6" />,
+      description: t('remoteImport.providers.googleDrive.description', { defaultValue: 'Files from Google Drive' }),
+      comingSoon: true,
+    },
+  ];
   const {
     activeProviderRemoteModal: activeProvider,
     setActiveProviderRemoteModal: setActiveProvider,
@@ -156,7 +158,7 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
       default:
         return (
           <div className="p-8 text-center text-white/60">
-            Select a provider to continue
+            {t('remoteImport.selectProvider', { defaultValue: 'Select a provider to continue' })}
           </div>
         );
     }
@@ -187,11 +189,11 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
               <div className="p-4 border-b border-white/10">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-heading font-medium text-white">
-                    Import Remote Sources
+                    {t('remoteImport.title', { defaultValue: 'Import Remote Sources' })}
                   </h2>
                 </div>
                 <p className="text-xs text-white/60 mt-1">
-                  Connect to various data sources
+                  {t('remoteImport.subtitle', { defaultValue: 'Connect to various data sources' })}
                 </p>
               </div>
 
@@ -264,7 +266,7 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                             </p>
                             {tab.comingSoon && (
                               <span className="ml-2 text-xs bg-white/10 text-white/50 px-1.5 py-0.5 rounded">
-                                Soon
+                                {t('remoteImport.comingSoon', { defaultValue: 'Soon' })}
                               </span>
                             )}
                           </div>
@@ -273,7 +275,7 @@ const RemoteDataImportModal: React.FC<RemoteDataImportModalProps> = ({
                             {tab.requiresAuth && !isAuthenticated && (
                               <span className="text-[10px] text-amber-400/60">
                                 {' '}
-                                • Sign in required
+                                • {t('remoteImport.signInRequired', { defaultValue: 'Sign in required' })}
                               </span>
                             )}
                           </p>

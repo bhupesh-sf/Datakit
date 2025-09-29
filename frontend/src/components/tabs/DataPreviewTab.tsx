@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useAppStore } from '@/store/appStore';
 import {
@@ -17,6 +18,7 @@ import SplitViewContainer from '@/components/layout/SplitViewContainer';
 import { ImportProvider } from '@/types/remoteImport';
 
 const DataPreviewTab: React.FC = () => {
+  const { t } = useTranslation();
   const { setIsRemoteModalOpen, setActiveProviderRemoteModal } = useAppStore();
   const hasFiles = useAppStore(selectHasFiles);
   const activeFile = useAppStore(selectActiveFile);
@@ -63,9 +65,9 @@ const DataPreviewTab: React.FC = () => {
             ) : (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center text-white/70">
-                  <p className="text-lg mb-2">No data to preview</p>
+                  <p className="text-lg mb-2">{t('tabs.preview.noData')}</p>
                   <p className="text-sm">
-                    Select a file tab to view its contents
+                    {t('tabs.preview.selectFile')}
                   </p>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   RefreshCw,
   Database,
@@ -20,43 +21,43 @@ interface AnalysisStep {
   progressRange: [number, number]; // [start%, end%]
 }
 
-const ANALYSIS_STEPS: AnalysisStep[] = [
+const getAnalysisSteps = (t: (key: string, options?: any) => string): AnalysisStep[] => [
   {
     id: "validation",
-    label: "Validating Data",
-    description: "Checking table structure and accessibility",
+    label: t('inspector.loading.steps.validation.label', { defaultValue: "Validating Data" }),
+    description: t('inspector.loading.steps.validation.description', { defaultValue: "Checking table structure and accessibility" }),
     icon: <Database className="h-4 w-4" />,
     estimatedDuration: 1,
     progressRange: [0, 10],
   },
   {
     id: "schema",
-    label: "Reading Schema",
-    description: "Identifying column types and structure",
+    label: t('inspector.loading.steps.schema.label', { defaultValue: "Reading Schema" }),
+    description: t('inspector.loading.steps.schema.description', { defaultValue: "Identifying column types and structure" }),
     icon: <Search className="h-4 w-4" />,
     estimatedDuration: 2,
     progressRange: [10, 25],
   },
   {
     id: "duplicates",
-    label: "Detecting Duplicates",
-    description: "Scanning for duplicate rows",
+    label: t('inspector.loading.steps.duplicates.label', { defaultValue: "Detecting Duplicates" }),
+    description: t('inspector.loading.steps.duplicates.description', { defaultValue: "Scanning for duplicate rows" }),
     icon: <RefreshCw className="h-4 w-4" />,
     estimatedDuration: 3,
     progressRange: [25, 35],
   },
   {
     id: "columns",
-    label: "Analyzing Columns",
-    description: "Computing statistics and patterns",
+    label: t('inspector.loading.steps.columns.label', { defaultValue: "Analyzing Columns" }),
+    description: t('inspector.loading.steps.columns.description', { defaultValue: "Computing statistics and patterns" }),
     icon: <BarChart3 className="h-4 w-4" />,
     estimatedDuration: 8,
     progressRange: [35, 85],
   },
   {
     id: "quality",
-    label: "Quality Assessment",
-    description: "Calculating health scores and recommendations",
+    label: t('inspector.loading.steps.quality.label', { defaultValue: "Quality Assessment" }),
+    description: t('inspector.loading.steps.quality.description', { defaultValue: "Calculating health scores and recommendations" }),
     icon: <TrendingUp className="h-4 w-4" />,
     estimatedDuration: 2,
     progressRange: [85, 100],
@@ -67,16 +68,17 @@ const ANALYSIS_STEPS: AnalysisStep[] = [
  * Get current step based on progress percentage
  */
 const getCurrentStep = (
-  progress: number
+  progress: number,
+  steps: AnalysisStep[]
 ): { current: AnalysisStep; next?: AnalysisStep } => {
   const currentStep =
-    ANALYSIS_STEPS.find(
+    steps.find(
       (step) =>
         progress >= step.progressRange[0] && progress < step.progressRange[1]
-    ) || ANALYSIS_STEPS[ANALYSIS_STEPS.length - 1];
+    ) || steps[steps.length - 1];
 
-  const currentIndex = ANALYSIS_STEPS.indexOf(currentStep);
-  const nextStep = ANALYSIS_STEPS[currentIndex + 1];
+  const currentIndex = steps.indexOf(currentStep);
+  const nextStep = steps[currentIndex + 1];
 
   return { current: currentStep, next: nextStep };
 };
@@ -100,7 +102,9 @@ export const LoadingState: React.FC<EnhancedLoadingStateProps> = ({
   totalColumns,
   className,
 }) => {
-  const { current: currentStep } = getCurrentStep(progress);
+  const { t } = useTranslation();
+  const analysisSteps = getAnalysisSteps(t);
+  const { current: currentStep } = getCurrentStep(progress, analysisSteps);
 
   return (
     <div className={`space-y-6 ${className || ""}`}>
@@ -159,9 +163,12 @@ export const LoadingState: React.FC<EnhancedLoadingStateProps> = ({
           {/* Column progress for column analysis step */}
           {currentStep.id === "columns" && currentColumn && totalColumns && (
             <div className="text-xs text-white/60">
-              Analyzing: {currentColumn} • Column{" "}
-              {Math.round(((progress - 35) / 50) * totalColumns)} of{" "}
-              {totalColumns}
+              {t('inspector.loading.analyzingColumn', { 
+                defaultValue: 'Analyzing: {{currentColumn}} • Column {{currentColumnNumber}} of {{totalColumns}}',
+                currentColumn,
+                currentColumnNumber: Math.round(((progress - 35) / 50) * totalColumns),
+                totalColumns
+              })}
             </div>
           )}
         </motion.div>

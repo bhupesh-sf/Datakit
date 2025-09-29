@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ChevronDown,
   Plus,
@@ -19,6 +20,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import AuthModal from '@/components/auth/AuthModal';
 
 export const WorkspaceSelector: React.FC = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
@@ -119,8 +121,8 @@ export const WorkspaceSelector: React.FC = () => {
     
     // Show success notification
     showSuccess(
-      'Workspace Created',
-      `"${workspaceName}" workspace has been created successfully`,
+      t('workspace.selector.workspaceCreated'),
+      t('workspace.selector.workspaceCreatedMessage', { name: workspaceName }),
       { icon: 'check', duration: 4000 }
     );
     
@@ -138,8 +140,8 @@ export const WorkspaceSelector: React.FC = () => {
       
       // Show success notification
       showSuccess(
-        'Workspace Renamed',
-        `Workspace renamed from "${oldName}" to "${newName}"`,
+        t('workspace.selector.workspaceRenamed'),
+        t('workspace.selector.workspaceRenamedMessage', { oldName, newName }),
         { icon: 'check', duration: 4000 }
       );
       
@@ -152,15 +154,15 @@ export const WorkspaceSelector: React.FC = () => {
 
     const workspace = workspaces.find((w) => w.id === id);
     const confirmed = confirm(
-      `Delete workspace "${workspace?.name}"? This action cannot be undone.`
+      t('workspace.selector.deleteConfirmation', { name: workspace?.name })
     );
     if (confirmed && workspace) {
       deleteWorkspace(id);
       
       // Show success notification
       showSuccess(
-        'Workspace Deleted',
-        `"${workspace.name}" workspace has been deleted`,
+        t('workspace.selector.workspaceDeleted'),
+        t('workspace.selector.workspaceDeletedMessage', { name: workspace.name }),
         { icon: 'check', duration: 4000 }
       );
     }
@@ -198,8 +200,12 @@ export const WorkspaceSelector: React.FC = () => {
     
     // Show success notification
     showSuccess(
-      'Workspace Saved',
-      `Draft workspace saved as "${workspaceName}" with ${fileCount} file${fileCount !== 1 ? 's' : ''}`,
+      t('workspace.selector.workspaceSaved'),
+      t('workspace.selector.workspaceSavedMessage', { 
+        name: workspaceName, 
+        count: fileCount,
+        files: fileCount === 1 ? t('workspace.selector.file') : t('workspace.selector.files')
+      }),
       { icon: 'check', duration: 5000 }
     );
     
@@ -219,11 +225,11 @@ export const WorkspaceSelector: React.FC = () => {
         <div className="flex items-center gap-2">
           <FolderOpen className="h-4 w-4 text-primary/70" />
           <span className="text-sm font-medium text-white">
-            {activeWorkspace?.name || 'Select Workspace'}
+            {activeWorkspace?.name || t('workspace.selector.selectWorkspace')}
           </span>
           {activeWorkspace?.isDraft && (
             <span className="text-[10px] text-white/50 bg-white/10 px-1.5 py-0.5 rounded">
-              unsaved
+              {t('workspace.selector.unsaved')}
             </span>
           )}
         </div>
@@ -256,7 +262,7 @@ export const WorkspaceSelector: React.FC = () => {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-medium text-white tracking-wide">
-                      Workspaces
+                      {t('workspace.selector.workspaces')}
                     </h3>
                     {!isAuthenticated && nonDraftWorkspaceCount >= 1 && (
                       <span className="text-xs px-1.5 py-0.5 bg-amber-400/10 text-amber-400 rounded">
@@ -285,27 +291,25 @@ export const WorkspaceSelector: React.FC = () => {
                         >
                           <div className="space-y-2">
                             <p>
-                              <strong className="text-white">Workspaces</strong>{' '}
-                              organize your files without storing actual data -
-                              only references for privacy.
+                              <strong className="text-white">{t('workspace.selector.tooltip.workspaces')}</strong>{' '}
+                              {t('workspace.selector.tooltip.organizeFiles')}
                             </p>
                             <p>
-                              <strong className="text-primary">Draft:</strong>{' '}
-                              Temporary workspace for files before saving to a
-                              named workspace.
+                              <strong className="text-primary">{t('workspace.selector.tooltip.draft')}:</strong>{' '}
+                              {t('workspace.selector.tooltip.draftDescription')}
                             </p>
                             <p>
-                              <strong className="text-white">Benefits:</strong>{' '}
-                              Keep projects organized, switch between datasets.
+                              <strong className="text-white">{t('workspace.selector.tooltip.benefits')}:</strong>{' '}
+                              {t('workspace.selector.tooltip.benefitsDescription')}
                             </p>
                             {!isAuthenticated && (
                               <p>
                                 <strong className="text-amber-400">
-                                  Limit:
+                                  {t('workspace.selector.tooltip.limit')}:
                                 </strong>{' '}
-                                Create up to 1 workspaces.{' '}
-                                <span className="text-primary">Sign up</span>{' '}
-                                for unlimited workspaces.
+                                {t('workspace.selector.tooltip.limitDescription')}{' '}
+                                <span className="text-primary">{t('workspace.selector.tooltip.signUp')}</span>{' '}
+                                {t('workspace.selector.tooltip.unlimitedWorkspaces')}
                               </p>
                             )}
                           </div>
@@ -315,8 +319,7 @@ export const WorkspaceSelector: React.FC = () => {
                   </div>
                 </div>
                 <p className="text-xs text-white/60 leading-relaxed">
-                  Organize your files into workspaces. Files are referenced, not
-                  stored.
+                  {t('workspace.selector.organizeDescription')}
                 </p>
               </div>
               {/* Workspace List */}
@@ -371,12 +374,14 @@ export const WorkspaceSelector: React.FC = () => {
                               </span>
                               {workspace.isDraft && (
                                 <span className="text-[10px] text-white/40">
-                                  draft
+                                  {t('workspace.selector.draft')}
                                 </span>
                               )}
                             </div>
                             <div className="text-[10px] text-white/40">
-                              {workspace.files.length} files
+                              {t('workspace.selector.fileCount', { 
+                                count: workspace.files.length
+                              })}
                             </div>
                           </div>
                           {workspace.id === activeWorkspaceId && (
@@ -428,7 +433,7 @@ export const WorkspaceSelector: React.FC = () => {
                             setDraftSaveName('');
                           }
                         }}
-                        placeholder="Workspace name..."
+                        placeholder={t('workspace.selector.workspaceNamePlaceholder')}
                         className="flex-1 bg-white/10 border border-white/20 rounded px-2 py-1.5 text-sm text-white placeholder-white/40 outline-none focus:border-primary"
                         autoFocus
                       />
@@ -455,7 +460,7 @@ export const WorkspaceSelector: React.FC = () => {
                     >
                       <Save className="h-4 w-4 text-green-400" />
                       <span className="text-sm text-white">
-                        Save Draft as Workspace
+                        {t('workspace.selector.saveDraftAsWorkspace')}
                       </span>
                     </button>
                   )}
@@ -477,7 +482,7 @@ export const WorkspaceSelector: React.FC = () => {
                           setNewWorkspaceName('');
                         }
                       }}
-                      placeholder="Workspace name..."
+                      placeholder={t('workspace.selector.workspaceNamePlaceholder')}
                       className="flex-1 bg-white/10 border border-white/20 rounded px-2 py-1.5 text-sm text-white placeholder-white/40 outline-none focus:border-primary"
                       autoFocus
                     />
@@ -515,7 +520,7 @@ export const WorkspaceSelector: React.FC = () => {
                   >
                     <div className="flex items-center gap-2">
                       <Plus className="h-4 w-4 text-primary" />
-                      <span className="text-sm text-white">New Workspace</span>
+                      <span className="text-sm text-white">{t('workspace.selector.newWorkspace')}</span>
                     </div>
                     {/* Show premium indicator for non-authenticated users at limit */}
                     {!isAuthenticated && nonDraftWorkspaceCount >= 1 && (

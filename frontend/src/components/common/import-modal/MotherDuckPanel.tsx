@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/Button";
 import { ConnectionStatus } from "./motherduck/ConnectionStatus";
 import { TokenInput } from "./motherduck/TokenInput";
@@ -11,6 +12,7 @@ interface MotherDuckPanelProps {
 }
 
 const MotherDuckPanel: React.FC<MotherDuckPanelProps> = ({ onImport }) => {
+  const { t } = useTranslation();
   const {
     isConnected,
     isConnecting,
@@ -75,11 +77,10 @@ const MotherDuckPanel: React.FC<MotherDuckPanelProps> = ({ onImport }) => {
               className="text-center space-y-4"
             >
               <h2 className="text-xl text-white font-medium">
-                You're all set!
+                {t('import.motherduck.success.title', { defaultValue: "You're all set!" })}
               </h2>
               <p className="text-white/70">
-                Connection successful. You can query your MotherDuck in the
-                query tab.
+                {t('import.motherduck.success.description', { defaultValue: 'Connection successful. You can query your MotherDuck in the query tab.' })}
               </p>
 
               <Button
@@ -90,7 +91,7 @@ const MotherDuckPanel: React.FC<MotherDuckPanelProps> = ({ onImport }) => {
                   onImport();
                 }}
               >
-                Go to Query Tab
+                {t('import.motherduck.success.goToQuery', { defaultValue: 'Go to Query Tab' })}
               </Button>
             </motion.div>
           </div>

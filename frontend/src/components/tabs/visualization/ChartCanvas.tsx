@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import { useChartsStore, ChartType } from "@/store/chartsStore";
 
@@ -28,6 +29,7 @@ import {
  * Component that renders the appropriate chart based on the current configuration
  */
 const ChartCanvas: React.FC = () => {
+  const { t } = useTranslation();
   const { currentChart, colorPalettes } = useChartsStore();
 
   if (!currentChart || !currentChart.data || currentChart.data.length === 0) {
@@ -35,10 +37,10 @@ const ChartCanvas: React.FC = () => {
       <div className="h-full flex items-center justify-center bg-darkNav/20 rounded-lg border border-white/5">
         <div className="text-center p-8">
           <h3 className="text-lg font-medium text-white/80 mb-2">
-            No Chart Data
+            {t('visualization.canvas.noData.title', { defaultValue: 'No Chart Data' })}
           </h3>
           <p className="text-sm text-white/60">
-            Configure your chart or run a query to visualize data.
+            {t('visualization.canvas.noData.message', { defaultValue: 'Configure your chart or run a query to visualize data.' })}
           </p>
         </div>
       </div>
@@ -441,7 +443,7 @@ const ChartCanvas: React.FC = () => {
       default:
         return (
           <div className="h-full flex items-center justify-center text-white/70">
-            <p>Chart type not supported</p>
+            <p>{t('visualization.canvas.unsupported', { defaultValue: 'Chart type not supported' })}</p>
           </div>
         );
     }

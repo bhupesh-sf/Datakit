@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Container, Terminal, Code, Hexagon, Upload, PlayCircle } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import S3 from "@/assets/s3.png";
 import HuggingFace from "@/assets/huggingface.png";
@@ -25,55 +26,56 @@ interface Props {
 const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
   const { fileInputRef, handleButtonClick, handleFileSelect, isProcessing } = useFileUpload();
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const { t } = useTranslation();
 
   const remoteOptions: RemoteImportOption[] = [
     {
       id: "postgresql",
-      name: "PostgreSQL",
+      name: t('preview.providers.postgresql.name'),
       icon: <img src={postgresIcon} className="h-5 w-5" />,
-      description: "Postgres Databases",
+      description: t('preview.providers.postgresql.description'),
     },
     {
       id: "s3",
-      name: "Amazon S3",
+      name: t('preview.providers.s3.name'),
       icon: <img src={S3} className="h-4 w-4" />,
-      description: "Public S3 buckets",
+      description: t('preview.providers.s3.description'),
     },
     {
       id: "huggingface",
-      name: "HuggingFace",
+      name: t('preview.providers.huggingface.name'),
       icon: <img src={HuggingFace} className="h-5 w-5" />,
-      description: "ML datasets",
+      description: t('preview.providers.huggingface.description'),
     },
     {
       id: "google-sheets",
-      name: "Google Sheets",
+      name: t('preview.providers.googleSheets.name'),
       icon: <GoogleSheetsIcon className="h-5 w-5" />,
-      description: "Published sheets",
+      description: t('preview.providers.googleSheets.description'),
     },
   ];
 
   const installOptions = [
     {
-      name: "Docker",
+      name: t('preview.install.docker'),
       icon: Container,
       emoji: "🐳",
       url: "https://docs.datakit.page/docs/installation/docker",
     },
     {
-      name: "Homebrew",
+      name: t('preview.install.homebrew'),
       icon: Terminal,
       emoji: "🍺",
       url: "https://docs.datakit.page/docs/installation/brew",
     },
     {
-      name: "Python",
+      name: t('preview.install.python'),
       icon: Code,
       emoji: "🐍",
       url: "https://docs.datakit.page/docs/installation/pip",
     },
     {
-      name: "Node.js",
+      name: t('preview.install.nodejs'),
       icon: Hexagon,
       emoji: "⬢",
       url: "https://docs.datakit.page/docs/installation/npm",
@@ -92,9 +94,9 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
         {/* Main heading with demo button */}
         <div className="flex items-center justify-center gap-3 mb-3 flex-wrap">
           <h1 className="text-2xl font-heading font-semibold text-white">
-            Get started with DataKit
+            {t('preview.empty.title')}
           </h1>
-          <span className="text-white/40 text-sm">or</span>
+          <span className="text-white/40 text-sm">{t('common.labels.or')}</span>
           <motion.button
             onClick={() => setShowDemoModal(true)}
             initial={{ opacity: 0, scale: 0.8 }}
@@ -117,13 +119,13 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
             >
               <PlayCircle className="h-4 w-4" />
             </motion.div>
-            <span>watch a demo</span>
+            <span>{t('preview.empty.watchDemo')}</span>
           </motion.button>
         </div>
 
         {/* Description */}
         <p className="text-white/70 mb-6 leading-relaxed">
-          Import your files to start analyzing.
+          {t('preview.empty.description')}
           <br />
           <motion.span
             className="relative overflow-hidden"
@@ -142,10 +144,10 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
                 ease: "linear",
               }}
             >
-              Everything runs locally
+              {t('preview.empty.privacy')}
             </motion.span>
           </motion.span>{" "}
-          — Your data stays private.
+          {t('preview.empty.privacyNote')}
         </p>
 
         {/* Import options */}
@@ -173,8 +175,8 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
                 
                 {/* Tooltip */}
                 <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/90 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                  <div className="font-medium">Open File</div>
-                  <div className="text-white/70">Local files</div>
+                  <div className="font-medium">{t('preview.tooltips.openFile')}</div>
+                  <div className="text-white/70">{t('preview.tooltips.localFiles')}</div>
                   {/* Tooltip arrow */}
                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
                 </div>
@@ -186,7 +188,7 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
                 transition={{ delay: 0.4, duration: 0.3 }}
                 className="text-primary text-sm font-medium"
               >
-                Open file
+                {t('preview.empty.openFile')}
               </motion.span>
             </div>
             
@@ -200,10 +202,10 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
             />
 
             {/* Divider */}
-            <span className="text-white/50 text-sm">or</span>
+            <span className="text-white/50 text-sm">{t('common.labels.or')}</span>
 
             {/* Remote options label */}
-            <span className="text-white/70 text-sm">import from:</span>
+            <span className="text-white/70 text-sm">{t('preview.empty.importFrom')}</span>
 
             {/* Grouped remote options */}
             <div className="inline-flex items-center bg-white/5 border border-white/10 rounded-full p-1.5 gap-1">
@@ -245,7 +247,7 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="border-t border-white/10 pt-6"
         >
-          <p className="text-white/50 text-sm mb-4">Self-host DataKit:</p>
+          <p className="text-white/50 text-sm mb-4">{t('preview.empty.selfHost')}</p>
 
           <div className="flex items-center justify-center gap-3">
             {installOptions.map((option, index) => {
@@ -281,7 +283,7 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
         isOpen={showDemoModal}
         onClose={() => setShowDemoModal(false)}
         videoUrl="/video/datakit-demo.mp4"
-        title="Take a look at your DataKit"
+        title={t('demo.title')}
       />
     </div>
   );

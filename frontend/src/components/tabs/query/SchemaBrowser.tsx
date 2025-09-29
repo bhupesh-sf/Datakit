@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDuckDBStore } from "@/store/duckDBStore";
 import { usePostgreSQLStore } from "@/store/postgresStore";
+import { useTranslation } from 'react-i18next';
 import {
   Database,
   Table,
@@ -42,6 +43,7 @@ interface TableSchema {
  * Enhanced schema browser showing both local and MotherDuck tables
  */
 const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
+  const { t } = useTranslation();
   const {
     // Local state
     getAvailableTables,
@@ -494,7 +496,7 @@ const SchemaBrowser: React.FC<SchemaBrowserProps> = ({ onInsertQuery }) => {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium flex items-center">
             <Database size={16} className="mr-2 text-primary" />
-            Schema Browser
+            {t('query.schema.title')}
           </h3>
         </div>
       </div>

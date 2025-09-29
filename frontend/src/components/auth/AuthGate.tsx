@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Shield, LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
@@ -20,13 +21,14 @@ export interface AuthGateProps {
 }
 
 const AuthGate: React.FC<AuthGateProps> = ({
-  title = "Sign In Required",
-  description = "This feature requires authentication to ensure security and enable advanced functionality.",
+  title,
+  description,
   benefits = [],
   iconColor = "text-blue-400",
   iconBgColor = "bg-gradient-to-br from-blue-500/20 to-purple-500/20",
   buttonClassName = "",
 }) => {
+  const { t } = useTranslation();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('signup');
 
@@ -38,10 +40,10 @@ const AuthGate: React.FC<AuthGateProps> = ({
             <Shield className={`h-8 w-8 ${iconColor}`} />
           </div>
           <h3 className="text-lg font-medium text-white mb-2">
-            {title}
+            {title || t('auth.authGate.title', { defaultValue: 'Sign In Required' })}
           </h3>
           <p className="text-sm text-white/60 mb-6 max-w-sm">
-            {description}
+            {description || t('auth.authGate.description', { defaultValue: 'This feature requires authentication to ensure security and enable advanced functionality.' })}
           </p>
           
           {benefits.length > 0 && (
@@ -75,14 +77,14 @@ const AuthGate: React.FC<AuthGateProps> = ({
           >
             <div className="flex items-center justify-center">
               <span className="text-sm font-medium text-white group-hover:text-purple-100 transition-colors">
-                Get Started Free
+                {t('auth.authGate.getStartedFree', { defaultValue: 'Get Started Free' })}
               </span>
             </div>
           </motion.button>
           
           {/* Secondary CTA - Sign In */}
           <div className="text-center">
-            <p className="text-xs text-white/40 mb-2">Already have an account?</p>
+            <p className="text-xs text-white/40 mb-2">{t('auth.authGate.alreadyHaveAccount', { defaultValue: 'Already have an account?' })}</p>
             <Button
               variant="outline"
               onClick={() => {
@@ -91,7 +93,7 @@ const AuthGate: React.FC<AuthGateProps> = ({
               }}
               className={`w-full border-white/20 hover:border-white/30 text-white/80 hover:text-white ${buttonClassName}`}
             >
-              Sign In
+              {t('auth.authGate.signIn', { defaultValue: 'Sign In' })}
             </Button>
           </div>
         </div>

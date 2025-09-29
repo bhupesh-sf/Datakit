@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 
 import { DataSourceManager } from '@/components/data-sources';
@@ -7,7 +8,7 @@ import {
   FileTreeView,
   WorkspaceFile,
 } from '@/components/workspace/FileTreeView';
-import { ThemeColorPicker } from '@/components/common/ThemeColorPicker';
+import { SettingsPopover } from '@/components/common/SettingsPopover';
 import { useDuckDBStore } from '@/store/duckDBStore';
 import useDirectFileImport from '@/hooks/useDirectFileImport';
 import { useAppStore } from '@/store/appStore';
@@ -142,6 +143,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
+  const { t } = useTranslation();
   const {
     sidebarCollapsed,
     toggleSidebar,
@@ -228,10 +230,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
 
         // Show success notification for remote file import
         showSuccess(
-          'Remote File Imported',
-          `"${result.fileName}" has been imported from ${
-            result.remoteProvider || 'remote source'
-          }`,
+          t('sidebar.remote.importedTitle', { defaultValue: 'Remote File Imported' }),
+          t('sidebar.remote.importedMessage', {
+            fileName: result.fileName,
+            provider: result.remoteProvider || t('sidebar.remote.defaultProvider', { defaultValue: 'remote source' }),
+            defaultValue: `"${result.fileName}" has been imported from ${
+              result.remoteProvider || 'remote source'
+            }`
+          }),
           { icon: 'check', duration: 5000 }
         );
       }
@@ -247,7 +253,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
 
     // Show confirmation alert before removing
     const confirmed = confirm(
-      `Remove "${file.name}" from workspace? This will not delete the actual file.`
+      t('sidebar.workspace.confirmRemove', {
+        fileName: file.name,
+        defaultValue: `Remove "${file.name}" from workspace? This will not delete the actual file.`
+      })
     );
 
     if (!confirmed) return;
@@ -257,8 +266,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
 
     // Show success notification
     showSuccess(
-      'File Removed',
-      `"${file.name}" has been removed from workspace`,
+      t('sidebar.workspace.fileRemovedTitle', { defaultValue: 'File Removed' }),
+      t('sidebar.workspace.fileRemovedMessage', {
+        fileName: file.name,
+        defaultValue: `"${file.name}" has been removed from workspace`
+      }),
       { icon: 'check', duration: 4000 }
     );
 
@@ -318,16 +330,23 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
           const browserInfo = getBrowserCompatibilityInfo();
           const browserName = browserInfo.getBrowserName();
 
-          let message = `Your browser (${browserName}) does not support automatic file access. Please re-import the file manually. `;
+          let message = t('sidebar.fileAccess.browserNotSupported', {
+            browserName,
+            defaultValue: `Your browser (${browserName}) does not support automatic file access. Please re-import the file manually. `
+          });
 
           if (browserInfo.noSupport) {
-            message += 'For automatic file access, please use Chrome or Edge.';
+            message += t('sidebar.fileAccess.useChrome', {
+              defaultValue: 'For automatic file access, please use Chrome or Edge.'
+            });
           } else if (browserInfo.hasLimitedSupport) {
-            message +=
-              'File access support is limited in Safari. For better experience, use Chrome or Edge.';
+            message += t('sidebar.fileAccess.safariLimited', {
+              defaultValue: 'File access support is limited in Safari. For better experience, use Chrome or Edge.'
+            });
           } else {
-            message +=
-              'For automatic import features, please use Chrome or Edge.';
+            message += t('sidebar.fileAccess.useChromeForFeatures', {
+              defaultValue: 'For automatic import features, please use Chrome or Edge.'
+            });
           }
 
           alert(message);
@@ -359,18 +378,27 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
             // Show specific error message to user based on the error type
             if (handleResult.error?.includes('Permission denied')) {
               const shouldRetry = confirm(
-                `Permission denied to access "${file.name}". This can happen due to browser security policies.\n\n` +
-                  `Click "OK" to manually select the file again, or "Cancel" to skip.`
+                t('sidebar.fileAccess.permissionDenied', {
+                  fileName: file.name,
+                  defaultValue: `Permission denied to access "${file.name}". This can happen due to browser security policies.\n\n` +
+                    `Click "OK" to manually select the file again, or "Cancel" to skip.`
+                })
               );
               if (!shouldRetry) return;
             } else if (handleResult.error?.includes('File name mismatch')) {
               alert(
-                `The stored file reference for "${file.name}" points to a different file. Please re-select the correct file.`
+                t('sidebar.fileAccess.nameMismatch', {
+                  fileName: file.name,
+                  defaultValue: `The stored file reference for "${file.name}" points to a different file. Please re-select the correct file.`
+                })
               );
             } else {
               const shouldRetry = confirm(
-                `Cannot automatically access "${file.name}". The file may have been moved, deleted, or access permissions changed.\n\n` +
-                  `Click "OK" to manually select the file again, or "Cancel" to skip.`
+                t('sidebar.fileAccess.cannotAccess', {
+                  fileName: file.name,
+                  defaultValue: `Cannot automatically access "${file.name}". The file may have been moved, deleted, or access permissions changed.\n\n` +
+                    `Click "OK" to manually select the file again, or "Cancel" to skip.`
+                })
               );
               if (!shouldRetry) return;
             }
@@ -387,7 +415,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
           const fileHandleArray = await window.showOpenFilePicker({
             types: [
               {
-                description: 'Data Files',
+                description: t('sidebar.fileDialog.dataFiles', { defaultValue: 'Data Files' }),
                 accept: {
                   'text/csv': ['.csv'],
                   'application/json': ['.json'],
@@ -446,14 +474,20 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
                 'vs',
                 file.name
               );
-              alert(`Please select the correct file: ${file.name}`);
+              alert(t('sidebar.fileAccess.selectCorrectFile', {
+                fileName: file.name,
+                defaultValue: `Please select the correct file: ${file.name}`
+              }));
             }
           }
         } catch (error) {
           if ((error as Error).name !== 'AbortError') {
             console.error('Error re-importing file:', error);
             alert(
-              `Could not load file ${file.name}. Please re-import it using the file upload button.`
+              t('sidebar.fileAccess.couldNotLoad', {
+                fileName: file.name,
+                defaultValue: `Could not load file ${file.name}. Please re-import it using the file upload button.`
+              })
             );
           }
         }
@@ -461,7 +495,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
         // Handle remote files - could trigger remote import modal
         console.log('Remote file clicked:', file);
         alert(
-          'Remote source re-import not yet implemented. Please use the Cloud Sources button to re-import.'
+          t('sidebar.remote.notImplemented', {
+            defaultValue: 'Remote source re-import not yet implemented. Please use the Cloud Sources button to re-import.'
+          })
         );
       }
     } catch (error) {
@@ -488,9 +524,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   const renderFileUploadPopup = () => (
     <div className="absolute left-16 top-0 bg-darkNav rounded-lg shadow-lg border border-white/10 p-3 w-64">
       <div className="mb-3">
-        <h3 className="text-sm font-medium text-white mb-1">Upload File</h3>
+        <h3 className="text-sm font-medium text-white mb-1">{t('sidebar.upload.title', { defaultValue: 'Upload File' })}</h3>
         <p className="text-xs text-white/70">
-          Import your data file for analysis
+          {t('sidebar.upload.description', { defaultValue: 'Import your data file for analysis' })}
         </p>
       </div>
 
@@ -581,7 +617,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:text-primary-foreground transition-custom p-2 hover:bg-background hover:bg-opacity-30 rounded"
-            aria-label="Visit Amin"
+            aria-label={t('sidebar.footer.visitAmin', { defaultValue: 'Visit Amin' })}
           >
             <ExternalLink size={16} />
           </a>
@@ -603,7 +639,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
           />
         ) : (
           <h1 className="text-white font-heading font-medium text-lg">
-            DataKit
+            {t('sidebar.header.title', { defaultValue: 'DataKit' })}
           </h1>
         )}
       </div>
@@ -688,10 +724,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
           <UserMenu variant="sidebar" />
         </div>
 
-        <div className="px-2 py-3 border-t border-white border-opacity-5">
+        <div className="px-2 py-2 border-t border-white border-opacity-5">
           <div className="flex items-center justify-end">
             <p className="text-xs text-white text-opacity-50 flex items-center">
-              Powered by{' '}
+              {t('sidebar.footer.poweredBy', { defaultValue: 'Powered by' })}{' '}
               <a
                 href="https://duckdb.org/"
                 target="_blank"
@@ -708,7 +744,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                built
+                {t('sidebar.footer.built', { defaultValue: 'built' })}
               </a>
               {' @ '}
               <a
@@ -717,11 +753,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                DataKit
+                {t('sidebar.footer.company', { defaultValue: 'DataKit' })}
               </a>
             </p>
             <div className="flex-shrink-0 ml-1">
-              <ThemeColorPicker variant="sidebar" />
+              <SettingsPopover variant="sidebar" />
             </div>
           </div>
         </div>
@@ -743,7 +779,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
         <button
           onClick={toggleSidebar}
           className="absolute top-5 right-3 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white hover:border-white/10 transition-colors shadow-lg cursor-pointer"
-          aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={sidebarCollapsed ? t('sidebar.expand', { defaultValue: 'Expand sidebar' }) : t('sidebar.collapse', { defaultValue: 'Collapse sidebar' })}
         >
           {sidebarCollapsed ? (
             <ChevronRight size={16} />

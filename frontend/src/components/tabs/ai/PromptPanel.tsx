@@ -7,6 +7,7 @@ import {
   Command
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import OpenAILogo from '@/assets/openai.webp';
 import AnthropicLogo from '@/assets/anthropic.webp';
@@ -33,24 +34,22 @@ interface PromptPanelProps {
   schemaBrowserOpen?: boolean;
 }
 
-const PROMPT_SUGGESTIONS = [
+const PROMPT_SUGGESTIONS = (t: any) => [
   {
-    title: 'Explore Data',
-    prompt:
-      'Give me an overview of this dataset - what columns do we have and what insights can you find?',
+    title: t('ai.prompts.suggestions.exploreData.title'),
+    prompt: t('ai.prompts.suggestions.exploreData.prompt'),
   },
   {
-    title: 'Find Patterns',
-    prompt: 'What are the most interesting patterns or trends in this data?',
+    title: t('ai.prompts.suggestions.findPatterns.title'),
+    prompt: t('ai.prompts.suggestions.findPatterns.prompt'),
   },
   {
-    title: 'Data Quality',
-    prompt:
-      'Check this dataset for missing values, duplicates, or data quality issues',
+    title: t('ai.prompts.suggestions.dataQuality.title'),
+    prompt: t('ai.prompts.suggestions.dataQuality.prompt'),
   },
   {
-    title: 'Quick Stats',
-    prompt: 'Show me summary statistics for all numeric columns',
+    title: t('ai.prompts.suggestions.quickStats.title'),
+    prompt: t('ai.prompts.suggestions.quickStats.prompt'),
   },
 ];
 
@@ -62,6 +61,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
   onToggleSchema,
   schemaBrowserOpen = false,
 }) => {
+  const { t } = useTranslation();
   const [prompt, setPrompt] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(true);
 
@@ -220,7 +220,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
   // Determine placeholder text based on conversation state
   const getPlaceholderText = () => {
     if (!tableName) {
-      return 'Ask about your data...';
+      return t('ai.prompts.placeholders.askAboutData');
     }
 
     // Check if there's an ongoing conversation (has user messages)
@@ -229,10 +229,10 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
     );
 
     if (hasConversation) {
-      return `Ask follow up question...`;
+      return t('ai.prompts.placeholders.followUp');
     }
 
-    return `Ask about ${tableName}...`;
+    return t('ai.prompts.placeholders.askAboutTable', { tableName });
   };
 
   useEffect(() => {
@@ -312,7 +312,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                 <button
                   onClick={onToggleSchema}
                   className="p-1 hover:bg-white/10 rounded transition-colors"
-                  title={schemaBrowserOpen ? 'Hide Schema' : 'Show Schema'}
+                  title={schemaBrowserOpen ? t('ai.prompts.hideSchema') : t('ai.prompts.showSchema')}
                 >
                   <ChevronRight
                     className={`h-4 w-4 text-white/70 transition-transform ${
@@ -320,7 +320,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                     }`}
                   />
                 </button>
-                <h3 className="text-sm font-medium text-white">Schemas</h3>
+                <h3 className="text-sm font-medium text-white">{t('ai.prompts.schemas')}</h3>
               </div>
             )}
           </div>
@@ -342,7 +342,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                   onClick={navigateToPreviousMessage}
                   disabled={currentMessageIndex <= 0}
                   className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Previous message"
+                  title={t('ai.prompts.navigation.previous')}
                 >
                   <ChevronLeft className="h-4 w-4 text-white/70" />
                 </button>
@@ -355,7 +355,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                   onClick={navigateToNextMessage}
                   disabled={currentMessageIndex >= userMessages.length}
                   className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Next message"
+                  title={t('ai.prompts.navigation.next')}
                 >
                   <ChevronRight className="h-4 w-4 text-white/70" />
                 </button>
@@ -363,7 +363,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
             )}
 
             {/* Refresh Button */}
-            <Tooltip content="Start a new chat" placement="bottom">
+            <Tooltip content={t('ai.prompts.actions.startNewChat')} placement="bottom">
               <button
                 onClick={handleRefreshChat}
                 disabled={showSetupPrompt || isProcessing}
@@ -372,7 +372,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                     ? 'opacity-50 cursor-not-allowed'
                     : 'hover:bg-white/10 text-white/70 hover:text-white'
                 }`}
-                aria-label="Start new chat"
+                aria-label={t('ai.prompts.actions.startNewChat')}
               >
                 <RefreshCw className="h-4 w-4" />
               </button>
@@ -448,7 +448,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                 className="space-y-3"
               >
                 <p className="text-xs text-white/50 text-center">
-                  Configure your AI model to start asking questions
+                  {t('ai.prompts.setup.configure')}
                 </p>
 
                 <div className="flex gap-2">
@@ -458,7 +458,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                     size="sm"
                     className="animate-pulse-border px-3 py-3 h-auto"
                   >
-                    Sign Up for Free Credits
+                    {t('ai.prompts.setup.signUpCredits')}
                   </Button>
 
                   <Button
@@ -467,7 +467,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                     size="sm"
                     className="flex-1 flex items-center justify-center gap-2 py-3 h-auto"
                   >
-                    <span>Use Your Own API Keys</span>
+                    <span>{t('ai.prompts.setup.useApiKeys')}</span>
                     <div className="flex items-center gap-1">
                       <img
                         src={OpenAILogo}
@@ -489,9 +489,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
                 </div>
 
                 <p className="text-xs text-white/40 text-center">
-                  {/* Choose from OpenAI, Anthropic, Groq, or DataKit. */}
-                  {/* <br /> */}
-                  Models only see your table structure, not your actual data
+                  {t('ai.prompts.setup.privacyNote')}
                 </p>
               </motion.div>
             )}
@@ -508,8 +506,8 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
               transition={{ duration: 0.2 }}
               className="space-y-2"
             >
-              <p className="text-xs text-white/50 mb-3">Suggestions:</p>
-              {PROMPT_SUGGESTIONS.map((suggestion, index) => (
+              <p className="text-xs text-white/50 mb-3">{t('ai.prompts.suggestions.title')}:</p>
+              {PROMPT_SUGGESTIONS(t).map((suggestion, index) => (
                 <button
                   key={index}
                   onClick={() =>
@@ -546,7 +544,7 @@ const PromptPanel: React.FC<PromptPanelProps> = ({
         <div className="px-4 py-2 border-t border-white/10">
           <div className="flex items-center gap-2 text-xs text-white/60">
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            <span>Thinking...</span>
+            <span>{t('ai.prompts.status.thinking')}</span>
           </div>
         </div>
       )}

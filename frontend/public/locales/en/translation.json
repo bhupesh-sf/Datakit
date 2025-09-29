@@ -1,0 +1,2101 @@
+{
+  "common": {
+    "comingSoon": "Coming Soon",
+    "save": "Save",
+    "cancel": "Cancel",
+    "enterName": "Enter name",
+    "download": {
+      "csvTitle": "Download CSV"
+    },
+    "actionButtons": {
+      "tooltips": {
+        "datakitStudio": "Create professional data visualizations and reports with DataKit Studio"
+      },
+      "dataKitStudio": "DataKit Studio",
+      "datakitStudio": "DataKit Studio",
+      "feedback": "Feedback",
+      "documentation": "Documentation",
+      "discord": "Discord",
+      "whatsNew": "What's New",
+      "viewDocumentation": "View documentation",
+      "joinDiscord": "Join our Discord",
+      "viewChangelog": "View changelog",
+      "feedbackModal": {
+        "title": "Share Your Feedback",
+        "thankYou": "Thank you for your feedback!",
+        "emailLabel": "Email (optional)",
+        "emailPlaceholder": "your.email@example.com",
+        "messageLabel": "Message *",
+        "messagePlaceholder": "Share your thoughts, suggestions, or report issues...",
+        "close": "Close",
+        "cancel": "Cancel",
+        "sending": "Sending...",
+        "sendFeedback": "Send Feedback"
+      }
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "close": "Close",
+      "submit": "Submit",
+      "back": "Back",
+      "next": "Next",
+      "continue": "Continue",
+      "copy": "Copy",
+      "edit": "Edit",
+      "delete": "Delete",
+      "remove": "Remove",
+      "add": "Add",
+      "create": "Create",
+      "update": "Update",
+      "import": "Import",
+      "export": "Export",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "test": "Test",
+      "retry": "Retry",
+      "refresh": "Refresh",
+      "reset": "Reset"
+    },
+    "loading": {
+      "processing": "Processing...",
+      "loading": "Loading...",
+      "sending": "Sending...",
+      "saving": "Saving...",
+      "importing": "Importing...",
+      "testing": "Testing...",
+      "connecting": "Connecting...",
+      "uploading": "Uploading..."
+    },
+    "labels": {
+      "email": "Email",
+      "emailOptional": "Email (optional)",
+      "name": "Name",
+      "fullName": "Full Name",
+      "password": "Password",
+      "username": "Username",
+      "host": "Host",
+      "port": "Port",
+      "database": "Database",
+      "schema": "Schema",
+      "url": "URL",
+      "or": "or",
+      "and": "and",
+      "required": "Required",
+      "optional": "Optional"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "ready": "Ready",
+      "pending": "Pending",
+      "success": "Success",
+      "error": "Error",
+      "failed": "Failed",
+      "completed": "Completed",
+      "processing": "Processing"
+    },
+    "messages": {
+      "noResults": "No results found",
+      "noData": "No data available",
+      "noItems": "No items",
+      "comingSoon": "Coming Soon",
+      "poweredBy": "Powered by",
+      "built": "built"
+    },
+    "on": "ON",
+    "off": "OFF"
+  },
+  "layout": {
+    "app": {
+      "title": "DataKit"
+    },
+    "navigation": {
+      "tabs": {
+        "preview": "Preview",
+        "query": "Query",
+        "notebook": "Notebook",
+        "visualization": "Visualize",
+        "ai": "Assistant"
+      }
+    },
+    "sidebar": {
+      "uploadFile": "Upload File",
+      "importDescription": "Import your data file for analysis",
+      "signIn": "Sign In",
+      "getStarted": "Get Started Free",
+      "settings": "Settings",
+      "expand": "Expand sidebar",
+      "collapse": "Collapse sidebar"
+    },
+    "mobile": {
+      "title": "DataKit works best on desktop",
+      "description": "Experience powerful data analysis and seamless file processing.",
+      "switchNote": "Switch to desktop for the full experience, or",
+      "watchDemo": "watch the demo",
+      "discord": "Discord"
+    },
+    "actionButtons": {
+      "dataKitStudio": "DataKit Studio",
+      "feedback": "Feedback",
+      "documentation": "Documentation",
+      "discord": "Discord",
+      "whatsNew": "What's New"
+    },
+    "tooltips": {
+      "joinDiscord": "Join our Discord",
+      "viewDocs": "View documentation",
+      "viewChangelog": "View changelog",
+      "datakitStudio": "DataKit Studio"
+    },
+    "splitView": {
+      "title": "Split View",
+      "swapFiles": "Swap files",
+      "close": "Close split view",
+      "columnCount": "{{count}} cols"
+    }
+  },
+  "auth": {
+    "modal": {
+      "welcomeBack": "Welcome Back",
+      "joinDataKit": "Join DataKit",
+      "signIn": "Sign In",
+      "signOut": "Sign Out",
+      "createAccount": "Create Account",
+      "alreadyHaveAccount": "Already have an account? ",
+      "dontHaveAccount": "Don't have an account? ",
+      "signUp": "Sign up",
+      "privacyPolicy": "Privacy Policy"
+    },
+    "fields": {
+      "fullName": "Full Name",
+      "emailAddress": "Email Address",
+      "password": "Password"
+    },
+    "placeholders": {
+      "enterName": "Enter your full name",
+      "enterEmail": "Enter your email",
+      "enterPassword": "Enter your password",
+      "createPassword": "Create a strong password"
+    },
+    "loading": {
+      "signingIn": "Signing In...",
+      "creatingAccount": "Creating Account..."
+    },
+    "messages": {
+      "welcomeSuccess": "Welcome back!",
+      "welcomeSuccessDesc": "You've successfully signed in to DataKit.",
+      "accountCreated": "Welcome to DataKit!",
+      "accountCreatedDesc": "Your account has been created successfully. You now have access to DataKit models with $3 to get started.",
+      "signedOut": "Signed out successfully",
+      "signedOutDesc": "You've been securely signed out of DataKit.",
+      "privacyNotice": "By creating an account, you agree to our "
+    },
+    "password": {
+      "requirements": "Security Requirements",
+      "minLength": "At least 12 characters long",
+      "hasUppercase": "Contains uppercase letter (A-Z)",
+      "hasLowercase": "Contains lowercase letter (a-z)",
+      "hasNumbers": "Contains number (0-9)",
+      "hasSpecialChars": "Contains special character (!@#$%^&*...)",
+      "noCommonPatterns": "No common patterns or sequences"
+    },
+    "benefits": {
+      "title": "Why join DataKit?",
+      "aiAccess": "Access to DataKit Assistant with built-in credits",
+      "unlimitedWorkspaces": "Create unlimited workspaces",
+      "cloudConnectors": "Access to all cloud connectors",
+      "exportReports": "Export reports from data inspector",
+      "prioritySupport": "Priority support and early access to new features"
+    },
+    "userMenu": {
+      "getStartedFree": "Get Started Free",
+      "settings": "Settings",
+      "billing": "Billing",
+      "user": "User",
+      "signIn": "Sign In",
+      "signUp": "Sign Up",
+      "signOut": "Sign Out",
+      "signOutSuccess": "Signed out successfully",
+      "signOutMessage": "You've been securely signed out of DataKit."
+    },
+    "authGate": {
+      "title": "Sign In Required",
+      "description": "This feature requires authentication to ensure security and enable advanced functionality.",
+      "getStartedFree": "Get Started Free",
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign In"
+    },
+    "protectedRoute": {
+      "loading": "Loading...",
+      "authRequired": "Authentication Required",
+      "signInMessage": "Please sign in to access this feature.",
+      "signInButton": "Sign In"
+    }
+  },
+  "preview": {
+    "empty": {
+      "title": "Get started with DataKit",
+      "description": "Import your files to start analyzing.",
+      "privacy": "Everything runs locally",
+      "privacyNote": "— Your data stays private.",
+      "openFile": "Open file",
+      "importFrom": "import from:",
+      "selfHost": "Self-host DataKit:",
+      "watchDemo": "watch a demo",
+      "localFiles": "Local files"
+    },
+    "providers": {
+      "postgresql": {
+        "name": "PostgreSQL",
+        "description": "Postgres Databases"
+      },
+      "s3": {
+        "name": "Amazon S3",
+        "description": "Public S3 buckets"
+      },
+      "huggingface": {
+        "name": "HuggingFace",
+        "description": "ML datasets"
+      },
+      "googleSheets": {
+        "name": "Google Sheets",
+        "description": "Published sheets"
+      }
+    },
+    "install": {
+      "docker": "Docker",
+      "homebrew": "Homebrew",
+      "python": "Python",
+      "nodejs": "Node.js"
+    },
+    "tooltips": {
+      "openFile": "Open File",
+      "localFiles": "Local files"
+    }
+  },
+  "fileUpload": {
+    "dropzone": {
+      "title": "Drop files here or click",
+      "description": "Supports large data files",
+      "dragTitle": "Drop your file here",
+      "dragDescription": "Ready to import"
+    },
+    "formats": {
+      "csv": "CSV",
+      "json": "JSON",
+      "xlsx": "XLS",
+      "parquet": "PQT",
+      "txt": "TXT",
+      "duckdb": "DB"
+    },
+    "messages": {
+      "fileRemoved": "File Removed",
+      "fileRemovedDesc": "\"%s\" has been removed from workspace",
+      "remoteFileImported": "Remote File Imported",
+      "remoteFileImportedDesc": "\"%s\" has been imported from %s"
+    },
+    "dataFiles": "Data Files",
+    "largeSizeWarning": "This file is {{size}}MB which may cause memory issues. Continue anyway? (Consider using Chrome to have a better experience.)",
+    "modernBrowserWarning": "This file is {{size}}MB. For better performance with large files, use a modern browser (Chrome/Edge) with streaming support.",
+    "invalidFileType": "Please import a CSV, JSON, Excel, Parquet, TXT, or DuckDB database file",
+    "dragDropLargeFileWarning": "This file is {{size}}MB. For better performance, try using the file picker instead of drag-and-drop for large files.",
+    "dropHere": "Drop your file here",
+    "readyToImport": "Ready to import",
+    "processing": "Processing...",
+    "dropOrClick": "Drop files here or click",
+    "supportsLargeFiles": "Supports large data files"
+  },
+  "dataImport": {
+    "googleSheets": {
+      "title": "Google Sheets Import",
+      "urlLabel": "Google Sheets URL (published to the web)",
+      "urlPlaceholder": "https://docs.google.com/spreadsheets/d/e/2PACX...",
+      "requirements": {
+        "title": "Requirements:",
+        "published": "Sheet must be published to the web",
+        "formats": "Supports CSV, Excel, and web page formats",
+        "noAuth": "No authentication required for published sheets"
+      },
+      "status": {
+        "ready": "Published sheet - ready to import",
+        "openInSheets": "Open in Google Sheets"
+      },
+      "buttons": {
+        "import": "Import Sheet"
+      },
+      "validation": {
+        "enterUrl": "Please enter a Google Sheets URL",
+        "validUrl": "Please enter a valid Google Sheets URL that's published to the web",
+        "invalidUrl": "Please enter a valid URL"
+      }
+    },
+    "s3": {
+      "title": "S3 Import",
+      "urlLabel": "S3 URL (public bucket)",
+      "urlPlaceholder": "s3://bucket/path/file.csv or https://bucket.s3.amazonaws.com/file.csv",
+      "exampleDatasets": {
+        "title": "Example Datasets",
+        "description": "Try these curated public datasets to get started",
+        "featured": "Featured",
+        "loadingDatasets": "Loading datasets..."
+      },
+      "browserAccess": {
+        "title": "S3 Browser Access:",
+        "corsNote": "Most S3 buckets require proxy access due to CORS",
+        "formats": "Supports CSV, JSON, Parquet, Excel formats",
+        "autoDetect": "Auto-detects file format and compression"
+      },
+      "status": {
+        "ready": "Valid S3 URL - ready to import"
+      },
+      "buttons": {
+        "import": "Import from S3",
+        "importDataset": "Import Dataset"
+      },
+      "validation": {
+        "enterUrl": "Please enter an S3 URL",
+        "validUrl": "Please enter a valid S3 URL"
+      }
+    },
+    "postgresql": {
+      "title": "PostgreSQL Connections",
+      "description": "Connect to your PostgreSQL databases",
+      "connections": {
+        "addConnection": "Add Connection",
+        "noConnections": "No Connections",
+        "noConnectionsDesc": "Create your first PostgreSQL connection to start importing data.",
+        "createConnection": "Create Connection"
+      },
+      "form": {
+        "newConnection": "New PostgreSQL Connection",
+        "editConnection": "Edit Connection",
+        "description": "Enter your PostgreSQL database connection details",
+        "connectionName": "Connection Name",
+        "defaultSchema": "Default Schema",
+        "enableSSL": "Enable SSL",
+        "placeholders": {
+          "connectionName": "My PostgreSQL DB",
+          "host": "localhost",
+          "username": "username",
+          "password": "password",
+          "database": "my_database",
+          "schema": "public"
+        },
+        "buttons": {
+          "testAndCreate": "Test & Create"
+        }
+      },
+      "tableSelection": {
+        "title": "Select Tables",
+        "description": "Choose tables to connect from %s.",
+        "backToConnections": "Back to Connections",
+        "searchPlaceholder": "Search tables...",
+        "loadingTables": "Loading tables...",
+        "noTables": "No Tables Found",
+        "noTablesDesc": "No tables found in this database.",
+        "noSearchResults": "No tables match your search.",
+        "connectSelected": "Connect Selected Tables",
+        "tablesSelected": "%d table(s) selected"
+      }
+    }
+  },
+  "settings": {
+    "header": {
+      "title": "Settings",
+      "subtitle": "Manage your account"
+    },
+    "footer": {
+      "poweredBy": "Powered by DuckDB",
+      "built": "built",
+      "company": "DataKit"
+    },
+    "tabs": {
+      "profile": "Profile",
+      "workspace": "Workspace & Team",
+      "ai": "AI assistant settings",
+      "appearance": "Appearance",
+      "notifications": "Notifications",
+      "subscription": "Subscription"
+    },
+    "signout": {
+      "successTitle": "Signed out successfully",
+      "successMessage": "You've been securely signed out of DataKit.",
+      "button": "Sign Out"
+    },
+    "navigation": {
+      "backToDataKit": "Back to DataKit",
+      "signOut": "Sign Out"
+    },
+    "sidebar": {
+      "expand": "Expand sidebar",
+      "collapse": "Collapse sidebar"
+    },
+    "title": "Settings",
+    "language": "Language",
+    "themeColor": "Theme Color",
+    "profile": {
+      "title": "Profile Information",
+      "emailNote": "Email cannot be changed. Contact support if needed.",
+      "saveChanges": "Save Changes"
+    },
+    "workspace": {
+      "title": "Workspace Information",
+      "teamMembers": {
+        "title": "Team Members",
+        "inviteMember": "Invite Member"
+      },
+      "inviteMember": "Invite Member",
+      "inviteForm": {
+        "title": "Invite New Member",
+        "emailLabel": "Email Address",
+        "roleLabel": "Role",
+        "emailPlaceholder": "Enter email address",
+        "roles": {
+          "member": "Member",
+          "admin": "Admin",
+          "owner": "Owner"
+        },
+        "sendInvite": "Send Invite",
+        "sending": "Sending...",
+        "cancel": "Cancel"
+      },
+      "loadingMembers": "Loading members...",
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "member": "Member"
+      },
+      "loading": {
+        "userData": "Loading user data...",
+        "workspaces": "Loading workspaces...",
+        "members": "Loading members..."
+      },
+      "noWorkspace": "No workspace found. Please create a workspace or contact support.",
+      "workspaceName": {
+        "placeholder": "Workspace name",
+        "editTitle": "Edit workspace name"
+      },
+      "personalWorkspace": "Personal workspace",
+      "unlimitedCredits": "Unlimited credits",
+      "creditsRemaining": "{{count}} credits remaining",
+      "unknownUser": "Unknown User"
+    },
+    "notifications": {
+      "title": "Notification Preferences",
+      "email": {
+        "title": "Email Notifications",
+        "description": "Receive updates about new features and announcements"
+      },
+      "usage": {
+        "title": "Usage Alerts",
+        "description": "Get notified when you're close to your credit limit"
+      },
+      "saveSettings": "Save Notification Settings"
+    },
+    "ai": {
+      "title": "AI Configuration",
+      "description": "Choose how DataKit processes your data with AI",
+      "datakitModels": {
+        "title": "DataKit Models",
+        "description": "Premium AI models optimized for data analysis. No API keys needed.",
+        "features": {
+          "powered": "Powered by Anthropic",
+          "pretuned": "Pre-tuned for SQL & data transformation",
+          "claude": "Claude 3.5 Sonnet & Haiku included",
+          "zeroConfig": "Zero configuration required",
+          "preTuned": "Pre-tuned for SQL & data transformation",
+          "claudeModels": "Claude 3.5 Sonnet & Haiku included"
+        },
+        "subscription": {
+          "proPlan": "Pro Plan",
+          "price": "$19/mo",
+          "viewPlans": "View All Plans →"
+        },
+        "credits": "Credits",
+        "poweredBy": "Powered by Anthropic",
+        "active": "Active",
+        "proPlan": "Pro Plan",
+        "viewPlans": "View All Plans →"
+      },
+      "alternativeProviders": {
+        "title": "Alternative Providers",
+        "description": "Use your own API keys for these providers"
+      },
+      "settings": {
+        "autoExecute": {
+          "title": "Auto-execute SQL",
+          "description": "Run AI queries automatically"
+        }
+      },
+      "unlimited": "Unlimited",
+      "creditStatus": {
+        "good": "Good",
+        "low": "Low",
+        "veryLow": "Very Low"
+      },
+      "providerStatus": {
+        "available": "Available",
+        "configured": "Configured",
+        "upgradeRequired": "Pro/Team Required",
+        "setupRequired": "Setup Required"
+      },
+      "credits": {
+        "title": "Credits"
+      },
+      "providers": {
+        "getApiKey": "Get API key",
+        "edit": "Edit",
+        "save": "Save",
+        "cancel": "Cancel",
+        "activate": "Activate",
+        "active": "Active"
+      },
+      "whyDatakit": {
+        "title": "Why DataKit Models?",
+        "features": {
+          "noApiKeys": "No API keys to manage",
+          "monthlyCredits": "Credits monthly",
+          "optimized": "Optimized for data tasks"
+        },
+        "learnMore": "Learn More →"
+      },
+      "autoExecuteSql": {
+        "title": "Auto-execute SQL",
+        "description": "Run AI queries automatically"
+      }
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Customize DataKit's theme color",
+      "current": "Current",
+      "displayMode": "Display Mode",
+      "themes": {
+        "datakitTeal": "DataKit Teal",
+        "oceanBlue": "Ocean Blue",
+        "royalPurple": "Royal Purple",
+        "vibrantRed": "Vibrant Red",
+        "forestGreen": "Forest Green",
+        "coralPink": "Coral Pink"
+      },
+      "modes": {
+        "system": "System",
+        "light": "Light",
+        "dark": "Dark"
+      }
+    },
+    "subscription": {
+      "title": "Subscription Plans",
+      "description": "Choose the plan that fits your needs",
+      "badges": {
+        "earlyAdopter": "Early Adopter: 20% OFF",
+        "comingSoon": "Coming Soon",
+        "moreCredits": "More credits soon!",
+        "currentPlan": "Current Plan"
+      },
+      "plans": {
+        "period": {
+          "month": "month"
+        },
+        "free": {
+          "title": "Free",
+          "description": "Perfect for getting started",
+          "features": {
+            "credits": "315 credits per month",
+            "anthropicModels": "Powered by Anthropic models",
+            "personalWorkspace": "Personal workspace",
+            "basicAnalysis": "Basic data analysis",
+            "communitySupport": "Community support"
+          }
+        },
+        "pro": {
+          "title": "Pro",
+          "description": "With more Anthropic credits",
+          "features": {
+            "credits": "1500 credits per month",
+            "advancedAnalytics": "Advanced analytics",
+            "prioritySupport": "Priority support",
+            "exportCapabilities": "More export capabilities",
+            "advancedIntegrations": "Advanced integrations"
+          }
+        },
+        "team": {
+          "title": "Team",
+          "price": "Custom",
+          "description": "For growing teams",
+          "features": {
+            "unlimitedCredits": "Unlimited credits",
+            "teamCollaboration": "Team collaboration",
+            "multipleWorkspaces": "Multiple Workspaces",
+            "memberManagement": "Member management",
+            "premiumSupport": "Premium support",
+            "customIntegrations": "Custom integrations",
+            "advancedSecurity": "Advanced security",
+            "accountManager": "Dedicated account manager"
+          }
+        }
+      },
+      "currentUsage": {
+        "title": "Current Usage",
+        "creditsRemaining": "Credits Remaining",
+        "currentPlan": "Current Plan",
+        "nextReset": "Next Reset"
+      },
+      "moreFeatures": "+{{count}} more features",
+      "waitlist": {
+        "successTitle": "You're on the waitlist!",
+        "successMessage": "We'll let you know at {{email}} when {{featureName}} features roll out.",
+        "error": "Something went wrong. Please try again.",
+        "joining": "Joining...",
+        "getNotified": "Get notified",
+        "modalTitle": "Join Waitlist",
+        "modalDescription": "Enter your email to get notified when Pro features are released.",
+        "emailPlaceholder": "your.email@example.com",
+        "cancel": "Cancel",
+        "joinWaitlist": "Join Waitlist"
+      }
+    }
+  },
+  "feedback": {
+    "title": "Share Your Feedback",
+    "emailLabel": "Your Email (optional)",
+    "feedbackLabel": "Your Feedback",
+    "placeholder": "Tell us what you think about DataKit...",
+    "placeholderAlt": "Share your thoughts, suggestions, or report issues...",
+    "success": "Thank you for your feedback!",
+    "button": {
+      "text": "Share Feedback?"
+    },
+    "modal": {
+      "title": "Share Your Feedback",
+      "success": "Thank you for your feedback!",
+      "emailLabel": "Your Email (optional)",
+      "emailPlaceholder": "your@email.com",
+      "messageLabel": "Your Feedback",
+      "messagePlaceholder": "Tell us what you think about DataKit...",
+      "sending": "Sending..."
+    }
+  },
+  "notebooks": {
+    "templates": {
+      "title": "Templates",
+      "searchPlaceholder": "Search templates...",
+      "categories": {
+        "dataAnalysis": "Data Analysis",
+        "visualization": "Visualization",
+        "machineLearning": "Machine Learning",
+        "huggingFace": "Hugging Face",
+        "statistics": "Statistics",
+        "utilities": "Utilities"
+      },
+      "noTemplates": "No templates found",
+      "noTemplatesAvailable": "No templates available",
+      "copyToClipboard": "Copy to clipboard",
+      "packages": "Packages:",
+      "showCode": "Show",
+      "hideCode": "Hide",
+      "filters": {
+        "all": "All"
+      },
+      "noTemplatesFound": "No templates found",
+      "use": "Use",
+      "templateCount": "{{count}} templates",
+      "requires": "Requires:",
+      "clearSearch": "Clear search"
+    },
+    "workspace": {
+      "aiGeneratedVisualization": "AI Generated Visualization",
+      "status": {
+        "saved": "Saved",
+        "initializing": "Initializing Python",
+        "loadingPackages": "Loading pandas, numpy..."
+      }
+    },
+    "apiKey": {
+      "configuration": "Configuration",
+      "configureDescription": "Configure AI providers and settings",
+      "providerTypes": {
+        "local": "Local",
+        "cloudApi": "Cloud API"
+      },
+      "serverConfiguration": "Server Configuration",
+      "ollamaServerUrl": "Ollama Server URL",
+      "ollamaServerUrlDescription": "The URL where your Ollama server is running",
+      "apiKeyConfiguration": "API Key Configuration",
+      "apiKey": "API Key",
+      "enterApiKeyPlaceholder": "Enter your {{provider}} API key",
+      "skipApiKeysTitle": "Skip the API keys with DataKit credits",
+      "skipApiKeysDescription": "Get instant access to powerful AI models without managing API keys. Credits included with your account.",
+      "signInToGetStarted": "Sign in to get started",
+      "getApiKey": "Get API Key",
+      "generalSettings": "General Settings",
+      "autoExecuteSQL": "Auto-execute generated SQL",
+      "autoExecuteSQLDescription": "Automatically run SQL queries generated by AI",
+      "saveConfiguration": "Save Configuration",
+      "providers": {
+        "ollama": {
+          "description": "Local Ollama server - runs models on your machine",
+          "helpText": "Run AI models locally with complete privacy. Requires Ollama to be running at http://localhost:11434"
+        },
+        "openai": {
+          "description": "GPT-4o and GPT-4o Mini models",
+          "helpText": "Most capable models for complex reasoning and analysis."
+        },
+        "anthropic": {
+          "description": "Claude 3.5 Sonnet and Haiku models",
+          "helpText": "Excellent for detailed analysis and explanations. Free credits for new users."
+        },
+        "groq": {
+          "description": "Ultra-fast Llama 3.1 models with free tier",
+          "helpText": "Fastest inference speed, perfect for trying AI features. Completely free to start."
+        }
+      }
+    },
+    "response": {
+      "title": "Response",
+      "tokens": "Tokens",
+      "tokensResponse": "response",
+      "tokensViz": "viz",
+      "placeholder": "Ask a question to see responses here",
+      "thinking": "Thinking..."
+    },
+    "results": {
+      "placeholder": "Query results will appear here",
+      "error": {
+        "title": "Query Error"
+      }
+    },
+    "context": {
+      "label": "Context",
+      "more": "more",
+      "noTables": "No tables in context",
+      "addTables": "Add Tables",
+      "models": "Models",
+      "autoExecute": "Auto-execute"
+    },
+    "error": {
+      "noModel": {
+        "title": "No Model Selected",
+        "message": "Please select an AI model from the dropdown to continue."
+      },
+      "noData": {
+        "title": "No Data Available",
+        "message": "Please add a table to the context to ask questions about it."
+      },
+      "auth": {
+        "title": "Authentication Required",
+        "message": "Please sign in or configure your API keys to use AI models."
+      },
+      "rateLimit": {
+        "title": "Rate Limit Exceeded",
+        "message": "You've reached the rate limit. Please try again later or upgrade your plan."
+      },
+      "connection": {
+        "title": "Connection Error",
+        "message": "Unable to connect to the AI service. Please check your internet connection."
+      },
+      "generic": {
+        "title": "Something went wrong"
+      },
+      "retry": "Retry",
+      "dismiss": "Dismiss"
+    },
+    "pythonCell": {
+      "expandInput": "Expand input",
+      "collapseInput": "Collapse input",
+      "executing": "Executing...",
+      "executeTooltip": "Execute Cell (Shift+Enter)",
+      "previewMarkdown": "Preview Markdown",
+      "editMarkdown": "Edit Markdown",
+      "deleteCell": "Delete Cell",
+      "moveUp": "Move Up",
+      "moveDown": "Move Down",
+      "copyCode": "Copy Code",
+      "clearOutput": "Clear Output",
+      "showInput": "Show Input",
+      "hideInput": "Hide Input",
+      "showOutput": "Show Output",
+      "hideOutput": "Hide Output",
+      "bold": "Bold",
+      "italic": "Italic",
+      "header1": "Header 1",
+      "header2": "Header 2",
+      "header3": "Header 3",
+      "list": "List",
+      "quote": "Quote",
+      "link": "Link",
+      "inlineCode": "Inline Code",
+      "clickToEdit": "Click to edit markdown...",
+      "plotOutput": "Plot Output",
+      "plotOutputAlt": "Python plot output",
+      "htmlOutput": "HTML Output",
+      "columns": "Columns:",
+      "moreRows": "... and {{count}} more rows",
+      "expandOutput": "Expand output",
+      "collapseOutput": "Collapse output",
+      "output": "Output"
+    },
+    "packageManager": {
+      "pythonNotInitialized": "Python not initialized",
+      "initializePython": "Initialize Python to manage packages",
+      "title": "Package Manager",
+      "searchPlaceholder": "Search packages...",
+      "showInstalledOnly": "Show Installed Only",
+      "installedCount": "{{count}} installed",
+      "installCustom": "Install Custom Package",
+      "packageNamePlaceholder": "Package name (e.g., requests)",
+      "packageInfo": "Only pure Python packages or packages with WebAssembly builds",
+      "noPackagesFound": "No packages found",
+      "noPackagesToShow": "No packages to show",
+      "installed": "Installed",
+      "install": "Install",
+      "installedPackagesTitle": "Installed Packages ({{count}})",
+      "refresh": "Refresh",
+      "andMore": "... and {{count}} more"
+    },
+    "scriptHistory": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago",
+      "title": "Notebooks",
+      "searchPlaceholder": "Search Notebooks...",
+      "createNewNotebook": "Create New Notebook",
+      "newNotebook": "New Notebook",
+      "savedScriptsCount": "{{count}} saved scripts",
+      "importScript": "Import script",
+      "import": "Import",
+      "noScriptsFound": "No scripts found",
+      "noSavedScripts": "No saved scripts",
+      "saveFirstScript": "Save your first script to see it here",
+      "current": "Current",
+      "cellsCount": "{{count}} cells",
+      "executed": "Executed",
+      "loadScript": "Load Script",
+      "rename": "Rename",
+      "duplicate": "Duplicate",
+      "export": "Export",
+      "delete": "Delete",
+      "saveAndCreateNew": "Save and Create New",
+      "saveNotebook": "Save Notebook",
+      "enterNotebookName": "Enter notebook name"
+    },
+    "variableInspector": {
+      "dataFrameDescription": "DataFrame with {{rows}} rows and {{columns}} columns",
+      "seriesDescription": "Series with {{size}} elements{{dtype}}",
+      "arrayDescription": "Array with shape {{shape}}{{dtype}}",
+      "listDescription": "List with {{size}} elements",
+      "dictDescription": "Dictionary with {{size}} keys",
+      "confirmClear": "Are you sure you want to clear the Python namespace? This will remove all variables.",
+      "pythonNotInitialized": "Python not initialized",
+      "initializePython": "Initialize Python to inspect variables",
+      "title": "Variables",
+      "refreshVariables": "Refresh variables",
+      "clearNamespace": "Clear namespace",
+      "searchPlaceholder": "Search variables...",
+      "variableCount": "{{filtered}} of {{total}} variables",
+      "noVariables": "No variables in namespace",
+      "noMatches": "No variables match your search",
+      "executeCode": "Execute some Python code to see variables here",
+      "copyVariableName": "Copy variable name",
+      "collapse": "Collapse",
+      "expand": "Expand",
+      "shape": "Shape: ({{shape}})",
+      "size": "Size: {{size}}",
+      "dtype": "DType: {{dtype}}",
+      "dataFrameInfo": "DataFrame Info:",
+      "dataFrameColumns": "Columns: {{columns}}",
+      "dataFrameIndex": "Index: {{count}} entries",
+      "memoryUsage": "Memory usage: ~{{size}} KB",
+      "contents": "Contents:",
+      "copyTip": "Click variable names to copy them to your clipboard"
+    }
+  },
+  "dataGrid": {
+    "stats": {
+      "hideStats": "Hide Stats",
+      "showStats": "Show Stats",
+      "columnStats": "Column Stats"
+    },
+    "inspector": "Inspector",
+    "jsonView": {
+      "table": "Table",
+      "tree": "Tree"
+    },
+    "error": {
+      "loadingData": "Error loading data"
+    },
+    "contextMenu": {
+      "sortAscending": "Sort Ascending",
+      "sortDescending": "Sort Descending",
+      "copy": "Copy \"{{value}}\""
+    },
+    "errors": {
+      "missingParameters": "Missing required parameters for AI action",
+      "aiFailed": "AI action failed:",
+      "signInRequired": "Please sign in to use AI-powered column actions with Datakit Smart.",
+      "actionFailed": "AI action failed: {{error}}",
+      "unknownError": "Unknown error"
+    },
+    "success": {
+      "tableCreated": "Success! Created new table: {{tableName}}"
+    },
+    "noData": "No data to display",
+    "columnHeader": {
+      "aiActions": "AI Column Actions",
+      "stats": {
+        "null": "null: {{percentage}}",
+        "unique": "uniq: {{count}}",
+        "noStats": "no stats"
+      }
+    },
+    "demoModal": {
+      "defaultTitle": "DataKit Demo",
+      "close": "Close modal",
+      "videoNotSupported": "Your browser does not support the video tag."
+    }
+  },
+  "demo": {
+    "title": "Take a look at your DataKit"
+  },
+  "seo": {
+    "title": "DataKit",
+    "description": "Your data, your choice. Process locally for complete privacy or leverage cloud when you need to collaborate. The modern data analysis platform that adapts to you.",
+    "keywords": "data analysis, privacy-first analytics, local data processing, WebAssembly, DuckDB, data visualization, SQL queries, CSV analysis, Excel processing, data science, business intelligence, secure analytics, DataKit"
+  },
+  "datasetImport": {
+    "importing": "Importing Dataset",
+    "processing": "Processing {{organization}}/{{dataset}}..."
+  },
+  "info": {
+    "title": "App Information",
+    "subtitle": "Version and build details",
+    "description": "Version information and application details for DataKit",
+    "version": "Version",
+    "environment": "Environment"
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "The requested page could not be found",
+    "message": "The page you're looking for doesn't exist.",
+    "goHome": "Go Home"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DataKit's privacy policy - Learn how we protect your data and what analytics we collect",
+    "backToDatakit": "Back to DataKit"
+  },
+  "viewer": {
+    "placeholder": "PLACEHOLDER"
+  },
+  "signup": {
+    "popup": {
+      "title": "The data platform that works your way",
+      "description": "Your data, your choice. Process locally for complete privacy or leverage cloud when you need to collaborate.",
+      "freeFeatures": "What you get free",
+      "features": {
+        "cloudConnectors": "All cloud connectors",
+        "credits": "$3 DataKit Assistant credits",
+        "localProjects": "Unlimited local projects",
+        "exportViz": "Export & visualizations"
+      },
+      "enterprise": {
+        "title": "Enterprise ready",
+        "contact": "Contact us →",
+        "description": "Deploy on-premise for complete control or hybrid cloud for flexibility. SOC2 compliant infrastructure."
+      },
+      "startFree": "Start free with $3 credits →",
+      "existingAccount": "Already have an account? Sign in"
+    }
+  },
+  "fileTabs": {
+    "closeFile": "Close file",
+    "splitWith": "Split with {{partner}}",
+    "googleSheets": "Google Sheets",
+    "contextMenu": {
+      "rename": "Rename",
+      "duplicate": "Duplicate",
+      "closeOthers": "Close Others",
+      "closeAll": "Close All"
+    },
+    "moreTabs": "{{count}} more tabs",
+    "loading": "Loading...",
+    "import": "Import"
+  },
+  "viewMode": {
+    "preview": {
+      "label": "Preview",
+      "description": "View and explore your data"
+    },
+    "query": {
+      "label": "SQL",
+      "description": "Query with SQL"
+    },
+    "notebook": {
+      "label": "Notebook",
+      "description": "Analyze with Jupyter notebook"
+    },
+    "visualization": {
+      "label": "Visualize",
+      "description": "Create charts and graphs"
+    },
+    "ai": {
+      "label": "Assistant",
+      "description": "AI-powered insights"
+    }
+  },
+  "importModal": {
+    "googleSheets": {
+      "urlLabel": "Google Sheets URL (published to the web)",
+      "urlPlaceholder": "https://docs.google.com/spreadsheets/d/e/2PACX...",
+      "validation": {
+        "urlRequired": "Please enter a Google Sheets URL",
+        "invalidPublishedUrl": "Please enter a valid Google Sheets URL that's published to the web",
+        "invalidUrl": "Please enter a valid URL"
+      },
+      "status": {
+        "readyToImport": "Published sheet - ready to import"
+      },
+      "actions": {
+        "openInSheets": "Open in Google Sheets",
+        "importing": "Importing",
+        "importSheet": "Import Sheet"
+      },
+      "requirements": {
+        "title": "Requirements",
+        "published": "Sheet must be published to the web",
+        "formats": "Supports CSV, Excel, and web page formats",
+        "noAuth": "No authentication required for published sheets"
+      }
+    },
+    "huggingface": {
+      "loading": {
+        "configurations": "Loading configurations...",
+        "datasets": "Loading datasets..."
+      },
+      "config": {
+        "title": "Dataset Configuration",
+        "configuration": "Configuration (Subset)",
+        "availableSplits": "Available splits",
+        "split": "Split",
+        "willImport": "Will import"
+      },
+      "datasetId": {
+        "label": "Dataset ID",
+        "placeholder": "microsoft/DialoGPT-medium or yandex/yambda:SelfRC/train"
+      },
+      "dataset": {
+        "featured": "Featured",
+        "updated": "Updated",
+        "recently": "Recently",
+        "importing": "Importing",
+        "import": "Import Dataset"
+      },
+      "strategy": {
+        "directStreaming": "Fastest, no download required",
+        "parquetDownload": "Reliable, full dataset download",
+        "alternativeFormat": "Fallback to CSV/JSON format"
+      },
+      "validation": {
+        "datasetIdRequired": "Please enter a dataset ID",
+        "invalidDatasetId": "Please enter a valid dataset ID"
+      },
+      "auth": {
+        "title": "Authentication (Optional)",
+        "hide": "Hide",
+        "show": "Show",
+        "description": "Required for private or gated datasets. Get your token from",
+        "settingsLink": "HuggingFace Settings",
+        "tokenPlaceholder": "hf_xxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "actions": {
+        "importing": "Importing",
+        "importDataset": "Import Dataset",
+        "view": "View"
+      },
+      "search": {
+        "title": "Search Datasets",
+        "placeholder": "Search datasets by name, task, or description...",
+        "results": "Search Results"
+      },
+      "featured": {
+        "title": "Featured Datasets",
+        "description": "Popular datasets to get you started"
+      },
+      "footer": {
+        "title": "HuggingFace Integration",
+        "memoryEfficient": "Memory-efficient processing for large datasets",
+        "multiFormat": "Multi-format support (Parquet, CSV, JSON, XLSX, TXT)"
+      },
+      "error": {
+        "importFailed": "Import Failed"
+      },
+      "status": {
+        "validDatasetId": "Valid dataset ID - ready to import"
+      },
+      "progress": {
+        "complete": "complete",
+        "initializing": "Initializing..."
+      }
+    },
+    "postgresql": {
+      "confirmDelete": "Are you sure you want to delete the connection \"{{name}}\"?",
+      "connections": {
+        "title": "PostgreSQL Connections",
+        "description": "Connect to your PostgreSQL databases",
+        "addConnection": "Add Connection"
+      },
+      "loading": {
+        "connections": "Loading connections...",
+        "tables": "Loading tables..."
+      },
+      "noConnections": {
+        "title": "No Connections",
+        "description": "Create your first PostgreSQL connection to start importing data.",
+        "createConnection": "Create Connection"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "form": {
+        "editConnection": "Edit Connection",
+        "newConnection": "New PostgreSQL Connection",
+        "description": "Enter your PostgreSQL database connection details",
+        "connectionName": "Connection Name",
+        "connectionNamePlaceholder": "My PostgreSQL DB",
+        "host": "Host",
+        "hostPlaceholder": "localhost",
+        "port": "Port",
+        "portPlaceholder": "5432",
+        "database": "Database",
+        "databasePlaceholder": "my_database",
+        "username": "Username",
+        "usernamePlaceholder": "username",
+        "password": "Password",
+        "passwordPlaceholder": "password",
+        "defaultSchema": "Default Schema",
+        "schemaPlaceholder": "public",
+        "enableSSL": "Enable SSL",
+        "cancel": "Cancel",
+        "testing": "Testing...",
+        "update": "Update",
+        "testCreate": "Test & Create"
+      },
+      "tables": {
+        "title": "Select Tables",
+        "description": "Choose tables to connect from {{name}}.",
+        "backToConnections": "Back to Connections",
+        "searchPlaceholder": "Search tables...",
+        "selectedCount": "{{count}} table selected;{{count}} tables selected",
+        "connectSelected": "Connect Selected Tables"
+      },
+      "noTables": {
+        "title": "No Tables Found",
+        "noMatches": "No tables match your search.",
+        "noTablesFound": "No tables found in this database."
+      },
+      "auth": {
+        "title": "Sign In Required",
+        "description": "PostgreSQL connections require authentication to keep your database credentials secure."
+      }
+    },
+    "s3": {
+      "dataset": {
+        "featured": "Featured",
+        "importing": "Importing",
+        "import": "Import Dataset"
+      },
+      "validation": {
+        "urlRequired": "Please enter an S3 URL",
+        "invalidUrl": "Please enter a valid S3 URL"
+      },
+      "urlLabel": "S3 URL (public bucket)",
+      "urlPlaceholder": "s3://bucket/path/file.csv or https://bucket.s3.amazonaws.com/file.csv",
+      "status": {
+        "validUrl": "Valid S3 URL - ready to import"
+      },
+      "actions": {
+        "importing": "Importing",
+        "importFromS3": "Import from S3"
+      },
+      "examples": {
+        "title": "Example Datasets",
+        "description": "Try these curated public datasets to get started"
+      },
+      "loading": {
+        "datasets": "Loading datasets..."
+      },
+      "footer": {
+        "title": "S3 Browser Access",
+        "corsInfo": "Most S3 buckets require proxy access due to CORS",
+        "supportedFormats": "Supports CSV, JSON, Parquet, Excel formats",
+        "autoDetection": "Auto-detects file format and compression"
+      }
+    }
+  },
+  "tabs": {
+    "preview": {
+      "noData": "No data to preview",
+      "selectFile": "Select a file tab to view its contents"
+    },
+    "visualization": {
+      "selectFile": "Select file",
+      "postgresqlTable": "PostgreSQL Table",
+      "rowCount": "{{count}} rows",
+      "postgresqlVisualization": "PostgreSQL Visualization",
+      "postgresqlComingSoon": "Coming soon! We're working on chart support for PostgreSQL tables.",
+      "chartTypes": {
+        "bar": "Bar",
+        "line": "Line",
+        "area": "Area",
+        "pie": "Pie",
+        "scatter": "Scatter"
+      },
+      "noDataAvailable": "No Data Available",
+      "importDataMessage": "Import data files to create visualizations.",
+      "importData": "Import Data",
+      "hidePanel": "Hide panel",
+      "showPanel": "Show panel",
+      "pointsCount": "{{count}} points",
+      "export": "Export",
+      "chartConfiguration": "Chart Configuration",
+      "selectDataSource": "Select a data source to begin",
+      "selectColumns": "Select columns to visualize"
+    }
+  },
+  "sidebar": {
+    "header": {
+      "title": "DataKit"
+    },
+    "footer": {
+      "poweredBy": "Powered by",
+      "visitAmin": "Visit Amin",
+      "built": "built",
+      "company": "DataKit"
+    },
+    "workspace": {
+      "confirmRemove": "Remove \"{{fileName}}\" from workspace? This will not delete the actual file.",
+      "fileRemovedTitle": "File Removed",
+      "fileRemovedMessage": "\"{{fileName}}\" has been removed from workspace"
+    },
+    "upload": {
+      "title": "Upload File",
+      "description": "Import your data file for analysis"
+    },
+    "remote": {
+      "importedTitle": "Remote File Imported",
+      "importedMessage": "\"{{fileName}}\" has been imported from {{provider}}",
+      "defaultProvider": "remote source",
+      "notImplemented": "Remote source re-import not yet implemented. Please use the Cloud Sources button to re-import."
+    },
+    "fileAccess": {
+      "browserNotSupported": "Your browser ({{browserName}}) does not support automatic file access. Please re-import the file manually. ",
+      "useChrome": "For automatic file access, please use Chrome or Edge.",
+      "safariLimited": "File access support is limited in Safari. For better experience, use Chrome or Edge.",
+      "useChromeForFeatures": "For automatic import features, please use Chrome or Edge.",
+      "permissionDenied": "Permission denied to access \"{{fileName}}\". This can happen due to browser security policies.\n\nClick \"OK\" to manually select the file again, or \"Cancel\" to skip.",
+      "nameMismatch": "The stored file reference for \"{{fileName}}\" points to a different file. Please re-select the correct file.",
+      "cannotAccess": "Cannot automatically access \"{{fileName}}\". The file may have been moved, deleted, or access permissions changed.\n\nClick \"OK\" to manually select the file again, or \"Cancel\" to skip.",
+      "selectCorrectFile": "Please select the correct file: {{fileName}}",
+      "couldNotLoad": "Could not load file {{fileName}}. Please re-import it using the file upload button."
+    },
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar",
+    "fileDialog": {
+      "dataFiles": "Data Files"
+    }
+  },
+  "pagination": {
+    "show": "Show",
+    "rows": "rows",
+    "showing": "Showing",
+    "countingRows": "Counting rows...",
+    "countingLarge": "Counting (large file)...",
+    "of": "of",
+    "columns": "columns",
+    "page": "Page",
+    "firstPage": "First page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "lastPage": "Last page",
+    "notAvailableForViews": "Not available for views"
+  },
+  "remoteImport": {
+    "title": "Import from Cloud",
+    "subtitle": "Connect to your cloud data sources",
+    "selectProvider": "Select a provider to get started",
+    "comingSoon": "Coming Soon",
+    "signInRequired": "Sign in required",
+    "providers": {
+      "customUrl": "Custom URL",
+      "s3": "Amazon S3",
+      "huggingface": "HuggingFace",
+      "motherduck": "MotherDuck",
+      "postgresql": "PostgreSQL",
+      "googleSheets": "Google Sheets",
+      "googleCloud": "Google Cloud",
+      "googleDrive": "Google Drive"
+    }
+  },
+  "consent": {
+    "thanks": {
+      "title": "Thank you!",
+      "message": "Your preferences have been saved"
+    },
+    "header": {
+      "title": "Help improve DataKit"
+    },
+    "description": "We use analytics to improve your experience. All data processing happens locally - your files never leave your device.",
+    "dropdown": {
+      "title": "What do we collect?"
+    },
+    "collection": {
+      "basic": {
+        "title": "Basic analytics (always collected):",
+        "performance": "Performance metrics",
+        "errors": "Error reports",
+        "usage": "Anonymous usage patterns"
+      },
+      "advanced": {
+        "title": "Advanced analytics (with your consent):",
+        "detailed": "Detailed feature usage",
+        "sessions": "Session recordings (data masked)",
+        "journeys": "User journey tracking"
+      },
+      "never": {
+        "title": "We never collect:",
+        "files": "Your uploaded files",
+        "content": "File contents or personal data",
+        "queries": "SQL queries or code"
+      }
+    },
+    "privacyPolicy": "Privacy Policy",
+    "buttons": {
+      "accept": "Accept Analytics",
+      "decline": "Essential Only"
+    }
+  },
+  "ai": {
+    "modelSelector": {
+      "selectModel": "Select Model",
+      "title": "Select AI Model",
+      "claudeModels": "Claude Models",
+      "signInRequired": "Sign in required",
+      "apiKeyRequired": "API key required",
+      "creditsPerToken": "{{cost}} credits/1K tokens",
+      "dollarsPerToken": "${{cost}}/1K",
+      "signUpCredits": "Sign up to use DataKit credits",
+      "noApiKeysNeeded": "No API keys needed. Credits included with your account.",
+      "signUpButton": "Sign up to get started",
+      "creditsRemaining": "Credits remaining: {{count}}"
+    },
+    "providers": {
+      "datakit": "DataKit",
+      "openai": "OpenAI",
+      "anthropic": "Anthropic",
+      "groq": "Groq",
+      "ollama": "Ollama"
+    },
+    "prompts": {
+      "schemas": "Schemas",
+      "hideSchema": "Hide Schema",
+      "showSchema": "Show Schema",
+      "navigation": {
+        "previous": "Previous message",
+        "next": "Next message"
+      },
+      "actions": {
+        "startNewChat": "Start a new chat"
+      },
+      "placeholders": {
+        "askAboutData": "Ask about your data...",
+        "followUp": "Ask follow up question...",
+        "askAboutTable": "Ask about {{tableName}}..."
+      },
+      "setup": {
+        "configure": "Configure your AI model to start asking questions",
+        "signUpCredits": "Sign Up for Free Credits",
+        "useApiKeys": "Use Your Own API Keys",
+        "privacyNote": "Models only see your table structure, not your actual data"
+      },
+      "suggestions": {
+        "title": "Suggestions",
+        "exploreData": {
+          "title": "Explore Data",
+          "prompt": "Give me an overview of this dataset - what columns do we have and what insights can you find?"
+        },
+        "findPatterns": {
+          "title": "Find Patterns",
+          "prompt": "What are the most interesting patterns or trends in this data?"
+        },
+        "dataQuality": {
+          "title": "Data Quality",
+          "prompt": "Check this dataset for missing values, duplicates, or data quality issues"
+        },
+        "quickStats": {
+          "title": "Quick Stats",
+          "prompt": "Show me summary statistics for all numeric columns"
+        }
+      },
+      "status": {
+        "thinking": "Thinking..."
+      }
+    },
+    "localModels": {
+      "title": "Local AI Models",
+      "description": "Run AI models locally using WebLLM",
+      "webgpu": {
+        "supported": "WebGPU Supported",
+        "notSupported": "Not Supported",
+        "required": "WebGPU Required"
+      },
+      "storage": {
+        "title": "Storage Usage",
+        "downloadedModels": "Downloaded Models"
+      },
+      "availableModels": "Available Models",
+      "useModel": "Use Model",
+      "download": "Download",
+      "current": "Current",
+      "active": "Active",
+      "refresh": "Refresh",
+      "done": "Done",
+      "deleteConfirm": "Are you sure you want to delete this model?"
+    },
+    "ollama": {
+      "connecting": "Connecting to Ollama...",
+      "connected": "Connected to Ollama",
+      "connectionFailed": "Connection Failed",
+      "connectionFailedTitle": "Failed to connect to Ollama",
+      "cannotConnect": "Cannot connect to Ollama server",
+      "howToFix": "How to fix this:",
+      "installStep": "1. Install Ollama from ollama.ai",
+      "runCommand": "2. Run: OLLAMA_ORIGINS=* ollama serve",
+      "browserCompatibility": "3. Use Chrome, Edge, or Safari (Firefox not supported)",
+      "firefoxNote": "Note: Firefox is not supported due to CORS restrictions",
+      "installedModels": "Installed Models",
+      "noModels": "No models installed",
+      "pullModelHint": "Pull a model below to get started",
+      "tryAgain": "Try Again"
+    },
+    "tableSelector": {
+      "title": "Select Tables for AI Context",
+      "searchPlaceholder": "Search tables...",
+      "noTablesFound": "No tables found matching your search",
+      "noTablesAvailable": "No tables available",
+      "selectedCount": "{{count}} selected",
+      "columns": "columns",
+      "postgresql": "PostgreSQL",
+      "motherduck": "MotherDuck",
+      "remote": "Remote",
+      "clearAll": "Clear all",
+      "cancel": "Cancel",
+      "addToContext": "Add to Context",
+      "applying": "Applying..."
+    },
+    "queryCard": {
+      "query": "Query",
+      "primary": "Primary",
+      "visualize": "Visualize",
+      "copySQL": "Copy SQL",
+      "copied": "Copied!",
+      "editInQueryTab": "Edit in Query Tab",
+      "run": "Run",
+      "generatingVisualization": "Generating visualization...",
+      "queryRunning": "Query is running..."
+    },
+    "visualization": {
+      "export": {
+        "title": "Export Visualization",
+        "format": "Export Format",
+        "quality": "Quality",
+        "options": "Options",
+        "includeTitle": "Include title",
+        "includeBackground": "Include background",
+        "copy": "Copy",
+        "copied": "Copied!",
+        "export": "Export",
+        "exporting": "Exporting...",
+        "chartNotFound": "Chart not found",
+        "exportFailed": "Export failed"
+      }
+    }
+  },
+  "query": {
+    "workspace": {
+      "poweredBy": "Powered by WebAssembly",
+      "errors": {
+        "initFailed": "DuckDB Initialization Failed"
+      },
+      "status": {
+        "initializing": "Initializing DuckDB",
+        "notReady": "DuckDB Not Ready",
+        "settingUp": "Setting up your in-browser SQL database...",
+        "preparing": "Preparing your data analysis environment..."
+      },
+      "actions": {
+        "retryInit": "Retry Initialization",
+        "fullScreenResults": "Full Screen Results",
+        "hideHistory": "Hide Query History",
+        "showHistory": "Show Query History",
+        "exitFullScreen": "Exit Full Screen",
+        "hideSchema": "Hide Schema Browser",
+        "showSchema": "Show Schema Browser",
+        "save": "Save",
+        "execute": "Execute",
+        "executeShortcut": "Execute query (⌘+Enter)",
+        "fullScreenEditor": "Full Screen Editor",
+        "dismiss": "Dismiss",
+        "cancel": "Cancel"
+      },
+      "results": {
+        "title": "Query Results",
+        "executionTime": "{{time}}ms",
+        "rowCount": "{{count}} rows"
+      },
+      "fullscreen": {
+        "editor": "SQL Editor (Fullscreen)",
+        "results": "Query Results (Fullscreen)"
+      },
+      "editor": {
+        "title": "SQL Editor",
+        "optimize": "Optimize",
+        "optimizationAvailable": "Query optimization suggestions available"
+      },
+      "optimization": {
+        "title": "Query Optimization Tips",
+        "applyFix": "Apply Fix",
+        "optimizeQuery": "Optimize Query"
+      },
+      "warnings": {
+        "largeDataset": {
+          "title": "Large Result Set ({{count}} rows)",
+          "description": "This query is returning a large dataset which may affect performance. Consider adding filters or LIMIT clause with lower value to reduce the result size.",
+          "addLimit": "Add LIMIT Clause"
+        }
+      },
+      "gettingStarted": {
+        "title": "Ready to Query Sample Data!",
+        "dataReady": "You have uploaded data ready to query. Try the sample query above or write your own SQL.",
+        "sampleData": "A sample employees table is available for testing. Import your own CSV, JSON, or Parquet files to query your data."
+      },
+      "saveDialog": {
+        "title": "Save Query",
+        "placeholder": "Enter query name"
+      }
+    },
+    "schema": {
+      "title": "Schema Browser",
+      "noData": "No data available. Import files to get started.",
+      "local": "Local",
+      "attached": "Attached",
+      "shared": "Shared",
+      "actions": {
+        "refresh": "Refresh schemas",
+        "refreshTables": "Refresh tables",
+        "refreshSchemas": "Refresh schemas",
+        "insertSelect": "Insert SELECT query",
+        "insertColumn": "Insert column query"
+      },
+      "loading": {
+        "local": "Loading local schemas...",
+        "database": "Loading {{name}} tables...",
+        "schemas": "Loading {{name}} schemas...",
+        "postgres": "Loading PostgreSQL schemas...",
+        "columns": "Loading columns..."
+      },
+      "empty": {
+        "local": "No local tables. Import data to get started.",
+        "database": "No tables found in {{name}}",
+        "postgres": "No tables found. Click refresh to load schemas.",
+        "columns": "No columns available"
+      },
+      "sections": {
+        "tables": "Tables ({{count}})",
+        "views": "Views ({{count}})"
+      },
+      "postgres": {
+        "available": "Available",
+        "connected": "Connected",
+        "connect": "Connect and browse tables"
+      }
+    },
+    "draft": {
+      "label": "Draft"
+    }
+  },
+  "visualization": {
+    "saveChart": {
+      "myChart": "My Chart",
+      "title": "Save Chart",
+      "chartName": "Chart Name",
+      "enterChartName": "Enter chart name",
+      "descriptionOptional": "Description (optional)",
+      "enterChartDescription": "Enter chart description",
+      "saveAsTemplate": "Save as Template",
+      "saveChart": "Save Chart"
+    },
+    "export": {
+      "title": "Export Chart",
+      "exportFormat": "Export Format",
+      "options": "Options",
+      "includeTitle": "Include title",
+      "includeDescription": "Include description",
+      "includeBackground": "Include background",
+      "exportButton": "Export {{format}}",
+      "copied": "Copied!",
+      "copy": "Copy"
+    },
+    "config": {
+      "noChart": "No Chart Selected",
+      "chartTitle": "Chart Title",
+      "chartTitlePlaceholder": "Enter chart title",
+      "tabs": {
+        "data": "Data",
+        "style": "Style",
+        "transform": "Transform"
+      },
+      "resetSettings": "Reset Chart Settings"
+    },
+    "gallery": {
+      "title": "Chart Gallery",
+      "searchPlaceholder": "Search charts...",
+      "savedCharts": "Saved Charts",
+      "templates": "Templates",
+      "noCharts": {
+        "title": "No Charts Found",
+        "noSaved": "You haven't saved any charts yet. Create and save a chart to see it here.",
+        "noSearchResults": "No templates match your search.",
+        "noTemplates": "No chart templates available."
+      },
+      "createNew": "Create New Chart",
+      "chartType": "{{type}} Chart",
+      "template": "Template",
+      "duplicate": "Duplicate",
+      "delete": "Delete"
+    },
+    "canvas": {
+      "noData": {
+        "title": "No Chart Data",
+        "message": "Configure your chart or run a query to visualize data."
+      },
+      "unsupported": "Chart type not supported"
+    },
+    "generator": {
+      "xAxisField": "X-Axis Field",
+      "yAxisField": "Y-Axis Field",
+      "selectField": "Select field...",
+      "xAxisHelp": "Categories to group your data by",
+      "yAxisHelpDate": "Date fields for time analysis",
+      "yAxisHelpNumeric": "Numeric values to measure",
+      "aggregation": "Aggregation",
+      "aggregationHelpDate": "Date aggregations: earliest, latest, or count",
+      "aggregationHelpNumeric": "How to calculate the numeric values",
+      "aggregationHelpGeneric": "How to aggregate the values",
+      "usingAllData": "Using all {{tableName}} data for visualization",
+      "processing": "Processing...",
+      "generateChart": "Generate Chart",
+      "aggregationLabels": {
+        "sum": "Sum",
+        "avg": "Average",
+        "min": "Minimum",
+        "max": "Maximum",
+        "count": "Count"
+      },
+      "description": {
+        "sum": "This chart will show the total sum of \"{{measure}}\" for each \"{{dimension}}\" category.",
+        "avg": "This chart will show the average \"{{measure}}\" for each \"{{dimension}}\" category.",
+        "min": "This chart will show the minimum \"{{measure}}\" value for each \"{{dimension}}\" category.",
+        "minDate": "This chart will show the earliest \"{{measure}}\" date for each \"{{dimension}}\" category.",
+        "max": "This chart will show the maximum \"{{measure}}\" value for each \"{{dimension}}\" category.",
+        "maxDate": "This chart will show the latest \"{{measure}}\" date for each \"{{dimension}}\" category.",
+        "count": "This chart will show the count of items in each \"{{dimension}}\" category."
+      }
+    }
+  },
+  "inspector": {
+    "title": "Data Inspector",
+    "fileSelector": {
+      "placeholder": "Select file..."
+    },
+    "postgresql": {
+      "title": "PostgreSQL Inspector",
+      "comingSoon": "Coming soon! We're working on data inspection for PostgreSQL tables."
+    },
+    "overview": {
+      "title": "Overview",
+      "dataOverview": "Data Overview",
+      "quality": "{{score}}% Quality",
+      "analyzedAt": "Analyzed at {{time}}",
+      "rows": "Rows",
+      "columns": "Columns",
+      "duplicates": "Duplicates",
+      "issues": "Issues",
+      "critical": "{{count}} critical",
+      "qualityBreakdown": "Quality Breakdown",
+      "completeness": "Completeness",
+      "uniqueness": "Uniqueness",
+      "consistency": "Consistency",
+      "analysisCompleted": "Analysis completed in {{time}}s"
+    },
+    "problems": {
+      "title": "Data Quality Issues",
+      "noProblems": {
+        "title": "No Problems Found!",
+        "description": "Your data appears to be clean with no critical issues detected.",
+        "healthScore": "Health Score: {{score}}%"
+      },
+      "duplicateRows": {
+        "title": "Duplicate Rows",
+        "description": "{{count}} duplicate rows found ({{percentage}}% of total)"
+      },
+      "missingValues": {
+        "title": "Missing Values in {{columnName}}",
+        "description": "{{count}} null values ({{percentage}}% of column)"
+      },
+      "typeIssue": {
+        "title": "{{issue}} in {{columnName}}",
+        "description": "{{count}} problematic values found"
+      },
+      "issueCount": "{{filtered}} of {{total}} issues",
+      "severity": {
+        "critical": "Critical",
+        "warning": "Warning",
+        "info": "Info"
+      },
+      "filteredBy": "Filtered by:",
+      "actions": {
+        "viewDetails": "View details",
+        "exporting": "Exporting...",
+        "exportCompleted": "Export completed!",
+        "exportData": "Export data",
+        "signInToExport": "Sign in to export data"
+      },
+      "details": {
+        "examples": "Examples:",
+        "count": "Count: {{count}}",
+        "percentage": "Percentage: {{percentage}}%",
+        "column": "Column: {{columnName}}"
+      },
+      "noIssuesFound": "No {{filter}} issues found"
+    },
+    "emptyStates": {
+      "noAnalysis": {
+        "title": "Ready to Analyze",
+        "descriptionWithFile": "Start analyzing \"{{fileName}}\" to discover data quality insights",
+        "descriptionNoFile": "Select a file to start your data quality analysis",
+        "startButton": "Start Analysis",
+        "timeEstimate": "Analysis typically takes 10-30 seconds depending on your data size"
+      },
+      "noColumns": {
+        "title": "No Columns Found",
+        "noMatchingColumns": "No columns matching \"{{searchTerm}}\"",
+        "noFilteredColumns": "No {{filterType}} columns found",
+        "totalColumns": "in {{totalColumns}} total columns",
+        "noAnalyzableColumns": "This dataset doesn't have any analyzable columns",
+        "clearFiltersButton": "Clear Filters",
+        "suggestion": "Try adjusting your search or filter criteria"
+      },
+      "error": {
+        "title": "Analysis Failed",
+        "tryAgainButton": "Try Again",
+        "resetButton": "Reset",
+        "suggestion": "If the problem persists, try with a different file or contact support"
+      }
+    },
+    "loading": {
+      "steps": {
+        "validation": {
+          "label": "Validating Data",
+          "description": "Checking table structure and accessibility"
+        },
+        "schema": {
+          "label": "Reading Schema",
+          "description": "Identifying column types and structure"
+        },
+        "duplicates": {
+          "label": "Detecting Duplicates",
+          "description": "Scanning for duplicate rows"
+        },
+        "columns": {
+          "label": "Analyzing Columns",
+          "description": "Computing statistics and patterns"
+        },
+        "quality": {
+          "label": "Quality Assessment",
+          "description": "Calculating health scores and recommendations"
+        }
+      },
+      "analyzingColumn": "Analyzing: {{currentColumn}} • Column {{currentColumnNumber}} of {{totalColumns}}"
+    },
+    "quickActions": {
+      "lastAnalyzed": "Last analyzed: {{time}}"
+    }
+  },
+  "queryHistory": {
+    "title": "Query History",
+    "source": "from indexedDB",
+    "tabs": {
+      "recent": "Recent",
+      "saved": "Saved"
+    },
+    "empty": {
+      "recent": "No recent queries. Execute a query to see it here.",
+      "saved": "No saved queries. Click the star icon to save a query."
+    },
+    "unnamedQuery": "Unnamed Query",
+    "actions": {
+      "save": "Save Query",
+      "editName": "Edit Name",
+      "copy": "Copy Query",
+      "delete": "Delete Query",
+      "cancel": "Cancel",
+      "use": "Use"
+    },
+    "dateFormat": {
+      "today": "Today at {{time}}",
+      "yesterday": "Yesterday at {{time}}"
+    }
+  },
+  "queryResults": {
+    "header": {
+      "rowsReturned": "rows returned",
+      "showingPage": "showing page {{current}} of {{total}}",
+      "downloadCSV": "Download CSV"
+    },
+    "emptyState": {
+      "executing": "Executing query...",
+      "error": "Error",
+      "empty": "Execute a query to see results.",
+      "noResults": "Query executed successfully. No results returned."
+    },
+    "pagination": {
+      "rowsPerPage": "Rows per page:",
+      "firstPage": "First Page",
+      "previousPage": "Previous Page",
+      "pageOf": "Page {{current}} of {{total}}",
+      "nextPage": "Next Page",
+      "lastPage": "Last Page",
+      "goTo": "Go to:"
+    }
+  },
+  "import": {
+    "customUrl": {
+      "dataset": {
+        "featured": "Featured",
+        "importing": "Importing",
+        "import": "Import Dataset"
+      },
+      "validation": {
+        "enterUrl": "Please enter a URL",
+        "validUrl": "Please enter a valid URL",
+        "fileDetected": "{{format}} file detected",
+        "readyToImport": "Valid URL - ready to import"
+      },
+      "form": {
+        "fileUrlLabel": "File URL (public access)",
+        "placeholder": "https://raw.githubusercontent.com/user/repo/main/data.csv"
+      },
+      "actions": {
+        "importing": "Importing",
+        "importFromUrl": "Import from URL",
+        "openFileUrl": "Open file URL"
+      },
+      "examples": {
+        "title": "Example Datasets",
+        "subtitle": "Try these curated public datasets from GitHub",
+        "loading": "Loading datasets..."
+      },
+      "footer": {
+        "supportedUrls": "Supported URLs:",
+        "directFiles": "Direct file URLs (CSV, JSON, Parquet, Excel)",
+        "publicRepos": "Public data repositories and APIs"
+      }
+    },
+    "motherduck": {
+      "success": {
+        "title": "You're all set!",
+        "description": "Connection successful. You can query your MotherDuck in the query tab.",
+        "goToQuery": "Go to Query Tab"
+      }
+    },
+    "gcs": {
+      "categories": {
+        "all": "All Datasets",
+        "earthObservation": "Earth Observation",
+        "climate": "Climate Data",
+        "geospatial": "Geospatial",
+        "research": "Research"
+      },
+      "dataset": {
+        "featured": "Featured",
+        "preview": "Preview",
+        "importing": "Importing",
+        "import": "Import"
+      },
+      "preview": {
+        "category": "Category",
+        "size": "Size",
+        "formats": "Formats",
+        "lastUpdated": "Last Updated",
+        "tags": "Tags",
+        "gcsUrl": "GCS URL",
+        "cancel": "Cancel",
+        "docs": "Docs",
+        "importing": "Importing",
+        "importDataset": "Import Dataset"
+      },
+      "header": {
+        "title": "Google Cloud Storage",
+        "subtitle": "Access public datasets and earth observation data"
+      },
+      "search": {
+        "placeholder": "Search datasets..."
+      },
+      "loading": {
+        "datasets": "Loading datasets..."
+      },
+      "sections": {
+        "featured": "Featured Earth Observation",
+        "allDatasets": "All Datasets ({{count}})"
+      },
+      "empty": {
+        "noDatasets": "No datasets found",
+        "tryAdjusting": "Try adjusting your search or category filter"
+      }
+    }
+  },
+  "dialog": {
+    "unsavedChanges": {
+      "title": "Unsaved Changes",
+      "message": "You have unsaved changes in your current notebook. What would you like to do?",
+      "saveAndContinue": "Save and Continue",
+      "discardChanges": "Discard Changes"
+    }
+  },
+  "workspace": {
+    "fileTree": {
+      "noFiles": "No files in workspace",
+      "addFilesHint": "Add files using the source panel above",
+      "workspaceFiles": "Workspace Files ({{count}})",
+      "remove": "Remove",
+      "rename": "Rename"
+    },
+    "selector": {
+      "selectWorkspace": "Select Workspace",
+      "unsaved": "unsaved",
+      "workspaces": "Workspaces",
+      "organizeDescription": "Organize your files into workspaces. Files are referenced, not stored.",
+      "draft": "draft",
+      "fileCount": "{{count}} files",
+      "file": "file",
+      "files": "files",
+      "workspaceNamePlaceholder": "Workspace name...",
+      "saveDraftAsWorkspace": "Save Draft as Workspace",
+      "newWorkspace": "New Workspace",
+      "workspaceCreated": "Workspace Created",
+      "workspaceCreatedMessage": "\"{{name}}\" workspace has been created successfully",
+      "workspaceRenamed": "Workspace Renamed",
+      "workspaceRenamedMessage": "Workspace renamed from \"{{oldName}}\" to \"{{newName}}\"",
+      "deleteConfirmation": "Delete workspace \"{{name}}\"? This action cannot be undone.",
+      "workspaceDeleted": "Workspace Deleted",
+      "workspaceDeletedMessage": "\"{{name}}\" workspace has been deleted",
+      "workspaceSaved": "Workspace Saved",
+      "workspaceSavedMessage": "Draft workspace saved as \"{{name}}\" with {{count}} {{files}}",
+      "tooltip": {
+        "workspaces": "Workspaces",
+        "organizeFiles": "organize your files without storing actual data - only references for privacy.",
+        "draft": "Draft",
+        "draftDescription": "Temporary workspace for files before saving to a named workspace.",
+        "benefits": "Benefits",
+        "benefitsDescription": "Keep projects organized, switch between datasets.",
+        "limit": "Limit",
+        "limitDescription": "Create up to 1 workspaces.",
+        "signUp": "Sign up",
+        "unlimitedWorkspaces": "for unlimited workspaces."
+      }
+    }
+  },
+  "dataSources": {
+    "files": "Files",
+    "localFiles": "Local files",
+    "remote": "Remote",
+    "remoteData": "Remote data",
+    "connectCloudSources": "Connect Cloud Sources"
+  },
+  "ui": {
+    "notebookEditor": {
+      "title": "Edit Notebook",
+      "nameLabel": "Name",
+      "namePlaceholder": "Untitled Notebook",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Optional description...",
+      "autoSaveMessage": "Changes are saved automatically"
+    }
+  },
+  "settingsPopover": {
+    "title": "Settings",
+    "language": "Language",
+    "presets": "Presets"
+  },
+  "pages": {
+    "privacy": {
+      "dataStaysLocal": {
+        "title": "Your Data Stays Local",
+        "description": "All data analysis is performed locally in your browser using DuckDB-WASM. Your files and data never leave your device, ensuring complete privacy and security.",
+        "aiModelsTitle": "DataKit AI Models - Column Schema Only",
+        "importantException": "Important exception:",
+        "aiModelsDescription": "When using DataKit AI features, we only send column headers and data types to our AI models - never your actual data. This allows AI to understand your dataset structure while keeping your sensitive information completely private.",
+        "aiModelsExample": "For example, from a CSV with customer data, we only send: [\"customer_id: INTEGER\", \"email: VARCHAR\", \"purchase_amount: DECIMAL\"] - the AI never sees actual customer emails or purchase amounts."
+      },
+      "analytics": {
+        "title": "Our Two-Tiered Analytics System",
+        "description": "We use a privacy-first approach to understand how DataKit is used and improve the experience:",
+        "basic": {
+          "title": "Basic Analytics (Always Active)",
+          "items": [
+            "Page views and feature usage",
+            "Performance metrics and error tracking",
+            "Browser type and general location (country-level)"
+          ],
+          "note": "This helps us understand which features are popular and fix bugs quickly."
+        },
+        "advanced": {
+          "title": "Advanced Analytics (Opt-in Only)",
+          "items": [
+            "Detailed user journey tracking",
+            "A/B testing for new features",
+            "More granular usage patterns"
+          ]
+        },
+        "neverCollect": {
+          "title": "We Never Collect",
+          "items": [
+            "Your actual data or file contents",
+            "Personal information beyond what you voluntarily provide",
+            "Passwords or authentication tokens",
+            "Precise location data"
+          ]
+        }
+      },
+      "thirdParty": {
+        "title": "Third-Party Services",
+        "items": [
+          "Google Analytics: Website usage analytics",
+          "PostHog: Product analytics and user feedback",
+          "Anthropic Claude: AI-powered data insights (column schemas only)",
+          "OpenAI: AI-powered data insights (column schemas only)"
+        ]
+      },
+      "choices": {
+        "title": "Your Choices",
+        "description": "You can disable advanced analytics in Settings. Basic analytics remain active to ensure DataKit works properly and securely for all users.",
+        "contact": "Questions about privacy? Contact us at privacy@datakit.dev"
+      },
+      "lastUpdated": "Last updated"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Play,
   Square,
@@ -52,6 +53,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
   onActivate,
   cellNumber,
 }) => {
+  const { t } = useTranslation();
   const {
     updateCell,
     deleteCell,
@@ -169,11 +171,11 @@ const PythonCell: React.FC<PythonCellProps> = ({
           <div className="bg-white/5 p-3 rounded border border-white/10">
             <div className="flex items-center gap-2 mb-2">
               <Image size={16} className="text-blue-400" />
-              <span className="text-sm text-white/70">Plot Output</span>
+              <span className="text-sm text-white/70">{t('notebooks.pythonCell.plotOutput', { defaultValue: 'Plot Output' })}</span>
             </div>
             <img
               src={output.content}
-              alt="Python plot output"
+              alt={t('notebooks.pythonCell.plotOutputAlt', { defaultValue: 'Python plot output' })}
               className="max-w-full h-auto rounded border border-white/10"
             />
           </div>
@@ -197,7 +199,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
 
             {/* Column info */}
             <div className="mb-3">
-              <div className="text-xs text-white/60 mb-1">Columns:</div>
+              <div className="text-xs text-white/60 mb-1">{t('notebooks.pythonCell.columns', { defaultValue: 'Columns:' })}</div>
               <div className="flex flex-wrap gap-1">
                 {dfInfo.columns.map((col, idx) => (
                   <span
@@ -243,7 +245,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
                 </table>
                 {dfInfo.preview.length > 10 && (
                   <div className="text-xs text-white/50 p-2">
-                    ... and {dfInfo.preview.length - 10} more rows
+                    {t('notebooks.pythonCell.moreRows', { defaultValue: '... and {{count}} more rows', count: dfInfo.preview.length - 10 })}
                   </div>
                 )}
               </div>
@@ -256,7 +258,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
           <div className="bg-white/5 p-3 rounded border border-white/10">
             <div className="flex items-center gap-2 mb-2">
               <FileText size={16} className="text-purple-400" />
-              <span className="text-sm text-white/70">HTML Output</span>
+              <span className="text-sm text-white/70">{t('notebooks.pythonCell.htmlOutput', { defaultValue: 'HTML Output' })}</span>
             </div>
             <div
               className="prose prose-invert max-w-none"
@@ -294,7 +296,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
               toggleCellInputCollapse(cell.id);
             }}
             className="p-1 hover:bg-white/10 rounded transition-colors"
-            title={cell.isInputCollapsed ? "Expand input" : "Collapse input"}
+            title={cell.isInputCollapsed ? t('notebooks.pythonCell.expandInput', { defaultValue: 'Expand input' }) : t('notebooks.pythonCell.collapseInput', { defaultValue: 'Collapse input' })}
           >
             <ChevronRight 
               size={14} 
@@ -316,7 +318,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
           {cell.isExecuting && (
             <div className="flex items-center gap-2 text-xs text-blue-400">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-              <span>Executing...</span>
+              <span>{t('notebooks.pythonCell.executing', { defaultValue: 'Executing...' })}</span>
             </div>
           )}
 
@@ -331,7 +333,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
         <div className="flex items-center gap-2">
           {/* Execute Button (only for code cells) */}
           {cell.type === 'code' && (
-            <Tooltip content="Execute Cell (Shift+Enter)" placement="bottom">
+            <Tooltip content={t('notebooks.pythonCell.executeTooltip', { defaultValue: 'Execute Cell (Shift+Enter)' })} placement="bottom">
               <Button
                 variant="ghost"
                 size="icon"
@@ -360,7 +362,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
                 e.stopPropagation();
                 handleToggleEdit();
               }}
-              title={cell.isEditing ? 'Preview Markdown' : 'Edit Markdown'}
+              title={cell.isEditing ? t('notebooks.pythonCell.previewMarkdown', { defaultValue: 'Preview Markdown' }) : t('notebooks.pythonCell.editMarkdown', { defaultValue: 'Edit Markdown' })}
             >
               {cell.isEditing ? <Eye size={14} /> : <Edit3 size={14} />}
             </Button>
@@ -375,7 +377,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
               e.stopPropagation();
               deleteCell(cell.id);
             }}
-            title="Delete Cell"
+            title={t('notebooks.pythonCell.deleteCell', { defaultValue: 'Delete Cell' })}
           >
             <Trash2 size={14} />
           </Button>
@@ -407,7 +409,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
                   }}
                 >
                   <ChevronUp size={14} />
-                  Move Up
+                  {t('notebooks.pythonCell.moveUp', { defaultValue: 'Move Up' })}
                 </button>
                 <button
                   className="w-full px-3 py-2 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2"
@@ -419,7 +421,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
                   }}
                 >
                   <ChevronDown size={14} />
-                  Move Down
+                  {t('notebooks.pythonCell.moveDown', { defaultValue: 'Move Down' })}
                 </button>
                 <div className="border-t border-white/10" />
                 <button
@@ -427,7 +429,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
                   onClick={handleCopyCell}
                 >
                   <Copy size={14} />
-                  Copy Code
+                  {t('notebooks.pythonCell.copyCode', { defaultValue: 'Copy Code' })}
                 </button>
                 <button
                   className="w-full px-3 py-2 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2"
@@ -437,7 +439,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
                   }}
                 >
                   <Square size={14} />
-                  Clear Output
+                  {t('notebooks.pythonCell.clearOutput', { defaultValue: 'Clear Output' })}
                 </button>
                 <div className="border-t border-white/10" />
                 <button
@@ -448,7 +450,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
                   }}
                 >
                   <Eye size={14} />
-                  {cell.isInputCollapsed ? 'Show' : 'Hide'} Input
+                  {cell.isInputCollapsed ? t('notebooks.pythonCell.showInput', { defaultValue: 'Show Input' }) : t('notebooks.pythonCell.hideInput', { defaultValue: 'Hide Input' })}
                 </button>
                 {cell.type === 'code' && cell.output.length > 0 && (
                   <button
@@ -459,7 +461,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
                     }}
                   >
                     <Eye size={14} />
-                    {cell.isOutputCollapsed ? 'Show' : 'Hide'} Output
+                    {cell.isOutputCollapsed ? t('notebooks.pythonCell.showOutput', { defaultValue: 'Show Output' }) : t('notebooks.pythonCell.hideOutput', { defaultValue: 'Hide Output' })}
                   </button>
                 )}
               </div>
@@ -475,14 +477,14 @@ const PythonCell: React.FC<PythonCellProps> = ({
             <button
               onClick={() => insertMarkdownFormat('bold')}
               className="p-1 hover:bg-white/10 rounded transition-colors"
-              title="Bold"
+              title={t('notebooks.pythonCell.bold', { defaultValue: 'Bold' })}
             >
               <Bold size={12} />
             </button>
             <button
               onClick={() => insertMarkdownFormat('italic')}
               className="p-1 hover:bg-white/10 rounded transition-colors"
-              title="Italic"
+              title={t('notebooks.pythonCell.italic', { defaultValue: 'Italic' })}
             >
               <Italic size={12} />
             </button>
@@ -490,21 +492,21 @@ const PythonCell: React.FC<PythonCellProps> = ({
             <button
               onClick={() => insertMarkdownFormat('h1')}
               className="px-2 py-1 hover:bg-white/10 rounded transition-colors font-mono"
-              title="Header 1"
+              title={t('notebooks.pythonCell.header1', { defaultValue: 'Header 1' })}
             >
               H1
             </button>
             <button
               onClick={() => insertMarkdownFormat('h2')}
               className="px-2 py-1 hover:bg-white/10 rounded transition-colors font-mono"
-              title="Header 2"
+              title={t('notebooks.pythonCell.header2', { defaultValue: 'Header 2' })}
             >
               H2
             </button>
             <button
               onClick={() => insertMarkdownFormat('h3')}
               className="px-2 py-1 hover:bg-white/10 rounded transition-colors font-mono"
-              title="Header 3"
+              title={t('notebooks.pythonCell.header3', { defaultValue: 'Header 3' })}
             >
               H3
             </button>
@@ -512,28 +514,28 @@ const PythonCell: React.FC<PythonCellProps> = ({
             <button
               onClick={() => insertMarkdownFormat('list')}
               className="p-1 hover:bg-white/10 rounded transition-colors"
-              title="List"
+              title={t('notebooks.pythonCell.list', { defaultValue: 'List' })}
             >
               <List size={12} />
             </button>
             <button
               onClick={() => insertMarkdownFormat('quote')}
               className="p-1 hover:bg-white/10 rounded transition-colors"
-              title="Quote"
+              title={t('notebooks.pythonCell.quote', { defaultValue: 'Quote' })}
             >
               <Quote size={12} />
             </button>
             <button
               onClick={() => insertMarkdownFormat('link')}
               className="p-1 hover:bg-white/10 rounded transition-colors"
-              title="Link"
+              title={t('notebooks.pythonCell.link', { defaultValue: 'Link' })}
             >
               <Link size={12} />
             </button>
             <button
               onClick={() => insertMarkdownFormat('code')}
               className="p-1 hover:bg-white/10 rounded transition-colors"
-              title="Inline Code"
+              title={t('notebooks.pythonCell.inlineCode', { defaultValue: 'Inline Code' })}
             >
               <Code2 size={12} />
             </button>
@@ -634,7 +636,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
               </div>
             ) : (
               <div className="text-white/50 italic">
-                Click to edit markdown...
+                {t('notebooks.pythonCell.clickToEdit', { defaultValue: 'Click to edit markdown...' })}
               </div>
             )}
           </div>
@@ -653,7 +655,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
                 toggleCellOutputCollapse(cell.id);
               }}
               className="p-1 hover:bg-white/10 rounded transition-colors"
-              title={cell.isOutputCollapsed ? "Expand output" : "Collapse output"}
+              title={cell.isOutputCollapsed ? t('notebooks.pythonCell.expandOutput', { defaultValue: 'Expand output' }) : t('notebooks.pythonCell.collapseOutput', { defaultValue: 'Collapse output' })}
             >
               <ChevronRight 
                 size={14} 
@@ -662,7 +664,7 @@ const PythonCell: React.FC<PythonCellProps> = ({
                 }`}
               />
             </button>
-            <span className="text-xs text-white/50">Output</span>
+            <span className="text-xs text-white/50">{t('notebooks.pythonCell.output', { defaultValue: 'Output' })}</span>
           </div>
 
           {/* Output Content */}

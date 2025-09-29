@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check, Cpu, Server } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import { useAIStore } from '@/store/aiStore';
 import { aiService } from '@/lib/ai/aiService';
@@ -40,6 +41,7 @@ const PROVIDER_ICONS: Record<AIProvider | 'datakit', React.ReactNode> = {
 };
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [downloadedModels, setDownloadedModels] = useState<any[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -244,7 +246,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
         ) : (
           <>
             <Cpu className="h-5 w-5 text-white/40" />
-            <span className="text-sm text-white/60">Select Model</span>
+            <span className="text-sm text-white/60">{t('ai.modelSelector.selectModel')}</span>
           </>
         )}
 
@@ -268,7 +270,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
           >
             <div className="p-3">
               <div className="text-xs font-medium text-white/60 uppercase tracking-wider mb-3">
-                Select AI Model
+                {t('ai.modelSelector.title')}
               </div>
 
               <div className="space-y-3">
@@ -278,16 +280,16 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
                       <div className="text-xs font-medium text-white/50 mb-2 flex items-center">
                         {PROVIDER_ICONS[provider]}
                         <span className="ml-2 capitalize">
-                          {provider === 'datakit' ? 'DataKit' : provider}
+                          {provider === 'datakit' ? t('ai.providers.datakit') : t(`ai.providers.${provider}`)}
                         </span>
                         {provider === 'datakit' && (
                           <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
-                            Claude Models
+                            {t('ai.modelSelector.claudeModels')}
                           </span>
                         )}
                         {!isAuthenticated && (
                           <span className="ml-2 text-yellow-500">
-                            (Sign in required)
+                            ({t('ai.modelSelector.signInRequired')})
                           </span>
                         )}
                         {isAuthenticated &&
@@ -296,7 +298,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
                           provider !== 'datakit' &&
                           provider !== 'ollama' && (
                             <span className="ml-2 text-yellow-500">
-                              (API key required)
+                              ({t('ai.modelSelector.apiKeyRequired')})
                             </span>
                           )}
                       </div>
@@ -335,12 +337,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
                                   {model?.costPer1kTokens && (
                                     <span className="ml-2">
                                       {provider === 'datakit'
-                                        ? `${model.costPer1kTokens.input.toFixed(
-                                            2
-                                          )} credits/1K tokens`
-                                        : `$${model.costPer1kTokens.input.toFixed(
-                                            3
-                                          )}/1K`}
+                                        ? t('ai.modelSelector.creditsPerToken', { cost: model.costPer1kTokens.input.toFixed(2) })
+                                        : t('ai.modelSelector.dollarsPerToken', { cost: model.costPer1kTokens.input.toFixed(3) })}
                                     </span>
                                   )}
                                 </div>
@@ -363,17 +361,16 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
                       {provider === 'datakit' && !isAuthenticated && (
                         <div className="mt-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
                           <div className="text-sm text-white/70 mb-2">
-                            Sign up to use DataKit credits
+                            {t('ai.modelSelector.signUpCredits')}
                           </div>
                           <div className="text-xs text-white/50 mb-3">
-                            No API keys needed. Credits included with your
-                            account.
+                            {t('ai.modelSelector.noApiKeysNeeded')}
                           </div>
                           <button
                             onClick={handleSignInClick}
                             className="w-full px-3 py-2 bg-primary/20 hover:bg-primary/30 border border-primary/50 rounded-lg text-sm font-medium text-primary transition-all duration-200"
                           >
-                            Sign up to get started
+                            {t('ai.modelSelector.signUpButton')}
                           </button>
                         </div>
                       )}
@@ -383,10 +380,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
                         user?.credits && (
                           <div className="mt-2 p-2 bg-background/10 border border-white/10 rounded">
                             <div className="text-xs text-white/60">
-                              Credits remaining:{' '}
-                              <span className="text-white font-medium">
-                                {user.credits.remaining}
-                              </span>
+                              {t('ai.modelSelector.creditsRemaining', { count: user.credits.remaining })}
                             </div>
                           </div>
                         )}

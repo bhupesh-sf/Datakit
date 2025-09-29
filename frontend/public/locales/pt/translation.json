@@ -1,0 +1,2100 @@
+{
+  "common": {
+    "comingSoon": "Em Breve",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "enterName": "Digite o nome",
+    "download": {
+      "csvTitle": "Baixar CSV"
+    },
+    "actionButtons": {
+      "tooltips": {
+        "datakitStudio": "Crie visualizações de dados profissionais e relatórios com o DataKit Studio"
+      },
+      "dataKitStudio": "DataKit Studio",
+      "feedback": "opinião",
+      "documentation": "Documentação",
+      "discord": "Discord",
+      "whatsNew": "Novidades",
+      "viewDocumentation": "Ver documentação",
+      "joinDiscord": "Junte-se ao nosso Discord",
+      "viewChangelog": "Ver Registro de Alterações",
+      "feedbackModal": {
+        "title": "Compartilhe Seu Feedback",
+        "thankYou": "Obrigado pelo seu Feedback!",
+        "emailLabel": "Email (opcional)",
+        "emailPlaceholder": "seu.Email@exemplo.com",
+        "messageLabel": "Mensagem *",
+        "messagePlaceholder": "Compartilhe seus pensamentos, sugestões ou relate problemas...",
+        "close": "Fechar",
+        "cancel": "Cancelar",
+        "sending": "Enviando...",
+        "sendFeedback": "Enviar Feedback"
+      }
+    },
+    "buttons": {
+      "cancel": "Cancelar",
+      "save": "Salvar",
+      "close": "Fechar",
+      "submit": "Enviar",
+      "back": "Voltar",
+      "next": "Próximo",
+      "continue": "Continuar",
+      "copy": "Copiar",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "remove": "Remover",
+      "add": "Adicionar",
+      "create": "Criar",
+      "update": "Atualizar",
+      "import": "Importar",
+      "export": "Exportar",
+      "connect": "Conectar",
+      "disconnect": "Desconectar",
+      "test": "Testar",
+      "retry": "Tentar novamente",
+      "refresh": "Atualizar",
+      "reset": "Redefinir"
+    },
+    "loading": {
+      "processing": "Processando...",
+      "loading": "Carregando...",
+      "sending": "Enviando...",
+      "saving": "Salvando...",
+      "importing": "Importando...",
+      "testing": "Testando...",
+      "connecting": "Conectando...",
+      "uploading": "Enviando arquivo..."
+    },
+    "labels": {
+      "email": "Email",
+      "emailOptional": "Email (opcional)",
+      "name": "Nome",
+      "fullName": "Nome completo",
+      "password": "Senha",
+      "username": "Nome de usuário",
+      "host": "Host",
+      "port": "Porta",
+      "database": "Banco de dados",
+      "schema": "Esquema",
+      "url": "URL",
+      "or": "ou",
+      "and": "e",
+      "required": "Obrigatório",
+      "optional": "Opcional"
+    },
+    "status": {
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "ready": "Pronto",
+      "pending": "Pendente",
+      "success": "Sucesso",
+      "error": "Erro",
+      "failed": "Falhou",
+      "completed": "Concluído",
+      "processing": "Processando"
+    },
+    "messages": {
+      "noResults": "Nenhum resultado encontrado",
+      "noData": "Nenhum dado disponível",
+      "noItems": "Nenhum item",
+      "comingSoon": "Em breve",
+      "poweredBy": "Desenvolvido por",
+      "built": "construído"
+    },
+    "on": "LIGADO",
+    "off": "DESLIGADO"
+  },
+  "layout": {
+    "app": {
+      "title": "DataKit"
+    },
+    "navigation": {
+      "tabs": {
+        "preview": "Visualizar",
+        "query": "Consulta",
+        "notebook": "Notebook",
+        "visualization": "Gráficos",
+        "ai": "Assistente"
+      }
+    },
+    "sidebar": {
+      "uploadFile": "Enviar Arquivo",
+      "importDescription": "Importe seu arquivo de dados para análise",
+      "signIn": "Entrar",
+      "getStarted": "Começar Grátis",
+      "settings": "Configurações",
+      "expand": "Expandir barra lateral",
+      "collapse": "Recolher barra lateral"
+    },
+    "mobile": {
+      "title": "DataKit funciona melhor no desktop",
+      "description": "Experimente análise de dados poderosa e processamento de arquivos sem problemas.",
+      "switchNote": "Mude para desktop para a experiência completa, ou",
+      "watchDemo": "assista a demonstração",
+      "discord": "Discord"
+    },
+    "actionButtons": {
+      "dataKitStudio": "DataKit Studio",
+      "feedback": "Feedback",
+      "documentation": "Documentação",
+      "discord": "Discord",
+      "whatsNew": "Novidades"
+    },
+    "tooltips": {
+      "joinDiscord": "Entrar no nosso Discord",
+      "viewDocs": "Ver documentação",
+      "viewChangelog": "Ver registro de mudanças",
+      "datakitStudio": "DataKit Studio"
+    },
+    "splitView": {
+      "title": "Visualização Dividida",
+      "swapFiles": "Trocar arquivos",
+      "close": "Fechar visualização dividida",
+      "columnCount": "{{Contagem}} colunas"
+    }
+  },
+  "auth": {
+    "modal": {
+      "welcomeBack": "Bem-vindo de volta",
+      "joinDataKit": "Junte-se ao DataKit",
+      "signIn": "Entrar",
+      "signOut": "Sair",
+      "createAccount": "Criar conta",
+      "alreadyHaveAccount": "Já possui uma conta? ",
+      "dontHaveAccount": "Não possui uma conta? ",
+      "signUp": "Registrar-se",
+      "privacyPolicy": "Política de Privacidade"
+    },
+    "fields": {
+      "fullName": "Nome completo",
+      "emailAddress": "Endereço de Email",
+      "password": "Senha"
+    },
+    "placeholders": {
+      "enterName": "Digite seu nome completo",
+      "enterEmail": "Digite seu Email",
+      "enterPassword": "Digite sua senha",
+      "createPassword": "Crie uma senha forte"
+    },
+    "loading": {
+      "signingIn": "Entrando...",
+      "creatingAccount": "Criando conta..."
+    },
+    "messages": {
+      "welcomeSuccess": "Bem-vindo de volta!",
+      "welcomeSuccessDesc": "Você fez login com sucesso no DataKit.",
+      "accountCreated": "Bem-vindo ao DataKit!",
+      "accountCreatedDesc": "Sua conta foi criada com sucesso. Você agora tem acesso aos modelos do DataKit com R$ 15 para começar.",
+      "signedOut": "Desconectado com sucesso",
+      "signedOutDesc": "Você foi desconectado com segurança do DataKit.",
+      "privacyNotice": "Ao criar uma conta, você concorda com nossa "
+    },
+    "password": {
+      "requirements": "Requisitos de Segurança",
+      "minLength": "Pelo menos 12 caracteres",
+      "hasUppercase": "Contém letra maiúscula (A-Z)",
+      "hasLowercase": "Contém letra minúscula (a-z)",
+      "hasNumbers": "Contém número (0-9)",
+      "hasSpecialChars": "Contém caractere especial (!@#$%^&*...)",
+      "noCommonPatterns": "Sem padrões ou sequências comuns"
+    },
+    "benefits": {
+      "title": "Por que se juntar ao DataKit?",
+      "aiAccess": "Acesso ao Assistente DataKit com créditos incluídos",
+      "unlimitedWorkspaces": "Criar áreas de trabalho ilimitadas",
+      "cloudConnectors": "Acesso a todos os conectores de nuvem",
+      "exportReports": "Exportar relatórios do inspetor de dados",
+      "prioritySupport": "Suporte prioritário e acesso antecipado a novos recursos"
+    },
+    "userMenu": {
+      "getStartedFree": "Começar Grátis",
+      "settings": "Configurações",
+      "billing": "Faturamento",
+      "user": "Usuário",
+      "signIn": "Entrar",
+      "signUp": "Cadastrar-se",
+      "signOut": "Sair",
+      "signOutSuccess": "Signed out successfully",
+      "signOutMessage": "You've been securely signed out of DataKit."
+    },
+    "protectedRoute": {
+      "loading": "Carregando...",
+      "authRequired": "Autenticação Obrigatória",
+      "signInMessage": "Por favor, faça login para acessar este recurso.",
+      "signInButton": "Entrar"
+    },
+    "authGate": {
+      "title": "Entrar obrigatório",
+      "description": "This Recurso requires Autenticação to ensure Segurança and enable advanced functionality.",
+      "getStartedFree": "Começar Gratuito",
+      "alreadyHaveAccount": "Already have an Conta?",
+      "signIn": "Entrar"
+    }
+  },
+  "preview": {
+    "empty": {
+      "title": "Comece com o DataKit",
+      "description": "Importe seus arquivos para começar a analisar.",
+      "privacy": "Tudo roda localmente",
+      "privacyNote": "— Seus dados permanecem privados.",
+      "openFile": "Abrir arquivo",
+      "importFrom": "importar de:",
+      "selfHost": "Auto-hospede o DataKit:",
+      "watchDemo": "assista a demonstração",
+      "localFiles": "Arquivos locais"
+    },
+    "providers": {
+      "postgresql": {
+        "name": "PostgreSQL",
+        "description": "Bancos de dados Postgres"
+      },
+      "s3": {
+        "name": "Amazon S3",
+        "description": "Buckets S3 públicos"
+      },
+      "huggingface": {
+        "name": "HuggingFace",
+        "description": "Datasets de ML"
+      },
+      "googleSheets": {
+        "name": "Planilhas Google",
+        "description": "Planilhas publicadas"
+      }
+    },
+    "install": {
+      "docker": "Docker",
+      "homebrew": "Homebrew",
+      "python": "Python",
+      "nodejs": "Node.js"
+    },
+    "tooltips": {
+      "openFile": "Abrir Arquivo",
+      "localFiles": "Arquivos locais"
+    }
+  },
+  "fileUpload": {
+    "dropzone": {
+      "title": "Solte arquivos aqui ou clique",
+      "description": "Suporta arquivos de dados grandes",
+      "dragTitle": "Solte seu arquivo aqui",
+      "dragDescription": "Pronto para importar"
+    },
+    "formats": {
+      "csv": "CSV",
+      "json": "JSON",
+      "xlsx": "XLS",
+      "parquet": "PQT",
+      "txt": "TXT",
+      "duckdb": "DB"
+    },
+    "messages": {
+      "fileRemoved": "Arquivo Removido",
+      "fileRemovedDesc": "\"%s\" foi removido da área de trabalho",
+      "remoteFileImported": "Arquivo Remoto Importado",
+      "remoteFileImportedDesc": "\"%s\" foi importado de %s"
+    },
+    "dataFiles": "Arquivos de Dados",
+    "largeSizeWarning": "Este arquivo tem {{Tamanho}}MB e pode causar problemas de memória. Continuar mesmo assim? (Considere usar o Chrome para uma melhor experiência.)",
+    "modernBrowserWarning": "Este arquivo tem {{Tamanho}}MB. Para melhor desempenho com arquivos grandes, use um navegador moderno (Chrome/Edge) com suporte a streaming.",
+    "invalidFileType": "Por favor, importe um arquivo CSV, JSON, Excel, Parquet, TXT ou banco de dados DuckDB",
+    "dragDropLargeFileWarning": "Este arquivo tem {{Tamanho}}MB. Para melhor desempenho, tente usar o seletor de arquivos em vez de arrastar e soltar para arquivos grandes.",
+    "dropHere": "Solte seu arquivo aqui",
+    "readyToImport": "Pronto para importar",
+    "processing": "Processando...",
+    "dropOrClick": "Solte arquivos aqui ou clique",
+    "supportsLargeFiles": "Suporta arquivos de dados grandes"
+  },
+  "dataImport": {
+    "googleSheets": {
+      "title": "Importação do Planilhas Google",
+      "urlLabel": "URL do Planilhas Google (publicado na web)",
+      "urlPlaceholder": "HTTPS://docs.google.com/spreadsheets/d/e/2PACX...",
+      "requirements": {
+        "title": "Requisitos:",
+        "published": "A planilha deve estar publicada na web",
+        "formats": "Suporta formatos CSV, Excel e página web",
+        "noAuth": "Não requer autenticação para planilhas publicadas"
+      },
+      "status": {
+        "ready": "Planilha publicada - pronta para importar",
+        "openInSheets": "Abrir no Planilhas Google"
+      },
+      "buttons": {
+        "import": "Importar Planilha"
+      },
+      "validation": {
+        "enterUrl": "Por favor, digite uma URL do Planilhas Google",
+        "validUrl": "Por favor, digite uma URL válida do Planilhas Google que esteja publicada na web",
+        "invalidUrl": "Por favor, digite uma URL válida"
+      }
+    },
+    "s3": {
+      "title": "Importação S3",
+      "urlLabel": "URL S3 (bucket público)",
+      "urlPlaceholder": "S3://bucket/caminho/arquivo.CSV ou HTTPS://bucket.S3.amazonaws.com/arquivo.CSV",
+      "exampleDatasets": {
+        "title": "Datasets de Exemplo",
+        "description": "Experimente estes datasets públicos selecionados para começar",
+        "featured": "Destaque",
+        "loadingDatasets": "Carregando datasets..."
+      },
+      "browserAccess": {
+        "title": "Acesso S3 via Navegador:",
+        "corsNote": "A maioria dos buckets S3 requer acesso via proxy devido ao CORS",
+        "formats": "Suporta formatos CSV, JSON, Parquet, Excel",
+        "autoDetect": "Detecta automaticamente formato de arquivo e compressão"
+      },
+      "status": {
+        "ready": "URL S3 válida - pronta para importar"
+      },
+      "buttons": {
+        "import": "Importar do S3",
+        "importDataset": "Importar Dataset"
+      },
+      "validation": {
+        "enterUrl": "Por favor, digite uma URL S3",
+        "validUrl": "Por favor, digite uma URL S3 válida"
+      }
+    },
+    "postgresql": {
+      "title": "Conexões PostgreSQL",
+      "description": "Conecte-se aos seus bancos de dados PostgreSQL",
+      "connections": {
+        "addConnection": "Adicionar Conexão",
+        "noConnections": "Nenhuma Conexão",
+        "noConnectionsDesc": "Crie sua primeira conexão PostgreSQL para começar a importar dados.",
+        "createConnection": "Criar Conexão"
+      },
+      "form": {
+        "newConnection": "Nova Conexão PostgreSQL",
+        "editConnection": "Editar Conexão",
+        "description": "Digite os detalhes de conexão do seu banco de dados PostgreSQL",
+        "connectionName": "Nome da Conexão",
+        "defaultSchema": "Esquema Padrão",
+        "enableSSL": "Habilitar SSL",
+        "placeholders": {
+          "connectionName": "Meu BD PostgreSQL",
+          "host": "localhost",
+          "username": "usuário",
+          "password": "senha",
+          "database": "meu_banco",
+          "schema": "public"
+        },
+        "buttons": {
+          "testAndCreate": "Testar e Criar"
+        }
+      },
+      "tableSelection": {
+        "title": "Selecionar Tabelas",
+        "description": "Escolha tabelas para conectar de %s.",
+        "backToConnections": "Voltar às Conexões",
+        "searchPlaceholder": "Buscar tabelas...",
+        "loadingTables": "Carregando tabelas...",
+        "noTables": "Nenhuma Tabela Encontrada",
+        "noTablesDesc": "Nenhuma tabela encontrada neste banco de dados.",
+        "noSearchResults": "Nenhuma tabela corresponde à sua busca.",
+        "connectSelected": "Conectar Tabelas Selecionadas",
+        "tablesSelected": "%d tabela(s) selecionada(s)"
+      }
+    }
+  },
+  "settings": {
+    "header": {
+      "title": "Configurações",
+      "subtitle": "Gerencie sua conta"
+    },
+    "footer": {
+      "poweredBy": "Desenvolvido com DuckDB",
+      "built": "construído",
+      "company": "DataKit"
+    },
+    "tabs": {
+      "profile": "Perfil",
+      "workspace": "Área de Trabalho e Equipe",
+      "ai": "Configurações do assistente de IA",
+      "appearance": "Aparência",
+      "notifications": "Notificações",
+      "subscription": "Assinatura"
+    },
+    "signout": {
+      "successTitle": "Desconectado com sucesso",
+      "successMessage": "Você foi desconectado com segurança do DataKit.",
+      "button": "Sair"
+    },
+    "navigation": {
+      "backToDataKit": "Voltar ao DataKit",
+      "signOut": "Sair"
+    },
+    "sidebar": {
+      "expand": "Expandir barra lateral",
+      "collapse": "Recolher barra lateral"
+    },
+    "title": "Configurações",
+    "language": "Idioma",
+    "themeColor": "Cor do Tema",
+    "profile": {
+      "title": "Informações do Perfil",
+      "emailNote": "O Email não pode ser alterado. Entre em contato com o suporte se necessário.",
+      "saveChanges": "Salvar Alterações"
+    },
+    "workspace": {
+      "title": "Informações da Área de Trabalho",
+      "teamMembers": {
+        "title": "Equipe Membros",
+        "inviteMember": "Invite Membro"
+      },
+      "inviteMember": "Convidar Membro",
+      "inviteForm": {
+        "title": "Convidar Novo Membro",
+        "emailLabel": "Endereço de Email",
+        "roleLabel": "Função",
+        "emailPlaceholder": "Digite o endereço de Email",
+        "roles": {
+          "member": "Membro",
+          "admin": "Administrador",
+          "owner": "Proprietário"
+        },
+        "sendInvite": "Enviar Convite",
+        "sending": "Sending...",
+        "cancel": "Cancelar"
+      },
+      "loadingMembers": "Carregando membros...",
+      "roles": {
+        "owner": "Proprietário",
+        "admin": "Administrador",
+        "member": "Membro"
+      },
+      "loading": {
+        "userData": "Carregando Usuário Dados...",
+        "workspaces": "Carregando workspaces...",
+        "members": "Carregando Membros..."
+      },
+      "noWorkspace": "No Área de Trabalho found. Por favor Criar a Área de Trabalho or contact Suporte.",
+      "workspaceName": {
+        "placeholder": "Área de Trabalho Nome",
+        "editTitle": "Editar Área de Trabalho Nome"
+      },
+      "personalWorkspace": "Pessoal Área de Trabalho",
+      "unlimitedCredits": "Ilimitado Créditos",
+      "creditsRemaining": "{{Contagem}} Créditos remaining",
+      "unknownUser": "Unknown Usuário"
+    },
+    "notifications": {
+      "title": "Preferências de Notificação",
+      "email": {
+        "title": "Notificações por Email",
+        "description": "Receba atualizações sobre novos recursos e anúncios"
+      },
+      "usage": {
+        "title": "Alertas de Uso",
+        "description": "Seja notificado quando estiver próximo do limite de créditos"
+      },
+      "saveSettings": "Salvar Configurações de Notificação"
+    },
+    "ai": {
+      "title": "Configuração de IA",
+      "description": "Escolha como o DataKit processa seus dados com IA",
+      "datakitModels": {
+        "title": "Modelos DataKit",
+        "description": "Modelos de IA Premium otimizados para análise de dados. Não requer chaves API.",
+        "features": {
+          "powered": "Desenvolvido pela Anthropic",
+          "pretuned": "Pré-ajustado para SQL e transformação de dados",
+          "claude": "Claude 3.5 Sonnet e Haiku incluídos",
+          "zeroConfig": "Zero configuração necessária",
+          "preTuned": "Pre-tuned for SQL & Dados transformation",
+          "claudeModels": "Claude 3.5 Sonnet & Haiku included"
+        },
+        "subscription": {
+          "proPlan": "Plano Pro",
+          "price": "R$ 99/mês",
+          "viewPlans": "Ver Todos os Planos →"
+        },
+        "credits": "Créditos",
+        "poweredBy": "Powered by Anthropic",
+        "active": "Ativo",
+        "proPlan": "Pro Plan",
+        "viewPlans": "Visualizar All Plans →"
+      },
+      "alternativeProviders": {
+        "title": "Provedores Alternativos",
+        "description": "Use suas próprias chaves API para estes provedores"
+      },
+      "settings": {
+        "autoExecute": {
+          "title": "Auto-executar SQL",
+          "description": "Executar consultas de IA automaticamente"
+        }
+      },
+      "unlimited": "Ilimitado",
+      "creditStatus": {
+        "good": "Good",
+        "low": "Low",
+        "veryLow": "Very Low"
+      },
+      "providerStatus": {
+        "available": "Disponível",
+        "configured": "Configured",
+        "upgradeRequired": "Pro/Equipe obrigatório",
+        "setupRequired": "Configurar obrigatório"
+      },
+      "credits": {
+        "title": "Créditos"
+      },
+      "providers": {
+        "getApiKey": "Get Chave de API",
+        "edit": "Editar",
+        "save": "Salvar",
+        "cancel": "Cancelar",
+        "activate": "Activate",
+        "active": "Ativo"
+      },
+      "whyDatakit": {
+        "title": "Why DataKit Modelos?",
+        "features": {
+          "noApiKeys": "No chave(s) de API to Gerenciar",
+          "monthlyCredits": "Créditos monthly",
+          "optimized": "Optimized for Dados tasks"
+        },
+        "learnMore": "Saiba mais →"
+      },
+      "autoExecuteSql": {
+        "title": "Auto-Executar SQL",
+        "description": "Executar IA Consultas automatically"
+      }
+    },
+    "appearance": {
+      "title": "Aparência",
+      "description": "Personalize a cor do tema do DataKit",
+      "current": "Atual",
+      "displayMode": "Modo de Exibição",
+      "themes": {
+        "datakitTeal": "DataKit Teal",
+        "oceanBlue": "Azul Oceano",
+        "royalPurple": "Roxo Real",
+        "vibrantRed": "Vermelho Vibrante",
+        "forestGreen": "Verde Floresta",
+        "coralPink": "Rosa Coral"
+      },
+      "modes": {
+        "system": "Sistema",
+        "light": "Claro",
+        "dark": "Escuro"
+      }
+    },
+    "subscription": {
+      "title": "Planos de Assinatura",
+      "description": "Escolha o plano that fits your needs",
+      "badges": {
+        "earlyAdopter": "Adotante Inicial: 20% OFF",
+        "comingSoon": "Em Breve",
+        "moreCredits": "More Créditos soon!",
+        "currentPlan": "Atual Plan"
+      },
+      "plans": {
+        "period": {
+          "month": "mês"
+        },
+        "free": {
+          "title": "Gratuito",
+          "description": "Perfeito para começar",
+          "features": {
+            "credits": "315 Créditos per mês",
+            "anthropicModels": "Powered by Anthropic Modelos",
+            "personalWorkspace": "Pessoal Área de Trabalho",
+            "basicAnalysis": "Basic Dados Análise",
+            "communitySupport": "Community Suporte"
+          }
+        },
+        "pro": {
+          "title": "Pro",
+          "description": "With more Anthropic Créditos",
+          "features": {
+            "credits": "1500 Créditos per mês",
+            "advancedAnalytics": "Análise avançada",
+            "prioritySupport": "Priority Suporte",
+            "exportCapabilities": "More Exportar capabilities",
+            "advancedIntegrations": "Integrações avançadas"
+          }
+        },
+        "team": {
+          "title": "Equipe",
+          "price": "Custom",
+          "description": "Para equipes em crescimento",
+          "features": {
+            "unlimitedCredits": "Ilimitado Créditos",
+            "teamCollaboration": "Equipe collaboration",
+            "multipleWorkspaces": "Multiple Workspaces",
+            "memberManagement": "Membro management",
+            "premiumSupport": "Premium Suporte",
+            "customIntegrations": "Integrações personalizadas",
+            "advancedSecurity": "Advanced Segurança",
+            "accountManager": "Dedicated Conta manager"
+          }
+        }
+      },
+      "currentUsage": {
+        "title": "Atual Usage",
+        "creditsRemaining": "Créditos Remaining",
+        "currentPlan": "Atual Plan",
+        "nextReset": "Próximo Redefinir"
+      },
+      "moreFeatures": "+{{Contagem}} more Recursos",
+      "waitlist": {
+        "successTitle": "Você está na lista de espera!",
+        "successMessage": "Nós informaremos você at {{Email}} when {{featureName}} Recursos roll out.",
+        "error": "Algo deu errado. Por favor Tentar novamente.",
+        "joining": "Joining...",
+        "getNotified": "Ser notificado",
+        "modalTitle": "Join Waitlist",
+        "modalDescription": "Enter your Email to get notified when Pro Recursos are released.",
+        "emailPlaceholder": "your.Email@Exemplo.com",
+        "cancel": "Cancelar",
+        "joinWaitlist": "Join Waitlist"
+      }
+    }
+  },
+  "feedback": {
+    "title": "Compartilhe Seu Feedback",
+    "emailLabel": "Seu Email (opcional)",
+    "feedbackLabel": "Seu Feedback",
+    "placeholder": "Conte-nos o que você pensa sobre o DataKit...",
+    "placeholderAlt": "Compartilhe seus pensamentos, sugestões ou reporte problemas...",
+    "success": "Obrigado pelo seu Feedback!",
+    "button": {
+      "text": "Compartilhar Feedback?"
+    },
+    "modal": {
+      "title": "Compartilhe Seu Feedback",
+      "success": "Obrigado pelo seu Feedback!",
+      "emailLabel": "Seu Email (opcional)",
+      "emailPlaceholder": "seu@Email.com",
+      "messageLabel": "Seu Feedback",
+      "messagePlaceholder": "Conte-nos o que você pensa sobre o DataKit...",
+      "sending": "Enviando..."
+    }
+  },
+  "notebooks": {
+    "templates": {
+      "title": "Modelos",
+      "searchPlaceholder": "Pesquisar modelos...",
+      "filters": {
+        "all": "Todos"
+      },
+      "categories": {
+        "dataAnalysis": "Análise de Dados",
+        "visualization": "Visualização",
+        "machineLearning": "Aprendizado de Máquina",
+        "huggingFace": "Hugging Face",
+        "statistics": "Estatísticas",
+        "utilities": "Utilitários"
+      },
+      "noTemplatesFound": "Nenhum modelo encontrado",
+      "noTemplatesAvailable": "Nenhum modelo disponível",
+      "use": "Usar",
+      "copyToClipboard": "Copiar para área de transferência",
+      "showCode": "Mostrar",
+      "hideCode": "Ocultar",
+      "templateCount": "{{Contagem}} modelos",
+      "requires": "Requer:",
+      "clearSearch": "Limpar pesquisa",
+      "noTemplates": "Nenhum(a) Modelos encontrado(a)",
+      "packages": "Pacotes:"
+    },
+    "workspace": {
+      "aiGeneratedVisualization": "Visualização Gerada por IA",
+      "status": {
+        "saved": "Salvo",
+        "initializing": "Inicializando",
+        "loadingPackages": "Carregando Pacotes"
+      }
+    },
+    "apiKey": {
+      "configuration": "Configuração",
+      "configureDescription": "Configurar IA providers and Configurações",
+      "providerTypes": {
+        "local": "Local",
+        "cloudApi": "Nuvem API"
+      },
+      "serverConfiguration": "Server Configuração",
+      "ollamaServerUrl": "Ollama Server URL",
+      "ollamaServerUrlDescription": "The URL where your Ollama server is running",
+      "apiKeyConfiguration": "Chave de API Configuração",
+      "apiKey": "Chave de API",
+      "enterApiKeyPlaceholder": "Enter your {{provider}} Chave de API",
+      "skipApiKeysTitle": "Skip the chave(s) de API with DataKit Créditos",
+      "skipApiKeysDescription": "Get instant Acesso to powerful IA Modelos without managing chave(s) de API. Créditos incluídos with your Conta.",
+      "signInToGetStarted": "Entrar to Começar",
+      "getApiKey": "Get Chave de API",
+      "generalSettings": "General Configurações",
+      "autoExecuteSQL": "Auto-Executar generated SQL",
+      "autoExecuteSQLDescription": "Automatically Executar SQL Consultas generated by IA",
+      "saveConfiguration": "Salvar Configuração",
+      "providers": {
+        "ollama": {
+          "description": "Local Ollama server - runs Modelos on your machine",
+          "helpText": "Executar IA Modelos locally with Completo Privacidade. Requires Ollama to be running at HTTP://localhost:11434"
+        },
+        "openai": {
+          "description": "GPT-4o and GPT-4o Mini Modelos",
+          "helpText": "Most capable Modelos for complex reasoning and Análise."
+        },
+        "anthropic": {
+          "description": "Claude 3.5 Sonnet and Haiku Modelos",
+          "helpText": "Excellent for detailed Análise and explanations. Gratuito Créditos for Novo Usuários."
+        },
+        "groq": {
+          "description": "Ultra-fast Llama 3.1 Modelos with Gratuito tier",
+          "helpText": "Fastest inference speed, perfect for trying IA Recursos. Completely Gratuito to Iniciar."
+        }
+      }
+    },
+    "response": {
+      "title": "Response",
+      "tokens": "Tokens",
+      "tokensResponse": "response",
+      "tokensViz": "viz",
+      "placeholder": "Ask a question to see responses here",
+      "thinking": "Pensando..."
+    },
+    "results": {
+      "placeholder": "Consulta Resultados will appear here",
+      "error": {
+        "title": "Consulta Erro"
+      }
+    },
+    "context": {
+      "label": "Context",
+      "more": "more",
+      "noTables": "No Tabelas in context",
+      "addTables": "Adicionar Tabelas",
+      "models": "Modelos",
+      "autoExecute": "Auto-Executar"
+    },
+    "error": {
+      "noModel": {
+        "title": "No Modelo Selected",
+        "message": "Por favor Selecionar an IA Modelo from the dropdown to Continuar."
+      },
+      "noData": {
+        "title": "No Dados disponível",
+        "message": "Por favor Adicionar a Tabela to the context to ask questions about it."
+      },
+      "auth": {
+        "title": "Autenticação obrigatório",
+        "message": "Por favor Entrar or Configurar your chave(s) de API to use IA Modelos."
+      },
+      "rateLimit": {
+        "title": "Rate Limit Exceeded",
+        "message": "You've reached the rate limit. Por favor Tentar novamente later or upgrade your plan."
+      },
+      "connection": {
+        "title": "Connection Erro",
+        "message": "Não foi possível conectar to the IA service. Por favor check your internet connection."
+      },
+      "generic": {
+        "title": "Algo deu errado"
+      },
+      "retry": "Tentar Novamente",
+      "dismiss": "Dismiss"
+    },
+    "pythonCell": {
+      "expandInput": "Expandir Entrada",
+      "collapseInput": "Recolher Entrada",
+      "executing": "Executing...",
+      "executeTooltip": "Executar Célula (Shift+Enter)",
+      "previewMarkdown": "Visualização Markdown",
+      "editMarkdown": "Editar Markdown",
+      "deleteCell": "Excluir Célula",
+      "moveUp": "Move Up",
+      "moveDown": "Move Down",
+      "copyCode": "Copiar Código",
+      "clearOutput": "Limpar Saída",
+      "showInput": "Mostrar Entrada",
+      "hideInput": "Ocultar Entrada",
+      "showOutput": "Mostrar Saída",
+      "hideOutput": "Ocultar Saída",
+      "bold": "Bold",
+      "italic": "Italic",
+      "header1": "Header 1",
+      "header2": "Header 2",
+      "header3": "Header 3",
+      "list": "List",
+      "quote": "Quote",
+      "link": "Link",
+      "inlineCode": "Inline Código",
+      "clickToEdit": "Clique para Editar Markdown...",
+      "plotOutput": "Plot Saída",
+      "plotOutputAlt": "Python plot Saída",
+      "htmlOutput": "HTML Saída",
+      "columns": "Colunas:",
+      "moreRows": "... and {{Contagem}} more Linhas",
+      "expandOutput": "Expandir Saída",
+      "collapseOutput": "Recolher Saída",
+      "output": "Saída"
+    },
+    "packageManager": {
+      "pythonNotInitialized": "Python não inicializado",
+      "initializePython": "Inicializar Python to Gerenciar Pacotes",
+      "title": "Pacote Manager",
+      "searchPlaceholder": "Pesquisar Pacotes...",
+      "showInstalledOnly": "Mostrar Installed Only",
+      "installedCount": "{{Contagem}} installed",
+      "installCustom": "Instalar Custom Pacote",
+      "packageNamePlaceholder": "Pacote Nome (e.g., requests)",
+      "packageInfo": "Only pure Python Pacotes or Pacotes with WebAssembly builds",
+      "noPackagesFound": "Nenhum(a) Pacotes encontrado(a)",
+      "noPackagesToShow": "No Pacotes to Mostrar",
+      "installed": "Installed",
+      "install": "Instalar",
+      "installedPackagesTitle": "Installed Pacotes ({{Contagem}})",
+      "refresh": "Atualizar",
+      "andMore": "... and {{Contagem}} more"
+    },
+    "scriptHistory": {
+      "justNow": "Just Agora",
+      "minutesAgo": "{{Contagem}}m atrás",
+      "hoursAgo": "{{Contagem}}h atrás",
+      "daysAgo": "{{Contagem}}d atrás",
+      "title": "Notebooks",
+      "searchPlaceholder": "Pesquisar Notebooks...",
+      "createNewNotebook": "Criar Novo Notebook",
+      "newNotebook": "Novo Notebook",
+      "savedScriptsCount": "{{Contagem}} Salvo Scripts",
+      "importScript": "Importar Script",
+      "import": "Importar",
+      "noScriptsFound": "Nenhum(a) Scripts encontrado(a)",
+      "noSavedScripts": "No Salvo Scripts",
+      "saveFirstScript": "Salvar your first Script to see it here",
+      "current": "Atual",
+      "cellsCount": "{{Contagem}} Células",
+      "executed": "Executed",
+      "loadScript": "Load Script",
+      "rename": "Rename",
+      "duplicate": "Duplicate",
+      "export": "Exportar",
+      "delete": "Excluir",
+      "saveAndCreateNew": "Salvar and Criar Novo",
+      "saveNotebook": "Salvar Notebook",
+      "enterNotebookName": "Enter Notebook Nome"
+    },
+    "variableInspector": {
+      "dataFrameDescription": "DataFrame with {{Linhas}} Linhas and {{Colunas}} Colunas",
+      "seriesDescription": "Series with {{Tamanho}} elements{{dtype}}",
+      "arrayDescription": "Array with shape {{shape}}{{dtype}}",
+      "listDescription": "List with {{Tamanho}} elements",
+      "dictDescription": "Dictionary with {{Tamanho}} keys",
+      "confirmClear": "Tem certeza you want to Limpar the Python namespace? Isso irá Remover all Variáveis.",
+      "pythonNotInitialized": "Python não inicializado",
+      "initializePython": "Inicializar Python to inspect Variáveis",
+      "title": "Variáveis",
+      "refreshVariables": "Atualizar Variáveis",
+      "clearNamespace": "Limpar namespace",
+      "searchPlaceholder": "Pesquisar Variáveis...",
+      "variableCount": "{{filtered}} of {{total}} Variáveis",
+      "noVariables": "No Variáveis in namespace",
+      "noMatches": "No Variáveis match your Pesquisar",
+      "executeCode": "Executar some Python Código to see Variáveis here",
+      "copyVariableName": "Copiar variable Nome",
+      "collapse": "Recolher",
+      "expand": "Expandir",
+      "shape": "Shape: ({{shape}})",
+      "size": "Tamanho: {{Tamanho}}",
+      "dtype": "DType: {{dtype}}",
+      "dataFrameInfo": "DataFrame Informação:",
+      "dataFrameColumns": "Colunas: {{Colunas}}",
+      "dataFrameIndex": "Index: {{Contagem}} entries",
+      "memoryUsage": "Uso de memória: ~{{Tamanho}} KB",
+      "contents": "Contents:",
+      "copyTip": "Click variable names to Copiar them to your clipboard"
+    }
+  },
+  "dataGrid": {
+    "stats": {
+      "hideStats": "Ocultar Estatísticas",
+      "showStats": "Mostrar Estatísticas",
+      "columnStats": "Estatísticas da Coluna"
+    },
+    "inspector": "Inspetor",
+    "jsonView": {
+      "table": "Tabela",
+      "tree": "Árvore"
+    },
+    "error": {
+      "loadingData": "Erro ao carregar dados"
+    },
+    "contextMenu": {
+      "sortAscending": "Classificar Crescente",
+      "sortDescending": "Classificar Decrescente",
+      "copy": "Copiar \"{{value}}\""
+    },
+    "errors": {
+      "missingParameters": "Ausente obrigatório parameters for Ação de IA",
+      "aiFailed": "Ação de IA falhou:",
+      "signInRequired": "Por favor Entrar to use IA-powered Coluna actions with DataKit Smart.",
+      "actionFailed": "Ação de IA falhou: {{Erro}}",
+      "unknownError": "Unknown Erro"
+    },
+    "success": {
+      "tableCreated": "Sucesso! Created Novo Tabela: {{tableName}}"
+    },
+    "noData": "No Dados to display",
+    "columnHeader": {
+      "aiActions": "IA Coluna Actions",
+      "stats": {
+        "null": "Nulo: {{Porcentagem}}",
+        "unique": "uniq: {{Contagem}}",
+        "noStats": "no stats"
+      }
+    },
+    "demoModal": {
+      "defaultTitle": "DataKit Demonstração",
+      "close": "Fechar modal",
+      "videoNotSupported": "Your browser does not Suporte the video Tag."
+    }
+  },
+  "demo": {
+    "title": "Dê uma olhada no seu DataKit"
+  },
+  "dialog": {
+    "unsavedChanges": {
+      "title": "Alterações Não Salvas",
+      "message": "Você tem alterações não salvas em seu Notebook atual. O que gostaria de fazer?",
+      "saveAndContinue": "Salvar e Continuar",
+      "discardChanges": "Descartar Alterações"
+    }
+  },
+  "seo": {
+    "title": "DataKit",
+    "description": "Seus dados, sua escolha. Processe localmente para privacidade completa ou aproveite a nuvem quando precisar colaborar. A plataforma moderna de análise de dados que se adapta a você.",
+    "keywords": "análise de dados, análise com foco em privacidade, processamento Local de dados, WebAssembly, DuckDB, visualização de dados, consultas SQL, análise CSV, processamento Excel, ciência de dados, inteligência de negócios, análise segura, DataKit"
+  },
+  "datasetImport": {
+    "importing": "Importando Dataset",
+    "processing": "Processando {{organization}}/{{dataset}}..."
+  },
+  "info": {
+    "title": "Informações do App",
+    "subtitle": "Detalhes de versão e compilação",
+    "description": "Informações de versão e detalhes do aplicativo para DataKit",
+    "version": "Versão",
+    "environment": "Ambiente"
+  },
+  "notFound": {
+    "title": "Página Não Encontrada",
+    "description": "A página solicitada não pôde ser encontrada",
+    "message": "A página que você está procurando não existe.",
+    "goHome": "Ir Para Início"
+  },
+  "privacy": {
+    "title": "Política de Privacidade",
+    "description": "Política de privacidade do DataKit - Saiba como protegemos seus dados e quais análises coletamos",
+    "backToDatakit": "Voltar ao DataKit"
+  },
+  "viewer": {
+    "placeholder": "ESPAÇO RESERVADO"
+  },
+  "signup": {
+    "popup": {
+      "title": "A plataforma de dados que funciona do seu jeito",
+      "description": "Seus dados, sua escolha. Processe localmente para privacidade completa ou aproveite a nuvem quando precisar colaborar.",
+      "freeFeatures": "O que você ganha grátis",
+      "features": {
+        "cloudConnectors": "Todos os conectores de nuvem",
+        "credits": "R$ 15 em créditos do Assistente DataKit",
+        "localProjects": "Projetos locais ilimitados",
+        "exportViz": "Exportação e visualizações"
+      },
+      "enterprise": {
+        "title": "Pronto para empresas",
+        "contact": "Entre em contato →",
+        "description": "Implante no Local para controle completo ou nuvem híbrida para flexibilidade. Infraestrutura compatível com SOC2."
+      },
+      "startFree": "Comece grátis com R$ 15 em créditos →",
+      "existingAccount": "Já tem uma conta? Faça login"
+    }
+  },
+  "fileTabs": {
+    "closeFile": "Fechar arquivo",
+    "splitWith": "Dividir com {{partner}}",
+    "googleSheets": "Planilhas Google",
+    "contextMenu": {
+      "rename": "Renomear",
+      "duplicate": "Duplicar",
+      "closeOthers": "Fechar Outros",
+      "closeAll": "Fechar Todos"
+    },
+    "moreTabs": "Mais {{Contagem}} abas",
+    "loading": "Carregando...",
+    "import": "Importar"
+  },
+  "viewMode": {
+    "preview": {
+      "label": "Pré-visualização",
+      "description": "Visualizar e explorar seus dados"
+    },
+    "query": {
+      "label": "SQL",
+      "description": "Consultar com SQL"
+    },
+    "notebook": {
+      "label": "Notebook",
+      "description": "Analisar com Notebook Jupyter"
+    },
+    "visualization": {
+      "label": "Visualizar",
+      "description": "Criar gráficos e visualizações"
+    },
+    "ai": {
+      "label": "Assistente",
+      "description": "Insights com IA"
+    }
+  },
+  "importModal": {
+    "googleSheets": {
+      "urlLabel": "URL do Planilhas Google (publicada na web)",
+      "urlPlaceholder": "HTTPS://docs.google.com/spreadsheets/d/e/2PACX...",
+      "validation": {
+        "urlRequired": "Por favor, insira uma URL do Planilhas Google",
+        "invalidPublishedUrl": "Por favor, insira uma URL válida do Planilhas Google que esteja publicada na web",
+        "invalidUrl": "Por favor, insira uma URL válida"
+      },
+      "status": {
+        "readyToImport": "Planilha publicada - pronta para importar"
+      },
+      "actions": {
+        "openInSheets": "Abrir no Planilhas Google",
+        "importing": "Importando",
+        "importSheet": "Importar Planilha"
+      },
+      "requirements": {
+        "title": "Requisitos",
+        "published": "A planilha deve estar publicada na web",
+        "formats": "Suporta formatos CSV, Excel e página web",
+        "noAuth": "Não requer autenticação para planilhas publicadas"
+      }
+    },
+    "huggingface": {
+      "loading": {
+        "configurations": "Carregando configurações...",
+        "datasets": "Carregando datasets..."
+      },
+      "config": {
+        "title": "Configuração do Dataset",
+        "configuration": "Configuração (Subconjunto)",
+        "availableSplits": "Divisões disponíveis",
+        "split": "Divisão",
+        "willImport": "Vai importar"
+      },
+      "datasetId": {
+        "label": "ID do Dataset",
+        "placeholder": "microsoft/DialoGPT-medium ou yandex/yambda:SelfRC/train"
+      },
+      "dataset": {
+        "featured": "Destaque",
+        "updated": "Atualizado",
+        "recently": "Recente",
+        "importing": "Importando",
+        "import": "Importar Dataset"
+      },
+      "strategy": {
+        "directStreaming": "Mais rápido, sem Baixar necessário",
+        "parquetDownload": "Confiável, Baixar completo do dataset",
+        "alternativeFormat": "Fallback para formato CSV/JSON"
+      },
+      "validation": {
+        "datasetIdRequired": "Por favor, insira um ID de dataset",
+        "invalidDatasetId": "Por favor, insira um ID de dataset válido"
+      },
+      "auth": {
+        "title": "Autenticação (Opcional)",
+        "hide": "Ocultar",
+        "show": "Mostrar",
+        "description": "Necessário para datasets privados ou restritos. Obtenha seu Token em",
+        "settingsLink": "Configurações do HuggingFace",
+        "tokenPlaceholder": "hf_xxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "actions": {
+        "importing": "Importando",
+        "importDataset": "Importar Dataset",
+        "view": "Visualizar"
+      },
+      "search": {
+        "title": "Buscar Datasets",
+        "placeholder": "Buscar datasets por nome, tarefa ou descrição...",
+        "results": "Resultados da Busca"
+      },
+      "featured": {
+        "title": "Datasets em Destaque",
+        "description": "Datasets populares para começar"
+      },
+      "footer": {
+        "title": "Integração HuggingFace",
+        "memoryEfficient": "Processamento eficiente de memória para datasets grandes",
+        "multiFormat": "Suporte multi-formato (Parquet, CSV, JSON, XLSX, TXT)"
+      },
+      "error": {
+        "importFailed": "Falha na Importação"
+      },
+      "status": {
+        "validDatasetId": "ID de dataset válido - pronto para importar"
+      },
+      "progress": {
+        "complete": "completo",
+        "initializing": "Inicializando..."
+      }
+    },
+    "postgresql": {
+      "confirmDelete": "Tem certeza de que deseja excluir a conexão \"{{Nome}}\"?",
+      "connections": {
+        "title": "Conexões PostgreSQL",
+        "description": "Conecte-se aos seus bancos de dados PostgreSQL",
+        "addConnection": "Adicionar Conexão"
+      },
+      "loading": {
+        "connections": "Carregando conexões...",
+        "tables": "Carregando tabelas..."
+      },
+      "noConnections": {
+        "title": "Nenhuma Conexão",
+        "description": "Crie sua primeira conexão PostgreSQL para começar a importar dados.",
+        "createConnection": "Criar Conexão"
+      },
+      "status": {
+        "active": "Ativo",
+        "inactive": "Inativo"
+      },
+      "form": {
+        "editConnection": "Editar Conexão",
+        "newConnection": "Nova Conexão PostgreSQL",
+        "description": "Insira os detalhes de conexão do seu banco de dados PostgreSQL",
+        "connectionName": "Nome da Conexão",
+        "connectionNamePlaceholder": "Meu BD PostgreSQL",
+        "host": "Host",
+        "hostPlaceholder": "localhost",
+        "port": "Porta",
+        "portPlaceholder": "5432",
+        "database": "Banco de Dados",
+        "databasePlaceholder": "meu_banco",
+        "username": "Usuário",
+        "usernamePlaceholder": "usuario",
+        "password": "Senha",
+        "passwordPlaceholder": "senha",
+        "defaultSchema": "Esquema Padrão",
+        "schemaPlaceholder": "public",
+        "enableSSL": "Habilitar SSL",
+        "cancel": "Cancelar",
+        "testing": "Testando...",
+        "update": "Atualizar",
+        "testCreate": "Testar e Criar"
+      },
+      "tables": {
+        "title": "Selecionar Tabelas",
+        "description": "Escolha tabelas para conectar de {{Nome}}.",
+        "backToConnections": "Voltar às Conexões",
+        "searchPlaceholder": "Buscar tabelas...",
+        "selectedCount": "{{Contagem}} tabela selecionada;{{Contagem}} tabelas selecionadas",
+        "connectSelected": "Conectar Tabelas Selecionadas"
+      },
+      "noTables": {
+        "title": "Nenhuma Tabela Encontrada",
+        "noMatches": "Nenhuma tabela corresponde à sua busca.",
+        "noTablesFound": "Nenhuma tabela encontrada neste banco de dados."
+      },
+      "auth": {
+        "title": "Login Necessário",
+        "description": "Conexões PostgreSQL requerem autenticação para manter suas credenciais de banco de dados seguras."
+      }
+    },
+    "s3": {
+      "dataset": {
+        "featured": "Destaque",
+        "importing": "Importando",
+        "import": "Importar Dataset"
+      },
+      "validation": {
+        "urlRequired": "Por favor, insira uma URL S3",
+        "invalidUrl": "Por favor, insira uma URL S3 válida"
+      },
+      "urlLabel": "URL S3 (bucket público)",
+      "urlPlaceholder": "S3://bucket/caminho/arquivo.CSV ou HTTPS://bucket.S3.amazonaws.com/arquivo.CSV",
+      "status": {
+        "validUrl": "URL S3 válida - pronta para importar"
+      },
+      "actions": {
+        "importing": "Importando",
+        "importFromS3": "Importar do S3"
+      },
+      "examples": {
+        "title": "Datasets de Exemplo",
+        "description": "Experimente estes datasets públicos selecionados para começar"
+      },
+      "loading": {
+        "datasets": "Carregando datasets..."
+      },
+      "footer": {
+        "title": "Acesso ao Navegador S3",
+        "corsInfo": "A maioria dos buckets S3 requer acesso via proxy devido ao CORS",
+        "supportedFormats": "Suporta formatos CSV, JSON, Parquet, Excel",
+        "autoDetection": "Detecta automaticamente formato de arquivo e compressão"
+      }
+    }
+  },
+  "tabs": {
+    "preview": {
+      "noData": "Nenhum dado para visualizar",
+      "selectFile": "Selecione uma aba de arquivo para ver seu conteúdo"
+    },
+    "visualization": {
+      "selectFile": "Selecionar arquivo",
+      "postgresqlTable": "Tabela PostgreSQL",
+      "rowCount": "{{Contagem}} linhas",
+      "postgresqlVisualization": "Visualização PostgreSQL",
+      "postgresqlComingSoon": "Em breve! Estamos trabalhando no suporte a gráficos para tabelas PostgreSQL.",
+      "chartTypes": {
+        "bar": "Barra",
+        "line": "Linha",
+        "area": "Área",
+        "pie": "Pizza",
+        "scatter": "Dispersão"
+      },
+      "noDataAvailable": "Nenhum Dado disponível",
+      "importDataMessage": "Importe arquivos de dados para criar visualizações.",
+      "importData": "Importar Dados",
+      "hidePanel": "Ocultar painel",
+      "showPanel": "Mostrar painel",
+      "pointsCount": "{{Contagem}} pontos",
+      "export": "Exportar",
+      "chartConfiguration": "Configuração do Gráfico",
+      "selectDataSource": "Selecione uma fonte de dados para começar",
+      "selectColumns": "Selecione colunas para visualizar"
+    }
+  },
+  "sidebar": {
+    "header": {
+      "title": "DataKit"
+    },
+    "footer": {
+      "poweredBy": "Desenvolvidopor",
+      "visitAmin": "Visitar Amin",
+      "built": "built",
+      "company": "DK"
+    },
+    "workspace": {
+      "confirmRemove": "Remover \"{{fileName}}\" da área de trabalho? Isto não excluirá o arquivo real.",
+      "fileRemovedTitle": "Arquivo Removido",
+      "fileRemovedMessage": "\"{{fileName}}\" foi removido da área de trabalho"
+    },
+    "upload": {
+      "title": "Enviar Arquivo",
+      "description": "Importe seu arquivo de dados para análise"
+    },
+    "remote": {
+      "importedTitle": "Arquivo Remoto Importado",
+      "importedMessage": "\"{{fileName}}\" foi importado de {{provider}}",
+      "defaultProvider": "fonte remota",
+      "notImplemented": "Re-importação de fonte remota ainda não implementada. Use o botão Fontes da Nuvem para re-importar."
+    },
+    "fileAccess": {
+      "browserNotSupported": "Seu navegador ({{browserName}}) não suporta acesso automático a arquivos. Por favor, re-importe o arquivo manualmente. ",
+      "useChrome": "Para acesso automático a arquivos, use Chrome ou Edge.",
+      "safariLimited": "O suporte a acesso de arquivos é limitado no Safari. Para melhor experiência, use Chrome ou Edge.",
+      "useChromeForFeatures": "Para recursos de importação automática, use Chrome ou Edge.",
+      "permissionDenied": "Permissão negada para acessar \"{{fileName}}\". Isso pode acontecer devido às políticas de segurança do navegador.\n\nClique \"OK\" para selecionar manualmente o arquivo novamente, ou \"Cancelar\" para pular.",
+      "nameMismatch": "A referência de arquivo armazenada para \"{{fileName}}\" aponta para um arquivo diferente. Por favor, re-selecione o arquivo correto.",
+      "cannotAccess": "Não é possível acessar automaticamente \"{{fileName}}\". O arquivo pode ter sido movido, excluído ou as permissões de acesso alteradas.\n\nClique \"OK\" para selecionar manualmente o arquivo novamente, ou \"Cancelar\" para pular.",
+      "selectCorrectFile": "Por favor, selecione o arquivo correto: {{fileName}}",
+      "couldNotLoad": "Não foi possível carregar o arquivo {{fileName}}. Por favor, re-importe-o usando o botão de upload de arquivo."
+    },
+    "expand": "Expandir barra lateral",
+    "collapse": "Recolher barra lateral",
+    "fileDialog": {
+      "dataFiles": "Arquivos de Dados"
+    }
+  },
+  "pagination": {
+    "show": "Mostrar",
+    "rows": "linhas",
+    "showing": "Mostrando",
+    "countingRows": "Contando linhas...",
+    "countingLarge": "Contando (arquivo grande)...",
+    "of": "de",
+    "columns": "colunas",
+    "page": "Página",
+    "firstPage": "Primeira página",
+    "previousPage": "Página anterior",
+    "nextPage": "Próxima página",
+    "lastPage": "Última página",
+    "notAvailableForViews": "Não disponível para visualizações"
+  },
+  "remoteImport": {
+    "title": "Importar da Nuvem",
+    "subtitle": "Conecte-se às suas fontes de dados na nuvem",
+    "selectProvider": "Selecione um provedor para começar",
+    "comingSoon": "Em Breve",
+    "signInRequired": "Login necessário",
+    "providers": {
+      "customUrl": "URL Personalizada",
+      "s3": "Amazon S3",
+      "huggingface": "HuggingFace",
+      "motherduck": "MotherDuck",
+      "postgresql": "PostgreSQL",
+      "googleSheets": "Planilhas Google",
+      "googleCloud": "Google Nuvem",
+      "googleDrive": "Google Drive"
+    }
+  },
+  "consent": {
+    "thanks": {
+      "title": "Obrigado!",
+      "message": "Suas preferências foram salvas"
+    },
+    "header": {
+      "title": "Ajude a melhorar o DataKit"
+    },
+    "description": "Usamos análises para melhorar sua experiência. Todo processamento de dados acontece localmente - seus arquivos nunca saem do seu dispositivo.",
+    "dropdown": {
+      "title": "O que coletamos?"
+    },
+    "collection": {
+      "basic": {
+        "title": "Análises básicas (sempre coletadas):",
+        "performance": "Métricas de desempenho",
+        "errors": "Relatórios de erro",
+        "usage": "Padrões de uso anônimos"
+      },
+      "advanced": {
+        "title": "Análises avançadas (com seu consentimento):",
+        "detailed": "Uso detalhado de recursos",
+        "sessions": "Gravações de sessão (dados mascarados)",
+        "journeys": "Rastreamento de jornada do usuário"
+      },
+      "never": {
+        "title": "Nunca coletamos:",
+        "files": "Seus arquivos enviados",
+        "content": "Conteúdo de arquivos ou dados pessoais",
+        "queries": "Consultas SQL ou código"
+      }
+    },
+    "privacyPolicy": "Política de Privacidade",
+    "buttons": {
+      "accept": "Aceitar Análises",
+      "decline": "Apenas Essencial"
+    }
+  },
+  "ai": {
+    "modelSelector": {
+      "selectModel": "Selecionar Modelo",
+      "title": "Selecionar IA Modelo",
+      "claudeModels": "Claude Modelos",
+      "signInRequired": "Entrar obrigatório",
+      "apiKeyRequired": "Chave de API obrigatório",
+      "creditsPerToken": "{{Custo}} Créditos/1K Tokens",
+      "dollarsPerToken": "${{Custo}}/1K",
+      "signUpCredits": "Cadastrar-se to use DataKit Créditos",
+      "noApiKeysNeeded": "Sem necessidade de chaves de API. Créditos incluídos with your Conta.",
+      "signUpButton": "Cadastrar-se to Começar",
+      "creditsRemaining": "Créditos remaining: {{Contagem}}"
+    },
+    "providers": {
+      "datakit": "DataKit",
+      "openai": "OpenAI",
+      "anthropic": "Anthropic",
+      "groq": "Groq",
+      "ollama": "Ollama"
+    },
+    "prompts": {
+      "schemas": "Esquemas",
+      "hideSchema": "Ocultar Esquema",
+      "showSchema": "Mostrar Esquema",
+      "navigation": {
+        "previous": "Anterior Mensagem",
+        "next": "Próximo Mensagem"
+      },
+      "actions": {
+        "startNewChat": "Iniciar a Novo chat"
+      },
+      "placeholders": {
+        "askAboutData": "Perguntar sobre your Dados...",
+        "followUp": "Fazer pergunta de acompanhamento question...",
+        "askAboutTable": "Perguntar sobre {{tableName}}..."
+      },
+      "setup": {
+        "configure": "Configurar your IA Modelo to Iniciar asking questions",
+        "signUpCredits": "Cadastrar-se for Gratuito Créditos",
+        "useApiKeys": "Use Suas Próprias API Keys",
+        "privacyNote": "Modelos only see your Tabela structure, not your actual Dados"
+      },
+      "suggestions": {
+        "title": "Suggestions",
+        "exploreData": {
+          "title": "Explore Dados",
+          "prompt": "Give me an Visão Geral of this dataset - what Colunas do we have and what insights can you find?"
+        },
+        "findPatterns": {
+          "title": "Encontrar Padrões",
+          "prompt": "What are the most interesting patterns or trends in this Dados?"
+        },
+        "dataQuality": {
+          "title": "Dados Qualidade",
+          "prompt": "Check this dataset for Ausente Valores, Duplicados, or Dados Qualidade Problemas"
+        },
+        "quickStats": {
+          "title": "Estatísticas Rápidas",
+          "prompt": "Mostrar me summary Estatísticas for all numeric Colunas"
+        }
+      },
+      "status": {
+        "thinking": "Pensando..."
+      }
+    },
+    "localModels": {
+      "title": "Local IA Modelos",
+      "description": "Executar IA Modelos locally using WebLLM",
+      "webgpu": {
+        "supported": "WebGPU Suportado",
+        "notSupported": "Não Suportado",
+        "required": "WebGPU obrigatório"
+      },
+      "storage": {
+        "title": "Uso do Armazenamento",
+        "downloadedModels": "Downloaded Modelos"
+      },
+      "availableModels": "Disponível Modelos",
+      "useModel": "Usar Modeloo",
+      "download": "Baixar",
+      "current": "Atual",
+      "active": "Ativo",
+      "refresh": "Atualizar",
+      "done": "Concluído",
+      "deleteConfirm": "Tem certeza you want to Excluir this Modelo?"
+    },
+    "ollama": {
+      "connecting": "Conectando to Ollama...",
+      "connected": "Conectado to Ollama",
+      "connectionFailed": "Connection falhou",
+      "connectionFailedTitle": "Falhou to connect to Ollama",
+      "cannotConnect": "Não é possível conectar to Ollama server",
+      "howToFix": "Como corrigir this:",
+      "installStep": "1. Instalar Ollama from Ollama.IA",
+      "runCommand": "2. Executar: OLLAMA_ORIGINS=* Ollama serve",
+      "browserCompatibility": "3. Use Chrome, Edge, or Safari (Firefox Não Suportado)",
+      "firefoxNote": "Nota: Firefox is Não Suportado due to Restrições CORS",
+      "installedModels": "Installed Modelos",
+      "noModels": "No Modelos installed",
+      "pullModelHint": "Pull a Modelo below to Começar",
+      "tryAgain": "Tentar novamente"
+    },
+    "tableSelector": {
+      "title": "Selecionar Tabelas for IA Context",
+      "searchPlaceholder": "Pesquisar Tabelas...",
+      "noTablesFound": "No tabela(s) encontrada(s) matching your Pesquisar",
+      "noTablesAvailable": "No Tabelas disponível",
+      "selectedCount": "{{Contagem}} selected",
+      "columns": "Colunas",
+      "postgresql": "PostgreSQL",
+      "motherduck": "MotherDuck",
+      "remote": "Remoto",
+      "clearAll": "Limpar all",
+      "cancel": "Cancelar",
+      "addToContext": "Adicionar to Context",
+      "applying": "Applying..."
+    },
+    "queryCard": {
+      "query": "Consulta",
+      "primary": "Primary",
+      "visualize": "Visualize",
+      "copySQL": "Copiar SQL",
+      "copied": "Copiado!",
+      "editInQueryTab": "Editar in Consulta Tab",
+      "run": "Executar",
+      "generatingVisualization": "Gerando visualization...",
+      "queryRunning": "Consulta is running..."
+    },
+    "visualization": {
+      "export": {
+        "title": "Exportar Visualization",
+        "format": "Exportar Formato",
+        "quality": "Qualidade",
+        "options": "Options",
+        "includeTitle": "Incluir título",
+        "includeBackground": "Incluir fundo",
+        "copy": "Copiar",
+        "copied": "Copiado!",
+        "export": "Exportar",
+        "exporting": "Exporting...",
+        "chartNotFound": "Chart Não encontrado",
+        "exportFailed": "Exportar falhou"
+      }
+    }
+  },
+  "inspector": {
+    "emptyStates": {
+      "noAnalysis": {
+        "title": "Pronto para Analisar",
+        "descriptionWithFile": "Comece analisando \"{{fileName}}\" para descobrir insights de qualidade de dados",
+        "descriptionNoFile": "Selecione um arquivo para iniciar sua análise de qualidade de dados",
+        "startButton": "Iniciar Análise",
+        "timeEstimate": "A análise normalmente leva de 10 a 30 segundos, dependendo do tamanho dos seus dados"
+      },
+      "noColumns": {
+        "title": "Nenhuma Coluna Encontrada",
+        "noMatchingColumns": "Nenhuma coluna correspondente a \"{{searchTerm}}\"",
+        "noFilteredColumns": "Nenhuma coluna de {{filterType}} encontrada",
+        "totalColumns": "em {{totalColumns}} colunas totais",
+        "noAnalyzableColumns": "Este conjunto de dados não possui colunas analisáveis",
+        "clearFiltersButton": "Limpar Filtros",
+        "suggestion": "Tente ajustar seus critérios de pesquisa ou filtro"
+      },
+      "error": {
+        "title": "Falha na Análise",
+        "tryAgainButton": "Tentar Novamente",
+        "resetButton": "Redefinir",
+        "suggestion": "Se o problema persistir, tente com um arquivo diferente ou entre em contato com o suporte"
+      }
+    },
+    "loading": {
+      "steps": {
+        "validation": {
+          "label": "Validando Dados",
+          "description": "Verificando estrutura e acessibilidade da tabela"
+        },
+        "schema": {
+          "label": "Lendo Esquema",
+          "description": "Identificando tipos e estrutura das colunas"
+        },
+        "duplicates": {
+          "label": "Detectando Duplicatas",
+          "description": "Escaneando linhas duplicadas"
+        },
+        "columns": {
+          "label": "Analisando Colunas",
+          "description": "Computando estatísticas e padrões"
+        },
+        "quality": {
+          "label": "Avaliação de Qualidade",
+          "description": "Calculando pontuações de saúde e recomendações"
+        }
+      },
+      "analyzingColumn": "Analisando: {{currentColumn}} • Coluna {{currentColumnNumber}} de {{totalColumns}}"
+    },
+    "quickActions": {
+      "lastAnalyzed": "Última análise: {{time}}"
+    },
+    "title": "Dados Inspetor",
+    "fileSelector": {
+      "placeholder": "Selecionar Arquivo..."
+    },
+    "postgresql": {
+      "title": "PostgreSQL Inspetor",
+      "comingSoon": "Em Breve! We're working on Dados inspection for PostgreSQL Tabelas."
+    },
+    "overview": {
+      "title": "Visão Geral",
+      "dataOverview": "Dados Visão Geral",
+      "quality": "{{score}}% Qualidade",
+      "analyzedAt": "Analisado em {{time}}",
+      "rows": "Linhas",
+      "columns": "Colunas",
+      "duplicates": "Duplicados",
+      "issues": "Problemas",
+      "critical": "{{Contagem}} Crítico",
+      "qualityBreakdown": "Qualidade Breakdown",
+      "completeness": "Completeness",
+      "uniqueness": "Uniqueness",
+      "consistency": "Consistency",
+      "analysisCompleted": "Análise concluído in {{time}}s"
+    },
+    "problems": {
+      "title": "Dados Qualidade Problemas",
+      "noProblems": {
+        "title": "Nenhum Problema Encontrado!",
+        "description": "Your Dados appears to be clean with no Crítico Problemas detected.",
+        "healthScore": "Pontuação de Saúde: {{score}}%"
+      },
+      "duplicateRows": {
+        "title": "Duplicate Linhas",
+        "description": "{{Contagem}} duplicate Linhas found ({{Porcentagem}}% of total)"
+      },
+      "missingValues": {
+        "title": "Valores Ausentes in {{columnName}}",
+        "description": "{{Contagem}} Nulo Valores ({{Porcentagem}}% of Coluna)"
+      },
+      "typeIssue": {
+        "title": "{{Problema}} in {{columnName}}",
+        "description": "{{Contagem}} problematic Valores found"
+      },
+      "issueCount": "{{filtered}} of {{total}} Problemas",
+      "severity": {
+        "critical": "Crítico",
+        "warning": "Aviso",
+        "info": "Informação"
+      },
+      "filteredBy": "Filtrado por:",
+      "actions": {
+        "viewDetails": "Visualizar Detalhes",
+        "exporting": "Exporting...",
+        "exportCompleted": "Exportar concluído!",
+        "exportData": "Exportar Dados",
+        "signInToExport": "Entrar to Exportar Dados"
+      },
+      "details": {
+        "examples": "Exemplos:",
+        "count": "Contagem: {{Contagem}}",
+        "percentage": "Porcentagem: {{Porcentagem}}%",
+        "column": "Coluna: {{columnName}}"
+      },
+      "noIssuesFound": "No {{Filtrar}} Problemas found"
+    }
+  },
+  "workspace": {
+    "fileTree": {
+      "noFiles": "Nenhum arquivo na área de trabalho",
+      "addFilesHint": "Adicione arquivos usando o painel de origem acima",
+      "workspaceFiles": "Arquivos da Área de Trabalho ({{Contagem}})",
+      "remove": "Remover",
+      "rename": "Renomear"
+    },
+    "selector": {
+      "selectWorkspace": "Selecionar Área de Trabalho",
+      "unsaved": "unsaved",
+      "workspaces": "Workspaces",
+      "organizeDescription": "Organize your Arquivos into workspaces. Arquivos are referenced, not stored.",
+      "draft": "Rascunho",
+      "fileCount": "{{Contagem}} Arquivos",
+      "file": "Arquivo",
+      "files": "Arquivos",
+      "workspaceNamePlaceholder": "Área de Trabalho Nome...",
+      "saveDraftAsWorkspace": "Salvar Rascunho as Área de Trabalho",
+      "newWorkspace": "Novo Área de Trabalho",
+      "workspaceCreated": "Área de Trabalho Created",
+      "workspaceCreatedMessage": "\"{{Nome}}\" Área de Trabalho has been created successfully",
+      "workspaceRenamed": "Área de Trabalho Renamed",
+      "workspaceRenamedMessage": "Área de Trabalho renamed from \"{{oldName}}\" to \"{{newName}}\"",
+      "deleteConfirmation": "Excluir Área de Trabalho \"{{Nome}}\"? This action cannot be undone.",
+      "workspaceDeleted": "Área de Trabalho Deleted",
+      "workspaceDeletedMessage": "\"{{Nome}}\" Área de Trabalho has been deleted",
+      "workspaceSaved": "Área de Trabalho Salvo",
+      "workspaceSavedMessage": "Rascunho Área de Trabalho Salvo as \"{{Nome}}\" with {{Contagem}} {{Arquivos}}",
+      "tooltip": {
+        "workspaces": "Workspaces",
+        "organizeFiles": "organize your Arquivos without storing actual Dados - only references for Privacidade.",
+        "draft": "Rascunho",
+        "draftDescription": "Temporary Área de Trabalho for Arquivos before saving to a named Área de Trabalho.",
+        "benefits": "Benefits",
+        "benefitsDescription": "Keep projects organized, switch between datasets.",
+        "limit": "Limit",
+        "limitDescription": "Criar up to 1 workspaces.",
+        "signUp": "Cadastrar-se",
+        "unlimitedWorkspaces": "for Ilimitado workspaces."
+      }
+    }
+  },
+  "dataSources": {
+    "files": "Arquivos",
+    "localFiles": "Arquivos locais",
+    "remote": "Remoto",
+    "remoteData": "Dados remotos",
+    "connectCloudSources": "Conectar Fontes em Nuvem"
+  },
+  "query": {
+    "draft": {
+      "label": "Rascunho"
+    },
+    "workspace": {
+      "poweredBy": "Desenvolvido com WebAssembly",
+      "errors": {
+        "initFailed": "DuckDB Initialization falhou"
+      },
+      "status": {
+        "initializing": "Inicializando DuckDB",
+        "notReady": "DuckDB Not Pronto",
+        "settingUp": "Configurando your in-browser SQL Banco de Dados...",
+        "preparing": "Preparando your Dados Análise environment..."
+      },
+      "actions": {
+        "retryInit": "Tentar Novamente Initialization",
+        "fullScreenResults": "Tela Cheia Resultados",
+        "hideHistory": "Ocultar Consulta Histórico",
+        "showHistory": "Mostrar Consulta Histórico",
+        "exitFullScreen": "Exit Tela Cheia",
+        "hideSchema": "Ocultar Esquema Browser",
+        "showSchema": "Mostrar Esquema Browser",
+        "save": "Salvar",
+        "execute": "Executar",
+        "executeShortcut": "Executar Consulta (⌘+Enter)",
+        "fullScreenEditor": "Tela Cheia Editor",
+        "dismiss": "Dismiss",
+        "cancel": "Cancelar"
+      },
+      "results": {
+        "title": "Consulta Resultados",
+        "executionTime": "{{time}}ms",
+        "rowCount": "{{Contagem}} Linhas"
+      },
+      "fullscreen": {
+        "editor": "Editor SQL (Fullscreen)",
+        "results": "Consulta Resultados (Fullscreen)"
+      },
+      "editor": {
+        "title": "Editor SQL",
+        "optimize": "Optimize",
+        "optimizationAvailable": "Consulta optimization suggestions disponível"
+      },
+      "optimization": {
+        "title": "Consulta Optimization Tips",
+        "applyFix": "Aplicar Fix",
+        "optimizeQuery": "Optimize Consulta"
+      },
+      "warnings": {
+        "largeDataset": {
+          "title": "Large Result Set ({{Contagem}} Linhas)",
+          "description": "This Consulta is returning a large dataset which may affect performance. Consider adding filters or LIMIT clause with lower value to reduce the result Tamanho.",
+          "addLimit": "Adicionar LIMIT Clause"
+        }
+      },
+      "gettingStarted": {
+        "title": "Pronto to Consulta Sample Dados!",
+        "dataReady": "Você tem uploaded Dados Pronto to Consulta. Try the sample Consulta above or write your own SQL.",
+        "sampleData": "A sample employees Tabela is disponível for Testando. Importar your own CSV, JSON, or Parquet Arquivos to Consulta your Dados."
+      },
+      "saveDialog": {
+        "title": "Salvar Consulta",
+        "placeholder": "Enter Consulta Nome"
+      }
+    },
+    "schema": {
+      "title": "Esquema Browser",
+      "noData": "No Dados disponível. Importar Arquivos to Começar.",
+      "local": "Local",
+      "attached": "Attached",
+      "shared": "Shared",
+      "actions": {
+        "refresh": "Atualizar Esquemas",
+        "refreshTables": "Atualizar Tabelas",
+        "refreshSchemas": "Atualizar Esquemas",
+        "insertSelect": "Insert Selecionar Consulta",
+        "insertColumn": "Insert Coluna Consulta"
+      },
+      "loading": {
+        "local": "Carregando Local Esquemas...",
+        "database": "Carregando {{Nome}} Tabelas...",
+        "schemas": "Carregando {{Nome}} Esquemas...",
+        "postgres": "Carregando PostgreSQL Esquemas...",
+        "columns": "Carregando Colunas..."
+      },
+      "empty": {
+        "local": "No Local Tabelas. Importar Dados to Começar.",
+        "database": "No tabela(s) encontrada(s) in {{Nome}}",
+        "postgres": "No tabela(s) encontrada(s). Click Atualizar to load Esquemas.",
+        "columns": "No Colunas disponível"
+      },
+      "sections": {
+        "tables": "Tabelas ({{Contagem}})",
+        "views": "Views ({{Contagem}})"
+      },
+      "postgres": {
+        "available": "Disponível",
+        "connected": "Conectado",
+        "connect": "Connect and Navegar Tabelas"
+      }
+    }
+  },
+  "ui": {
+    "notebookEditor": {
+      "title": "Editar Notebook",
+      "nameLabel": "Nome",
+      "namePlaceholder": "Notebook Sem Título",
+      "descriptionLabel": "Descrição",
+      "descriptionPlaceholder": "Descrição opcional...",
+      "autoSaveMessage": "As alterações são salvas automaticamente"
+    }
+  },
+  "settingsPopover": {
+    "title": "Configurações",
+    "language": "Idioma",
+    "presets": "Predefinições"
+  },
+  "pages": {
+    "privacy": {
+      "dataStaysLocal": {
+        "title": "Seus Dados Ficam Locais",
+        "description": "Toda análise de dados é realizada localmente no seu navegador usando DuckDB-WASM. Seus arquivos e dados nunca saem do seu dispositivo, garantindo privacidade e segurança completas.",
+        "aiModelsTitle": "Modelos de IA do DataKit - Apenas Esquema de Colunas",
+        "importantException": "Exceção importante:",
+        "aiModelsDescription": "Ao usar recursos de IA do DataKit, enviamos apenas cabeçalhos de colunas e tipos de dados para nossos modelos de IA - nunca seus dados reais. Isso permite que a IA entenda a estrutura do seu conjunto de dados mantendo suas informações sensíveis completamente privadas.",
+        "aiModelsExample": "Por exemplo, de um CSV com dados de clientes, enviamos apenas: [\"customer_id: INTEGER\", \"Email: VARCHAR\", \"purchase_amount: DECIMAL\"] - a IA nunca vê emails reais de clientes ou valores de compras."
+      },
+      "analytics": {
+        "title": "Nosso Sistema de Análise de Duas Camadas",
+        "description": "Usamos uma abordagem focada em privacidade para entender como o DataKit é usado e melhorar a experiência:",
+        "basic": {
+          "title": "Análise Básica (Sempre Ativa)",
+          "items": [
+            "Visualizações de página e uso de recursos",
+            "Métricas de desempenho e rastreamento de erros",
+            "Tipo de navegador e localização geral (nível do país)"
+          ],
+          "note": "Isso nos ajuda a entender quais recursos são populares e corrigir bugs rapidamente."
+        },
+        "advanced": {
+          "title": "Análise Avançada (Apenas Opt-in)",
+          "items": [
+            "Rastreamento detalhado da jornada do usuário",
+            "Testes A/B para novos recursos",
+            "Padrões de uso mais granulares"
+          ]
+        },
+        "neverCollect": {
+          "title": "Nunca Coletamos",
+          "items": [
+            "Seus dados reais ou conteúdo de arquivos",
+            "Informações pessoais além do que você fornece voluntariamente",
+            "Senhas ou tokens de autenticação",
+            "Dados de localização precisa"
+          ]
+        }
+      },
+      "thirdParty": {
+        "title": "Serviços de Terceiros",
+        "items": [
+          "Google Analytics: Análise de uso do site",
+          "PostHog: Análise de produto e feedback do usuário",
+          "Anthropic Claude: Insights de dados alimentados por IA (apenas esquemas de colunas)",
+          "OpenAI: Insights de dados alimentados por IA (apenas esquemas de colunas)"
+        ]
+      },
+      "choices": {
+        "title": "Suas Escolhas",
+        "description": "Você pode desabilitar análises avançadas nas Configurações. As análises básicas permanecem ativas para garantir que o DataKit funcione adequadamente e com segurança para todos os usuários.",
+        "contact": "Dúvidas sobre privacidade? Entre em contato conosco em Privacidade@DataKit.dev"
+      },
+      "lastUpdated": "Última atualização"
+    }
+  },
+  "import": {
+    "customUrl": {
+      "dataset": {
+        "featured": "Destaque",
+        "importing": "Importando",
+        "import": "Importar Conjunto de Dados"
+      },
+      "validation": {
+        "enterUrl": "Por favor, insira uma URL",
+        "validUrl": "Por favor, insira uma URL válida",
+        "fileDetected": "Arquivo {{Formato}} detectado",
+        "readyToImport": "URL válida - pronto para importar"
+      },
+      "form": {
+        "fileUrlLabel": "URL do arquivo (acesso público)",
+        "placeholder": "HTTPS://raw.githubusercontent.com/usuario/repo/main/dados.CSV"
+      },
+      "actions": {
+        "importing": "Importando",
+        "importFromUrl": "Importar da URL",
+        "openFileUrl": "Abrir URL do arquivo"
+      },
+      "examples": {
+        "title": "Conjuntos de Dados de Exemplo",
+        "subtitle": "Experimente estes conjuntos de dados públicos selecionados do GitHub",
+        "loading": "Carregando conjuntos de dados..."
+      },
+      "footer": {
+        "supportedUrls": "URLs suportadas:",
+        "directFiles": "URLs diretas de arquivos (CSV, JSON, Parquet, Excel)",
+        "publicRepos": "Repositórios de dados públicos e APIs"
+      }
+    },
+    "motherduck": {
+      "success": {
+        "title": "Tudo pronto!",
+        "description": "Conexão bem-sucedida. Você pode consultar seu MotherDuck na aba de consulta.",
+        "goToQuery": "Ir para Aba de Consulta"
+      }
+    },
+    "gcs": {
+      "categories": {
+        "all": "Todos os Conjuntos de Dados",
+        "earthObservation": "Observação da Terra",
+        "climate": "Dados Climáticos",
+        "geospatial": "Geoespacial",
+        "research": "Pesquisa"
+      },
+      "dataset": {
+        "featured": "Destaque",
+        "preview": "Visualizar",
+        "importing": "Importando",
+        "import": "Importar"
+      },
+      "preview": {
+        "category": "Categoria",
+        "size": "Tamanho",
+        "formats": "Formatos",
+        "lastUpdated": "Última Atualização",
+        "tags": "Tags",
+        "gcsUrl": "URL GCS",
+        "cancel": "Cancelar",
+        "docs": "Documentos",
+        "importing": "Importando",
+        "importDataset": "Importar Conjunto de Dados"
+      },
+      "header": {
+        "title": "Google Nuvem Storage",
+        "subtitle": "Acesse conjuntos de dados públicos e dados de observação da terra"
+      },
+      "search": {
+        "placeholder": "Pesquisar conjuntos de dados..."
+      },
+      "loading": {
+        "datasets": "Carregando conjuntos de dados..."
+      },
+      "sections": {
+        "featured": "Observação da Terra em Destaque",
+        "allDatasets": "Todos os Conjuntos de Dados ({{Contagem}})"
+      },
+      "empty": {
+        "noDatasets": "Nenhum conjunto de dados encontrado",
+        "tryAdjusting": "Tente ajustar sua pesquisa ou filtro de categoria"
+      }
+    }
+  },
+  "queryHistory": {
+    "title": "Histórico de Consultas",
+    "source": "do indexedDB",
+    "tabs": {
+      "recent": "Recentes",
+      "saved": "Salvos"
+    },
+    "empty": {
+      "recent": "Nenhuma consulta recente. Executar uma consulta para vê-la aqui.",
+      "saved": "Nenhuma consulta salva. Clique no ícone de estrela para salvar uma consulta."
+    },
+    "unnamedQuery": "Consulta Sem Nome",
+    "actions": {
+      "save": "Salvar Consulta",
+      "editName": "Editar Nome",
+      "copy": "Copiar Consulta",
+      "delete": "Excluir Consulta",
+      "cancel": "Cancelar",
+      "use": "Usar"
+    },
+    "dateFormat": {
+      "today": "Hoje às {{time}}",
+      "yesterday": "Ontem às {{time}}"
+    }
+  },
+  "queryResults": {
+    "header": {
+      "rowsReturned": "linhas retornadas",
+      "showingPage": "mostrando página {{Atual}} de {{total}}",
+      "downloadCSV": "Baixar CSV"
+    },
+    "emptyState": {
+      "executing": "Executando consulta...",
+      "error": "Erro",
+      "empty": "Executar uma consulta para ver os resultados.",
+      "noResults": "Consulta executada com sucesso. Nenhum resultado retornado."
+    },
+    "pagination": {
+      "rowsPerPage": "Linhas por página:",
+      "firstPage": "Primeira Página",
+      "previousPage": "Página Anterior",
+      "pageOf": "Página {{Atual}} de {{total}}",
+      "nextPage": "Próxima Página",
+      "lastPage": "Última Página",
+      "goTo": "Ir para:"
+    }
+  },
+  "visualization": {
+    "saveChart": {
+      "myChart": "Meu Gráfico",
+      "title": "Salvar Gráfico",
+      "chartName": "Nome do Gráfico",
+      "enterChartName": "Digite o nome do gráfico",
+      "descriptionOptional": "Descrição (opcional)",
+      "enterChartDescription": "Digite a descrição do gráfico",
+      "saveAsTemplate": "Salvar como Modelo",
+      "saveChart": "Salvar Gráfico"
+    },
+    "export": {
+      "title": "Exportar Gráfico",
+      "exportFormat": "Formato de Exportação",
+      "options": "Opções",
+      "includeTitle": "Incluir título",
+      "includeDescription": "Incluir descrição",
+      "includeBackground": "Incluir fundo",
+      "exportButton": "Exportar {{Formato}}",
+      "copied": "Copiado!",
+      "copy": "Copiar"
+    },
+    "config": {
+      "noChart": "Nenhum Gráfico Selecionado",
+      "chartTitle": "Título do Gráfico",
+      "chartTitlePlaceholder": "Digite o título do gráfico",
+      "tabs": {
+        "data": "Dados",
+        "style": "Estilo",
+        "transform": "Transformar"
+      },
+      "resetSettings": "Redefinir Configurações do Gráfico"
+    },
+    "gallery": {
+      "title": "Galeria de Gráficos",
+      "searchPlaceholder": "Pesquisar gráficos...",
+      "savedCharts": "Gráficos Salvos",
+      "templates": "Modelos",
+      "noCharts": {
+        "title": "Nenhum Gráfico Encontrado",
+        "noSaved": "Você ainda não salvou nenhum gráfico. Crie e salve um gráfico para vê-lo aqui.",
+        "noSearchResults": "Nenhum modelo corresponde à sua pesquisa.",
+        "noTemplates": "Nenhum modelo de gráfico disponível."
+      },
+      "createNew": "Criar Novo Gráfico",
+      "chartType": "Gráfico {{Tipo}}",
+      "template": "Modelo",
+      "duplicate": "Duplicar",
+      "delete": "Excluir"
+    },
+    "canvas": {
+      "noData": {
+        "title": "Nenhum Dado do Gráfico",
+        "message": "Configurar seu gráfico ou Executar uma consulta para visualizar dados."
+      },
+      "unsupported": "Tipo de gráfico não suportado"
+    },
+    "generator": {
+      "xAxisField": "Campo do Eixo X",
+      "yAxisField": "Campo do Eixo Y",
+      "selectField": "Selecionar campo...",
+      "xAxisHelp": "Categorias para agrupar seus dados",
+      "yAxisHelpDate": "Campos de Dados para análise temporal",
+      "yAxisHelpNumeric": "Valores numéricos para medir",
+      "aggregation": "Agregação",
+      "aggregationHelpDate": "Agregações de Dados: mais antigo, mais recente ou contar",
+      "aggregationHelpNumeric": "Como calcular os valores numéricos",
+      "aggregationHelpGeneric": "Como agregar os valores",
+      "usingAllData": "Usando todos os dados de {{tableName}} para visualização",
+      "processing": "Processando...",
+      "generateChart": "Gerar Gráfico",
+      "aggregationLabels": {
+        "sum": "Soma",
+        "avg": "Média",
+        "min": "Mínimo",
+        "max": "Máximo",
+        "count": "Contagem"
+      },
+      "description": {
+        "sum": "Este gráfico mostrará a soma total de \"{{measure}}\" para cada categoria \"{{dimension}}\".",
+        "avg": "Este gráfico mostrará a média de \"{{measure}}\" para cada categoria \"{{dimension}}\".",
+        "min": "Este gráfico mostrará o valor mínimo de \"{{measure}}\" para cada categoria \"{{dimension}}\".",
+        "minDate": "Este gráfico mostrará a Dados mais antiga de \"{{measure}}\" para cada categoria \"{{dimension}}\".",
+        "max": "Este gráfico mostrará o valor máximo de \"{{measure}}\" para cada categoria \"{{dimension}}\".",
+        "maxDate": "Este gráfico mostrará a Dados mais recente de \"{{measure}}\" para cada categoria \"{{dimension}}\".",
+        "count": "Este gráfico mostrará a contagem de itens em cada categoria \"{{dimension}}\"."
+      }
+    }
+  }
+}

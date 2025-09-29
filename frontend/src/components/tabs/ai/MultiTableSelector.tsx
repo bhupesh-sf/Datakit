@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Plus, Check, FileText, Table2, Link2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -21,6 +22,7 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
   onClose,
   onTablesSelected,
 }) => {
+  const { t } = useTranslation();
   const { getTableSchema, getAllAvailableTablesWithPostgreSQL } = useDuckDBStore();
   const { files } = useAppStore();
   const {
@@ -156,18 +158,18 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
   // Get source label
   const getSourceLabel = (table: typeof allAvailableTables[0]) => {
     if (table.source === 'postgresql') {
-      return <div className="flex flex-row gap-2" ><span>PostgreSQL</span>  <img src={PostgreSQLIcon} className="h-5 w-5" alt="PostgreSQL" /> </div>;
+      return <div className="flex flex-row gap-2" ><span>{t('ai.tableSelector.postgresql', { defaultValue: 'PostgreSQL' })}</span>  <img src={PostgreSQLIcon} className="h-5 w-5" alt="PostgreSQL" /> </div>;
     } else if (table.source === 'motherduck') {
-      return 'MotherDuck';
+      return t('ai.tableSelector.motherduck', { defaultValue: 'MotherDuck' });
     }
     // For local tables, check file source
     const file = files.find((f) => f.tableName === table.name);
     if (file?.source === 'remote') {
-      return file.remoteSource?.type || 'Remote';
+      return file.remoteSource?.type || t('ai.tableSelector.remote', { defaultValue: 'Remote' });
     } else if (file?.source === 'file') {
-      return 'Local File';
+      return t('ai.tableSelector.localFile', { defaultValue: 'Local File' });
     }
-    return 'Local Table';
+    return t('ai.tableSelector.localTable', { defaultValue: 'Local Table' });
   };
 
   if (!isOpen) return null;
@@ -195,10 +197,10 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
             <div className="flex items-center justify-between p-6 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-semibold text-white">
-                  Select Tables for AI Context
+                  {t('ai.tableSelector.title', { defaultValue: 'Select Tables for AI Context' })}
                 </h2>
                 <span className="px-2 py-1 bg-primary/20 text-primary text-xs rounded-full">
-                  {selectedTables.size} selected
+                  {t('ai.tableSelector.selectedCount', { defaultValue: '{count} selected', count: selectedTables.size })}
                 </span>
               </div>
               <Button
@@ -217,7 +219,7 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tables..."
+                placeholder={t('ai.tableSelector.searchPlaceholder', { defaultValue: 'Search tables...' })}
                 className="w-full px-4 py-2 bg-black/30 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-primary/50"
               />
             </div>
@@ -227,8 +229,8 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
               {filteredTables.length === 0 ? (
                 <div className="text-center py-8 text-white/50">
                   {searchQuery
-                    ? 'No tables found matching your search'
-                    : 'No tables available'}
+                    ? t('ai.tableSelector.noTablesFound', { defaultValue: 'No tables found matching your search' })
+                    : t('ai.tableSelector.noTablesAvailable', { defaultValue: 'No tables available' })}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -282,7 +284,7 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
                                     </span>
                                   )} */}
                                   {file.columnCount && (
-                                    <span>{file.columnCount} columns</span>
+                                    <span>{t('ai.tableSelector.columns', { defaultValue: '{count} columns', count: file.columnCount })}</span>
                                   )}
                                   {file.fileName && (
                                     <span className="truncate">
@@ -312,12 +314,12 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
                       .length === 0
                   }
                 >
-                  Clear all
+                  {t('ai.tableSelector.clearAll', { defaultValue: 'Clear all' })}
                 </button>
 
                 <div className="flex gap-3">
                   <Button variant="ghost" onClick={onClose}>
-                    Cancel
+                    {t('ai.tableSelector.cancel', { defaultValue: 'Cancel' })}
                   </Button>
                   <Button
                     variant="outline"
@@ -330,8 +332,8 @@ const MultiTableSelector: React.FC<MultiTableSelectorProps> = ({
                       <Plus className="h-4 w-4" />
                     )}
                     {isApplying
-                      ? 'Applying...'
-                      : `Add to Context (${selectedTables.size})`}
+                      ? t('ai.tableSelector.applying', { defaultValue: 'Applying...' })
+                      : t('ai.tableSelector.addToContext', { defaultValue: 'Add to Context ({count})', count: selectedTables.size })}
                   </Button>
                 </div>
               </div>

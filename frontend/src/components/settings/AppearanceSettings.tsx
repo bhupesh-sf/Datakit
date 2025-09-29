@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Monitor, Sun, Moon } from 'lucide-react';
-import { ThemeColorPicker } from '@/components/common/ThemeColorPicker';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { applyThemeColor } from '@/utils/theme';
 
 const AppearanceSettings: React.FC = () => {
+  const { t } = useTranslation();
   const [currentColor, setCurrentColor] = useState('#00B8A9');
 
   useEffect(() => {
@@ -36,12 +38,12 @@ const AppearanceSettings: React.FC = () => {
   }, [currentColor]);
 
   const presetThemes = [
-    { name: 'DataKit Teal', color: '#00B8A9' },
-    { name: 'Ocean Blue', color: '#3498db' },
-    { name: 'Royal Purple', color: '#9b59b6' },
-    { name: 'Vibrant Red', color: '#e74c3c' },
-    { name: 'Forest Green', color: '#2ecc71' },
-    { name: 'Coral Pink', color: '#ff6b6b' },
+    { name: t('settings.appearance.themes.datakitTeal'), color: '#00B8A9' },
+    { name: t('settings.appearance.themes.oceanBlue'), color: '#3498db' },
+    { name: t('settings.appearance.themes.royalPurple'), color: '#9b59b6' },
+    { name: t('settings.appearance.themes.vibrantRed'), color: '#e74c3c' },
+    { name: t('settings.appearance.themes.forestGreen'), color: '#2ecc71' },
+    { name: t('settings.appearance.themes.coralPink'), color: '#ff6b6b' },
   ];
 
   const handleThemeSelect = (color: string) => {
@@ -53,8 +55,8 @@ const AppearanceSettings: React.FC = () => {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-medium text-white mb-1">Appearance</h3>
-        <p className="text-sm text-white/60">Customize DataKit's theme color</p>
+        <h3 className="text-lg font-medium text-white mb-1">{t('settings.appearance.title')}</h3>
+        <p className="text-sm text-white/60">{t('settings.appearance.description')}</p>
       </div>
 
       <div className="bg-white/5 border border-white/10 rounded-lg p-4">
@@ -65,11 +67,13 @@ const AppearanceSettings: React.FC = () => {
               style={{ backgroundColor: currentColor }}
             />
             <div>
-              <div className="text-sm font-medium text-white">Current</div>
+              <div className="text-sm font-medium text-white">{t('settings.appearance.current')}</div>
               <div className="text-xs text-white/60">{currentColor.toUpperCase()}</div>
             </div>
           </div>
-          <ThemeColorPicker />
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+          </div>
         </div>
         
         <div className="grid grid-cols-3 gap-2">
@@ -101,22 +105,22 @@ const AppearanceSettings: React.FC = () => {
         <div className="opacity-50 cursor-not-allowed">
           <h4 className="text-sm font-medium text-white/60 mb-2 flex items-center gap-2">
             <Monitor className="h-4 w-4" />
-            Display Mode
+{t('settings.appearance.displayMode')}
           </h4>
-          <p className="text-xs text-white/40 mb-3">Coming Soon</p>
+          <p className="text-xs text-white/40 mb-3">{t('common.comingSoon')}</p>
           
           <div className="grid grid-cols-3 gap-2">
             <div className="p-2 rounded-md bg-white/5 border border-white/10 text-center">
               <Monitor className="h-4 w-4 mx-auto mb-1 text-white/40" />
-              <div className="text-xs text-white/40">System</div>
+              <div className="text-xs text-white/40">{t('settings.appearance.modes.system')}</div>
             </div>
             <div className="p-2 rounded-md bg-white/5 border border-white/10 text-center">
               <Sun className="h-4 w-4 mx-auto mb-1 text-white/40" />
-              <div className="text-xs text-white/40">Light</div>
+              <div className="text-xs text-white/40">{t('settings.appearance.modes.light')}</div>
             </div>
             <div className="p-2 rounded-md bg-white/10 border border-primary/30 text-center">
               <Moon className="h-4 w-4 mx-auto mb-1 text-primary/60" />
-              <div className="text-xs text-primary/60">Dark</div>
+              <div className="text-xs text-primary/60">{t('settings.appearance.modes.dark')}</div>
             </div>
           </div>
         </div>

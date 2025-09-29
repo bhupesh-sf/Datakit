@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { useChartsStore, ChartConfig } from "@/store/chartsStore";
 import { useAppStore } from "@/store/appStore";
 import {
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/Button";
  * Component for displaying saved charts and templates
  */
 const ChartGallery: React.FC = () => {
+  const { t } = useTranslation();
   const {
     savedCharts,
     chartTemplates,
@@ -112,13 +114,13 @@ const ChartGallery: React.FC = () => {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-white/10">
-        <h3 className="text-lg font-medium mb-4">Chart Gallery</h3>
+        <h3 className="text-lg font-medium mb-4">{t('visualization.gallery.title', { defaultValue: 'Chart Gallery' })}</h3>
 
         {/* Filter input */}
         <div className="relative mb-4">
           <input
             type="text"
-            placeholder="Search charts..."
+            placeholder={t('visualization.gallery.searchPlaceholder', { defaultValue: 'Search charts...' })}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="w-full p-2 pl-8 bg-background border border-white/10 rounded text-white"
@@ -137,7 +139,7 @@ const ChartGallery: React.FC = () => {
             onClick={() => setActiveTab("saved")}
           >
             <Save size={14} className="inline mr-1" />
-            Saved Charts
+            {t('visualization.gallery.savedCharts', { defaultValue: 'Saved Charts' })}
           </button>
           <button
             className={`px-3 py-2 text-sm ${
@@ -148,7 +150,7 @@ const ChartGallery: React.FC = () => {
             onClick={() => setActiveTab("templates")}
           >
             <BookOpen size={14} className="inline mr-1" />
-            Templates
+            {t('visualization.gallery.templates', { defaultValue: 'Templates' })}
           </button>
         </div>
       </div>
@@ -160,18 +162,18 @@ const ChartGallery: React.FC = () => {
             <div className="text-white/50 mb-3">
               <BarChart4 size={48} className="inline-block" />
             </div>
-            <h3 className="text-lg font-medium mb-2">No Charts Found</h3>
+            <h3 className="text-lg font-medium mb-2">{t('visualization.gallery.noCharts.title', { defaultValue: 'No Charts Found' })}</h3>
             <p className="text-sm text-white/60 mb-4">
               {activeTab === "saved"
-                ? "You haven't saved any charts yet. Create and save a chart to see it here."
+                ? t('visualization.gallery.noCharts.noSaved', { defaultValue: "You haven't saved any charts yet. Create and save a chart to see it here." })
                 : filter
-                ? "No templates match your search."
-                : "No chart templates available."}
+                ? t('visualization.gallery.noCharts.noSearchResults', { defaultValue: 'No templates match your search.' })
+                : t('visualization.gallery.noCharts.noTemplates', { defaultValue: 'No chart templates available.' })}
             </p>
             {activeTab === "saved" && (
               <Button variant="primary">
                 <Plus size={16} className="mr-1" />
-                Create New Chart
+                {t('visualization.gallery.createNew', { defaultValue: 'Create New Chart' })}
               </Button>
             )}
           </div>
@@ -190,7 +192,7 @@ const ChartGallery: React.FC = () => {
                   <div className="text-primary/70 flex flex-col items-center">
                     {getChartIcon(chart.type)}
                     <span className="mt-2 text-xs capitalize">
-                      {chart.type} Chart
+                      {t('visualization.gallery.chartType', { defaultValue: '{{type}} Chart', type: chart.type })}
                     </span>
                   </div>
                 </div>
@@ -222,7 +224,7 @@ const ChartGallery: React.FC = () => {
                   <div className="mt-3 flex justify-between items-center">
                     <div className="text-xs text-white/50">
                       {chart.isTemplate
-                        ? "Template"
+                        ? t('visualization.gallery.template', { defaultValue: 'Template' })
                         : new Date(chart.timestamp).toLocaleDateString()}
                     </div>
 
@@ -232,7 +234,7 @@ const ChartGallery: React.FC = () => {
                         size="sm"
                         className="h-7 w-7 p-0"
                         onClick={() => duplicateChart(chart.id)}
-                        title="Duplicate"
+                        title={t('visualization.gallery.duplicate', { defaultValue: 'Duplicate' })}
                       >
                         <Copy size={14} />
                       </Button>
@@ -243,7 +245,7 @@ const ChartGallery: React.FC = () => {
                           size="sm"
                           className="h-7 w-7 p-0 text-destructive"
                           onClick={() => deleteChart(chart.id)}
-                          title="Delete"
+                          title={t('visualization.gallery.delete', { defaultValue: 'Delete' })}
                         >
                           <Trash size={14} />
                         </Button>
@@ -260,7 +262,7 @@ const ChartGallery: React.FC = () => {
         <div className="p-3 border-t border-white/10 bg-darkNav/50">
           <Button variant="primary" className="w-full">
             <Plus size={16} className="mr-1" />
-            Create New Chart
+            {t('visualization.gallery.createNew', { defaultValue: 'Create New Chart' })}
           </Button>
         </div>
       )}

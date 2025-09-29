@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { SavedQuery } from "@/store/appStore";
 import { useQueryHistory } from "@/hooks/query/useQueryHistory";
+import { useTranslation } from 'react-i18next';
 import {
   Clock,
   Star,
@@ -21,6 +22,7 @@ interface QueryHistoryProps {
  * Displays and manages previously executed and saved queries
  */
 const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
+  const { t } = useTranslation();
   const {
     recentQueries,
     savedQueries,
@@ -50,20 +52,26 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
 
     // If today, just show time
     if (date.toDateString() === now.toDateString()) {
-      return `Today at ${date.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}`;
+      return t('queryHistory.dateFormat.today', { 
+        defaultValue: 'Today at {{time}}', 
+        time: date.toLocaleTimeString(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      });
     }
 
     // If yesterday, show "Yesterday"
     const yesterday = new Date();
     yesterday.setDate(now.getDate() - 1);
     if (date.toDateString() === yesterday.toDateString()) {
-      return `Yesterday at ${date.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}`;
+      return t('queryHistory.dateFormat.yesterday', { 
+        defaultValue: 'Yesterday at {{time}}', 
+        time: date.toLocaleTimeString(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      });
     }
 
     // If within last 7 days, show day name
@@ -113,9 +121,9 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
           <Clock size={16} className="mr-2 text-primary" />
           <span className="flex items-center">
            
-            Query History
+            {t('queryHistory.title', { defaultValue: 'Query History' })}
             <span className="text-[10px] bg-white/10 text-white/60 px-1.5 py-0.5 rounded ml-1.5">
-              from indexedDB
+              {t('queryHistory.source', { defaultValue: 'from indexedDB' })}
             </span>
           </span>
         </h3>
@@ -130,7 +138,7 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
             }`}
             onClick={() => setActiveTab("recent")}
           >
-            Recent
+            {t('queryHistory.tabs.recent', { defaultValue: 'Recent' })}
           </button>
           <button
             className={`px-3 py-1.5 text-xs font-medium ${
@@ -140,7 +148,7 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
             }`}
             onClick={() => setActiveTab("saved")}
           >
-            Saved
+            {t('queryHistory.tabs.saved', { defaultValue: 'Saved' })}
           </button>
         </div>
       </div>
@@ -149,8 +157,8 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
         {queries.length === 0 ? (
           <div className="p-4 text-center text-white/50 text-xs">
             {activeTab === "recent"
-              ? "No recent queries. Execute a query to see it here."
-              : "No saved queries. Click the star icon to save a query."}
+              ? t('queryHistory.empty.recent', { defaultValue: 'No recent queries. Execute a query to see it here.' })
+              : t('queryHistory.empty.saved', { defaultValue: 'No saved queries. Click the star icon to save a query.' })}
           </div>
         ) : (
           <div className="space-y-2">
@@ -174,7 +182,7 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
                         size="icon"
                         className="h-6 w-6"
                         onClick={() => setEditingQuery(null)}
-                        title="Cancel"
+                        title={t('queryHistory.actions.cancel', { defaultValue: 'Cancel' })}
                       >
                         <X size={14} className="text-white/70" />
                       </Button>
@@ -183,7 +191,7 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
                         size="icon"
                         className="h-6 w-6"
                         onClick={saveEditedQuery}
-                        title="Save"
+                        title={t('queryHistory.actions.save', { defaultValue: 'Save' })}
                         disabled={!editName.trim()}
                       >
                         <Save size={14} className="text-primary" />
@@ -193,7 +201,7 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
                 ) : (
                   <div className="flex items-center justify-between mb-1 group">
                     <div className="text-xs font-medium text-white/80 truncate flex-1">
-                      {query.name || "Unnamed Query"}
+                      {query.name || t('queryHistory.unnamedQuery', { defaultValue: 'Unnamed Query' })}
                     </div>
                     <div className="flex items-center space-x-1">
                       {activeTab === "recent" && (
@@ -202,7 +210,7 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
                           size="icon"
                           className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => saveQuery(query.query, query.name)}
-                          title="Save Query"
+                          title={t('queryHistory.actions.save', { defaultValue: 'Save Query' })}
                         >
                           <Star size={14} className="text-secondary" />
                         </Button>
@@ -214,7 +222,7 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
                           size="icon"
                           className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => startEditing(query)}
-                          title="Edit Name"
+                          title={t('queryHistory.actions.editName', { defaultValue: 'Edit Name' })}
                         >
                           <Edit size={14} className="text-white/70" />
                         </Button>
@@ -225,7 +233,7 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
                         size="icon"
                         className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => copyToClipboard(query.query, query.id)}
-                        title="Copy Query"
+                        title={t('queryHistory.actions.copy', { defaultValue: 'Copy Query' })}
                       >
                         {copiedId === query.id ? (
                           <Check size={14} className="text-primary" />
@@ -239,7 +247,7 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
                         size="icon"
                         className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => deleteQuery(query.id)}
-                        title="Delete Query"
+                        title={t('queryHistory.actions.delete', { defaultValue: 'Delete Query' })}
                       >
                         <Trash size={14} className="text-destructive" />
                       </Button>
@@ -267,7 +275,7 @@ const QueryHistory: React.FC<QueryHistoryProps> = ({ onSelectQuery }) => {
                     className="h-6 py-0 px-2 text-xs"
                     onClick={() => onSelectQuery(query.query)}
                   >
-                    Use
+                    {t('queryHistory.actions.use', { defaultValue: 'Use' })}
                   </Button>
                 </div>
               </div>

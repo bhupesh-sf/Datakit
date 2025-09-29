@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileUploadButton } from '@/components/common/FileUploadButton';
 import { SourceTypeSelector } from './SourceTypeSelector';
 
@@ -31,20 +32,21 @@ export const DataSourceManager: React.FC<DataSourceManagerProps> = ({
   isLoading = false,
   className = '',
 }) => {
+  const { t } = useTranslation();
   const [activeSourceType, setActiveSourceType] = useState<SourceType>('file');
 
   const sourceTypes = [
     {
       type: 'file' as SourceType,
-      label: 'Files',
+      label: t('dataSources.files', { defaultValue: 'Files' }),
       icon: File,
-      description: 'Local files',
+      description: t('dataSources.localFiles', { defaultValue: 'Local files' }),
     },
     {
       type: 'cloud' as SourceType,
-      label: 'Remote',
+      label: t('dataSources.remote', { defaultValue: 'Remote' }),
       icon: Cloud,
-      description: 'Remote data',
+      description: t('dataSources.remoteData', { defaultValue: 'Remote data' }),
     },
   ];
 
@@ -86,7 +88,7 @@ export const DataSourceManager: React.FC<DataSourceManagerProps> = ({
               </div>
 
               <h3 className="text-sm font-medium text-white mb-4 relative z-10 tracking-wide">
-                Connect Cloud Sources
+                {t('dataSources.connectCloudSources', { defaultValue: 'Connect Cloud Sources' })}
               </h3>
 
               {/* Provider logos - 4 smaller icons */}

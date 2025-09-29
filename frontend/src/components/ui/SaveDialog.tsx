@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
 
 interface SaveDialogProps {
@@ -15,11 +16,12 @@ export const SaveDialog: React.FC<SaveDialogProps> = ({
   isOpen,
   onClose,
   onSave,
-  title = 'Save',
-  placeholder = 'Enter name',
+  title,
+  placeholder,
   initialValue = '',
   disabled = false,
 }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState(initialValue);
 
   // Reset name when dialog opens/closes
@@ -51,11 +53,11 @@ export const SaveDialog: React.FC<SaveDialogProps> = ({
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50">
       <div className="bg-darkNav p-4 rounded-lg shadow-lg w-96">
-        <h3 className="text-lg font-medium mb-4">{title}</h3>
+        <h3 className="text-lg font-medium mb-4">{title || t('common.save', { defaultValue: 'Save' })}</h3>
         <input
           type="text"
           className="w-full p-2 bg-background border border-white/10 rounded mb-4 text-white placeholder:text-white/50 focus:outline-none focus:border-primary/50"
-          placeholder={placeholder}
+          placeholder={placeholder || t('common.enterName', { defaultValue: 'Enter name' })}
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={handleKeyPress}
@@ -68,14 +70,14 @@ export const SaveDialog: React.FC<SaveDialogProps> = ({
             onClick={onClose}
             disabled={disabled}
           >
-            Cancel
+            {t('common.cancel', { defaultValue: 'Cancel' })}
           </Button>
           <Button
             variant="primary"
             onClick={handleSave}
             disabled={!name.trim() || disabled}
           >
-            Save
+            {t('common.save', { defaultValue: 'Save' })}
           </Button>
         </div>
       </div>

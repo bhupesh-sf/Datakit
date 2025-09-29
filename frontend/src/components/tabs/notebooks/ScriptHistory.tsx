@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   History,
   Play,
@@ -26,6 +27,7 @@ import { UnsavedChangesDialog } from '@/components/ui/UnsavedChangesDialog';
  * Script history component for managing saved Python scripts
  */
 const ScriptHistory: React.FC = () => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedScript, setSelectedScript] = useState<string | null>(null);
 
@@ -85,11 +87,11 @@ const ScriptHistory: React.FC = () => {
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffMins < 60) {
-      return diffMins <= 1 ? 'Just now' : `${diffMins}m ago`;
+      return diffMins <= 1 ? t('notebooks.scriptHistory.justNow', { defaultValue: 'Just now' }) : t('notebooks.scriptHistory.minutesAgo', { defaultValue: '{{count}}m ago', count: diffMins });
     } else if (diffHours < 24) {
-      return `${diffHours}h ago`;
+      return t('notebooks.scriptHistory.hoursAgo', { defaultValue: '{{count}}h ago', count: diffHours });
     } else if (diffDays < 7) {
-      return `${diffDays}d ago`;
+      return t('notebooks.scriptHistory.daysAgo', { defaultValue: '{{count}}d ago', count: diffDays });
     } else {
       return formatDate(date);
     }
@@ -102,7 +104,7 @@ const ScriptHistory: React.FC = () => {
       <div className="p-4 border-b border-white/10">
         <div className="flex items-center gap-2 mb-3">
           <Notebook className="w-5 h-5 text-primary" />
-          <h3 className="font-medium text-white">Notebooks</h3>
+          <h3 className="font-medium text-white">{t('notebooks.scriptHistory.title', { defaultValue: 'Notebooks' })}</h3>
         </div>
 
         {/* Search */}
@@ -110,7 +112,7 @@ const ScriptHistory: React.FC = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
           <input
             type="text"
-            placeholder="Search Notebooks..."
+            placeholder={t('notebooks.scriptHistory.searchPlaceholder', { defaultValue: 'Search Notebooks...' })}
             className="w-full pl-10 pr-4 py-2 bg-background border border-white/10 rounded text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-primary/50"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -123,16 +125,16 @@ const ScriptHistory: React.FC = () => {
           size="sm"
           onClick={handleCreateNewNotebook}
           className="w-full mb-3 h-8 border-white/30 text-white/80 hover:bg-white/10 hover:border-white/30"
-          title="Create New Notebook"
+          title={t('notebooks.scriptHistory.createNewNotebook', { defaultValue: 'Create New Notebook' })}
         >
           <FilePlus className="w-4 h-4 mr-2" />
-          New Notebook
+          {t('notebooks.scriptHistory.newNotebook', { defaultValue: 'New Notebook' })}
         </Button>
 
         {/* Import button */}
         <div className="flex justify-between items-center">
           <span className="text-xs text-white/60">
-            {savedScripts.length} saved scripts
+            {t('notebooks.scriptHistory.savedScriptsCount', { defaultValue: '{{count}} saved scripts', count: savedScripts.length })}
           </span>
 
           <div className="relative">
@@ -141,16 +143,16 @@ const ScriptHistory: React.FC = () => {
               accept=".ipynb,.py"
               onChange={handleImportScript}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              title="Import script"
+              title={t('notebooks.scriptHistory.importScript', { defaultValue: 'Import script' })}
             />
             <Button
               variant="ghost"
               size="sm"
               className="h-7 px-2 text-xs"
-              title="Import Script"
+              title={t('notebooks.scriptHistory.importScript', { defaultValue: 'Import Script' })}
             >
               <Upload className="w-3 h-3 mr-1" />
-              Import
+              {t('notebooks.scriptHistory.import', { defaultValue: 'Import' })}
             </Button>
           </div>
         </div>
@@ -162,11 +164,11 @@ const ScriptHistory: React.FC = () => {
           <div className="p-4 text-center">
             <History className="w-8 h-8 text-white/30 mx-auto mb-2" />
             <p className="text-sm text-white/60">
-              {searchQuery ? 'No scripts found' : 'No saved scripts'}
+              {searchQuery ? t('notebooks.scriptHistory.noScriptsFound', { defaultValue: 'No scripts found' }) : t('notebooks.scriptHistory.noSavedScripts', { defaultValue: 'No saved scripts' })}
             </p>
             {!searchQuery && (
               <p className="text-xs text-white/40 mt-1">
-                Save your first script to see it here
+                {t('notebooks.scriptHistory.saveFirstScript', { defaultValue: 'Save your first script to see it here' })}
               </p>
             )}
           </div>
@@ -210,7 +212,7 @@ const ScriptHistory: React.FC = () => {
                         </h4>
                         {currentScript?.id === script.id && (
                           <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
-                            Current
+                            {t('notebooks.scriptHistory.current', { defaultValue: 'Current' })}
                           </span>
                         )}
                       </div>
@@ -230,13 +232,13 @@ const ScriptHistory: React.FC = () => {
 
                       <div className="flex items-center gap-1">
                         <FileText className="w-3 h-3" />
-                        <span>{script.cells.length} cells</span>
+                        <span>{t('notebooks.scriptHistory.cellsCount', { defaultValue: '{{count}} cells', count: script.cells.length })}</span>
                       </div>
 
                       {script.cells.some((cell) => cell.executionCount) && (
                         <div className="flex items-center gap-1">
                           <Play className="w-3 h-3" />
-                          <span>Executed</span>
+                          <span>{t('notebooks.scriptHistory.executed', { defaultValue: 'Executed' })}</span>
                         </div>
                       )}
                     </div>
@@ -266,7 +268,7 @@ const ScriptHistory: React.FC = () => {
                           }}
                         >
                           <Play className="w-4 h-4" />
-                          Load Script
+                          {t('notebooks.scriptHistory.loadScript', { defaultValue: 'Load Script' })}
                         </button>
 
                         <button
@@ -277,7 +279,7 @@ const ScriptHistory: React.FC = () => {
                           }}
                         >
                           <Edit3 className="w-4 h-4" />
-                          Rename
+                          {t('notebooks.scriptHistory.rename', { defaultValue: 'Rename' })}
                         </button>
 
                         <button
@@ -288,7 +290,7 @@ const ScriptHistory: React.FC = () => {
                           }}
                         >
                           <Copy className="w-4 h-4" />
-                          Duplicate
+                          {t('notebooks.scriptHistory.duplicate', { defaultValue: 'Duplicate' })}
                         </button>
 
                         <button
@@ -299,7 +301,7 @@ const ScriptHistory: React.FC = () => {
                           }}
                         >
                           <Download className="w-4 h-4" />
-                          Export
+                          {t('notebooks.scriptHistory.export', { defaultValue: 'Export' })}
                         </button>
 
                         <div className="border-t border-white/10" />
@@ -312,7 +314,7 @@ const ScriptHistory: React.FC = () => {
                           }}
                         >
                           <Trash2 className="w-4 h-4" />
-                          Delete
+                          {t('notebooks.scriptHistory.delete', { defaultValue: 'Delete' })}
                         </button>
                       </div>
                     )}
@@ -335,14 +337,14 @@ const ScriptHistory: React.FC = () => {
         onClose={handleCloseSaveConfirm}
         onSave={handleSaveAndContinue}
         onDiscard={handleDiscardAndContinue}
-        saveButtonText="Save and Create New"
+        saveButtonText={t('notebooks.scriptHistory.saveAndCreateNew', { defaultValue: 'Save and Create New' })}
       />
 
       {/* Save Dialog */}
       <SaveDialog
         isOpen={showSaveDialog}
-        title="Save Notebook"
-        placeholder="Enter notebook name"
+        title={t('notebooks.scriptHistory.saveNotebook', { defaultValue: 'Save Notebook' })}
+        placeholder={t('notebooks.scriptHistory.enterNotebookName', { defaultValue: 'Enter notebook name' })}
         onSave={handleSaveDialogComplete}
         onClose={handleCloseSaveDialog}
       />

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Copy, Database, Columns } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { InspectorMetrics } from '@/store/inspectorStore';
 
 interface EnhancedOverviewProps {
@@ -8,6 +9,7 @@ interface EnhancedOverviewProps {
 }
 
 const Overview: React.FC<EnhancedOverviewProps> = ({ metrics }) => {
+  const { t } = useTranslation();
   const criticalIssues = metrics.typeIssues.filter(
     (issue) => issue.severity === 'high'
   ).length;
@@ -21,9 +23,9 @@ const Overview: React.FC<EnhancedOverviewProps> = ({ metrics }) => {
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">Data Overview</h3>
+        <h3 className="text-lg font-semibold text-white">{t('inspector.overview.dataOverview', { defaultValue: 'Data Overview' })}</h3>
         <div className="text-xs text-white/50">
-          Analyzed at {new Date(metrics.analysisTimestamp).toLocaleTimeString()}
+          {t('inspector.overview.analyzedAt', { defaultValue: 'Analyzed at {{time}}', time: new Date(metrics.analysisTimestamp).toLocaleTimeString() })}
         </div>
       </div>
 
@@ -39,7 +41,7 @@ const Overview: React.FC<EnhancedOverviewProps> = ({ metrics }) => {
               {metrics.totalRows.toLocaleString()}
             </div>
           </div>
-          <div className="text-xs text-white/60">Rows</div>
+          <div className="text-xs text-white/60">{t('inspector.overview.rows', { defaultValue: 'Rows' })}</div>
         </motion.div>
 
         <motion.div
@@ -52,7 +54,7 @@ const Overview: React.FC<EnhancedOverviewProps> = ({ metrics }) => {
               {metrics.totalColumns}
             </div>
           </div>
-          <div className="text-xs text-white/60">Columns</div>
+          <div className="text-xs text-white/60">{t('inspector.overview.columns', { defaultValue: 'Columns' })}</div>
         </motion.div>
 
         <motion.div
@@ -65,7 +67,7 @@ const Overview: React.FC<EnhancedOverviewProps> = ({ metrics }) => {
               {metrics.duplicateRows}
             </div>
           </div>
-          <div className="text-xs text-white/60">Duplicates</div>
+          <div className="text-xs text-white/60">{t('inspector.overview.duplicates', { defaultValue: 'Duplicates' })}</div>
           {metrics.duplicateRows > 0 && (
             <div className="text-xs text-red-400/80">
               {metrics.duplicatePercentage.toFixed(1)}%
@@ -83,10 +85,10 @@ const Overview: React.FC<EnhancedOverviewProps> = ({ metrics }) => {
               {totalIssues}
             </div>
           </div>
-          <div className="text-xs text-white/60">Issues</div>
+          <div className="text-xs text-white/60">{t('inspector.overview.issues', { defaultValue: 'Issues' })}</div>
           {criticalIssues > 0 && (
             <div className="text-xs text-red-400/80">
-              {criticalIssues} critical
+              {t('inspector.overview.critical', { defaultValue: '{{count}} critical', count: criticalIssues })}
             </div>
           )}
         </motion.div>
@@ -95,26 +97,26 @@ const Overview: React.FC<EnhancedOverviewProps> = ({ metrics }) => {
       {/* Health Breakdown */}
       <div className="mb-4">
         <div className="text-sm font-medium text-white mb-2">
-          Quality Breakdown
+          {t('inspector.overview.qualityBreakdown', { defaultValue: 'Quality Breakdown' })}
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="text-center p-2 bg-card/10 rounded border border-white/5">
             <div className="text-sm font-medium text-white">
               {metrics.healthBreakdown.completeness}%
             </div>
-            <div className="text-xs text-white/60">Completeness</div>
+            <div className="text-xs text-white/60">{t('inspector.overview.completeness', { defaultValue: 'Completeness' })}</div>
           </div>
           <div className="text-center p-2 bg-card/10 rounded border border-white/5">
             <div className="text-sm font-medium text-white">
               {metrics.healthBreakdown.uniqueness}%
             </div>
-            <div className="text-xs text-white/60">Uniqueness</div>
+            <div className="text-xs text-white/60">{t('inspector.overview.uniqueness', { defaultValue: 'Uniqueness' })}</div>
           </div>
           <div className="text-center p-2 bg-card/10 rounded border border-white/5">
             <div className="text-sm font-medium text-white">
               {metrics.healthBreakdown.consistency}%
             </div>
-            <div className="text-xs text-white/60">Consistency</div>
+            <div className="text-xs text-white/60">{t('inspector.overview.consistency', { defaultValue: 'Consistency' })}</div>
           </div>
         </div>
       </div>
@@ -123,7 +125,7 @@ const Overview: React.FC<EnhancedOverviewProps> = ({ metrics }) => {
       <div className="mt-3 pt-3 border-t border-white/5">
         <div className="flex items-center justify-between text-xs text-white/50">
           <div>
-            Analysis completed in {(metrics.analysisTimeMs / 1000).toFixed(1)}s
+            {t('inspector.overview.analysisCompleted', { defaultValue: 'Analysis completed in {{time}}s', time: (metrics.analysisTimeMs / 1000).toFixed(1) })}
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 import { useAppStore } from "@/store/appStore";
 
 interface SidebarToggleProps {
@@ -14,14 +15,15 @@ const SidebarToggle: React.FC<SidebarToggleProps> = ({
   className = "", 
   variant = "chevron" 
 }) => {
+  const { t } = useTranslation();
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
   
   return (
     <button
       onClick={toggleSidebar}
       className={`p-2 rounded hover:bg-background/20 transition-colors text-white text-opacity-70 hover:text-opacity-100 ${className}`}
-      aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-      title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+      aria-label={sidebarCollapsed ? t('layout.sidebar.expand', { defaultValue: 'Expand sidebar' }) : t('layout.sidebar.collapse', { defaultValue: 'Collapse sidebar' })}
+      title={sidebarCollapsed ? t('layout.sidebar.expand', { defaultValue: 'Expand sidebar' }) : t('layout.sidebar.collapse', { defaultValue: 'Collapse sidebar' })}
     >
       {variant === "chevron" ? (
         sidebarCollapsed ? (

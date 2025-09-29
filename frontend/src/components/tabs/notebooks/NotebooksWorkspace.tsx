@@ -16,6 +16,7 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { usePythonStore } from '@/store/pythonStore';
 import { useDuckDBStore } from '@/store/duckDBStore';
@@ -54,6 +55,7 @@ const MAX_PANEL_WIDTH = 400;
  * Main container for the Python scripts workspace with resizable panels
  */
 const NotebooksWorkspace: React.FC = () => {
+  const { t } = useTranslation();
   const {
     pyodide,
     cells,
@@ -256,20 +258,20 @@ const NotebooksWorkspace: React.FC = () => {
         return (
           <div className="flex items-center gap-1 text-xs text-blue-400">
             <Clock size={12} className="animate-spin" />
-            <span>Saving...</span>
+            <span>{t('notebooks.workspace.status.saving')}</span>
           </div>
         );
       case 'saved':
         return (
           <div className="flex items-center gap-1 text-xs text-green-400">
-            <span>Saved</span>
+            <span>{t('notebooks.workspace.status.saved')}</span>
           </div>
         );
       case 'unsaved':
         return (
           <div className="flex items-center gap-1 text-xs text-yellow-400">
             <AlertCircle size={12} />
-            <span>Unsaved</span>
+            <span>{t('notebooks.workspace.status.unsaved')}</span>
           </div>
         );
       default:
@@ -340,11 +342,11 @@ const NotebooksWorkspace: React.FC = () => {
               </div>
             </div>
             <h3 className="text-lg font-heading font-medium text-white mb-2">
-              Python Initialization Failed
+              {t('notebooks.workspace.errors.pythonInitFailed')}
             </h3>
             <p className="text-white/70 mb-4">{pyodide.error}</p>
             <Button onClick={initializePython} variant="primary">
-              Retry Initialization
+              {t('notebooks.workspace.actions.retryInit')}
             </Button>
           </div>
         </div>
@@ -356,18 +358,18 @@ const NotebooksWorkspace: React.FC = () => {
         <div className="text-center p-8 max-w-md">
           <h3 className="text-lg font-heading font-medium text-white mb-2">
             {pyodide.isInitializing
-              ? 'Initializing Python'
-              : 'Python Not Ready'}
+              ? t('notebooks.workspace.status.initializing')
+              : t('notebooks.workspace.status.notReady')}
           </h3>
           <p className="text-white/70 mb-4">
             {pyodide.isInitializing
               ? ''
-              : 'Preparing your Python data analysis environment'}
+              : t('notebooks.workspace.status.preparing')}
           </p>
           <div className="text-sm text-white/60">
             <div className="flex items-center justify-center gap-2">
               <Package className="w-4 h-4 text-secondary" />
-              <span>Loading pandas, numpy...</span>
+              <span>{t('notebooks.workspace.status.loadingPackages')}</span>
             </div>
           </div>
         </div>
@@ -586,7 +588,7 @@ const NotebooksWorkspace: React.FC = () => {
                     onClick={handleCreateNewNotebook}
                   >
                     <Plus className="w-4 h-4" />
-                    New Notebook
+                    {t('notebooks.workspace.actions.newNotebook')}
                   </button>
 
                   {/* Saved Notebooks */}
@@ -613,7 +615,7 @@ const NotebooksWorkspace: React.FC = () => {
                     ))
                   ) : (
                     <div className="px-3 py-4 text-center text-sm text-white/50">
-                      No saved notebooks
+                      {t('notebooks.workspace.noSavedNotebooks')}
                     </div>
                   )}
                 </div>

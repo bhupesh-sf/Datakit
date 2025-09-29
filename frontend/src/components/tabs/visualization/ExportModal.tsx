@@ -1,5 +1,6 @@
 // src/components/tabs/visualization/ExportModal.tsx
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useChartsStore } from '@/store/chartsStore';
 import { Download, X, Image, FileText, Clipboard, Link } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +10,7 @@ import { toPng, toJpeg, toSvg } from 'html-to-image';
  * Modal for exporting charts with various options
  */
 const ExportModal: React.FC = () => {
+  const { t } = useTranslation();
   const { isExportModalOpen, toggleExportModal, currentChart } = useChartsStore();
   const [format, setFormat] = useState<'png' | 'jpeg' | 'svg' | 'csv'>('png');
   const [quality, setQuality] = useState<number>(0.92);
@@ -116,7 +118,7 @@ const ExportModal: React.FC = () => {
     <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50">
       <div className="bg-black p-6 rounded-lg shadow-lg w-96 border border-white/10">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">Export Chart</h3>
+          <h3 className="text-lg font-medium">{t('visualization.export.title')}</h3>
           <Button
             variant="ghost"
             size="sm"
@@ -130,7 +132,7 @@ const ExportModal: React.FC = () => {
         <div className="space-y-4">
           {/* Format selection */}
           <div>
-            <label className="block text-sm font-medium mb-2">Export Format</label>
+            <label className="block text-sm font-medium mb-2">{t('visualization.export.exportFormat')}</label>
             <div className="grid grid-cols-4 gap-2">
               <FormatOption 
                 id="png" 
@@ -184,7 +186,7 @@ const ExportModal: React.FC = () => {
           {/* Options */}
           {format !== 'csv' && (
             <div>
-              <label className="block text-sm font-medium mb-2">Options</label>
+              <label className="block text-sm font-medium mb-2">{t('visualization.export.options')}</label>
               <div className="space-y-2">
                 <div className="flex items-center ">
                   <input
@@ -194,7 +196,7 @@ const ExportModal: React.FC = () => {
                     onChange={(e) => setIncludeTitle(e.target.checked)}
                     className="mr-2 cursor-pointer" 
                   />
-                  <label htmlFor="include-title" className="text-sm">Include title</label>
+                  <label htmlFor="include-title" className="text-sm">{t('visualization.export.includeTitle')}</label>
                 </div>
                 <div className="flex items-center">
                   <input
@@ -204,7 +206,7 @@ const ExportModal: React.FC = () => {
                     onChange={(e) => setIncludeDescription(e.target.checked)}
                     className="mr-2 cursor-pointer"
                   />
-                  <label htmlFor="include-description" className="text-sm">Include description</label>
+                  <label htmlFor="include-description" className="text-sm">{t('visualization.export.includeDescription')}</label>
                 </div>
                 <div className="flex items-center">
                   <input
@@ -214,7 +216,7 @@ const ExportModal: React.FC = () => {
                     onChange={(e) => setIncludeBackground(e.target.checked)}
                     className="mr-2 cursor-pointer"
                   />
-                  <label htmlFor="include-background" className="text-sm">Include background</label>
+                  <label htmlFor="include-background" className="text-sm">{t('visualization.export.includeBackground')}</label>
                 </div>
               </div>
             </div>
@@ -228,7 +230,7 @@ const ExportModal: React.FC = () => {
             onClick={exportChart}
           >
             <Download size={16} className="mr-1" />
-            Export {format.toUpperCase()}
+            {t('visualization.export.exportButton', { format: format.toUpperCase() })}
           </Button>
           
           {format !== 'csv' && (
@@ -239,12 +241,12 @@ const ExportModal: React.FC = () => {
               {copySuccess ? (
                 <>
                   <Clipboard size={16} className="mr-1 text-primary" />
-                  Copied!
+                  {t('visualization.export.copied')}
                 </>
               ) : (
                 <>
                   <Clipboard size={16} className="mr-1" />
-                  Copy
+                  {t('visualization.export.copy')}
                 </>
               )}
             </Button>

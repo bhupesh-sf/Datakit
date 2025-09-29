@@ -10,6 +10,7 @@ import {
   Shield,
   ChevronRight,
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ interface S3ImportPanelProps {
 }
 
 const S3DatasetCard = ({ dataset, onImport, isImporting }) => {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -34,7 +36,7 @@ const S3DatasetCard = ({ dataset, onImport, isImporting }) => {
           </h4>
           {dataset.featured && (
             <span className="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded">
-              Featured
+              {t('importModal.s3.dataset.featured')}
             </span>
           )}
         </div>
@@ -66,12 +68,12 @@ const S3DatasetCard = ({ dataset, onImport, isImporting }) => {
         {isImporting ? (
           <>
             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-            Importing
+            {t('importModal.s3.dataset.importing')}
           </>
         ) : (
           <>
             <Download className="h-3 w-3 mr-1" />
-            Import Dataset
+            {t('importModal.s3.dataset.import')}
           </>
         )}
       </Button>
@@ -80,6 +82,7 @@ const S3DatasetCard = ({ dataset, onImport, isImporting }) => {
 };
 
 const S3ImportPanel: FC<S3ImportPanelProps> = ({ onImport }) => {
+  const { t } = useTranslation();
   const [customS3Url, setCustomS3Url] = useState("");
   const [inputError, setInputError] = useState(null);
 
@@ -100,13 +103,13 @@ const S3ImportPanel: FC<S3ImportPanelProps> = ({ onImport }) => {
     setInputError(null);
 
     if (!url.trim()) {
-      setInputError("Please enter an S3 URL");
+      setInputError(t('importModal.s3.validation.urlRequired'));
       return false;
     }
 
     const validation = validateS3Url(url);
     if (!validation.isValid) {
-      setInputError(validation.error || "Please enter a valid S3 URL");
+      setInputError(validation.error || t('importModal.s3.validation.invalidUrl'));
       return false;
     }
 
@@ -173,13 +176,13 @@ const S3ImportPanel: FC<S3ImportPanelProps> = ({ onImport }) => {
               htmlFor="s3-url"
               className="block text-sm font-medium text-white/80 mb-2"
             >
-              S3 URL (public bucket)
+              {t('importModal.s3.urlLabel')}
             </label>
             <div className="relative">
               <input
                 id="s3-url"
                 type="text"
-                placeholder="s3://bucket/path/file.csv or https://bucket.s3.amazonaws.com/file.csv"
+                placeholder={t('importModal.s3.urlPlaceholder')}
                 className={cn(
                   "w-full px-3 py-3 h-12 bg-black/30 border border-white/20 rounded-lg text-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 placeholder:text-white/40 transition-all",
                   inputError &&
@@ -242,7 +245,7 @@ const S3ImportPanel: FC<S3ImportPanelProps> = ({ onImport }) => {
 
                   <div className="flex items-center text-xs text-white/70">
                     <CheckCircle className="h-3.5 w-3.5 mr-1.5 text-white/50" />
-                    <span>Valid S3 URL - ready to import</span>
+                    <span>{t('importModal.s3.status.validUrl')}</span>
                   </div>
                 </div>
               </motion.div>
@@ -265,11 +268,11 @@ const S3ImportPanel: FC<S3ImportPanelProps> = ({ onImport }) => {
               {isImporting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Importing
+                  {t('importModal.s3.actions.importing')}
                 </>
               ) : (
                 <>
-                  Import from S3
+                  {t('importModal.s3.actions.importFromS3')}
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </>
               )}
@@ -297,17 +300,17 @@ const S3ImportPanel: FC<S3ImportPanelProps> = ({ onImport }) => {
         <div className="border-t border-white/10 pt-6">
           <div className="mb-4">
             <h4 className="text-base font-medium text-white mb-2 flex items-center">
-              Example Datasets
+              {t('importModal.s3.examples.title')}
             </h4>
             <p className="text-sm text-white/60">
-              Try these curated public datasets to get started
+              {t('importModal.s3.examples.description')}
             </p>
           </div>
 
           {datasetsLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
-              <span className="text-white/60">Loading datasets...</span>
+              <span className="text-white/60">{t('importModal.s3.loading.datasets')}</span>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -330,21 +333,21 @@ const S3ImportPanel: FC<S3ImportPanelProps> = ({ onImport }) => {
           <div className="flex items-center mb-2">
             <Shield className="h-3 w-3 mr-1.5 text-primary" />
             <span className="font-medium text-white/80">
-              S3 Browser Access:
+              {t('importModal.s3.footer.title')}:
             </span>
           </div>
           <ul className="space-y-1 ml-4">
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Most S3 buckets require proxy access due to CORS
+              {t('importModal.s3.footer.corsInfo')}
             </li>
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Supports CSV, JSON, Parquet, Excel formats
+              {t('importModal.s3.footer.supportedFormats')}
             </li>
             <li className="flex items-center">
               <span className="h-1 w-1 bg-white/40 rounded-full mr-2"></span>
-              Auto-detects file format and compression
+              {t('importModal.s3.footer.autoDetection')}
             </li>
           </ul>
         </div>

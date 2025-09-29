@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Code2, FileText, BarChart3, UserPen } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 export type ViewMode =
@@ -21,6 +22,7 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   onModeChange,
   className
 }) => {
+  const { t } = useTranslation();
   // Always keep expanded, no collapsing behavior
 
   const modes: {
@@ -31,33 +33,33 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   }[] = [
     {
       value: 'preview',
-      label: 'Preview',
+      label: t('viewMode.preview.label'),
       icon: <Eye size={16} />,
-      description: 'View and explore your data',
+      description: t('viewMode.preview.description'),
     },
     {
       value: 'query',
-      label: 'SQL',
+      label: t('viewMode.query.label'),
       icon: <Code2 size={16} />,
-      description: 'Query with SQL',
+      description: t('viewMode.query.description'),
     },
     {
       value: 'notebook',
-      label: 'Notebook',
+      label: t('viewMode.notebook.label'),
       icon: <FileText size={16} />,
-      description: 'Analyze with Jupyter notebook',
+      description: t('viewMode.notebook.description'),
     },
     {
       value: 'visualization',
-      label: 'Visualize',
+      label: t('viewMode.visualization.label'),
       icon: <BarChart3 size={16} />,
-      description: 'Create charts and graphs',
+      description: t('viewMode.visualization.description'),
     },
     {
       value: 'ai',
-      label: 'Assistant',
+      label: t('viewMode.ai.label'),
       icon: <UserPen size={16} />,
-      description: 'AI-powered insights',
+      description: t('viewMode.ai.description'),
     },
   ];
 

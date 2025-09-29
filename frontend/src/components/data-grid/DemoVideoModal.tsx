@@ -1,6 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Play } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface DemoVideoModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ const DemoVideoModal: React.FC<DemoVideoModalProps> = ({
   videoUrl = "https://www.youtube.com/embed/qqIVesU5McE?si=ZyVZQZ54loEyOWll",
   title = "DataKit Demo",
 }) => {
+  const { t } = useTranslation();
   return (
     <AnimatePresence>
       {isOpen && (
@@ -40,12 +42,12 @@ const DemoVideoModal: React.FC<DemoVideoModalProps> = ({
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <Play className="h-5 w-5"/>
-                <h2 className="text-lg font-semibold text-white">{title}</h2>
+                <h2 className="text-lg font-semibold text-white">{title || t('dataGrid.demoModal.defaultTitle', { defaultValue: 'DataKit Demo' })}</h2>
               </div>
               <button
                 onClick={onClose}
                 className="p-1 hover:bg-white/10 rounded transition-colors"
-                aria-label="Close modal"
+                aria-label={t('dataGrid.demoModal.close', { defaultValue: 'Close modal' })}
               >
                 <X className="h-5 w-5 text-white/70" />
               </button>
@@ -59,7 +61,7 @@ const DemoVideoModal: React.FC<DemoVideoModalProps> = ({
                 autoPlay
                 className="absolute inset-0 w-full h-full object-contain"
               >
-                Your browser does not support the video tag.
+                {t('dataGrid.demoModal.videoNotSupported', { defaultValue: 'Your browser does not support the video tag.' })}
               </video>
             </div>
           </motion.div>
