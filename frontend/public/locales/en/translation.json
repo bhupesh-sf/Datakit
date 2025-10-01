@@ -1479,6 +1479,12 @@
       "installedModels": "Installed Models",
       "noModels": "No models installed",
       "pullModelHint": "Pull a model below to get started",
+      "pullModelToStart": "Pull a model below to get started",
+      "inTerminal": "in terminal",
+      "makeSureRunning": "Make sure it's running on {{baseUrl}}",
+      "privacyNote": "Models run entirely on your machine for complete privacy.",
+      "needMoreModels": "Need more models? Visit",
+      "ollamaLibrary": "Ollama Library",
       "tryAgain": "Try Again"
     },
     "tableSelector": {
