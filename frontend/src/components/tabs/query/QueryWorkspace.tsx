@@ -340,9 +340,6 @@ const QueryWorkspace: React.FC = () => {
       <div className="h-full flex items-center justify-center">
         <div className="text-center p-8 max-w-md">
           <div className="mb-6 flex justify-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-              <Database className="w-8 h-8 text-primary animate-pulse" />
-            </div>
           </div>
           <h3 className="text-lg font-heading font-medium text-white mb-2">
             {isInitializing ? t('query.workspace.status.initializing') : t('query.workspace.status.notReady')}
@@ -352,12 +349,6 @@ const QueryWorkspace: React.FC = () => {
               ? t('query.workspace.status.settingUp')
               : t('query.workspace.status.preparing')}
           </p>
-          <div className="text-sm text-white/60">
-            <div className="flex items-center justify-center gap-2">
-              <Zap className="w-4 h-4 text-secondary" />
-              <span>{t('query.workspace.poweredBy')}</span>
-            </div>
-          </div>
         </div>
       </div>
     );

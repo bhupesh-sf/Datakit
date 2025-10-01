@@ -1534,7 +1534,7 @@
         "initializing": "Initializing DuckDB",
         "notReady": "DuckDB Not Ready",
         "settingUp": "Setting up your in-browser SQL database...",
-        "preparing": "Preparing your data analysis environment..."
+        "preparing": "Preparing your environment..."
       },
       "actions": {
         "retryInit": "Retry Initialization",

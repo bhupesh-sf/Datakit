@@ -3,7 +3,7 @@
     "comingSoon": "Em Breve",
     "save": "Salvar",
     "cancel": "Cancelar",
-    "enterName": "Digite o nome",
+    "enterName": "Digite nome",
     "download": {
       "csvTitle": "Baixar CSV"
     },
@@ -20,12 +20,12 @@
       "joinDiscord": "Junte-se ao nosso Discord",
       "viewChangelog": "Ver Registro de Alterações",
       "feedbackModal": {
-        "title": "Compartilhe Seu Feedback",
+        "title": "Dê Seu Feedback",
         "thankYou": "Obrigado pelo seu Feedback!",
         "emailLabel": "Email (opcional)",
         "emailPlaceholder": "seu.Email@exemplo.com",
         "messageLabel": "Mensagem *",
-        "messagePlaceholder": "Compartilhe seus pensamentos, sugestões ou relate problemas...",
+        "messagePlaceholder": "Compartilhe suas ideias, sugestões ou relate problemas...",
         "close": "Fechar",
         "cancel": "Cancelar",
         "sending": "Enviando...",
@@ -122,7 +122,7 @@
     },
     "sidebar": {
       "uploadFile": "Enviar Arquivo",
-      "importDescription": "Importe seu arquivo de dados para análise",
+      "importDescription": "Importar dados para análise",
       "signIn": "Entrar",
       "getStarted": "Começar Grátis",
       "settings": "Configurações",
@@ -131,7 +131,7 @@
     },
     "mobile": {
       "title": "DataKit funciona melhor no desktop",
-      "description": "Experimente análise de dados poderosa e processamento de arquivos sem problemas.",
+      "description": "Análise de dados fácil e sem problemas.",
       "switchNote": "Mude para desktop para a experiência completa, ou",
       "watchDemo": "assista a demonstração",
       "discord": "Discord"
@@ -153,7 +153,7 @@
       "title": "Visualização Dividida",
       "swapFiles": "Trocar arquivos",
       "close": "Fechar visualização dividida",
-      "columnCount": "{{Contagem}} colunas"
+      "columnCount": "{{Count}} colunas"
     }
   },
   "auth": {
@@ -217,8 +217,8 @@
       "signIn": "Entrar",
       "signUp": "Cadastrar-se",
       "signOut": "Sair",
-      "signOutSuccess": "Signed out successfully",
-      "signOutMessage": "You've been securely signed out of DataKit."
+      "signOutSuccess": "Desconectado com sucesso",
+      "signOutMessage": "Você foi desconectado do DataKit com segurança."
     },
     "protectedRoute": {
       "loading": "Carregando...",
@@ -228,9 +228,9 @@
     },
     "authGate": {
       "title": "Entrar obrigatório",
-      "description": "This Recurso requires Autenticação to ensure Segurança and enable advanced functionality.",
-      "getStartedFree": "Começar Gratuito",
-      "alreadyHaveAccount": "Already have an Conta?",
+      "description": "Este recurso requer Autenticação para garantir segurança.",
+      "getStartedFree": "Começar Gratuitamente",
+      "alreadyHaveAccount": "Já tem conta?",
       "signIn": "Entrar"
     }
   },
@@ -261,7 +261,7 @@
       },
       "googleSheets": {
         "name": "Planilhas Google",
-        "description": "Planilhas publicadas"
+        "description": "Planilhas públicas"
       }
     },
     "install": {
@@ -278,7 +278,7 @@
   "fileUpload": {
     "dropzone": {
       "title": "Solte arquivos aqui ou clique",
-      "description": "Suporta arquivos de dados grandes",
+      "description": "Suporta arquivos grandes",
       "dragTitle": "Solte seu arquivo aqui",
       "dragDescription": "Pronto para importar"
     },
@@ -305,21 +305,21 @@
     "readyToImport": "Pronto para importar",
     "processing": "Processando...",
     "dropOrClick": "Solte arquivos aqui ou clique",
-    "supportsLargeFiles": "Suporta arquivos de dados grandes"
+    "supportsLargeFiles": "Suporta arquivos grandes"
   },
   "dataImport": {
     "googleSheets": {
-      "title": "Importação do Planilhas Google",
+      "title": "Importação de Planilhas Google",
       "urlLabel": "URL do Planilhas Google (publicado na web)",
       "urlPlaceholder": "HTTPS://docs.google.com/spreadsheets/d/e/2PACX...",
       "requirements": {
         "title": "Requisitos:",
-        "published": "A planilha deve estar publicada na web",
+        "published": "A planilha deve estar pública na web",
         "formats": "Suporta formatos CSV, Excel e página web",
-        "noAuth": "Não requer autenticação para planilhas publicadas"
+        "noAuth": "Não requer autenticação para planilhas públicas"
       },
       "status": {
-        "ready": "Planilha publicada - pronta para importar",
+        "ready": "Planilha pública - pronta para importar",
         "openInSheets": "Abrir no Planilhas Google"
       },
       "buttons": {
@@ -327,7 +327,7 @@
       },
       "validation": {
         "enterUrl": "Por favor, digite uma URL do Planilhas Google",
-        "validUrl": "Por favor, digite uma URL válida do Planilhas Google que esteja publicada na web",
+        "validUrl": "Por favor, digite uma URL válida do Planilhas Google que esteja pública na web",
         "invalidUrl": "Por favor, digite uma URL válida"
       }
     },
@@ -343,7 +343,7 @@
       },
       "browserAccess": {
         "title": "Acesso S3 via Navegador:",
-        "corsNote": "A maioria dos buckets S3 requer acesso via proxy devido ao CORS",
+        "corsNote": "A maioria dos buckets S3 requer acesso via proxy devido a CORS",
         "formats": "Suporta formatos CSV, JSON, Parquet, Excel",
         "autoDetect": "Detecta automaticamente formato de arquivo e compressão"
       },
@@ -408,7 +408,7 @@
     },
     "footer": {
       "poweredBy": "Desenvolvido com DuckDB",
-      "built": "construído",
+      "built": "construído por",
       "company": "DataKit"
     },
     "tabs": {
@@ -443,8 +443,8 @@
     "workspace": {
       "title": "Informações da Área de Trabalho",
       "teamMembers": {
-        "title": "Equipe Membros",
-        "inviteMember": "Invite Membro"
+        "title": "Membros da Equipe",
+        "inviteMember": "Convidar Membro"
       },
       "inviteMember": "Convidar Membro",
       "inviteForm": {
@@ -458,7 +458,7 @@
           "owner": "Proprietário"
         },
         "sendInvite": "Enviar Convite",
-        "sending": "Sending...",
+        "sending": "Enviando...",
         "cancel": "Cancelar"
       },
       "loadingMembers": "Carregando membros...",
@@ -469,17 +469,17 @@
       },
       "loading": {
         "userData": "Carregando Usuário Dados...",
-        "workspaces": "Carregando workspaces...",
+        "workspaces": "Carregando Áreas de Trabalho...",
         "members": "Carregando Membros..."
       },
-      "noWorkspace": "No Área de Trabalho found. Por favor Criar a Área de Trabalho or contact Suporte.",
+      "noWorkspace": "Nenhuma Área de Trabalho encontrada. Por favor, crie uma Área de Trabalho ou entre em contato com o Suporte.",
       "workspaceName": {
         "placeholder": "Área de Trabalho Nome",
         "editTitle": "Editar Área de Trabalho Nome"
       },
       "personalWorkspace": "Pessoal Área de Trabalho",
-      "unlimitedCredits": "Ilimitado Créditos",
-      "creditsRemaining": "{{Contagem}} Créditos remaining",
+      "unlimitedCredits": "Créditos Ilimitados",
+      "creditsRemaining": "{{Contagem}} Créditos restantes",
       "unknownUser": "Unknown Usuário"
     },
     "notifications": {
@@ -572,7 +572,7 @@
       "current": "Atual",
       "displayMode": "Modo de Exibição",
       "themes": {
-        "datakitTeal": "DataKit Teal",
+        "datakitTeal": "DataKit verde-azulado",
         "oceanBlue": "Azul Oceano",
         "royalPurple": "Roxo Real",
         "vibrantRed": "Vermelho Vibrante",
@@ -587,12 +587,12 @@
     },
     "subscription": {
       "title": "Planos de Assinatura",
-      "description": "Escolha o plano that fits your needs",
+      "description": "Escolha o plano que lhe atenda",
       "badges": {
-        "earlyAdopter": "Adotante Inicial: 20% OFF",
+        "earlyAdopter": "Pioneiro: 20% OFF",
         "comingSoon": "Em Breve",
-        "moreCredits": "More Créditos soon!",
-        "currentPlan": "Atual Plan"
+        "moreCredits": "Mais Créditos (Em breve!)",
+        "currentPlan": "Plano Atual"
       },
       "plans": {
         "period": {
@@ -602,11 +602,11 @@
           "title": "Gratuito",
           "description": "Perfeito para começar",
           "features": {
-            "credits": "315 Créditos per mês",
-            "anthropicModels": "Powered by Anthropic Modelos",
-            "personalWorkspace": "Pessoal Área de Trabalho",
-            "basicAnalysis": "Basic Dados Análise",
-            "communitySupport": "Community Suporte"
+            "credits": "315 Créditos por mês",
+            "anthropicModels": "Baseado em modelos Anthropic",
+            "personalWorkspace": "Área de Trabalho Pessoal",
+            "basicAnalysis": "Análise de Dados Básica",
+            "communitySupport": "Suporte da Comunidade"
           }
         },
         "pro": {
@@ -1397,7 +1397,7 @@
       "signUpCredits": "Cadastrar-se to use DataKit Créditos",
       "noApiKeysNeeded": "Sem necessidade de chaves de API. Créditos incluídos with your Conta.",
       "signUpButton": "Cadastrar-se to Começar",
-      "creditsRemaining": "Créditos remaining: {{Contagem}}"
+      "creditsRemaining": "Créditos restantes: {{Contagem}}"
     },
     "providers": {
       "datakit": "DataKit",
@@ -1653,7 +1653,7 @@
   "workspace": {
     "fileTree": {
       "noFiles": "Nenhum arquivo na área de trabalho",
-      "addFilesHint": "Adicione arquivos usando o painel de origem acima",
+      "addFilesHint": "Adicione arquivos usando o painel acima",
       "workspaceFiles": "Arquivos da Área de Trabalho ({{Contagem}})",
       "remove": "Remover",
       "rename": "Renomear"
@@ -1685,11 +1685,11 @@
         "draft": "Rascunho",
         "draftDescription": "Temporary Área de Trabalho for Arquivos before saving to a named Área de Trabalho.",
         "benefits": "Benefits",
-        "benefitsDescription": "Keep projects organized, switch between datasets.",
-        "limit": "Limit",
-        "limitDescription": "Criar up to 1 workspaces.",
+        "benefitsDescription": "Mantenha projetos organizados, mude de base de dados.",
+        "limit": "Limite",
+        "limitDescription": "Criar até 1 área de trabalho.",
         "signUp": "Cadastrar-se",
-        "unlimitedWorkspaces": "for Ilimitado workspaces."
+        "unlimitedWorkspaces": "Áreas de Trabalho Ilimitadas."
       }
     }
   },
@@ -1707,13 +1707,13 @@
     "workspace": {
       "poweredBy": "Desenvolvido com WebAssembly",
       "errors": {
-        "initFailed": "DuckDB Initialization falhou"
+        "initFailed": "Inicialização do DuckDB falhou"
       },
       "status": {
         "initializing": "Inicializando DuckDB",
-        "notReady": "DuckDB Not Pronto",
-        "settingUp": "Configurando your in-browser SQL Banco de Dados...",
-        "preparing": "Preparando your Dados Análise environment..."
+        "notReady": "DuckDB não está pronto",
+        "settingUp": "Configurando seu Banco de Dados no browser...",
+        "preparing": "Preparando seu ambiente de Análise de Dados..."
       },
       "actions": {
         "retryInit": "Tentar Novamente Initialization",
@@ -1737,29 +1737,29 @@
       },
       "fullscreen": {
         "editor": "Editor SQL (Fullscreen)",
-        "results": "Consulta Resultados (Fullscreen)"
+        "results": "Resultados da consulta (Fullscreen)"
       },
       "editor": {
         "title": "Editor SQL",
-        "optimize": "Optimize",
-        "optimizationAvailable": "Consulta optimization suggestions disponível"
+        "optimize": "Otimize",
+        "optimizationAvailable": "Sugestões de otimização de consulta disponíveis"
       },
       "optimization": {
-        "title": "Consulta Optimization Tips",
-        "applyFix": "Aplicar Fix",
-        "optimizeQuery": "Optimize Consulta"
+        "title": "Dicas de otimização de consulta",
+        "applyFix": "Aplicar Dica",
+        "optimizeQuery": "Otimize a Consulta"
       },
       "warnings": {
         "largeDataset": {
-          "title": "Large Result Set ({{Contagem}} Linhas)",
-          "description": "This Consulta is returning a large dataset which may affect performance. Consider adding filters or LIMIT clause with lower value to reduce the result Tamanho.",
-          "addLimit": "Adicionar LIMIT Clause"
+          "title": "Consulta Grande ({{Contagem}} Linhas)",
+          "description": "Essa consulta está retornando muitos dados, o que pode estar afetando sua performance. Considere adicionar filtros ou cláusula LIMIT.",
+          "addLimit": "Adicionar cláusula LIMIT"
         }
       },
       "gettingStarted": {
-        "title": "Pronto to Consulta Sample Dados!",
-        "dataReady": "Você tem uploaded Dados Pronto to Consulta. Try the sample Consulta above or write your own SQL.",
-        "sampleData": "A sample employees Tabela is disponível for Testando. Importar your own CSV, JSON, or Parquet Arquivos to Consulta your Dados."
+        "title": "Pronto para Consulta de Dados!",
+        "dataReady": "Você está pronto para consultar dados. Tente a consulta acima ou escreva seu próprio SQL.",
+        "sampleData": "Uma tabela exemplo de empregados está disponível para teste. Importar seus Arquivos CSV, JSON, or Parquet próprios para consultar seus dados."
       },
       "saveDialog": {
         "title": "Salvar Consulta",
@@ -1780,7 +1780,7 @@
         "insertColumn": "Insert Coluna Consulta"
       },
       "loading": {
-        "local": "Carregando Local Esquemas...",
+        "local": "Carregando Esquemas Locais...",
         "database": "Carregando {{Nome}} Tabelas...",
         "schemas": "Carregando {{Nome}} Esquemas...",
         "postgres": "Carregando PostgreSQL Esquemas...",
@@ -1942,7 +1942,7 @@
         "importDataset": "Importar Conjunto de Dados"
       },
       "header": {
-        "title": "Google Nuvem Storage",
+        "title": "Google Cloud Storage",
         "subtitle": "Acesse conjuntos de dados públicos e dados de observação da terra"
       },
       "search": {
