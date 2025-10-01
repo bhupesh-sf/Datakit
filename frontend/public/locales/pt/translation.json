@@ -185,7 +185,7 @@
     },
     "messages": {
       "welcomeSuccess": "Bem-vindo de volta!",
-      "welcomeSuccessDesc": "Você fez login com sucesso no DataKit.",
+      "welcomeSuccessDesc": "Você está no DataKit.",
       "accountCreated": "Bem-vindo ao DataKit!",
       "accountCreatedDesc": "Sua conta foi criada com sucesso. Você agora tem acesso aos modelos do DataKit com R$ 15 para começar.",
       "signedOut": "Desconectado com sucesso",
@@ -203,7 +203,7 @@
     },
     "benefits": {
       "title": "Por que se juntar ao DataKit?",
-      "aiAccess": "Acesso ao Assistente DataKit com créditos incluídos",
+      "aiAccess": "Acesso ao Assistente de IA DataKit com créditos incluídos",
       "unlimitedWorkspaces": "Criar áreas de trabalho ilimitadas",
       "cloudConnectors": "Acesso a todos os conectores de nuvem",
       "exportReports": "Exportar relatórios do inspetor de dados",
@@ -228,7 +228,7 @@
     },
     "authGate": {
       "title": "Entrar obrigatório",
-      "description": "Este recurso requer Autenticação para garantir segurança.",
+      "description": "Este recurso requer Autenticação por medida de segurança.",
       "getStartedFree": "Começar Gratuitamente",
       "alreadyHaveAccount": "Já tem conta?",
       "signIn": "Entrar"
@@ -237,7 +237,7 @@
   "preview": {
     "empty": {
       "title": "Comece com o DataKit",
-      "description": "Importe seus arquivos para começar a analisar.",
+      "description": "Importe seus arquivos e comece a analisar.",
       "privacy": "Tudo roda localmente",
       "privacyNote": "— Seus dados permanecem privados.",
       "openFile": "Abrir arquivo",
@@ -297,10 +297,10 @@
       "remoteFileImportedDesc": "\"%s\" foi importado de %s"
     },
     "dataFiles": "Arquivos de Dados",
-    "largeSizeWarning": "Este arquivo tem {{Tamanho}}MB e pode causar problemas de memória. Continuar mesmo assim? (Considere usar o Chrome para uma melhor experiência.)",
-    "modernBrowserWarning": "Este arquivo tem {{Tamanho}}MB. Para melhor desempenho com arquivos grandes, use um navegador moderno (Chrome/Edge) com suporte a streaming.",
+    "largeSizeWarning": "Este arquivo tem {{size}}MB e pode causar problemas de memória. Continuar mesmo assim? (Considere usar o Chrome para uma melhor experiência.)",
+    "modernBrowserWarning": "Este arquivo tem {{size}}MB. Para melhor desempenho com arquivos grandes, use um navegador moderno (Chrome/Edge) com suporte a streaming.",
     "invalidFileType": "Por favor, importe um arquivo CSV, JSON, Excel, Parquet, TXT ou banco de dados DuckDB",
-    "dragDropLargeFileWarning": "Este arquivo tem {{Tamanho}}MB. Para melhor desempenho, tente usar o seletor de arquivos em vez de arrastar e soltar para arquivos grandes.",
+    "dragDropLargeFileWarning": "Este arquivo tem {{size}}MB. Para melhor desempenho, tente usar o seletor de arquivos em vez de arrastar e soltar para arquivos grandes.",
     "dropHere": "Solte seu arquivo aqui",
     "readyToImport": "Pronto para importar",
     "processing": "Processando...",
@@ -337,7 +337,7 @@
       "urlPlaceholder": "S3://bucket/caminho/arquivo.CSV ou HTTPS://bucket.S3.amazonaws.com/arquivo.CSV",
       "exampleDatasets": {
         "title": "Datasets de Exemplo",
-        "description": "Experimente estes datasets públicos selecionados para começar",
+        "description": "Experimente estes datasets públicos para começar",
         "featured": "Destaque",
         "loadingDatasets": "Carregando datasets..."
       },
@@ -479,7 +479,7 @@
       },
       "personalWorkspace": "Pessoal Área de Trabalho",
       "unlimitedCredits": "Créditos Ilimitados",
-      "creditsRemaining": "{{Contagem}} Créditos restantes",
+      "creditsRemaining": "{{count}} créditos restantes",
       "unknownUser": "Unknown Usuário"
     },
     "notifications": {
@@ -504,9 +504,9 @@
           "powered": "Desenvolvido pela Anthropic",
           "pretuned": "Pré-ajustado para SQL e transformação de dados",
           "claude": "Claude 3.5 Sonnet e Haiku incluídos",
-          "zeroConfig": "Zero configuração necessária",
-          "preTuned": "Pre-tuned for SQL & Dados transformation",
-          "claudeModels": "Claude 3.5 Sonnet & Haiku included"
+          "zeroConfig": "Zero configuração",
+          "preTuned": "Pré-ajustado para SQL e transformação de dados",
+          "claudeModels": "Claude 3.5 Sonnet & Haiku incluídos"
         },
         "subscription": {
           "proPlan": "Plano Pro",
@@ -514,10 +514,10 @@
           "viewPlans": "Ver Todos os Planos →"
         },
         "credits": "Créditos",
-        "poweredBy": "Powered by Anthropic",
+        "poweredBy": "Desenvolvido pela Anthropic",
         "active": "Ativo",
-        "proPlan": "Pro Plan",
-        "viewPlans": "Visualizar All Plans →"
+        "proPlan": "Plano Pro",
+        "viewPlans": "Visualizar Todos os Planos →"
       },
       "alternativeProviders": {
         "title": "Provedores Alternativos",
@@ -531,39 +531,39 @@
       },
       "unlimited": "Ilimitado",
       "creditStatus": {
-        "good": "Good",
-        "low": "Low",
-        "veryLow": "Very Low"
+        "good": "Bom",
+        "low": "Baixo",
+        "veryLow": "Muito Baixo"
       },
       "providerStatus": {
         "available": "Disponível",
-        "configured": "Configured",
+        "configured": "Configurado",
         "upgradeRequired": "Pro/Equipe obrigatório",
-        "setupRequired": "Configurar obrigatório"
+        "setupRequired": "Configuração obrigatória"
       },
       "credits": {
         "title": "Créditos"
       },
       "providers": {
-        "getApiKey": "Get Chave de API",
+        "getApiKey": "Obtenha Chave de API",
         "edit": "Editar",
         "save": "Salvar",
         "cancel": "Cancelar",
-        "activate": "Activate",
+        "activate": "Ativar",
         "active": "Ativo"
       },
       "whyDatakit": {
-        "title": "Why DataKit Modelos?",
+        "title": "Por que Modelos DataKit?",
         "features": {
-          "noApiKeys": "No chave(s) de API to Gerenciar",
-          "monthlyCredits": "Créditos monthly",
-          "optimized": "Optimized for Dados tasks"
+          "noApiKeys": "Sem chave(s) de API para gerenciar",
+          "monthlyCredits": "Créditos mensais",
+          "optimized": "Otimizado para tarefas com dados"
         },
         "learnMore": "Saiba mais →"
       },
       "autoExecuteSql": {
         "title": "Auto-Executar SQL",
-        "description": "Executar IA Consultas automatically"
+        "description": "Executar consultas de IA automaticamente"
       }
     },
     "appearance": {
@@ -611,49 +611,49 @@
         },
         "pro": {
           "title": "Pro",
-          "description": "With more Anthropic Créditos",
+          "description": "Com mais créditos Anthropic",
           "features": {
             "credits": "1500 Créditos per mês",
             "advancedAnalytics": "Análise avançada",
-            "prioritySupport": "Priority Suporte",
-            "exportCapabilities": "More Exportar capabilities",
+            "prioritySupport": "Suporte Prioritário",
+            "exportCapabilities": "Mais meios de Exportar",
             "advancedIntegrations": "Integrações avançadas"
           }
         },
         "team": {
           "title": "Equipe",
-          "price": "Custom",
+          "price": "Consultar",
           "description": "Para equipes em crescimento",
           "features": {
-            "unlimitedCredits": "Ilimitado Créditos",
-            "teamCollaboration": "Equipe collaboration",
-            "multipleWorkspaces": "Multiple Workspaces",
-            "memberManagement": "Membro management",
-            "premiumSupport": "Premium Suporte",
-            "customIntegrations": "Integrações personalizadas",
-            "advancedSecurity": "Advanced Segurança",
-            "accountManager": "Dedicated Conta manager"
+            "unlimitedCredits": "Créditos Ilimitados",
+            "teamCollaboration": "Colaboração em Equipe",
+            "multipleWorkspaces": "Múltiplas Áreas de Trabalho",
+            "memberManagement": "Gerenciamento de Membros",
+            "premiumSupport": "Suporte Premium",
+            "customIntegrations": "Integrações Personalizadas",
+            "advancedSecurity": "Segurança Avançada",
+            "accountManager": "Gerente de Conta Dedicado"
           }
         }
       },
       "currentUsage": {
-        "title": "Atual Usage",
-        "creditsRemaining": "Créditos Remaining",
-        "currentPlan": "Atual Plan",
+        "title": "Uso Atual",
+        "creditsRemaining": "Créditos Restantes",
+        "currentPlan": "Plano Atual",
         "nextReset": "Próximo Redefinir"
       },
-      "moreFeatures": "+{{Contagem}} more Recursos",
+      "moreFeatures": "+{{count}} recursos a mais",
       "waitlist": {
         "successTitle": "Você está na lista de espera!",
-        "successMessage": "Nós informaremos você at {{Email}} when {{featureName}} Recursos roll out.",
+        "successMessage": "Nós informaremos você em {{Email}} quando o recurso {{featureName}} for lançado.",
         "error": "Algo deu errado. Por favor Tentar novamente.",
-        "joining": "Joining...",
+        "joining": "Entrando...",
         "getNotified": "Ser notificado",
-        "modalTitle": "Join Waitlist",
-        "modalDescription": "Enter your Email to get notified when Pro Recursos are released.",
+        "modalTitle": "Entrar na Lista de Espera",
+        "modalDescription": "Digite seu Email para ser notificado quando os Recursos Pro forem lançados.",
         "emailPlaceholder": "your.Email@Exemplo.com",
         "cancel": "Cancelar",
-        "joinWaitlist": "Join Waitlist"
+        "joinWaitlist": "Entrar na Lista de Espera"
       }
     }
   },
@@ -662,7 +662,7 @@
     "emailLabel": "Seu Email (opcional)",
     "feedbackLabel": "Seu Feedback",
     "placeholder": "Conte-nos o que você pensa sobre o DataKit...",
-    "placeholderAlt": "Compartilhe seus pensamentos, sugestões ou reporte problemas...",
+    "placeholderAlt": "Compartilhe suas ideias, sugestões ou reporte problemas...",
     "success": "Obrigado pelo seu Feedback!",
     "button": {
       "text": "Compartilhar Feedback?"
@@ -698,10 +698,10 @@
       "copyToClipboard": "Copiar para área de transferência",
       "showCode": "Mostrar",
       "hideCode": "Ocultar",
-      "templateCount": "{{Contagem}} modelos",
+      "templateCount": "{{count}} modelos",
       "requires": "Requer:",
       "clearSearch": "Limpar pesquisa",
-      "noTemplates": "Nenhum(a) Modelos encontrado(a)",
+      "noTemplates": "Nenhum Modelo encontrado",
       "packages": "Pacotes:"
     },
     "workspace": {
@@ -713,163 +713,164 @@
       }
     },
     "response": {
-      "title": "Response",
+      "title": "Resposta",
       "tokens": "Tokens",
-      "tokensResponse": "response",
+      "tokensResponse": "resposta",
       "tokensViz": "viz",
-      "placeholder": "Ask a question to see responses here",
+      "placeholder": "Faça uma pergunta para ver respostas aqui",
       "thinking": "Pensando..."
     },
     "results": {
-      "placeholder": "Consulta Resultados will appear here",
+      "placeholder": "Resultados da Consulta aparecerão aqui",
       "error": {
-        "title": "Consulta Erro"
+        "title": "Erro na consulta"
       }
     },
     "context": {
-      "label": "Context",
-      "more": "more",
-      "noTables": "No Tabelas in context",
+      "label": "Contexto",
+      "more": "mais",
+      "noTables": "Nenhuma tabela no contexto",
       "addTables": "Adicionar Tabelas",
       "models": "Modelos",
       "autoExecute": "Auto-Executar"
     },
     "error": {
       "noModel": {
-        "title": "No Modelo Selected",
-        "message": "Por favor Selecionar an IA Modelo from the dropdown to Continuar."
+        "title": "Nenhum Modelo Selecionado",
+        "message": "Por favor Selecionar um Modelo de IA no dropdown para Continuar."
       },
       "noData": {
-        "title": "No Dados disponível",
-        "message": "Por favor Adicionar a Tabela to the context to ask questions about it."
+        "title": "Nenhum Dado disponível",
+        "message": "Por favor Adicionar a Tabela ao contexto para fazer perguntas sobre ela."
       },
       "auth": {
-        "title": "Autenticação obrigatório",
-        "message": "Por favor Entrar or Configurar your chave(s) de API to use IA Modelos."
+        "title": "Autenticação obrigatória",
+        "message": "Por favor Entrar ou Configurar suas chave(s) de API para usar Modelos de IA."
       },
       "rateLimit": {
-        "title": "Rate Limit Exceeded",
-        "message": "You've reached the rate limit. Por favor Tentar novamente later or upgrade your plan."
+        "title": "Limite de Taxa Excedido",
+        "message": "Você atingiu o limite de taxa. Por favor Tentar novamente mais tarde ou atualizar seu plano."
       },
       "connection": {
-        "title": "Connection Erro",
-        "message": "Não foi possível conectar to the IA service. Por favor check your internet connection."
+        "title": "Erro de Conexão",
+        "message": "Não foi possível conectar ao serviço de IA. Por favor verifique sua conexão com a internet."
       },
       "generic": {
         "title": "Algo deu errado"
       },
       "retry": "Tentar Novamente",
-      "dismiss": "Dismiss"
+      "dismiss": "Ignorar"
     },
     "pythonCell": {
       "expandInput": "Expandir Entrada",
       "collapseInput": "Recolher Entrada",
-      "executing": "Executing...",
+      "executing": "Executando...",
       "executeTooltip": "Executar Célula (Shift+Enter)",
       "previewMarkdown": "Visualização Markdown",
       "editMarkdown": "Editar Markdown",
       "deleteCell": "Excluir Célula",
-      "moveUp": "Move Up",
-      "moveDown": "Move Down",
+      "moveUp": "Mover para Cima",
+      "moveDown": "Mover para Baixo",
       "copyCode": "Copiar Código",
       "clearOutput": "Limpar Saída",
       "showInput": "Mostrar Entrada",
       "hideInput": "Ocultar Entrada",
       "showOutput": "Mostrar Saída",
       "hideOutput": "Ocultar Saída",
-      "bold": "Bold",
-      "italic": "Italic",
-      "header1": "Header 1",
-      "header2": "Header 2",
-      "header3": "Header 3",
-      "list": "List",
-      "quote": "Quote",
+      "bold": "Negrito",
+      "italic": "Itálico",
+      "header1": "Cabeçalho 1",
+      "header2": "Cabeçalho 2",
+      "header3": "Cabeçalho 3",
+      "list": "Lista",
+      "quote": "Citação",
       "link": "Link",
-      "inlineCode": "Inline Código",
+      "inlineCode": "Código Inline",
       "clickToEdit": "Clique para Editar Markdown...",
-      "plotOutput": "Plot Saída",
-      "plotOutputAlt": "Python plot Saída",
-      "htmlOutput": "HTML Saída",
+      "plotOutput": "Saída de Plot",
+      "plotOutputAlt": "Saída de Plot Python",
+      "htmlOutput": "Saída HTML",
       "columns": "Colunas:",
-      "moreRows": "... and {{Contagem}} more Linhas",
+      "moreRows": "... e {{count}} mais Linhas",
       "expandOutput": "Expandir Saída",
       "collapseOutput": "Recolher Saída",
       "output": "Saída"
     },
     "packageManager": {
       "pythonNotInitialized": "Python não inicializado",
-      "initializePython": "Inicializar Python to Gerenciar Pacotes",
-      "title": "Pacote Manager",
+      "initializePython": "Inicializar Python para gerenciar pacotes",
+      "title": "Gerenciador de Pacotes",
       "searchPlaceholder": "Pesquisar Pacotes...",
-      "showInstalledOnly": "Mostrar Installed Only",
-      "installedCount": "{{Contagem}} installed",
-      "installCustom": "Instalar Custom Pacote",
-      "packageNamePlaceholder": "Pacote Nome (e.g., requests)",
-      "packageInfo": "Only pure Python Pacotes or Pacotes with WebAssembly builds",
+      "showInstalledOnly": "Mostrar Apenas Instalados",
+      "installedCount": "{{count}} instalados",
+      "installCustom": "Instalar Pacote Personalizado",
+      "packageNamePlaceholder": "Nome do Pacote (ex: pandas, requests)",
+      "packageInfo": "Apenas Pacotes Python puros ou Pacotes com _builds_ WebAssembly",
       "noPackagesFound": "Nenhum(a) Pacotes encontrado(a)",
       "noPackagesToShow": "No Pacotes to Mostrar",
-      "installed": "Installed",
+      "installed": "Instalado",
       "install": "Instalar",
-      "installedPackagesTitle": "Installed Pacotes ({{Contagem}})",
+      "installedPackagesTitle": "({{count}}) Pacotes Instalados",
       "refresh": "Atualizar",
-      "andMore": "... and {{Contagem}} more"
+      "andMore": "... e {{count}} mais"
     },
     "scriptHistory": {
-      "justNow": "Just Agora",
-      "minutesAgo": "{{Contagem}}m atrás",
-      "hoursAgo": "{{Contagem}}h atrás",
-      "daysAgo": "{{Contagem}}d atrás",
+      "justNow": "Agorinha",
+      "minutesAgo": "{{count}}m atrás",
+      "hoursAgo": "{{count}}h atrás",
+      "daysAgo": "{{count}}d atrás",
       "title": "Notebooks",
       "searchPlaceholder": "Pesquisar Notebooks...",
       "createNewNotebook": "Criar Novo Notebook",
       "newNotebook": "Novo Notebook",
-      "savedScriptsCount": "{{Contagem}} Salvo Scripts",
+      "savedScriptsCount": "{{count}} Scripts Salvos",
       "importScript": "Importar Script",
       "import": "Importar",
-      "noScriptsFound": "Nenhum(a) Scripts encontrado(a)",
-      "noSavedScripts": "No Salvo Scripts",
-      "saveFirstScript": "Salvar your first Script to see it here",
+      "noScriptsFound": "Nenhum Script encontrado",
+      "noSavedScripts": "Nenhum Script Salvo",
+      "saveFirstScript": "Salvar seu primeiro Script para vê-lo aqui",
       "current": "Atual",
-      "cellsCount": "{{Contagem}} Células",
-      "executed": "Executed",
-      "loadScript": "Load Script",
-      "rename": "Rename",
-      "duplicate": "Duplicate",
+      "cellsCount": "{{count}} Células",
+      "executed": "Executado",
+      "loadScript": "Carregar Script",
+      "rename": "Renomear",
+      "duplicate": "Duplicar",
       "export": "Exportar",
       "delete": "Excluir",
-      "saveAndCreateNew": "Salvar and Criar Novo",
+      "saveAndCreateNew": "Salvar e Criar Novo",
       "saveNotebook": "Salvar Notebook",
-      "enterNotebookName": "Enter Notebook Nome"
+      "enterNotebookName": "Entrar Nome do Notebook"
     },
     "variableInspector": {
-      "dataFrameDescription": "DataFrame with {{Linhas}} Linhas and {{Colunas}} Colunas",
-      "seriesDescription": "Series with {{Tamanho}} elements{{dtype}}",
-      "arrayDescription": "Array with shape {{shape}}{{dtype}}",
-      "listDescription": "List with {{Tamanho}} elements",
-      "dictDescription": "Dictionary with {{Tamanho}} keys",
-      "confirmClear": "Tem certeza you want to Limpar the Python namespace? Isso irá Remover all Variáveis.",
+      "dataFrameDescription": "DataFrame com {{rows}} Linhas e {{columns}} Colunas",
+      "seriesDescription": "Série com {{size}} elementos{{dtype}}",
+      "arrayDescription": "Array com shape {{shape}}{{dtype}}",
+      "listDescription": "Lista com {{size}} elementos",
+      "dictDescription": "Dicionário com {{size}} chaves",
+      "confirmClear": "Tem certeza que deseja Limpar o namespace Python? Isso irá Remover todas as Variáveis.",
       "pythonNotInitialized": "Python não inicializado",
-      "initializePython": "Inicializar Python to inspect Variáveis",
+      "initializePython": "Inicializar Python para Inspecionar Variáveis",
       "title": "Variáveis",
       "refreshVariables": "Atualizar Variáveis",
       "clearNamespace": "Limpar namespace",
       "searchPlaceholder": "Pesquisar Variáveis...",
-      "variableCount": "{{filtered}} of {{total}} Variáveis",
-      "noVariables": "No Variáveis in namespace",
-      "noMatches": "No Variáveis match your Pesquisar",
-      "executeCode": "Executar some Python Código to see Variáveis here",
-      "copyVariableName": "Copiar variable Nome",
+      "variableCount": "{{filtered}} de {{total}} Variáveis",
+      "noVariables": "Nenhuma Variável no namespace",
+      "noMatches": "Nenhuma Variável corresponde à sua Pesquisa",
+      "executeCode": "Executar algum Código Python para ver Variáveis aqui",
+      "copyVariableName": "Copiar Nome da Variável",
+      "copyVariableValue": "Copiar Valor da Variável",
       "collapse": "Recolher",
       "expand": "Expandir",
       "shape": "Shape: ({{shape}})",
-      "size": "Tamanho: {{Tamanho}}",
+      "size": "Tamanho: {{size}}",
       "dtype": "DType: {{dtype}}",
-      "dataFrameInfo": "DataFrame Informação:",
+      "dataFrameInfo": "Informação do DataFrame:",
       "dataFrameColumns": "Colunas: {{Colunas}}",
-      "dataFrameIndex": "Index: {{Contagem}} entries",
-      "memoryUsage": "Uso de memória: ~{{Tamanho}} KB",
-      "contents": "Contents:",
-      "copyTip": "Click variable names to Copiar them to your clipboard"
+      "dataFrameIndex": "Índice: {{count}} entrada(s)",
+      "memoryUsage": "Uso de memória: ~{{size}} KB",
+      "contents": "Conteúdo:",
+      "copyTip": "Clique o nome da variável para Copiá-la para a Área de Transferência"
     }
   },
   "dataGrid": {
@@ -892,28 +893,28 @@
       "copy": "Copiar \"{{value}}\""
     },
     "errors": {
-      "missingParameters": "Ausente obrigatório parameters for Ação de IA",
+      "missingParameters": "Parâmetro Ausente obrigatório para Ação de IA",
       "aiFailed": "Ação de IA falhou:",
-      "signInRequired": "Por favor Entrar to use IA-powered Coluna actions with DataKit Smart.",
-      "actionFailed": "Ação de IA falhou: {{Erro}}",
-      "unknownError": "Unknown Erro"
+      "signInRequired": "Por favor Entrar para usar ações de coluna com IA no DataKit Smart.",
+      "actionFailed": "Ação de IA falhou: {{error}}",
+      "unknownError": "Erro Desconhecido"
     },
     "success": {
-      "tableCreated": "Sucesso! Created Novo Tabela: {{tableName}}"
+      "tableCreated": "Sucesso! Nova Tabela: {{tableName}}"
     },
-    "noData": "No Dados to display",
+    "noData": "Nenhum Dado para exibir",
     "columnHeader": {
-      "aiActions": "IA Coluna Actions",
+      "aiActions": "Ações de Coluna com IA",
       "stats": {
         "null": "Nulo: {{Porcentagem}}",
-        "unique": "uniq: {{Contagem}}",
-        "noStats": "no stats"
+        "unique": "único: {{count}}",
+        "noStats": "sem estatísticas"
       }
     },
     "demoModal": {
-      "defaultTitle": "DataKit Demonstração",
+      "defaultTitle": "Demonstração DataKit",
       "close": "Fechar modal",
-      "videoNotSupported": "Your browser does not Suporte the video Tag."
+      "videoNotSupported": "Seu browser não suporta vídeo."
     }
   },
   "demo": {
@@ -937,7 +938,7 @@
     "processing": "Processando {{organization}}/{{dataset}}..."
   },
   "info": {
-    "title": "Informações do App",
+    "title": "Informações do Aplicativo",
     "subtitle": "Detalhes de versão e compilação",
     "description": "Informações de versão e detalhes do aplicativo para DataKit",
     "version": "Versão",
@@ -951,7 +952,7 @@
   },
   "privacy": {
     "title": "Política de Privacidade",
-    "description": "Política de privacidade do DataKit - Saiba como protegemos seus dados e quais análises coletamos",
+    "description": "Política de privacidade do DataKit - Saiba como protegemos seus dados e o que coletamos",
     "backToDatakit": "Voltar ao DataKit"
   },
   "viewer": {
@@ -979,7 +980,7 @@
   },
   "fileTabs": {
     "closeFile": "Fechar arquivo",
-    "splitWith": "Dividir com {{partner}}",
+    "splitWith": "Compartilhar com {{partner}}",
     "googleSheets": "Planilhas Google",
     "contextMenu": {
       "rename": "Renomear",
@@ -987,7 +988,7 @@
       "closeOthers": "Fechar Outros",
       "closeAll": "Fechar Todos"
     },
-    "moreTabs": "Mais {{Contagem}} abas",
+    "moreTabs": "Mais {{count}} abas",
     "loading": "Carregando...",
     "import": "Importar"
   },
@@ -1015,15 +1016,15 @@
   },
   "importModal": {
     "googleSheets": {
-      "urlLabel": "URL do Planilhas Google (publicada na web)",
+      "urlLabel": "URL de Planilhas Google (públicas na web)",
       "urlPlaceholder": "HTTPS://docs.google.com/spreadsheets/d/e/2PACX...",
       "validation": {
         "urlRequired": "Por favor, insira uma URL do Planilhas Google",
-        "invalidPublishedUrl": "Por favor, insira uma URL válida do Planilhas Google que esteja publicada na web",
+        "invalidPublishedUrl": "Por favor, insira uma URL válida do Planilhas Google que esteja pública na web",
         "invalidUrl": "Por favor, insira uma URL válida"
       },
       "status": {
-        "readyToImport": "Planilha publicada - pronta para importar"
+        "readyToImport": "Planilha pública - pronta para importar"
       },
       "actions": {
         "openInSheets": "Abrir no Planilhas Google",
@@ -1032,9 +1033,9 @@
       },
       "requirements": {
         "title": "Requisitos",
-        "published": "A planilha deve estar publicada na web",
+        "published": "A planilha deve estar pública na web",
         "formats": "Suporta formatos CSV, Excel e página web",
-        "noAuth": "Não requer autenticação para planilhas publicadas"
+        "noAuth": "Não requer autenticação para planilhas públicas"
       }
     },
     "huggingface": {
@@ -1061,9 +1062,9 @@
         "import": "Importar Dataset"
       },
       "strategy": {
-        "directStreaming": "Mais rápido, sem Baixar necessário",
-        "parquetDownload": "Confiável, Baixar completo do dataset",
-        "alternativeFormat": "Fallback para formato CSV/JSON"
+        "directStreaming": "Mais rápido, não é necessário baixar",
+        "parquetDownload": "Confiável, Baixar dataset completo",
+        "alternativeFormat": "Alternativa em formato CSV/JSON"
       },
       "validation": {
         "datasetIdRequired": "Por favor, insira um ID de dataset",
@@ -1153,10 +1154,10 @@
       },
       "tables": {
         "title": "Selecionar Tabelas",
-        "description": "Escolha tabelas para conectar de {{Nome}}.",
+        "description": "Escolha tabelas de {{name}} para conectar.",
         "backToConnections": "Voltar às Conexões",
         "searchPlaceholder": "Buscar tabelas...",
-        "selectedCount": "{{Contagem}} tabela selecionada;{{Contagem}} tabelas selecionadas",
+        "selectedCount": "{{count}} tabela selecionada;{{count}} tabelas selecionadas",
         "connectSelected": "Conectar Tabelas Selecionadas"
       },
       "noTables": {
@@ -1211,7 +1212,7 @@
     "visualization": {
       "selectFile": "Selecionar arquivo",
       "postgresqlTable": "Tabela PostgreSQL",
-      "rowCount": "{{Contagem}} linhas",
+      "rowCount": "{{count}} linhas",
       "postgresqlVisualization": "Visualização PostgreSQL",
       "postgresqlComingSoon": "Em breve! Estamos trabalhando no suporte a gráficos para tabelas PostgreSQL.",
       "chartTypes": {
@@ -1226,7 +1227,7 @@
       "importData": "Importar Dados",
       "hidePanel": "Ocultar painel",
       "showPanel": "Mostrar painel",
-      "pointsCount": "{{Contagem}} pontos",
+      "pointsCount": "{{count}} pontos",
       "export": "Exportar",
       "chartConfiguration": "Configuração do Gráfico",
       "selectDataSource": "Selecione uma fonte de dados para começar",
@@ -1238,7 +1239,7 @@
       "title": "DataKit"
     },
     "footer": {
-      "poweredBy": "Desenvolvidopor",
+      "poweredBy": "Tecnologia ",
       "visitAmin": "Visitar Amin",
       "built": "built",
       "company": "DK"
@@ -1350,14 +1351,14 @@
       "selectModel": "Selecionar Modelo",
       "title": "Selecionar IA Modelo",
       "claudeModels": "Claude Modelos",
-      "signInRequired": "Entrar obrigatório",
-      "apiKeyRequired": "Chave de API obrigatório",
+      "signInRequired": "Login obrigatório",
+      "apiKeyRequired": "Chave de API obrigatória",
       "creditsPerToken": "{{Custo}} Créditos/1K Tokens",
       "dollarsPerToken": "${{Custo}}/1K",
-      "signUpCredits": "Cadastrar-se to use DataKit Créditos",
-      "noApiKeysNeeded": "Sem necessidade de chaves de API. Créditos incluídos with your Conta.",
-      "signUpButton": "Cadastrar-se to Começar",
-      "creditsRemaining": "Créditos restantes: {{Contagem}}"
+      "signUpCredits": "Cadastrar para usar Créditos DataKit",
+      "noApiKeysNeeded": "Sem necessidade de chaves de API. Créditos incluídos na sua Conta.",
+      "signUpButton": "Cadastre-se para Começar",
+      "creditsRemaining": "Créditos restantes: {{count}}"
     },
     "providers": {
       "datakit": "DataKit",
@@ -1368,41 +1369,41 @@
     },
     "apiKey": {
       "configuration": "Configuração",
-      "configureDescription": "Configurar IA providers and Configurações",
+      "configureDescription": "Configurar provedor IA",
       "providerTypes": {
         "local": "Local",
-        "cloudApi": "Nuvem API"
+        "cloudApi": "Nuvem"
       },
-      "serverConfiguration": "Server Configuração",
-      "ollamaServerUrl": "Ollama Server URL",
-      "ollamaServerUrlDescription": "The URL where your Ollama server is running",
-      "apiKeyConfiguration": "Chave de API Configuração",
+      "serverConfiguration": "Configuração do Servidor",
+      "ollamaServerUrl": "URL do Servidor Ollama",
+      "ollamaServerUrlDescription": "A URL onde seu servidor Ollama está em execução",
+      "apiKeyConfiguration": "Configuração da Chave de API",
       "apiKey": "Chave de API",
-      "enterApiKeyPlaceholder": "Enter your {{provider}} Chave de API",
-      "skipApiKeysTitle": "Skip the chave(s) de API with DataKit Créditos",
-      "skipApiKeysDescription": "Get instant Acesso to powerful IA Modelos without managing chave(s) de API. Créditos incluídos with your Conta.",
-      "signInToGetStarted": "Entrar to Começar",
-      "getApiKey": "Get Chave de API",
-      "generalSettings": "General Configurações",
-      "autoExecuteSQL": "Auto-Executar generated SQL",
-      "autoExecuteSQLDescription": "Automatically Executar SQL Consultas generated by IA",
+      "enterApiKeyPlaceholder": "Digite sua Chave de API {{provider}} ",
+      "skipApiKeysTitle": "Ignorar a(s) chave(s) de API com Créditos DataKit",
+      "skipApiKeysDescription": "Obtenha acesso instantâneo a poderosos Modelos IA sem gerenciar chave(s) de API. Créditos incluídos na sua Conta.",
+      "signInToGetStarted": "Entrar para Começar",
+      "getApiKey": "Obter Chave de API",
+      "generalSettings": "Configurações Gerais",
+      "autoExecuteSQL": "Auto-Executar SQL gerado",
+      "autoExecuteSQLDescription": "Executar Consultas SQL geradas por IA automaticamente.",
       "saveConfiguration": "Salvar Configuração",
       "providers": {
         "ollama": {
-          "description": "Local Ollama server - runs Modelos on your machine",
-          "helpText": "Executar IA Modelos locally with Completo Privacidade. Requires Ollama to be running at HTTP://localhost:11434"
+          "description": "Servidor Ollama local - executa Modelos na sua máquina",
+          "helpText": "Executar IA Modelos localmente com Privacidade Completa. Requer que o Ollama esteja em execução em HTTP://localhost:11434"
         },
         "openai": {
-          "description": "GPT-4o and GPT-4o Mini Modelos",
-          "helpText": "Most capable Modelos for complex reasoning and Análise."
+          "description": "Modelos GPT-4o e GPT-4o Mini",
+          "helpText": "Modelos mais capazes para raciocínio complexo e Análise."
         },
         "anthropic": {
-          "description": "Claude 3.5 Sonnet and Haiku Modelos",
-          "helpText": "Excellent for detailed Análise and explanations. Gratuito Créditos for Novo Usuários."
+          "description": "Modelos Claude 3.5 Sonnet e Haiku",
+          "helpText": "Excelente para Análise detalhada e explicações. Créditos Gratuitos para Novos Usuários."
         },
         "groq": {
-          "description": "Ultra-fast Llama 3.1 Modelos with Gratuito tier",
-          "helpText": "Fastest inference speed, perfect for trying IA Recursos. Completely Gratuito to Iniciar."
+          "description": "Modelos Llama 3.1 ultra-rápidos com nível Gratuito",
+          "helpText": "Velocidade de inferência mais rápida, perfeita para experimentar Recursos IA. Completamente Gratuito para Iniciar."
         }
       }
     },
@@ -1418,33 +1419,33 @@
         "startNewChat": "Iniciar a Novo chat"
       },
       "placeholders": {
-        "askAboutData": "Perguntar sobre your Dados...",
-        "followUp": "Fazer pergunta de acompanhamento question...",
+        "askAboutData": "Perguntar sobre seus Dados...",
+        "followUp": "Fazer pergunta de acompanhamento ...",
         "askAboutTable": "Perguntar sobre {{tableName}}..."
       },
       "setup": {
-        "configure": "Configurar your IA Modelo to Iniciar asking questions",
-        "signUpCredits": "Cadastrar-se for Gratuito Créditos",
-        "useApiKeys": "Use Suas Próprias API Keys",
-        "privacyNote": "Modelos only see your Tabela structure, not your actual Dados"
+        "configure": "Configurar seu Modelo IA para iniciar a fazer perguntas",
+        "signUpCredits": "Cadastrar-se para Créditos Gratuitos",
+        "useApiKeys": "Use Suas Próprias Chaves de API",
+        "privacyNote": "Modelos só veem a estrutura da sua Tabela, não seus Dados reais"
       },
       "suggestions": {
-        "title": "Suggestions",
+        "title": "Sugestões",
         "exploreData": {
           "title": "Explore Dados",
-          "prompt": "Give me an Visão Geral of this dataset - what Colunas do we have and what insights can you find?"
+          "prompt": "Eu quero ter uma Visão Geral deste conjunto de dados - quais Colunas temos e quais insights você pode tirar?"
         },
         "findPatterns": {
           "title": "Encontrar Padrões",
-          "prompt": "What are the most interesting patterns or trends in this Dados?"
+          "prompt": "Quais são os padrões mais interessantes ou tendências neste conjunto de dados?"
         },
         "dataQuality": {
-          "title": "Dados Qualidade",
-          "prompt": "Check this dataset for Ausente Valores, Duplicados, or Dados Qualidade Problemas"
+          "title": "Qualidade dos Dados",
+          "prompt": "Verifique este conjunto de dados em busca de Valores Ausentes, Duplicados ou outros Problemas de Qualidade dos Dados"
         },
         "quickStats": {
           "title": "Estatísticas Rápidas",
-          "prompt": "Mostrar me summary Estatísticas for all numeric Colunas"
+          "prompt": "Mostre-me um resumo de estatísticas para todas as colunas numéricas"
         }
       },
       "status": {
@@ -1452,8 +1453,8 @@
       }
     },
     "localModels": {
-      "title": "Local IA Modelos",
-      "description": "Executar IA Modelos locally using WebLLM",
+      "title": "Modelos IA Locais",
+      "description": "Executar Modelos IA localmente usando WebLLM",
       "webgpu": {
         "supported": "WebGPU Suportado",
         "notSupported": "Não Suportado",
@@ -1470,23 +1471,23 @@
       "active": "Ativo",
       "refresh": "Atualizar",
       "done": "Concluído",
-      "deleteConfirm": "Tem certeza you want to Excluir this Modelo?"
+      "deleteConfirm": "Tem certeza que deseja excluir este Modelo?"
     },
     "ollama": {
-      "connecting": "Conectando to Ollama...",
-      "connected": "Conectado to Ollama",
-      "connectionFailed": "Connection falhou",
-      "connectionFailedTitle": "Falhou to connect to Ollama",
-      "cannotConnect": "Não é possível conectar to Ollama server",
-      "howToFix": "Como corrigir this:",
-      "installStep": "1. Instalar Ollama from Ollama.IA",
+      "connecting": "Conectando ao Ollama...",
+      "connected": "Conectado ao Ollama",
+      "connectionFailed": "Conexão falhou",
+      "connectionFailedTitle": "Falhou ao conectar ao Ollama",
+      "cannotConnect": "Não é possível conectar ao servidor Ollama",
+      "howToFix": "Como corrigir isso:",
+      "installStep": "1. Instalar Ollama a partir do Ollama.IA",
       "runCommand": "2. Executar: OLLAMA_ORIGINS=* Ollama serve",
       "browserCompatibility": "3. Use Chrome, Edge, or Safari (Firefox Não Suportado)",
-      "firefoxNote": "Nota: Firefox is Não Suportado due to Restrições CORS",
-      "installedModels": "Installed Modelos",
-      "noModels": "No Modelos installed",
-      "pullModelHint": "Pull a Modelo below to Começar",
-      "pullModelToStart": "Pull a Modelo below to Começar",
+      "firefoxNote": "Nota: Firefox não é suportado devido a restrições CORS",
+      "installedModels": "Modelos Instalados",
+      "noModels": "Nenhum Modelo instalado",
+      "pullModelHint": "Baixe um Modelo abaixo para Começar",
+      "pullModelToStart": "Baixe um Modelo abaixo para Começar",
       "inTerminal": "no terminal",
       "makeSureRunning": "Certifique-se que está executando em {{baseUrl}}",
       "privacyNote": "Modelos executam completamente na sua máquina para total privacidade.",
@@ -1495,11 +1496,11 @@
       "tryAgain": "Tentar novamente"
     },
     "tableSelector": {
-      "title": "Selecionar Tabelas for IA Context",
+      "title": "Selecionar Tabelas para Contexto de IA",
       "searchPlaceholder": "Pesquisar Tabelas...",
-      "noTablesFound": "No tabela(s) encontrada(s) matching your Pesquisar",
-      "noTablesAvailable": "No Tabelas disponível",
-      "selectedCount": "{{Contagem}} selected",
+      "noTablesFound": "Nenhuma tabela encontrada neste banco de dados.",
+      "noTablesAvailable": "Nenhuma Tabela disponível",
+      "selectedCount": "{{count}} selecionada(s)",
       "columns": "Colunas",
       "postgresql": "PostgreSQL",
       "motherduck": "MotherDuck",
@@ -1511,29 +1512,29 @@
     },
     "queryCard": {
       "query": "Consulta",
-      "primary": "Primary",
+      "primary": "Principal",
       "visualize": "Visualize",
       "copySQL": "Copiar SQL",
       "copied": "Copiado!",
-      "editInQueryTab": "Editar in Consulta Tab",
+      "editInQueryTab": "Editar na Aba de Consulta",
       "run": "Executar",
-      "generatingVisualization": "Gerando visualization...",
-      "queryRunning": "Consulta is running..."
+      "generatingVisualization": "Gerando visualização...",
+      "queryRunning": "Consulta em execução..."
     },
     "visualization": {
       "export": {
-        "title": "Exportar Visualization",
+        "title": "Exportar Visualização",
         "format": "Exportar Formato",
         "quality": "Qualidade",
-        "options": "Options",
+        "options": "Opções",
         "includeTitle": "Incluir título",
         "includeBackground": "Incluir fundo",
         "copy": "Copiar",
         "copied": "Copiado!",
         "export": "Exportar",
-        "exporting": "Exporting...",
-        "chartNotFound": "Chart Não encontrado",
-        "exportFailed": "Exportar falhou"
+        "exporting": "Exportando...",
+        "chartNotFound": "Gráfico não encontrado",
+        "exportFailed": "Exportação falhou"
       }
     }
   },
@@ -1544,7 +1545,7 @@
         "descriptionWithFile": "Comece analisando \"{{fileName}}\" para descobrir insights de qualidade de dados",
         "descriptionNoFile": "Selecione um arquivo para iniciar sua análise de qualidade de dados",
         "startButton": "Iniciar Análise",
-        "timeEstimate": "A análise normalmente leva de 10 a 30 segundos, dependendo do tamanho dos seus dados"
+        "timeEstimate": "A análise normalmente leva de 10 a 30 segundos, dependendo da quantidade de dados"
       },
       "noColumns": {
         "title": "Nenhuma Coluna Encontrada",
@@ -1596,7 +1597,7 @@
     },
     "postgresql": {
       "title": "PostgreSQL Inspetor",
-      "comingSoon": "Em Breve! We're working on Dados inspection for PostgreSQL Tabelas."
+      "comingSoon": "Em Breve! Estamos trabalhando na inspeção de dados para tabelas PostgreSQL."
     },
     "overview": {
       "title": "Visão Geral",
@@ -1607,33 +1608,33 @@
       "columns": "Colunas",
       "duplicates": "Duplicados",
       "issues": "Problemas",
-      "critical": "{{Contagem}} Crítico",
+      "critical": "{{count}} Crítico",
       "qualityBreakdown": "Qualidade Breakdown",
-      "completeness": "Completeness",
-      "uniqueness": "Uniqueness",
-      "consistency": "Consistency",
-      "analysisCompleted": "Análise concluído in {{time}}s"
+      "completeness": "Completude",
+      "uniqueness": "Unicidade",
+      "consistency": "Consistência",
+      "analysisCompleted": "Análise concluída em {{time}}s"
     },
     "problems": {
-      "title": "Dados Qualidade Problemas",
+      "title": "Problemas de Qualidade de Dados",
       "noProblems": {
         "title": "Nenhum Problema Encontrado!",
-        "description": "Your Dados appears to be clean with no Crítico Problemas detected.",
+        "description": "Seus dados parecem estar limpos, sem problemas críticos detectados.",
         "healthScore": "Pontuação de Saúde: {{score}}%"
       },
       "duplicateRows": {
-        "title": "Duplicate Linhas",
-        "description": "{{Contagem}} duplicate Linhas found ({{Porcentagem}}% of total)"
+        "title": "Linhas Duplicadas",
+        "description": "{{count}} Linhas duplicadas encontradas ({{Porcentagem}}% do total)"
       },
       "missingValues": {
-        "title": "Valores Ausentes in {{columnName}}",
-        "description": "{{Contagem}} Nulo Valores ({{Porcentagem}}% of Coluna)"
+        "title": "Valores Ausentes em {{columnName}}",
+        "description": "{{count}} Valores Nulos ({{Porcentagem}}% da Coluna)"
       },
       "typeIssue": {
-        "title": "{{Problema}} in {{columnName}}",
-        "description": "{{Contagem}} problematic Valores found"
+        "title": "{{problem}} em {{columnName}}",
+        "description": "{{count}} Valores problemáticos encontrados"
       },
-      "issueCount": "{{filtered}} of {{total}} Problemas",
+      "issueCount": "{{filtered}} de {{total}} Problemas",
       "severity": {
         "critical": "Crítico",
         "warning": "Aviso",
@@ -1642,55 +1643,55 @@
       "filteredBy": "Filtrado por:",
       "actions": {
         "viewDetails": "Visualizar Detalhes",
-        "exporting": "Exporting...",
-        "exportCompleted": "Exportar concluído!",
+        "exporting": "Exportando...",
+        "exportCompleted": "Exportação concluída!",
         "exportData": "Exportar Dados",
-        "signInToExport": "Entrar to Exportar Dados"
+        "signInToExport": "Entrar para Exportar Dados"
       },
       "details": {
         "examples": "Exemplos:",
-        "count": "Contagem: {{Contagem}}",
+        "count": "Contagem: {{count}}",
         "percentage": "Porcentagem: {{Porcentagem}}%",
         "column": "Coluna: {{columnName}}"
       },
-      "noIssuesFound": "No {{Filtrar}} Problemas found"
+      "noIssuesFound": "Nenhum Problema encontrado"
     }
   },
   "workspace": {
     "fileTree": {
       "noFiles": "Nenhum arquivo na área de trabalho",
       "addFilesHint": "Adicione arquivos usando o painel acima",
-      "workspaceFiles": "Arquivos da Área de Trabalho ({{Contagem}})",
+      "workspaceFiles": "Arquivos da Área de Trabalho ({{count}})",
       "remove": "Remover",
       "rename": "Renomear"
     },
     "selector": {
       "selectWorkspace": "Selecionar Área de Trabalho",
-      "unsaved": "unsaved",
-      "workspaces": "Workspaces",
-      "organizeDescription": "Organize your Arquivos into workspaces. Arquivos are referenced, not stored.",
+      "unsaved": "Rascunho Não Salvo",
+      "workspaces": "Áreas de Trabalho",
+      "organizeDescription": "Organize seus Arquivos em áreas de trabalho. Arquivos são referenciados, não armazenados.",
       "draft": "Rascunho",
-      "fileCount": "{{Contagem}} Arquivos",
+      "fileCount": "{{count}} Arquivos",
       "file": "Arquivo",
       "files": "Arquivos",
       "workspaceNamePlaceholder": "Área de Trabalho Nome...",
-      "saveDraftAsWorkspace": "Salvar Rascunho as Área de Trabalho",
-      "newWorkspace": "Novo Área de Trabalho",
-      "workspaceCreated": "Área de Trabalho Created",
-      "workspaceCreatedMessage": "\"{{Nome}}\" Área de Trabalho has been created successfully",
-      "workspaceRenamed": "Área de Trabalho Renamed",
-      "workspaceRenamedMessage": "Área de Trabalho renamed from \"{{oldName}}\" to \"{{newName}}\"",
-      "deleteConfirmation": "Excluir Área de Trabalho \"{{Nome}}\"? This action cannot be undone.",
-      "workspaceDeleted": "Área de Trabalho Deleted",
-      "workspaceDeletedMessage": "\"{{Nome}}\" Área de Trabalho has been deleted",
-      "workspaceSaved": "Área de Trabalho Salvo",
-      "workspaceSavedMessage": "Rascunho Área de Trabalho Salvo as \"{{Nome}}\" with {{Contagem}} {{Arquivos}}",
+      "saveDraftAsWorkspace": "Salvar Rascunho como Área de Trabalho",
+      "newWorkspace": "Nova Área de Trabalho",
+      "workspaceCreated": "Área de Trabalho Criada",
+      "workspaceCreatedMessage": "\"{{Nome}}\" Área de Trabalho foi criada com sucesso",
+      "workspaceRenamed": "Área de Trabalho Renomeada",
+      "workspaceRenamedMessage": "Área de Trabalho renomeada de \"{{oldName}}\" para \"{{newName}}\"",
+      "deleteConfirmation": "Excluir Área de Trabalho \"{{Nome}}\"? Esta ação não pode ser desfeita.",
+      "workspaceDeleted": "Área de Trabalho Excluída",
+      "workspaceDeletedMessage": "\"{{Nome}}\" Área de Trabalho foi excluída",
+      "workspaceSaved": "Área de Trabalho Salva",
+      "workspaceSavedMessage": "Rascunho Área de Trabalho Salvo como \"{{Nome}}\" com {{count}} {{Arquivos}}",
       "tooltip": {
-        "workspaces": "Workspaces",
-        "organizeFiles": "organize your Arquivos without storing actual Dados - only references for Privacidade.",
+        "workspaces": "Áreas de Trabalho",
+        "organizeFiles": "organize seus arquivos sem armazenar dados reais - apenas referências para sua privacidade.",
         "draft": "Rascunho",
-        "draftDescription": "Temporary Área de Trabalho for Arquivos before saving to a named Área de Trabalho.",
-        "benefits": "Benefits",
+        "draftDescription": "Área de Trabalho Temporária para Arquivos antes de salvar em uma Área de Trabalho nomeada.",
+        "benefits": "Benefícios",
         "benefitsDescription": "Mantenha projetos organizados, mude de base de dados.",
         "limit": "Limite",
         "limitDescription": "Criar até 1 área de trabalho.",
@@ -1722,28 +1723,28 @@
         "preparing": "Preparando seu ambiente de Análise de Dados..."
       },
       "actions": {
-        "retryInit": "Tentar Novamente Initialization",
-        "fullScreenResults": "Tela Cheia Resultados",
-        "hideHistory": "Ocultar Consulta Histórico",
-        "showHistory": "Mostrar Consulta Histórico",
-        "exitFullScreen": "Exit Tela Cheia",
-        "hideSchema": "Ocultar Esquema Browser",
-        "showSchema": "Mostrar Esquema Browser",
+        "retryInit": "Tentar Inicialização Novamente",
+        "fullScreenResults": "Resultados em Tela Cheia",
+        "hideHistory": "Ocultar Histórico de Consultas",
+        "showHistory": "Mostrar Histórico de Consultas",
+        "exitFullScreen": "Sair de Tela Cheia",
+        "hideSchema": "Ocultar Esquema do Navegador",
+        "showSchema": "Mostrar Esquema do Navegador",
         "save": "Salvar",
         "execute": "Executar",
         "executeShortcut": "Executar Consulta (⌘+Enter)",
         "fullScreenEditor": "Tela Cheia Editor",
-        "dismiss": "Dismiss",
+        "dismiss": "Dispensar",
         "cancel": "Cancelar"
       },
       "results": {
-        "title": "Consulta Resultados",
+        "title": "Resultados da Consulta",
         "executionTime": "{{time}}ms",
-        "rowCount": "{{Contagem}} Linhas"
+        "rowCount": "{{count}} Linhas"
       },
       "fullscreen": {
-        "editor": "Editor SQL (Fullscreen)",
-        "results": "Resultados da consulta (Fullscreen)"
+        "editor": "Editor SQL (Tela Cheia)",
+        "results": "Resultados da consulta (Tela Cheia)"
       },
       "editor": {
         "title": "Editor SQL",
@@ -1757,7 +1758,7 @@
       },
       "warnings": {
         "largeDataset": {
-          "title": "Consulta Grande ({{Contagem}} Linhas)",
+          "title": "Consulta Grande ({{count}} Linhas)",
           "description": "Essa consulta está retornando muitos dados, o que pode estar afetando sua performance. Considere adicionar filtros ou cláusula LIMIT.",
           "addLimit": "Adicionar cláusula LIMIT"
         }
@@ -1799,8 +1800,8 @@
         "columns": "No Colunas disponível"
       },
       "sections": {
-        "tables": "Tabelas ({{Contagem}})",
-        "views": "Views ({{Contagem}})"
+        "tables": "Tabelas ({{count}})",
+        "views": "Views ({{count}})"
       },
       "postgres": {
         "available": "Disponível",
@@ -1876,7 +1877,7 @@
       "choices": {
         "title": "Suas Escolhas",
         "description": "Você pode desabilitar análises avançadas nas Configurações. As análises básicas permanecem ativas para garantir que o DataKit funcione adequadamente e com segurança para todos os usuários.",
-        "contact": "Dúvidas sobre privacidade? Entre em contato conosco em Privacidade@DataKit.dev"
+        "contact": "Dúvidas sobre privacidade? Entre em contato conosco em privacy@DataKit.dev"
       },
       "lastUpdated": "Última atualização"
     }
@@ -1959,7 +1960,7 @@
       },
       "sections": {
         "featured": "Observação da Terra em Destaque",
-        "allDatasets": "Todos os Conjuntos de Dados ({{Contagem}})"
+        "allDatasets": "Todos os Conjuntos de Dados ({{count}})"
       },
       "empty": {
         "noDatasets": "Nenhum conjunto de dados encontrado",
