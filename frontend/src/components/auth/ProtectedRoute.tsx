@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRequireAuth } from '@/hooks/auth/useRequireAuth';
 import AuthModal from './AuthModal';
 
@@ -13,6 +14,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   fallback,
   requireAuth = true 
 }) => {
+  const { t } = useTranslation();
   const [showAuthModal, setShowAuthModal] = useState(false);
   
   const { isAuthenticated, isLoading } = useRequireAuth({
