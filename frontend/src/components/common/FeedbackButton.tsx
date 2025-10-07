@@ -1,4 +1,5 @@
-import { FC } from 'react';
+import { FC, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -31,6 +32,7 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
   className = '',
 }) => {
   const { t } = useTranslation();
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const {
     showFeedbackModal,
     feedbackEmail,
@@ -51,19 +53,35 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
     <>
       {/* Feedback Button */}
       <Button
+        ref={buttonRef}
         variant={variant}
         size={size}
         onClick={openFeedbackModal}
         className={`flex items-center ${className}`}
       >
-        <MessageSquare size={14} className="mr-1.5 text-white" />
-        <span className="text-xs">{text || t('feedback.button.text')}</span>
+        <MessageSquare size={14} className={text ? "mr-1.5 text-white" : "text-white drop-shadow-sm"} />
+        {text && <span className="text-xs">{text}</span>}
+        {text === undefined && <span className="text-xs">{t('feedback.button.text')}</span>}
       </Button>
 
-      {/* Feedback Modal */}
-      {showFeedbackModal && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-black p-4 rounded-lg shadow-lg w-96 border border-white/10">
+      {/* Feedback Modal - Rendered via Portal */}
+      {showFeedbackModal && createPortal(
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-transparent z-40"
+            onClick={closeFeedbackModal}
+          />
+          {/* Modal positioned relative to button */}
+          <div 
+            className="fixed z-50 w-80 bg-black/95 border border-white/20 rounded-lg shadow-xl backdrop-blur-sm"
+            style={{
+              top: buttonRef.current ? buttonRef.current.getBoundingClientRect().bottom + window.scrollY + 8 : '50vh',
+              left: buttonRef.current ? Math.max(16, Math.min(window.innerWidth - 336, buttonRef.current.getBoundingClientRect().left + window.scrollX)) : '50vw',
+              transform: !buttonRef.current ? 'translate(-50%, -50%)' : 'none'
+            }}
+          >
+            <div className="p-4">
             <h3 className="text-lg font-medium mb-4">{t('feedback.modal.title')}</h3>
 
             {feedbackSuccess ? (
@@ -175,8 +193,10 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
                 </div>
               </>
             )}
+            </div>
           </div>
-        </div>
+        </>,
+        document.body
       )}
     </>
   );

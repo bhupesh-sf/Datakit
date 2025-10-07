@@ -80,14 +80,13 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
 
         {/* Feedback Button - Essential CTA */}
         <Tooltip placement="bottom" content={t('common.actionButtons.feedback', { defaultValue: 'Feedback' })}>
-          <Button
+          <FeedbackButton
+            context={feedbackContext}
             variant="ghost"
             size="sm"
-            onClick={openFeedbackModal}
+            text=""
             className="!px-2 !py-1 min-w-0 opacity-90 hover:opacity-100 hover:scale-105 transition-all duration-200"
-          >
-            <MessageSquare size={14} className="text-white drop-shadow-sm" />
-          </Button>
+          />
         </Tooltip>
 
         <Tooltip placement="bottom" content={t('common.actionButtons.documentation', { defaultValue: 'Documentation' })}>
@@ -388,8 +387,6 @@ const ActionButtons: React.FC<UnifiedActionButtonsProps> = ({
         )}
       </div>
 
-      {/* Feedback Modal - for minimal version */}
-      {minimal && renderFeedbackModal()}
     </>
   );
 };
