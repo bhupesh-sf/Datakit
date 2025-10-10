@@ -3,17 +3,23 @@ export function createCorsOriginChecker(allowedOrigins: string[]) {
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void,
   ) => {
+    console.log('CORS check - Origin:', origin);
+    console.log('CORS check - Allowed origins:', allowedOrigins);
+    
     // Allow requests with no origin (like mobile apps or Postman)
     if (!origin) {
+      console.log('CORS: Allowing request with no origin');
       return callback(null, true);
     }
 
     // Check if origin matches any allowed pattern
     if (isOriginAllowed(origin, allowedOrigins)) {
+      console.log('CORS: Origin allowed');
       return callback(null, true);
     }
 
     // Reject other origins
+    console.log('CORS: Origin rejected');
     callback(new Error('Not allowed by CORS'));
   };
 }
