@@ -28,7 +28,9 @@ export function isOriginAllowed(
   origin: string,
   allowedOrigins: string[],
 ): boolean {
+  console.log(`Testing origin: ${origin}`);
   for (const allowed of allowedOrigins) {
+    console.log(`  Checking against pattern: ${allowed}`);
     // Handle localhost wildcard patterns
     if (
       allowed === 'localhost:*' ||
@@ -67,10 +69,14 @@ export function isOriginAllowed(
     }
     // Handle pages.dev wildcard
     else if (allowed === '*.pages.dev') {
+      console.log(`    Matched *.pages.dev pattern`);
       const regex = new RegExp(`^https://[a-zA-Z0-9-]+\\.pages\\.dev$`);
+      console.log(`    Testing regex: ${regex} against: ${origin}`);
       if (regex.test(origin)) {
+        console.log(`    ✓ pages.dev regex matched!`);
         return true;
       }
+      console.log(`    ✗ pages.dev regex failed`);
     }
     // Handle domain wildcard patterns (e.g., *.datakit.page)
     else if (allowed.startsWith('*.')) {
