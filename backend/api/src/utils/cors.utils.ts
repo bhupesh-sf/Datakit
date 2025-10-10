@@ -3,23 +3,17 @@ export function createCorsOriginChecker(allowedOrigins: string[]) {
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void,
   ) => {
-    console.log('CORS check - Origin:', origin);
-    console.log('CORS check - Allowed origins:', allowedOrigins);
-    
     // Allow requests with no origin (like mobile apps or Postman)
     if (!origin) {
-      console.log('CORS: Allowing request with no origin');
       return callback(null, true);
     }
 
     // Check if origin matches any allowed pattern
     if (isOriginAllowed(origin, allowedOrigins)) {
-      console.log('CORS: Origin allowed');
       return callback(null, true);
     }
 
     // Reject other origins
-    console.log('CORS: Origin rejected');
     callback(new Error('Not allowed by CORS'));
   };
 }
@@ -28,9 +22,7 @@ export function isOriginAllowed(
   origin: string,
   allowedOrigins: string[],
 ): boolean {
-  console.log(`Testing origin: ${origin}`);
   for (const allowed of allowedOrigins) {
-    console.log(`  Checking against pattern: ${allowed}`);
     // Handle localhost wildcard patterns
     if (
       allowed === 'localhost:*' ||
@@ -69,14 +61,10 @@ export function isOriginAllowed(
     }
     // Handle pages.dev wildcard
     else if (allowed === '*.pages.dev') {
-      console.log(`    Matched *.pages.dev pattern`);
-      const regex = new RegExp(`^https://[a-zA-Z0-9-]+\\.pages\\.dev$`);
-      console.log(`    Testing regex: ${regex} against: ${origin}`);
+      const regex = new RegExp(`^https://[a-zA-Z0-9.-]+\\.pages\\.dev$`);
       if (regex.test(origin)) {
-        console.log(`    ✓ pages.dev regex matched!`);
         return true;
       }
-      console.log(`    ✗ pages.dev regex failed`);
     }
     // Handle domain wildcard patterns (e.g., *.datakit.page)
     else if (allowed.startsWith('*.')) {
