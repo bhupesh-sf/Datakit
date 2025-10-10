@@ -45,8 +45,7 @@ export function isOriginAllowed(
     else if (
       allowed === '127.0.0.1:*' ||
       allowed === 'http://127.0.0.1:*' ||
-      allowed === 'https://127.0.0.1:*' ||
-      allowed === '*.pages.dev'
+      allowed === 'https://127.0.0.1:*'
     ) {
       const protocol = allowed.startsWith('http://')
         ? 'http'
@@ -56,6 +55,13 @@ export function isOriginAllowed(
       const regex = new RegExp(
         `^${protocol}://(localhost|127\\.0\\.0\\.1)(:\\d+)?$`,
       );
+      if (regex.test(origin)) {
+        return true;
+      }
+    }
+    // Handle pages.dev wildcard
+    else if (allowed === '*.pages.dev') {
+      const regex = new RegExp(`^https://[a-zA-Z0-9-]+\\.pages\\.dev$`);
       if (regex.test(origin)) {
         return true;
       }
