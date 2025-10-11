@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Container, Terminal, Code, Hexagon, Upload, PlayCircle, FilePlus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAppStore } from "@/store/appStore";
 
 import S3 from "@/assets/s3.png";
 import HuggingFace from "@/assets/huggingface.png";
@@ -27,6 +28,7 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
   const { fileInputRef, handleButtonClick, handleFileSelect, isProcessing } = useFileUpload();
   const [showDemoModal, setShowDemoModal] = useState(false);
   const { t } = useTranslation();
+  const { showAIAssistant } = useAppStore();
 
   const getUploadText = () => {
     if (isProcessing) return t('preview.empty.processing', 'Processing files...');
@@ -162,14 +164,18 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-8"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-0 items-center">
+          <div className={`grid gap-6 items-center ${
+            showAIAssistant 
+              ? 'grid-cols-1 gap-8' 
+              : 'grid-cols-1 lg:grid-cols-4 lg:gap-0'
+          }`}>
             
             {/* Primary Drop Zone - Left/Top */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3, duration: 0.4 }}
-              className="lg:col-span-2"
+              className={showAIAssistant ? '' : 'lg:col-span-2'}
             >
               <motion.button
                 onClick={handleButtonClick}
@@ -236,23 +242,25 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
             </motion.div>
 
             {/* Divider */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.4 }}
-              className="hidden lg:flex flex-col items-center justify-center lg:-ml-12"
-            >
-              <div className="w-px h-12 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-              <span className="text-white/40 text-sm mt-1 mb-1">{t('common.labels.or')}</span>
-              <div className="w-px h-12 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-            </motion.div>
+            {!showAIAssistant && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+                className="hidden lg:flex flex-col items-center justify-center lg:-ml-12"
+              >
+                <div className="w-px h-12 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+                <span className="text-white/40 text-sm mt-1 mb-1">{t('common.labels.or')}</span>
+                <div className="w-px h-12 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+              </motion.div>
+            )}
 
-            {/* Mobile divider */}
+            {/* Mobile/vertical divider */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.4 }}
-              className="lg:hidden flex items-center justify-center py-4"
+              className={showAIAssistant ? 'flex items-center justify-center py-4' : 'lg:hidden flex items-center justify-center py-4'}
             >
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               <span className="text-white/40 text-sm mx-3">{t('common.labels.or')}</span>
@@ -264,7 +272,7 @@ const EmptyDataState: React.FC<Props> = ({ onImportOptionClick }) => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.6, duration: 0.4 }}
-              className="flex flex-col items-center lg:-ml-20"
+              className={`flex flex-col items-center ${showAIAssistant ? '' : 'lg:-ml-20'}`}
             >
               <div className="text-sm text-white/60 mb-4 text-center whitespace-nowrap">
                 {t('preview.empty.importFrom')}

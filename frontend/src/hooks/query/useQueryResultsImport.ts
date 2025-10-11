@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAppStore } from '@/store/appStore';
 import { useDuckDBStore } from '@/store/duckDBStore';
+import { useFolderStore } from '@/store/folderStore';
 import { ColumnType } from '@/types/csv';
 import { DataSourceType } from '@/types/json';
 import { convertDuckDBColumnTypes } from '@/lib/duckdb/ingestion/convertDuckDBColumnTypes';
@@ -91,6 +92,7 @@ export const useQueryResultsImport = () => {
   const [isImporting, setIsImporting] = useState(false);
   const { addFile } = useAppStore();
   const { loadData, getTableSchema, executeQuery, db, registeredTables } = useDuckDBStore();
+  const { addNode, draftFolderId, initializeStore } = useFolderStore();
   
   /**
    * Import query results as a new table or view in DuckDB and add to file tabs
@@ -288,6 +290,41 @@ export const useQueryResultsImport = () => {
       
       // Add to file tabs
       addFile(fileData);
+      
+      // Add to folder tree as well
+      try {
+        // Ensure draft folder exists
+        if (!draftFolderId) {
+          initializeStore();
+        }
+        
+        const currentDraftFolderId = useFolderStore.getState().draftFolderId;
+        if (currentDraftFolderId) {
+          // Create a virtual file object for the folder store
+          const virtualFile = {
+            name: `${tableName}.sql`,
+            size: 0,
+          } as File;
+          
+          addNode({
+            name: `${tableName}.sql`,
+            type: 'file' as const,
+            fileData: {
+              size: 0,
+              lastModified: Date.now(),
+              fileType: 'query' as const,
+              isLoaded: true,
+              tableName: loadedTableName,
+              isRemote: false,
+            },
+          }, currentDraftFolderId);
+          
+          console.log(`[useQueryResultsImport] Added table to folder tree: ${tableName}`);
+        }
+      } catch (folderError) {
+        console.warn('[useQueryResultsImport] Failed to add to folder tree, but table creation succeeded:', folderError);
+        // Don't fail the whole operation if folder tree update fails
+      }
       
       console.log(`[useQueryResultsImport] Successfully imported ${results.length} rows as ${objectType}: ${loadedTableName}${sourceFileName ? ` (modified from ${sourceFileName})` : ''}`);
       return true;

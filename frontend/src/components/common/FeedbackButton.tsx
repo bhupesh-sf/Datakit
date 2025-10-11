@@ -69,16 +69,30 @@ const FeedbackButton: FC<FeedbackButtonProps> = ({
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-transparent z-40"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 animate-in fade-in duration-200"
             onClick={closeFeedbackModal}
           />
-          {/* Modal positioned relative to button */}
+          {/* Modal positioned to the right of button */}
           <div 
-            className="fixed z-50 w-80 bg-black/95 border border-white/20 rounded-lg shadow-xl backdrop-blur-sm"
+            className="fixed z-50 w-80 bg-black/95 border border-white/20 rounded-lg shadow-xl backdrop-blur-sm animate-in slide-in-from-left-2 fade-in duration-200"
             style={{
-              top: buttonRef.current ? buttonRef.current.getBoundingClientRect().bottom + window.scrollY + 8 : '50vh',
-              left: buttonRef.current ? Math.max(16, Math.min(window.innerWidth - 336, buttonRef.current.getBoundingClientRect().left + window.scrollX)) : '50vw',
-              transform: !buttonRef.current ? 'translate(-50%, -50%)' : 'none'
+              top: buttonRef.current ? Math.max(16, buttonRef.current.getBoundingClientRect().top + window.scrollY) : '50vh',
+              left: buttonRef.current ? (() => {
+                const buttonRect = buttonRef.current.getBoundingClientRect();
+                const modalWidth = 320; // w-80 = 320px
+                const rightPosition = buttonRect.right + window.scrollX + 8;
+                const leftPosition = buttonRect.left + window.scrollX - modalWidth - 8;
+                
+                // If modal would go off-screen to the right, position it to the left
+                if (rightPosition + modalWidth > window.innerWidth - 16) {
+                  return Math.max(16, leftPosition);
+                }
+                return rightPosition;
+              })() : '50vw',
+              transform: !buttonRef.current ? 'translate(-50%, -50%)' : 'none',
+              // Ensure modal doesn't go off-screen vertically
+              maxHeight: 'calc(100vh - 32px)',
+              overflow: 'auto'
             }}
           >
             <div className="p-4">

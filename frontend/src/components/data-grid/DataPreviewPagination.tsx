@@ -53,20 +53,20 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
       : Math.min(currentPage * rowsPerPage, totalRows);
 
   return (
-    <div className={`flex items-center justify-between bg-darkNav border-t border-white/10 ${
+    <div className={`flex items-center bg-darkNav border-t border-white/10 ${
       compact 
-        ? 'px-1 sm:px-2 py-1 sm:py-2' 
-        : 'px-4 py-3'
+        ? 'px-1 sm:px-2 py-1 sm:py-2 justify-center lg:justify-between' 
+        : 'px-4 py-3 justify-center lg:justify-between'
     }`}>
-      {/* Left: Rows per page selector */}
-      <div className={`flex items-center ${
+      {/* Left: Rows per page selector - hide on mobile and tablet */}
+      <div className={`items-center ${
         compact 
-          ? 'space-x-1' 
-          : 'space-x-3'
+          ? 'space-x-1 hidden xl:flex' 
+          : 'space-x-3 hidden lg:flex'
       }`}>
         <span className={`font-medium text-white/80 ${
           compact 
-            ? 'text-xs hidden md:inline' 
+            ? 'text-xs' 
             : 'text-sm'
         }`}>{t('pagination.show', { defaultValue: 'Show' })}:</span>
         <select
@@ -87,16 +87,16 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
         </select>
         <span className={`text-white/60 ${
           compact 
-            ? 'text-xs hidden sm:inline' 
+            ? 'text-xs' 
             : 'text-sm'
         }`}>{t('pagination.rows', { defaultValue: 'rows' })}</span>
       </div>
 
-      {/* Center: Range display with improved counting state */}
-      <div className={`flex items-center flex-1 justify-center ${
+      {/* Center: Range display with improved counting state - hide detailed info on mobile */}
+      <div className={`items-center justify-center ${
         compact 
-          ? 'space-x-1 px-1' 
-          : 'space-x-2'
+          ? 'space-x-1 px-1 hidden sm:flex lg:flex-1' 
+          : 'space-x-2 hidden md:flex lg:flex-1'
       }`}>
         {isCountLoading ? (
           <div className={`flex items-center ${
@@ -115,7 +115,7 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
                   ? 'text-xs' 
                   : 'text-sm'
               }`}>
-                <span className={compact ? 'hidden md:inline' : 'hidden sm:inline'}>{t('pagination.showing', { defaultValue: 'Showing' })} </span>{startRow.toLocaleString()} - {endRow.toLocaleString()}
+                <span className={compact ? 'hidden lg:inline' : 'hidden sm:inline'}>{t('pagination.showing', { defaultValue: 'Showing' })} </span>{startRow.toLocaleString()} - {endRow.toLocaleString()}
               </span>
             </div>
             {!compact && <div className="text-white/40">•</div>}
@@ -146,8 +146,8 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
             {startRow.toLocaleString()} - {endRow.toLocaleString()}
             <span className={`text-white/60 ml-1 ${
               compact 
-                ? 'hidden sm:inline' 
-                : ''
+                ? 'hidden lg:inline' 
+                : 'hidden sm:inline'
             }`}>({compact ? t('pagination.large', { defaultValue: 'large' }) : t('pagination.largeFile', { defaultValue: 'large file' })})</span>
           </span>
         ) : (
@@ -161,7 +161,7 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
                 ? 'text-xs' 
                 : 'text-sm'
             }`}>
-              {startRow.toLocaleString()} - {endRow.toLocaleString()}<span className={compact ? 'hidden md:inline' : 'hidden sm:inline'}> {t('pagination.of', { defaultValue: 'of' })}{" "}
+              {startRow.toLocaleString()} - {endRow.toLocaleString()}<span className={compact ? 'hidden lg:inline' : 'hidden sm:inline'}> {t('pagination.of', { defaultValue: 'of' })}{" "}
               <span className="text-white font-semibold">{totalRows.toLocaleString()}</span> {t('pagination.rows', { defaultValue: 'rows' })}</span>
             </span>
             
@@ -188,14 +188,14 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
           ? 'space-x-0.5' 
           : 'space-x-1'
       }`}>
-        {/* First page button */}
+        {/* First page button - hide on mobile and tablet */}
         <Button
           variant="ghost"
           size="sm"
           className={`p-0 flex items-center justify-center rounded-md hover:bg-white/10 disabled:opacity-40 transition-all duration-200 ${
             compact 
-              ? 'h-5 w-5 sm:h-6 sm:w-6 hidden sm:flex' 
-              : 'h-8 w-8'
+              ? 'h-5 w-5 sm:h-6 sm:w-6 hidden xl:flex' 
+              : 'h-8 w-8 hidden lg:flex'
           }`}
           disabled={disabled || currentPage === 1}
           onClick={() => onPageChange(1)}
@@ -221,8 +221,8 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
 
         <div className={`text-center ${
           compact 
-            ? 'px-1 sm:px-2 min-w-[40px] sm:min-w-[60px]' 
-            : 'px-3 min-w-[140px]'
+            ? 'px-1 sm:px-2 min-w-[30px] sm:min-w-[40px] lg:min-w-[60px]' 
+            : 'px-3 min-w-[80px] lg:min-w-[140px]'
         }`}>
           {isCountLoading && totalPages === 0 ? (
             <span className={`font-medium text-white/90 ${
@@ -230,11 +230,11 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
                 ? 'text-xs' 
                 : 'text-sm'
             }`}>
-              <span className={compact ? 'hidden md:inline' : ''}>{compact ? '' : t('pagination.page', { defaultValue: 'Page' }) + ' '}</span><span className="font-semibold">{currentPage}</span>
+              <span className={compact ? 'hidden lg:inline' : 'hidden sm:inline'}>{compact ? '' : t('pagination.page', { defaultValue: 'Page' }) + ' '}</span><span className="font-semibold">{currentPage}</span>
               <span className={`text-white/60 ${
                 compact 
-                  ? 'hidden md:inline' 
-                  : ''
+                  ? 'hidden lg:inline' 
+                  : 'hidden sm:inline'
               }`}>{compact ? ' / ?' : ' ' + t('pagination.of', { defaultValue: 'of' }) + ' ?'}</span>
             </span>
           ) : isView ? (
@@ -243,7 +243,7 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
                 ? 'text-xs' 
                 : 'text-sm'
             }`}>
-              <span className={compact ? 'hidden md:inline' : ''}>{compact ? '' : t('pagination.page', { defaultValue: 'Page' }) + ' '}</span><span className="font-semibold">{currentPage}</span>
+              <span className={compact ? 'hidden lg:inline' : 'hidden sm:inline'}>{compact ? '' : t('pagination.page', { defaultValue: 'Page' }) + ' '}</span><span className="font-semibold">{currentPage}</span>
             </span>
           ) : totalPages === 0 ? (
             <span className={`font-medium text-white/90 ${
@@ -251,7 +251,7 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
                 ? 'text-xs' 
                 : 'text-sm'
             }`}>
-              <span className={compact ? 'hidden md:inline' : ''}>{compact ? '' : t('pagination.page', { defaultValue: 'Page' }) + ' '}</span><span className="font-semibold">{currentPage}</span>
+              <span className={compact ? 'hidden lg:inline' : 'hidden sm:inline'}>{compact ? '' : t('pagination.page', { defaultValue: 'Page' }) + ' '}</span><span className="font-semibold">{currentPage}</span>
             </span>
           ) : (
             <span className={`font-medium text-white/90 ${
@@ -259,7 +259,7 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
                 ? 'text-xs' 
                 : 'text-sm'
             }`}>
-              <span className={compact ? 'hidden md:inline' : ''}>{compact ? '' : t('pagination.page', { defaultValue: 'Page' }) + ' '}</span><span className="font-semibold">{currentPage.toLocaleString()}</span><span className={compact ? 'hidden sm:inline' : ''}>{compact ? ` / ${totalPages}` : ` ${t('pagination.of', { defaultValue: 'of' })} ${totalPages.toLocaleString()}`}</span>
+              <span className={compact ? 'hidden lg:inline' : 'hidden sm:inline'}>{compact ? '' : t('pagination.page', { defaultValue: 'Page' }) + ' '}</span><span className="font-semibold">{currentPage.toLocaleString()}</span><span className={compact ? 'hidden lg:inline' : 'hidden sm:inline'}>{compact ? ` / ${totalPages}` : ` ${t('pagination.of', { defaultValue: 'of' })} ${totalPages.toLocaleString()}`}</span>
             </span>
           )}
         </div>
@@ -281,14 +281,14 @@ const DataPreviewPagination: React.FC<DataPreviewPaginationProps> = ({
           <ChevronRight size={compact ? 12 : 16} className={compact ? 'sm:size-3' : ''} />
         </Button>
         
-        {/* Last page button */}
+        {/* Last page button - hide on mobile and tablet */}
         <Button
           variant="ghost"
           size="sm"
           className={`p-0 flex items-center justify-center rounded-md hover:bg-white/10 disabled:opacity-40 transition-all duration-200 ${
             compact 
-              ? 'h-5 w-5 sm:h-6 sm:w-6 hidden sm:flex' 
-              : 'h-8 w-8'
+              ? 'h-5 w-5 sm:h-6 sm:w-6 hidden xl:flex' 
+              : 'h-8 w-8 hidden lg:flex'
           }`}
           disabled={
             disabled || isView || currentPage === totalPages || totalPages === 0

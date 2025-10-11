@@ -23,7 +23,7 @@ interface DataPreviewGridProps {
 const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = false }) => {
   const { t } = useTranslation();
   const activeFile = useAppStore(selectActiveFile);
-  const { showColumnStats, setShowColumnStats } = useAppStore();
+  const { showColumnStats, setShowColumnStats, showAIAssistant } = useAppStore();
   const { openPanel, analyzeFile } = useInspectorStore();
   const { getObjectType, executeQuery } = useDuckDBStore();
   
@@ -353,7 +353,7 @@ const DataPreviewGrid: React.FC<DataPreviewGridProps> = ({ fileId, hideHeader = 
             onPageChange={changePage}
             onRowsPerPageChange={changeRowsPerPage}
             disabled={isLoading || isChangingPage}
-            compact={hideHeader}
+            compact={hideHeader || showAIAssistant}
           />
         )}
       </div>

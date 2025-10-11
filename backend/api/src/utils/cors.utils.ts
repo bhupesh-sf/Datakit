@@ -45,7 +45,8 @@ export function isOriginAllowed(
     else if (
       allowed === '127.0.0.1:*' ||
       allowed === 'http://127.0.0.1:*' ||
-      allowed === 'https://127.0.0.1:*'
+      allowed === 'https://127.0.0.1:*' ||
+      allowed === '*.pages.dev'
     ) {
       const protocol = allowed.startsWith('http://')
         ? 'http'

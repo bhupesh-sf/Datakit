@@ -72,6 +72,12 @@ interface AppState {
   /** View mode when no files are active */
   emptyStateViewMode: ViewMode;
 
+  // AI Assistant Sidebar state
+  /** Whether the AI assistant sidebar is open */
+  showAIAssistant: boolean;
+  /** Width of the AI assistant sidebar */
+  assistantSidebarWidth: number;
+
   // Query history state
   /** Array of recent queries */
   recentQueries: SavedQuery[];
@@ -131,6 +137,15 @@ interface AppState {
   setShowColumnStats: (show: boolean) => void;
   /** Change view mode for active file or empty state */
   changeViewMode: (mode: ViewMode) => void;
+  
+  // AI Assistant Sidebar actions
+  /** Toggle AI assistant sidebar */
+  toggleAIAssistant: () => void;
+  /** Set AI assistant sidebar visibility */
+  setShowAIAssistant: (show: boolean) => void;
+  /** Set AI assistant sidebar width */
+  setAssistantSidebarWidth: (width: number) => void;
+  
   isRemoteModalOpen: boolean;
   activeProviderRemoteModal: ImportProvider;
 
@@ -192,6 +207,10 @@ const initialState = {
   isInIframe: false,
   showColumnStats: false,
   emptyStateViewMode: 'preview' as ViewMode,
+
+  // AI Assistant Sidebar state
+  showAIAssistant: false,
+  assistantSidebarWidth: 400,
 
   // Query history state
   recentQueries: [],
@@ -515,6 +534,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   setShowColumnStats: (show) => {
     localStorage.setItem("show-column-stats", String(show));
     set({ showColumnStats: show });
+  },
+
+  toggleAIAssistant: () => {
+    const newState = !get().showAIAssistant;
+    set({ showAIAssistant: newState });
+  },
+
+  setShowAIAssistant: (show) => {
+    set({ showAIAssistant: show });
+  },
+
+  setAssistantSidebarWidth: (width) => {
+    set({ assistantSidebarWidth: width });
   },
 
   // View mode change logic (reusable across components)

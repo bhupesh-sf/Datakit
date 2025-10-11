@@ -504,7 +504,7 @@ const QueryWorkspace: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="h-full w-full flex overflow-hidden relative"
+      className="h-full w-full flex overflow-hidden relative border-t border-l border-white/10"
     >
       {/* Resize Overlay - prevents interference from iframes/content during resize */}
       {isResizingSchema && (
@@ -841,7 +841,7 @@ const QueryWorkspace: React.FC = () => {
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="outline"
                 onClick={() => {
                   if (queryName.trim()) {
                     saveQuery(query, queryName);

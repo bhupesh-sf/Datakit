@@ -210,49 +210,55 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Trigger Button */}
+      {/* Trigger Button - Minimal for sidebar */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex items-center space-x-2 p-2 rounded-lg border transition-all duration-200',
+          'flex items-center gap-1.5 px-2 py-1 rounded border transition-all duration-200 text-xs',
+          compact 
+            ? 'text-xs min-w-0' 
+            : 'space-x-2 p-2',
           currentModel && hasApiKey(activeProvider)
-            ? `${getProviderColorClass(
-                activeProvider,
-                'bg'
-              )} ${getProviderColorClass(
-                activeProvider,
-                'border'
-              )} hover:bg-opacity-80`
-            : 'bg-white/5 border-white/10 hover:bg-white/10',
-          isOpen && 'ring-2 ring-primary/50'
+            ? 'bg-white/5 border-white/20 text-white/90 hover:bg-white/10'
+            : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10',
+          isOpen && 'ring-1 ring-primary/30'
         )}
       >
         {currentModel ? (
           <>
             <div
               className={cn(
-                'h-5 w-5 rounded flex items-center justify-center',
+                compact ? 'h-3 w-3' : 'h-4 w-4',
+                'rounded flex items-center justify-center flex-shrink-0',
                 hasApiKey(activeProvider)
-                  ? getProviderColorClass(activeProvider, 'text')
+                  ? 'text-white/80'
                   : 'text-white/40'
               )}
             >
-              {PROVIDER_ICONS[activeProvider]}
+              {React.cloneElement(PROVIDER_ICONS[activeProvider] as React.ReactElement, {
+                className: compact ? 'h-3 w-3' : 'h-4 w-4'
+              })}
             </div>
-            <span className="text-sm font-medium text-white truncate max-w-32">
-              {currentModel.name}
+            <span className={cn(
+              'font-medium truncate',
+              compact ? 'text-xs max-w-16' : 'text-sm max-w-32'
+            )}>
+              {compact ? currentModel.name.split(' ')[0] : currentModel.name}
             </span>
           </>
         ) : (
           <>
-            <Cpu className="h-5 w-5 text-white/40" />
-            <span className="text-sm text-white/60">{t('ai.modelSelector.selectModel', { defaultValue: 'Select Model' })}</span>
+            <Cpu className={cn(compact ? 'h-3 w-3' : 'h-4 w-4', 'text-white/40 flex-shrink-0')} />
+            <span className={compact ? 'text-xs' : 'text-sm'}>
+              {compact ? t('ai.modelSelector.model', { defaultValue: 'Model' }) : t('ai.modelSelector.selectModel', { defaultValue: 'Select Model' })}
+            </span>
           </>
         )}
 
         <ChevronDown
           className={cn(
-            'h-4 w-4 text-white/60 transition-transform',
+            compact ? 'h-3 w-3' : 'h-4 w-4',
+            'text-white/60 transition-transform flex-shrink-0',
             isOpen && 'rotate-180'
           )}
         />
@@ -266,38 +272,48 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 mt-2 w-80 bg-black border border-white/10 rounded-lg shadow-xl shadow-black/30 z-50 max-h-100 overflow-y-auto"
+            className={cn(
+              'absolute top-full mt-2 bg-black border border-white/10 rounded-lg shadow-xl shadow-black/30 z-50 max-h-96 overflow-y-auto',
+              compact ? 'w-72 right-0' : 'w-80 left-0'
+            )}
           >
-            <div className="p-3">
-              <div className="text-xs font-medium text-white/60 uppercase tracking-wider mb-3">
-                {t('ai.modelSelector.title', { defaultValue: 'Select AI Model' })}
-              </div>
+            <div className={compact ? 'p-2' : 'p-3'}>
+              {!compact && (
+                <div className="text-xs font-medium text-white/60 uppercase tracking-wider mb-3">
+                  {t('ai.modelSelector.title', { defaultValue: 'Select AI Model' })}
+                </div>
+              )}
 
-              <div className="space-y-3">
+              <div className={compact ? 'space-y-2' : 'space-y-3'}>
                 {Array.from(availableModels.entries()).map(
                   ([provider, models]) => (
                     <div key={provider}>
-                      <div className="text-xs font-medium text-white/50 mb-2 flex items-center">
-                        {PROVIDER_ICONS[provider]}
-                        <span className="ml-2 capitalize">
+                      <div className={cn(
+                        'text-xs font-medium text-white/50 flex items-center',
+                        compact ? 'mb-1' : 'mb-2'
+                      )}>
+                        {React.cloneElement(PROVIDER_ICONS[provider] as React.ReactElement, {
+                          className: compact ? 'h-3 w-3' : 'h-4 w-4'
+                        })}
+                        <span className={compact ? 'ml-1.5 capitalize' : 'ml-2 capitalize'}>
                           {provider === 'datakit' ? t('ai.providers.datakit', { defaultValue: 'DataKit' }) : t(`ai.providers.${provider}`, { defaultValue: provider.charAt(0).toUpperCase() + provider.slice(1) })}
                         </span>
-                        {provider === 'datakit' && (
+                        {provider === 'datakit' && !compact && (
                           <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
                             {t('ai.modelSelector.claudeModels', { defaultValue: 'Claude Models' })}
                           </span>
                         )}
-                        {!isAuthenticated && (
-                          <span className="ml-2 text-yellow-500">
+                        {!compact && !isAuthenticated && (
+                          <span className="ml-2 text-yellow-500 text-xs">
                             ({t('ai.modelSelector.signInRequired', { defaultValue: 'Sign in required' })})
                           </span>
                         )}
-                        {isAuthenticated &&
+                        {!compact && isAuthenticated &&
                           !hasApiKey(provider) &&
                           provider !== 'local' &&
                           provider !== 'datakit' &&
                           provider !== 'ollama' && (
-                            <span className="ml-2 text-yellow-500">
+                            <span className="ml-2 text-yellow-500 text-xs">
                               ({t('ai.modelSelector.apiKeyRequired', { defaultValue: 'API key required' })})
                             </span>
                           )}
@@ -312,45 +328,50 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
                             }
                             disabled={!isAuthenticated || !hasApiKey(provider)}
                             className={cn(
-                              'w-full text-left p-2 rounded-lg border transition-all duration-200',
+                              'w-full text-left rounded border transition-all duration-200',
+                              compact ? 'p-1.5' : 'p-2',
                               activeModel === model.id
-                                ? `${getProviderColorClass(
-                                    provider,
-                                    'bg'
-                                  )} ${getProviderColorClass(
-                                    provider,
-                                    'border'
-                                  )}`
+                                ? 'bg-primary/10 border-primary/30'
                                 : isAuthenticated && hasApiKey(provider)
                                 ? 'border-transparent hover:bg-white/5 hover:border-white/10'
                                 : 'border-transparent opacity-50 cursor-not-allowed'
                             )}
                           >
                             <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="text-sm font-medium text-white">
-                                  {model.name}
+                              <div className="flex-1 min-w-0">
+                                <div className={cn(
+                                  'font-medium text-white',
+                                  compact ? 'text-xs' : 'text-sm'
+                                )}>
+                                  {compact ? model.name.split(' ')[0] : model.name}
                                 </div>
-                                <div className="text-xs text-white/60">
-                                  {model?.contextWindow &&
-                                    `${model?.contextWindow?.toLocaleString?.()} tokens`}
-                                  {model?.costPer1kTokens && (
-                                    <span className="ml-2">
+                                {!compact && (
+                                  <>
+                                    <div className="text-xs text-white/60">
+                                      {model?.contextWindow &&
+                                        `${model?.contextWindow?.toLocaleString?.()} tokens`}
+                                      {model?.costPer1kTokens && (
+                                        <span className="ml-2">
+                                          {provider === 'datakit'
+                                            ? t('ai.modelSelector.creditsPerToken', { cost: model.costPer1kTokens.input.toFixed(2), defaultValue: '{{cost}} credits/1K tokens' })
+                                            : t('ai.modelSelector.dollarsPerToken', { cost: model.costPer1kTokens.input.toFixed(3), defaultValue: '${{cost}}/1K' })}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-white/40 mt-1">
                                       {provider === 'datakit'
-                                        ? t('ai.modelSelector.creditsPerToken', { cost: model.costPer1kTokens.input.toFixed(2), defaultValue: '{{cost}} credits/1K tokens' })
-                                        : t('ai.modelSelector.dollarsPerToken', { cost: model.costPer1kTokens.input.toFixed(3), defaultValue: '${{cost}}/1K' })}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xs text-white/40 mt-1">
-                                  {provider === 'datakit'
-                                    ? model.description
-                                    : model.capabilities.join(', ')}
-                                </div>
+                                        ? model.description
+                                        : model.capabilities.join(', ')}
+                                    </div>
+                                  </>
+                                )}
                               </div>
 
                               {activeModel === model.id && (
-                                <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                                <Check className={cn(
+                                  'text-primary flex-shrink-0',
+                                  compact ? 'h-3 w-3' : 'h-4 w-4'
+                                )} />
                               )}
                             </div>
                           </button>
@@ -358,7 +379,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
                       </div>
 
                       {/* Special sections for DataKit */}
-                      {provider === 'datakit' && !isAuthenticated && (
+                      {!compact && provider === 'datakit' && !isAuthenticated && (
                         <div className="mt-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
                           <div className="text-sm text-white/70 mb-2">
                             {t('ai.modelSelector.signUpCredits', { defaultValue: 'Sign up to use DataKit credits' })}
@@ -375,7 +396,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
                         </div>
                       )}
 
-                      {provider === 'datakit' &&
+                      {!compact && provider === 'datakit' &&
                         isAuthenticated &&
                         user?.credits && (
                           <div className="mt-2 p-2 bg-background/10 border border-white/10 rounded">

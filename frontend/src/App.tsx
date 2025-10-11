@@ -89,7 +89,6 @@ const AppContent = () => {
   const { checkAuth } = useAuthStore();
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const { ConsentPopup } = useConsentManager();
-  const { SignupPrompt } = useSignupPrompt();
   
   // Automatically identify users in PostHog when they log in
   usePostHogIdentification();

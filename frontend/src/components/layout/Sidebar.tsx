@@ -10,13 +10,15 @@ import { useDuckDBStore } from '@/store/duckDBStore';
 import { useFolderStore } from '@/store/folderStore';
 import { useAppStore } from '@/store/appStore';
 import { useFileImport } from '@/hooks/useFileImport';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNotifications } from '@/hooks/useNotifications';
 import { FolderNode } from '@/types/folder';
 
 import UserMenu from '@/components/auth/UserMenu';
 import DuckDBIcon from '@/assets/duckdb.svg';
 import RemoteDataImportModal from '@/components/common/RemoteDataImportPanel';
+import HelpDropdown from '@/components/common/HelpDropdown';
+import SidebarFeedbackButton from '@/components/common/SidebarFeedbackButton';
 
 import { ColumnType } from '@/types/csv';
 import { DataSourceType } from '@/types/json';
@@ -56,9 +58,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
     sidebarCollapsed,
     toggleSidebar,
     isRemoteModalOpen,
-    setIsRemoteModalOpen,
+    setIsRemoteModalOpen
   } = useAppStore();
-  
+
+  // Removed file checking - Help & Support always shows
+
   // Sidebar resizing state
   const [sidebarWidth, setSidebarWidth] = useState(256); // Default 16rem = 256px
   const [isResizing, setIsResizing] = useState(false);
@@ -66,15 +70,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
 
   // Initialize CSS custom property
   useEffect(() => {
-    document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`);
+    document.documentElement.style.setProperty(
+      '--sidebar-width',
+      `${sidebarWidth}px`
+    );
   }, []);
 
   const { showSuccess, showError } = useNotifications();
 
   // Folder store
-  const { 
-    initializeStore, 
-    draftFolderId, 
+  const {
+    initializeStore,
+    draftFolderId,
     remoteFolderId,
     addFile: addFileToFolder,
     getNodeById,
@@ -104,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
-    
+
     // Disable transitions during resize
     if (sidebarRef.current) {
       sidebarRef.current.classList.add('sidebar-resizing');
@@ -114,37 +121,42 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing || !sidebarRef.current) return;
-      
+
       e.preventDefault();
       const newWidth = Math.min(Math.max(256, e.clientX), 500); // Min 256px (default), max 500px
-      
+
       // Direct CSS custom property update - instant and smooth
-      document.documentElement.style.setProperty('--sidebar-width', `${newWidth}px`);
+      document.documentElement.style.setProperty(
+        '--sidebar-width',
+        `${newWidth}px`
+      );
     };
 
     const handleMouseUp = (e: MouseEvent) => {
       if (!isResizing || !sidebarRef.current) return;
-      
+
       const finalWidth = Math.min(Math.max(256, e.clientX), 500); // Min 256px (default), max 500px
-      
+
       // Re-enable transitions
       sidebarRef.current.classList.remove('sidebar-resizing');
-      
+
       // Update React state for persistence
       setSidebarWidth(finalWidth);
       setIsResizing(false);
-      
-      document.body.style.userSelect = ''; 
+
+      document.body.style.userSelect = '';
       document.body.style.cursor = '';
     };
 
     if (isResizing) {
       document.body.style.userSelect = 'none'; // Disable text selection during drag
       document.body.style.cursor = 'col-resize'; // Set cursor globally
-      
-      document.addEventListener('mousemove', handleMouseMove, { passive: false });
+
+      document.addEventListener('mousemove', handleMouseMove, {
+        passive: false,
+      });
       document.addEventListener('mouseup', handleMouseUp, { passive: false });
-      
+
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
@@ -159,15 +171,23 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
     handle: FileSystemFileHandle,
     file: File
   ) => {
-    console.log('[handleFileWithStreaming] Using unified import for:', file.name);
-    
-    return await importFileWithHandle(handle, file, onDataLoad, draftFolderId || undefined);
+    console.log(
+      '[handleFileWithStreaming] Using unified import for:',
+      file.name
+    );
+
+    return await importFileWithHandle(
+      handle,
+      file,
+      onDataLoad,
+      draftFolderId || undefined
+    );
   };
 
   // Handle regular file import (unified)
   const handleFileImport = async (file: File) => {
     console.log('[handleFileImport] Using unified import for:', file.name);
-    
+
     return await importFiles([file], onDataLoad, draftFolderId || undefined);
   };
 
@@ -178,20 +198,27 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
 
       // Add remote file to Remote Sources folder
       if (result.isRemote) {
-        const file = new File([], result.fileName, { lastModified: Date.now() });
-        addFileToFolder(file, {
-          isRemote: true,
-          remoteUrl: result.remoteURL,
-          fileType: 'remote',
-          isLoaded: true,
-          tableName: result.tableName,
-        }, remoteFolderId || undefined);
+        const file = new File([], result.fileName, {
+          lastModified: Date.now(),
+        });
+        addFileToFolder(
+          file,
+          {
+            isRemote: true,
+            remoteUrl: result.remoteURL,
+            fileType: 'remote',
+            isLoaded: true,
+            tableName: result.tableName,
+          },
+          remoteFolderId || undefined
+        );
 
         showSuccess(
           t('sidebar.remote.importedTitle'),
           t('sidebar.remote.importedMessage', {
             fileName: result.fileName,
-            provider: result.remoteProvider || t('sidebar.remote.defaultProvider'),
+            provider:
+              result.remoteProvider || t('sidebar.remote.defaultProvider'),
           }),
           { icon: 'check', duration: 5000 }
         );
@@ -207,31 +234,36 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       fileData: node.fileData,
       hasHandle: !!node.fileData?.handle,
       isLoaded: node.fileData?.isLoaded,
-      tableName: node.fileData?.tableName
+      tableName: node.fileData?.tableName,
     });
 
     if (node.type !== 'file') return;
 
     // Find the workspace file corresponding to this folder node
     const { workspaceFiles, files, setActiveFile } = useAppStore.getState();
-    
+
     // Try to match by handle first (most reliable), then by name
-    let workspaceFile = workspaceFiles.find(f => 
-      node.fileData?.handle && f.handle && f.handle === node.fileData.handle
+    let workspaceFile = workspaceFiles.find(
+      (f) =>
+        node.fileData?.handle && f.handle && f.handle === node.fileData.handle
     );
-    
+
     // Fallback to name matching if handle matching fails
     if (!workspaceFile) {
-      workspaceFile = workspaceFiles.find(f => 
-        f.name === node.name || f.originalName === node.name
+      workspaceFile = workspaceFiles.find(
+        (f) => f.name === node.name || f.originalName === node.name
       );
     }
-    
-    console.log('[Sidebar] Found workspace file:', !!workspaceFile, workspaceFile);
-    
+
+    console.log(
+      '[Sidebar] Found workspace file:',
+      !!workspaceFile,
+      workspaceFile
+    );
+
     if (workspaceFile) {
       // Check if file is already loaded in app store
-      const existingFile = files.find(f => f.fileName === workspaceFile.name);
+      const existingFile = files.find((f) => f.fileName === workspaceFile.name);
       if (existingFile) {
         console.log('[Sidebar] File already in app store, switching to it');
         setActiveFile(existingFile.id);
@@ -242,22 +274,26 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       try {
         const result = await reopenWorkspaceFile(workspaceFile, onDataLoad);
         if (result) {
-          console.log('[Sidebar] File reopened successfully using unified import');
+          console.log(
+            '[Sidebar] File reopened successfully using unified import'
+          );
         }
       } catch (error) {
         console.error('[Sidebar] Failed to reopen file:', error);
       }
     } else {
       console.warn('[Sidebar] No workspace file found for:', node.name);
-      
+
       // For files without handles (drag & drop), check if they're already in app store
-      const existingFile = files.find(f => f.fileName === node.name);
+      const existingFile = files.find((f) => f.fileName === node.name);
       if (existingFile) {
-        console.log('[Sidebar] File found in app store, switching to existing tab');
+        console.log(
+          '[Sidebar] File found in app store, switching to existing tab'
+        );
         setActiveFile(existingFile.id);
         return;
       }
-      
+
       // File is completely missing - show error and suggest re-import
       showError(
         t('sidebar.fileLoadError', 'Failed to Load File'),
@@ -273,32 +309,60 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   };
 
   // Handle global file drop (unified)
-  const handleGlobalFileDrop = async (files: File[], targetFolderId?: string, handles?: (FileSystemFileHandle | undefined)[]) => {
-    console.log('[handleGlobalFileDrop] Using unified import for:', files.length, 'files', 'targetFolderId:', targetFolderId, 'draftFolderId:', draftFolderId, 'handles:', handles?.filter(Boolean).length || 0);
-    
+  const handleGlobalFileDrop = async (
+    files: File[],
+    targetFolderId?: string,
+    handles?: (FileSystemFileHandle | undefined)[]
+  ) => {
+    console.log(
+      '[handleGlobalFileDrop] Using unified import for:',
+      files.length,
+      'files',
+      'targetFolderId:',
+      targetFolderId,
+      'draftFolderId:',
+      draftFolderId,
+      'handles:',
+      handles?.filter(Boolean).length || 0
+    );
+
     const finalFolderId = targetFolderId || draftFolderId || undefined;
     console.log('[handleGlobalFileDrop] Final folder ID:', finalFolderId);
-    
+
     try {
       const results = [];
-      
+
       // Process each file with its corresponding handle
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const handle = handles?.[i];
-        
+
         if (handle) {
-          console.log('[handleGlobalFileDrop] Using handle for file:', file.name);
-          const result = await importFileWithHandle(handle, file, onDataLoad, finalFolderId);
+          console.log(
+            '[handleGlobalFileDrop] Using handle for file:',
+            file.name
+          );
+          const result = await importFileWithHandle(
+            handle,
+            file,
+            onDataLoad,
+            finalFolderId
+          );
           if (result) results.push(result);
         } else {
-          console.log('[handleGlobalFileDrop] No handle available for file:', file.name);
+          console.log(
+            '[handleGlobalFileDrop] No handle available for file:',
+            file.name
+          );
           const result = await importFiles([file], onDataLoad, finalFolderId);
           if (result) results.push(...result);
         }
       }
-      
-      console.log('[handleGlobalFileDrop] Import completed, results:', results.length);
+
+      console.log(
+        '[handleGlobalFileDrop] Import completed, results:',
+        results.length
+      );
       return results;
     } catch (error) {
       console.error('[handleGlobalFileDrop] Import failed:', error);
@@ -316,15 +380,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
     collapsed: { width: '4rem' },
   };
 
-
   // Collapsed sidebar content
   const renderCollapsedContent = () => (
     <>
-      <div className="p-4">
-        {/* Header space for collapsed mode */}
-      </div>
+      <div className="p-4">{/* Header space for collapsed mode */}</div>
 
-      <div className="mt-auto p-4 flex flex-col items-center gap-4 border-t border-white/10">
+      <div className="mt-auto p-4 flex flex-col items-center gap-4 border-t border-gray-500/20">
         <UserMenu variant="collapsed" />
 
         <div className="flex flex-col gap-2 items-center">
@@ -346,7 +407,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   const renderExpandedContent = () => (
     <>
       {/* Header with logo and title */}
-      <div className="px-5 py-4 border-b border-white border-opacity-10 flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-gray-500/20 bg-black/20 flex items-center justify-between">
         {customLogoUrl ? (
           <img
             src={customLogoUrl}
@@ -371,7 +432,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
       />
 
       {/* Folder Tree View - Main content area */}
-      <div className="flex-1 overflow-y-auto border-t border-white/10">
+      <div className="flex-1 overflow-y-auto overflow-x-visible border-t border-gray-500/20">
         <FolderTreeView
           onFileSelect={handleFileSelect}
           onFolderSelect={handleFolderSelect}
@@ -403,13 +464,50 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
         </div>
       )}
 
-      {/* Footer area */}
-      <div>
-        <div className="p-4">
+      {/* Footer area - Enhanced */}
+      <div className="border-t border-gray-500/20 bg-black/30">
+        {/* User Menu - Match Help & Support section styling */}
+        <div className="px-3 py-2.5 border-b border-gray-400/15">
           <UserMenu variant="sidebar" />
         </div>
+        {/* Action Buttons Section */}
+        <div className="px-3 py-2.5 border-b border-gray-400/15 bg-black/20">
+          <div className="space-y-0.5">
+            {/* DataKit Studio - Standalone */}
+            <a
+              href="https://datakit.studio"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-2 py-1.5 text-xs hover:bg-white/5 rounded transition-all duration-200 group"
+            >
+              <svg
+                className="h-3.5 w-3.5 text-white/50 group-hover:text-white/70 transition-colors"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+              <span className="font-medium bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                DataKit Studio
+              </span>
+            </a>
 
-        <div className="px-2 py-2 border-t border-white border-opacity-5">
+            {/* Help Dropdown */}
+            <HelpDropdown />
+
+            {/* Send Feedback - Standalone */}
+            <SidebarFeedbackButton context="sidebar" />
+          </div>
+        </div>
+
+        {/* Attribution footer - Improved harmony */}
+        <div className="px-2 py-2 border-t border-gray-400/15 bg-black/40">
           <div className="flex items-center justify-end">
             <p className="text-xs text-white text-opacity-50 flex items-center">
               {t('sidebar.footer.poweredBy')}{' '}
@@ -451,10 +549,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
   );
 
   return (
-    <>      
+    <>
       <motion.div
         ref={sidebarRef}
-        className={`relative bg-darkNav flex flex-col h-full border-r border-white border-opacity-10 overflow-hidden sidebar-container ${
+        className={`relative bg-darkNav flex flex-col h-full border-r border-gray-500/20 overflow-visible sidebar-container ${
           sidebarCollapsed ? 'sidebar-collapsed' : ''
         }`}
         initial={sidebarCollapsed ? 'collapsed' : 'expanded'}
@@ -471,30 +569,32 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
             onMouseDown={handleMouseDown}
           >
             {/* Fade-out border effect with primary gradient */}
-            <div 
+            <div
               className={`absolute top-0 right-0 w-1 h-full transition-all duration-150 ease-out ${
                 isResizing ? 'opacity-100' : 'opacity-0 group-hover:opacity-80'
               }`}
               style={{
-                background: isResizing 
+                background: isResizing
                   ? 'linear-gradient(to bottom, transparent 0%, hsl(175 100% 36% / 0.6) 10%, hsl(175 100% 45% / 0.7) 30%, hsl(175 100% 55% / 0.5) 50%, hsl(175 100% 45% / 0.7) 70%, hsl(175 100% 36% / 0.6) 90%, transparent 100%)'
-                  : 'linear-gradient(to bottom, transparent 0%, hsl(175 100% 36% / 0.7) 15%, hsl(175 100% 45% / 0.5) 35%, hsl(175 100% 55% / 0.4) 50%, hsl(175 100% 45% / 0.5) 65%, hsl(175 100% 36% / 0.7) 85%, transparent 100%)'
+                  : 'linear-gradient(to bottom, transparent 0%, hsl(175 100% 36% / 0.7) 15%, hsl(175 100% 45% / 0.5) 35%, hsl(175 100% 55% / 0.4) 50%, hsl(175 100% 45% / 0.5) 65%, hsl(175 100% 36% / 0.7) 85%, transparent 100%)',
               }}
             />
-            
+
             {/* Subtle glow effect when actively resizing */}
             {isResizing && (
               <>
-                <div 
+                <div
                   className="absolute top-0 right-0 w-3 h-full opacity-25 blur-sm transition-all duration-150"
                   style={{
-                    background: 'linear-gradient(to bottom, transparent 0%, hsl(175 100% 36% / 0.3) 15%, hsl(175 100% 45% / 0.25) 40%, hsl(175 100% 55% / 0.15) 50%, hsl(175 100% 45% / 0.25) 60%, hsl(175 100% 36% / 0.3) 85%, transparent 100%)'
+                    background:
+                      'linear-gradient(to bottom, transparent 0%, hsl(175 100% 36% / 0.3) 15%, hsl(175 100% 45% / 0.25) 40%, hsl(175 100% 55% / 0.15) 50%, hsl(175 100% 45% / 0.25) 60%, hsl(175 100% 36% / 0.3) 85%, transparent 100%)',
                   }}
                 />
-                <div 
+                <div
                   className="absolute top-0 right-0 w-6 h-full opacity-15 blur-md transition-all duration-150"
                   style={{
-                    background: 'linear-gradient(to bottom, transparent 0%, hsl(175 100% 36% / 0.15) 20%, hsl(175 100% 45% / 0.1) 50%, hsl(175 100% 36% / 0.15) 80%, transparent 100%)'
+                    background:
+                      'linear-gradient(to bottom, transparent 0%, hsl(175 100% 36% / 0.15) 20%, hsl(175 100% 45% / 0.1) 50%, hsl(175 100% 36% / 0.15) 80%, transparent 100%)',
                   }}
                 />
               </>
@@ -506,9 +606,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDataLoad }) => {
           onClick={toggleSidebar}
           className="absolute top-5 right-3 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white hover:border-white/10 transition-colors shadow-lg cursor-pointer"
           aria-label={
-            sidebarCollapsed
-              ? t('sidebar.expand')
-              : t('sidebar.collapse')
+            sidebarCollapsed ? t('sidebar.expand') : t('sidebar.collapse')
           }
         >
           {sidebarCollapsed ? (

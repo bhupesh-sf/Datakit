@@ -14,7 +14,8 @@ import {
   MoreVertical,
   Trash2,
   Edit2,
-  Plus
+  Plus,
+  TableProperties
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFolderStore } from '@/store/folderStore';
@@ -58,7 +59,7 @@ export const FolderTreeView: React.FC<FolderTreeViewProps> = ({
     getNodeById
   } = useFolderStore();
   
-  const { removeFile, removeFileFromWorkspace, workspaceFiles, files } = useAppStore();
+  const { removeFile, removeFileFromWorkspace, workspaceFiles, files, activeFileId } = useAppStore();
   const { dropTable } = useDuckDBStore();
 
   // Comprehensive file deletion handler
@@ -140,6 +141,8 @@ export const FolderTreeView: React.FC<FolderTreeViewProps> = ({
         return <Database {...iconProps} className="text-violet-400" />;
       case 'remote':
         return <Cloud {...iconProps} className="text-blue-400" />;
+      case 'query':
+        return <TableProperties {...iconProps} className="text-orange-400" />;
       default:
         return <FileText {...iconProps} className="text-white/50" />;
     }
@@ -285,6 +288,18 @@ export const FolderTreeView: React.FC<FolderTreeViewProps> = ({
     setNewFolderName('');
   };
 
+  // Check if this node corresponds to the active file
+  const isActiveFile = (node: FolderNode): boolean => {
+    if (node.type !== 'file' || !activeFileId) return false;
+    
+    // Find the active file in the app store
+    const activeFile = files.find(f => f.id === activeFileId);
+    if (!activeFile) return false;
+    
+    // Match by file name
+    return node.name === activeFile.fileName;
+  };
+
   // Render tree node
   const renderNode = (node: FolderNode, depth = 0, isLast = false, parentConnections: boolean[] = []) => {
     const isExpanded = expandedIds.has(node.id);
@@ -292,9 +307,10 @@ export const FolderTreeView: React.FC<FolderTreeViewProps> = ({
     const isDraggedOver = draggedOver === node.id;
     const isRenaming = renamingNodeId === node.id;
     const hasContextMenu = contextMenuNodeId === node.id;
+    const isActive = isActiveFile(node);
 
     return (
-      <div key={node.id} className="relative">
+      <div key={node.id} className="relative overflow-visible">
         {/* Simplified connection lines - complex for folders, simple for files */}
         {depth > 0 && node.type === 'folder' && (
           <div className="absolute left-0 top-0 h-full flex">
@@ -322,16 +338,17 @@ export const FolderTreeView: React.FC<FolderTreeViewProps> = ({
         
         <div
           className={cn(
-            'group flex items-center gap-1 py-1 rounded-md cursor-pointer transition-all relative',
-            isSelected && 'bg-primary/10',
-            !isSelected && 'hover:bg-white/5',
+            'group flex items-center gap-1 py-1.5 cursor-pointer transition-all relative',
+            isActive && node.type === 'file' && 'bg-primary/20 border-l-2 border-primary z-10',
+            isSelected && !isActive && 'bg-white/5',
+            !isSelected && !isActive && 'hover:bg-white/5',
             isDraggedOver && 'bg-primary/20 ring-1 ring-primary',
-            // Enhanced visual hierarchy with better indentation
-            node.type === 'file' && 'bg-white/[0.01]',
+            // Non-active files
+            node.type === 'file' && !isActive && 'ml-0.5',
           )}
           style={{ 
-            paddingLeft: `${8 + depth * 20 + (node.type === 'file' ? 12 : 0)}px`,
-            paddingRight: '8px'
+            paddingLeft: `${6 + depth * 20 + (node.type === 'file' ? 12 : 0) - (isActive ? 2 : 0)}px`,
+            paddingRight: isActive && node.type === 'file' ? '12px' : '8px'
           }}
           onClick={(e) => handleNodeClick(node, e)}
           onContextMenu={(e) => handleNodeContextMenu(node, e)}
@@ -341,6 +358,12 @@ export const FolderTreeView: React.FC<FolderTreeViewProps> = ({
           onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, node)}
         >
+          {/* Active file border cover - hides the sidebar border just for this row */}
+          {isActive && node.type === 'file' && (
+            <div 
+              className="absolute top-0 -right-2 w-4 h-full bg-darkNav z-20"
+            />
+          )}
           {/* Expand/collapse chevron for folders */}
           {node.type === 'folder' && (
             <button
@@ -402,7 +425,8 @@ export const FolderTreeView: React.FC<FolderTreeViewProps> = ({
                   'flex-1 text-xs truncate',
                   node.fileData?.isLoaded === false && 'opacity-50',
                   // Enhanced text styling for files
-                  node.type === 'file' && 'text-white/80 font-normal',
+                  isActive && 'text-white font-medium',
+                  node.type === 'file' && !isActive && 'text-white/80 font-normal',
                   node.type === 'folder' && 'text-white font-medium'
                 )}
               >
@@ -413,7 +437,13 @@ export const FolderTreeView: React.FC<FolderTreeViewProps> = ({
               {node.type === 'file' && (
                 <>
                   {/* {getLoadingIcon(node.fileData?.isLoaded)} */}
-                  {node.fileData?.size && (
+                  {/* Show draft badge for query results */}
+                  {node.fileData?.fileType === 'query' && (
+                    <span className="text-[10px] text-orange-400 bg-orange-400/10 px-1 rounded border border-orange-400/20">
+                      Draft
+                    </span>
+                  )}
+                  {node.fileData?.size && node.fileData.size > 0 && (
                     <span className="text-[10px] text-white/40">
                       {formatFileSize(node.fileData.size)}
                     </span>
@@ -585,7 +615,7 @@ export const FolderTreeView: React.FC<FolderTreeViewProps> = ({
       )}
 
       {/* Tree nodes */}
-      <div className="space-y-0.5">
+      <div className="space-y-0.5 overflow-visible">
         {roots.map((node, index) => {
           const isLastRoot = index === roots.length - 1;
           return renderNode(node, 0, isLastRoot, []);

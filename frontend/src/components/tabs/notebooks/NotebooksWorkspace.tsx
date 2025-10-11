@@ -271,7 +271,7 @@ const NotebooksWorkspace: React.FC = () => {
         return (
           <div className="flex items-center gap-1 text-xs text-yellow-400">
             <AlertCircle size={12} />
-            <span>{t('notebooks.workspace.status.unsaved')}</span>
+            <span>{t('notebooks.workspace.status.unsaved', {defaultValue: 'Unsaved'})}</span>
           </div>
         );
       default:
@@ -439,7 +439,7 @@ const NotebooksWorkspace: React.FC = () => {
     <NotebookErrorBoundary>
       <div
         ref={containerRef}
-        className="h-full w-full flex overflow-hidden relative"
+        className="h-full w-full flex overflow-hidden relative border-t border-white/10"
       >
       {/* Resize Overlays */}
       {(isResizingLeft || isResizingRight) && (

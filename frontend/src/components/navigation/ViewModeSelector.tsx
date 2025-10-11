@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Code2, FileText, BarChart3, UserPen } from 'lucide-react';
+import { Eye, Code2, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
@@ -23,7 +23,6 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   className
 }) => {
   const { t } = useTranslation();
-  // Always keep expanded, no collapsing behavior
 
   const modes: {
     value: ViewMode;
@@ -49,24 +48,24 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
       icon: <FileText size={16} />,
       description: t('viewMode.notebook.description', { defaultValue: 'Analyze with Jupyter notebook' }),
     },
-    {
-      value: 'visualization',
-      label: t('viewMode.visualization.label', { defaultValue: 'Visualize' }),
-      icon: <BarChart3 size={16} />,
-      description: t('viewMode.visualization.description', { defaultValue: 'Create charts and graphs' }),
-    },
-    {
-      value: 'ai',
-      label: t('viewMode.ai.label', { defaultValue: 'Assistant' }),
-      icon: <UserPen size={16} />,
-      description: t('viewMode.ai.description', { defaultValue: 'AI-powered insights' }),
-    },
+    // {
+    //   value: 'visualization',
+    //   label: t('viewMode.visualization.label', { defaultValue: 'Visualize' }),
+    //   icon: <BarChart3 size={16} />,
+    //   description: t('viewMode.visualization.description', { defaultValue: 'Create charts and graphs' }),
+    // },
+    // {
+    //   value: 'ai',
+    //   label: t('viewMode.ai.label', { defaultValue: 'Assistant' }),
+    //   icon: <UserPen size={16} />,
+    //   description: t('viewMode.ai.description', { defaultValue: 'AI-powered insights' }),
+    // },
   ];
 
 
   return (
     <div className={cn('relative flex items-center justify-center', className)}>
-      {/* Always show expanded state - all options visible */}
+      {/* Responsive view mode selector */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: -5 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -76,26 +75,27 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
           scale: { duration: 0.2 },
           opacity: { duration: 0.15 },
         }}
-        className="flex items-center gap-0.5 bg-black/50 backdrop-blur-sm border border-white/10 rounded-lg p-0.5 shadow-xl"
+        className="responsive-view-selector flex items-center gap-0.5 bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg p-0.5 shadow-xl shadow-black/50"
       >
         {modes.map((mode) => (
           <motion.button
+            key={mode.value}
             onClick={() => onModeChange(mode.value)}
             disabled={false} // Always clickable
             className={cn(
-              'relative group flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md',
-              'transition-all duration-200 cursor-pointer',
+              'responsive-view-mode-button relative group flex items-center rounded-md transition-all duration-200 cursor-pointer gap-1.5 px-3 py-1.5 text-xs border',
               currentMode === mode.value
-                ? 'text-white'
-                : 'text-white/50 hover:text-white/70'
+                ? 'text-white border-primary/40 bg-primary/5'
+                : 'text-white/50 hover:text-white/70 border-transparent hover:border-white/20 hover:bg-white/5'
             )}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            data-tooltip={mode.description}
           >
             {currentMode === mode.value && (
               <motion.div
                 layoutId="activeMode"
-                className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/25 via-primary/20 to-primary/15 border border-primary/30 shadow-lg shadow-primary/10"
+                className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/30 via-primary/25 to-primary/20 border border-primary/50 shadow-lg shadow-primary/20"
                 transition={{ type: 'spring', duration: 0.4, bounce: 0.15 }}
               />
             )}
@@ -109,7 +109,7 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
             </span>
             <span
               className={cn(
-                'relative z-10 font-medium',
+                'button-text relative z-10 font-medium',
                 currentMode === mode.value ? 'text-white' : ''
               )}
             >

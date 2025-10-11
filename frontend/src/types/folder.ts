@@ -2,7 +2,7 @@
  * Folder structure types for the new folder-based file management system
  */
 
-export type FileType = 'csv' | 'json' | 'excel' | 'parquet' | 'txt' | 'duckdb' | 'remote';
+export type FileType = 'csv' | 'json' | 'excel' | 'parquet' | 'txt' | 'duckdb' | 'remote' | 'query';
 
 export interface WorkspaceFile {
   id: string;
