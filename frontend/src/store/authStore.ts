@@ -78,6 +78,17 @@ export const useAuthStore = create<AuthState>()(
           } catch (workspaceError) {
             console.warn("Failed to load workspace:", workspaceError);
           }
+
+          // Set default AI model to Smart for authenticated users
+          try {
+            const { useAIStore } = await import('@/store/aiStore');
+            const { setActiveProvider, setActiveModel } = useAIStore.getState();
+            setActiveProvider('datakit');
+            setActiveModel('datakit-smart');
+            console.log('[AuthStore] Set default Smart model after login');
+          } catch (aiError) {
+            console.warn("Failed to set default AI model:", aiError);
+          }
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : "Login failed",
@@ -100,6 +111,17 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
+
+          // Set default AI model to Smart for new users
+          try {
+            const { useAIStore } = await import('@/store/aiStore');
+            const { setActiveProvider, setActiveModel } = useAIStore.getState();
+            setActiveProvider('datakit');
+            setActiveModel('datakit-smart');
+            console.log('[AuthStore] Set default Smart model after signup');
+          } catch (aiError) {
+            console.warn("Failed to set default AI model:", aiError);
+          }
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : "Signup failed",

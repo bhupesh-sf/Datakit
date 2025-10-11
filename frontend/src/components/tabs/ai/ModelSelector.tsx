@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check, Cpu, Server } from 'lucide-react';
+import { ChevronDown, Check, Cpu, Server, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
@@ -17,6 +17,7 @@ import GroqLogo from '@/assets/groq.png';
 import DatakitLogoShort from '@/assets/datakitShort.png';
 import OllamaLogo from '@/assets/ollama.webp';
 import AuthModal from '@/components/auth/AuthModal';
+import ApiKeyModal from '@/components/tabs/ai/ApiKeyModal';
 
 interface ModelSelectorProps {
   compact?: boolean;
@@ -50,6 +51,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ compact = false }) => {
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>(
     'signup'
   );
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
