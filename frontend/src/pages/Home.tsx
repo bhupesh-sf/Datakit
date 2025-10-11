@@ -38,9 +38,6 @@ const Home = () => {
     // Store actions
     setJsonViewMode,
     
-    // Computed values
-    feedbackContext,
-    
     // Handlers
     handleDataLoad,
   } = useHomePageLogic();
@@ -63,7 +60,7 @@ const Home = () => {
   } = useAppStore();
   
   // Folder store
-  const { getParentChain, roots, nodeMap } = useFolderStore();
+  const { getParentChain, nodeMap } = useFolderStore();
   
   // Inspector store
   const { openPanel, analyzeFile } = useInspectorStore();
@@ -185,8 +182,6 @@ const Home = () => {
       />
       <MainLayout 
         onDataLoad={handleDataLoad}
-        feedbackContext={feedbackContext}
-        showTabs={false} // We're handling navigation ourselves now
       >
         <div 
           className="h-full flex flex-col bg-background relative transition-all duration-300"
@@ -242,7 +237,7 @@ const Home = () => {
             </div>
             
             
-            {/* Right side: Stats, Inspector, and Assistant buttons */}
+            {/* Right side: Stats, Inspector, and Assistant */}
             <div className="flex justify-end min-w-0">
               <motion.div 
                 className="responsive-buttons flex items-center gap-1.5 transition-all duration-300 min-w-0"

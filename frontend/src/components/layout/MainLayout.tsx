@@ -52,7 +52,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         <Sidebar onDataLoad={onDataLoad} />
       </div>
 
-      {/* Main content area */}
       <motion.main
         className="flex-1 h-full overflow-hidden relative z-10 flex flex-col"
         initial={sidebarCollapsed ? 'sidebarCollapsed' : 'sidebarExpanded'}
@@ -60,7 +59,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         variants={contentVariants}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
-        {/* Content area */}
         <div className="flex-1 overflow-hidden">{children}</div>
       </motion.main>
     </div>
