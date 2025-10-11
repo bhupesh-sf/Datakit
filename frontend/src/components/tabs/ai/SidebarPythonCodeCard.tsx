@@ -57,7 +57,7 @@ const SidebarPythonCodeCard: React.FC<SidebarPythonCodeCardProps> = ({
       <div className="flex items-center justify-between px-3 py-2 bg-blue-500/10 border-b border-blue-500/20">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-          <span className="text-xs font-medium text-blue-300">Python Code</span>
+          <span className="text-xs font-medium text-blue-300">{t('ai.pythonCard.title', { defaultValue: 'Python Code' })}</span>
           {index > 0 && (
             <span className="text-xs text-blue-400/60">#{index + 1}</span>
           )}
@@ -65,7 +65,7 @@ const SidebarPythonCodeCard: React.FC<SidebarPythonCodeCardProps> = ({
         
         <div className="flex items-center gap-1">
           {/* Copy Button */}
-          <Tooltip content="Copy code" placement="top">
+          <Tooltip content={t('ai.pythonCard.copyCode', { defaultValue: 'Copy code' })} placement="bottom">
             <button
               onClick={handleCopy}
               className="p-1 hover:bg-blue-500/20 rounded transition-colors"
@@ -80,7 +80,7 @@ const SidebarPythonCodeCard: React.FC<SidebarPythonCodeCardProps> = ({
 
           {/* Expand/Collapse for multi-line code */}
           {shouldTruncate && (
-            <Tooltip content={isExpanded ? "Collapse" : "Expand"} placement="top">
+            <Tooltip content={isExpanded ? t('ai.pythonCard.collapse', { defaultValue: 'Collapse' }) : t('ai.pythonCard.expand', { defaultValue: 'Expand' })} placement="bottom">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="p-1 hover:bg-blue-500/20 rounded transition-colors"
@@ -103,7 +103,10 @@ const SidebarPythonCodeCard: React.FC<SidebarPythonCodeCardProps> = ({
             {displayLines.join('\n')}
             {shouldTruncate && !isExpanded && (
               <span className="text-blue-400/60">
-                \n... ({codeLines.length - 6} more lines)
+                \n... ({t('ai.pythonCard.moreLines', { 
+                  defaultValue: '{{count}} more lines', 
+                  count: codeLines.length - 6 
+                })})
               </span>
             )}
           </code>
@@ -113,7 +116,7 @@ const SidebarPythonCodeCard: React.FC<SidebarPythonCodeCardProps> = ({
       {/* Action Buttons */}
       <div className="flex items-center gap-2 px-3 py-2 bg-black/20 border-t border-blue-500/20">
         {/* Send to Notebook Button */}
-        <Tooltip content="Send to active notebook" placement="bottom">
+        <Tooltip content={t('ai.pythonCard.sendToNotebook', { defaultValue: 'Send to active notebook' })} placement="top">
           <Button
             onClick={handleSendToNotebook}
             size="sm"
@@ -121,7 +124,7 @@ const SidebarPythonCodeCard: React.FC<SidebarPythonCodeCardProps> = ({
             className="h-7 px-2 text-xs border-blue-500/30 hover:border-blue-400/50 hover:bg-blue-500/10 text-blue-300 hover:text-blue-200 flex items-center gap-1.5"
           >
             <FileCode className="h-3 w-3" />
-            <span>Send to Notebook</span>
+            <span>{t('ai.pythonCard.sendToNotebookButton', { defaultValue: 'Send to Notebook' })}</span>
             <ArrowRight className="h-3 w-3" />
           </Button>
         </Tooltip>
