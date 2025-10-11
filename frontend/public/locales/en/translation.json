@@ -968,17 +968,17 @@
     "steps": {
       "welcome": {
         "title": "Welcome to DataKit",
-        "description": "Your privacy-first data analysis platform. Process data locally with complete control and security.",
+        "description": "Datakit doesn’t upload your data anywhere, it works with your files locally, with your browser as the engine.",
         "ctaText": "Get started"
       },
       "preview": {
         "title": "Inspect & Analyze",
-        "description": "Preview your data and perform column analysis at a glance. Instantly identify data quality issues, patterns, and insights.",
+        "description": "Preview your data, clean it, transform it and change and use it to build insights.",
         "ctaText": "Explore data"
       },
       "sql": {
         "title": "SQL Editor",
-        "description": "Write powerful SQL queries with AI assistance. Explore your data with intelligent autocomplete and suggestions.",
+        "description": "Work with your data files just like you would as if they were in a database with the help of our AI assistance on intelligent autocomplete and suggestions.",
         "ctaText": "Try it now"
       },
       "notebooks": {
