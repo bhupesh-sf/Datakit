@@ -66,8 +66,6 @@ const Home = () => {
   // Inspector store
   const { openPanel, analyzeFile } = useInspectorStore();
   
-  // Python store
-  const { initializePython, pyodide } = usePythonStore();
 
   // Column stats hook
   const { columnStats, isLoading: isLoadingStats, triggerAnalysis } = useColumnStats({
@@ -126,17 +124,6 @@ const Home = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [toggleAIAssistant]);
 
-  useEffect(() => {
-    // Initialize Python in the background if not already initialized or initializing
-    if (!pyodide.isInitialized && !pyodide.isInitializing && !pyodide.error) {
-      console.log('[Home] Starting early Python initialization for AI integration...');
-      initializePython().then(() => {
-        console.log('[Home] Python environment ready for AI-generated code');
-      }).catch((error) => {
-        console.warn('[Home] Python initialization failed (non-blocking):', error);
-      });
-    }
-  }, []); // Only run once on mount
 
 
   // Inspector handler
@@ -326,14 +313,14 @@ const Home = () => {
                 <motion.button
                   onClick={toggleAIAssistant}
                   className={cn(
-                    'responsive-button assistant-button relative group flex items-center rounded-md transition-all duration-200 cursor-pointer gap-1.5 px-3 py-1.5 text-xs border',
+                    'responsive-button assistant-button relative group flex items-center rounded-md transition-all duration-200 cursor-pointer gap-1.5 px-3 py-1.5 text-xs border-2 font-semibold',
                     showAIAssistant
-                      ? 'text-white border-primary/40 bg-primary/5'
-                      : 'text-white/50 hover:text-white/70 border-transparent hover:border-white/20 hover:bg-white/5'
+                      ? 'border-primary bg-primary/10'
+                      : 'border-white/20 hover:border-white/30 hover:bg-white/5'
                   )}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  data-tooltip={t('ai.assistant.button', { defaultValue: 'Assistant' }) + ' (⌘K)'}
+                  data-tooltip="Datakit Assistant (⌘K)"
                 >
                   {showAIAssistant && (
                     <motion.div
@@ -348,10 +335,10 @@ const Home = () => {
                     <span className="font-mono">K</span>
                   </div>
                   <span className={cn(
-                    'button-text relative z-10 font-medium',
-                    showAIAssistant ? 'text-white' : 'text-white/95'
+                    'button-text relative z-10 font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent',
+                    showAIAssistant && 'from-white to-gray-300'
                   )}>
-                    {t('ai.assistant.button', { defaultValue: 'Assistant' })}
+                    Datakit Assistant
                   </span>
                 </motion.button>
               </motion.div>

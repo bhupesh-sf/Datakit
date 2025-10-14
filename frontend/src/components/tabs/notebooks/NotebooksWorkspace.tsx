@@ -154,6 +154,19 @@ const NotebooksWorkspace: React.FC = () => {
   });
 
 
+  // Initialize Python when NotebooksWorkspace is first opened
+  useEffect(() => {
+    // Initialize Python if not already initialized or initializing
+    if (!pyodide.isInitialized && !pyodide.isInitializing && !pyodide.error) {
+      console.log('[NotebooksWorkspace] Starting Python initialization for notebook environment...');
+      initializePython().then(() => {
+        console.log('[NotebooksWorkspace] Python environment ready for notebook execution');
+      }).catch((error) => {
+        console.warn('[NotebooksWorkspace] Python initialization failed:', error);
+      });
+    }
+  }, []); // Only run once on mount
+
   // Initialize notebook for the active file when first opened
   useEffect(() => {
     if (activeFile && (!activeFile.notebookState || !activeFile.notebookState.cells)) {

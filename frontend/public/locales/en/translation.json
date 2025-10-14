@@ -714,7 +714,7 @@
       "status": {
         "saved": "Saved",
         "initializing": "Initializing Python",
-        "loadingPackages": "Loading pandas, numpy..."
+        "loadingPackages": "Loading pandas, numpy on your browser..."
       }
     },
     "apiKey": {

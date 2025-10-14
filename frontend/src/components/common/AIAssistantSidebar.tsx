@@ -7,6 +7,9 @@ import {
   RefreshCw, 
   Command,
   MessageSquare,
+  ChevronDown,
+  ChevronRight,
+  Eye,
 } from "lucide-react";
 
 import { useAIStore } from "@/store/aiStore";
@@ -70,6 +73,7 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<"login" | "signup">("signup");
   const [isResizing, setIsResizing] = useState(false);
+  const [expandedResponses, setExpandedResponses] = useState<Set<number>>(new Set());
 
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -324,6 +328,18 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
     }
   };
 
+  const toggleResponseExpansion = (messageIndex: number) => {
+    setExpandedResponses(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(messageIndex)) {
+        newSet.delete(messageIndex);
+      } else {
+        newSet.add(messageIndex);
+      }
+      return newSet;
+    });
+  };
+
   // Handle resize
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsResizing(true);
@@ -387,10 +403,10 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
             >
               {message.role === 'assistant' ? (
                 <div className="space-y-3">
-                  {/* Parse and render content with SQL and Python code blocks */}
                   {(() => {
                     const sqlQueries = extractSQLQueries(message.content);
                     const pythonCodes = extractPythonQueries(message.content);
+                    const isExpanded = expandedResponses.has(index);
                     
                     if (sqlQueries.length === 0 && pythonCodes.length === 0) {
                       return (
@@ -400,83 +416,143 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
                       );
                     }
 
-                    // Parse content to maintain order of text and code blocks
-                    const codeBlockRegex = /```(?:sql|python)[\s\S]*?```/gi;
-                    const parts: Array<{ type: 'text' | 'sql' | 'python', content: string }> = [];
-                    let lastIndex = 0;
-                    let sqlIndex = 0;
-                    let pythonIndex = 0;
-                    
-                    // Find all code blocks and their positions
-                    const matches = Array.from(message.content.matchAll(codeBlockRegex));
-                    
-                    matches.forEach((match) => {
-                      // Add text before this code block
-                      if (match.index! > lastIndex) {
-                        const textContent = message.content.slice(lastIndex, match.index!).trim();
-                        if (textContent) {
-                          parts.push({ type: 'text', content: textContent });
-                        }
-                      }
-                      
-                      // Determine if SQL or Python
-                      if (match[0].toLowerCase().includes('```sql')) {
-                        if (sqlQueries[sqlIndex]) {
-                          parts.push({ type: 'sql', content: sqlQueries[sqlIndex++] });
-                        }
-                      } else if (match[0].toLowerCase().includes('```python')) {
-                        if (pythonCodes[pythonIndex]) {
-                          parts.push({ type: 'python', content: pythonCodes[pythonIndex++] });
-                        }
-                      }
-                      
-                      lastIndex = match.index! + match[0].length;
-                    });
-                    
-                    // Add remaining text after last code block
-                    if (lastIndex < message.content.length) {
-                      const textContent = message.content.slice(lastIndex).trim();
-                      if (textContent) {
-                        parts.push({ type: 'text', content: textContent });
-                      }
-                    }
-                    
-                    // Render parts in order
+                    // Show only the primary SQL/Python card prominently
                     return (
                       <>
-                        {parts.map((part, idx) => {
-                          if (part.type === 'text') {
-                            return (
-                              <p key={`text-${idx}`} className="text-sm leading-relaxed whitespace-pre-wrap">
-                                {part.content}
-                              </p>
-                            );
-                          } else if (part.type === 'sql') {
-                            const queryIndex = sqlQueries.indexOf(part.content);
-                            return (
-                              <SidebarSQLQueryCard
-                                key={`sql-${idx}`}
-                                query={part.content}
-                                index={queryIndex >= 0 ? queryIndex : 0}
-                                responseId={`sidebar-${index}`}
-                                isPrimary={queryIndex === 0}
-                                activeFile={activeFile}
-                              />
-                            );
-                          } else if (part.type === 'python') {
-                            const codeIndex = pythonCodes.indexOf(part.content);
-                            return (
-                              <SidebarPythonCodeCard
-                                key={`python-${idx}`}
-                                code={part.content}
-                                index={codeIndex >= 0 ? codeIndex : 0}
-                                onSendToNotebook={handleSendToNotebook}
-                                activeFile={activeFile}
-                              />
-                            );
-                          }
-                          return null;
-                        })}
+                        {/* Primary SQL Card */}
+                        {sqlQueries.length > 0 && (
+                          <SidebarSQLQueryCard
+                            key={`primary-sql-${index}`}
+                            query={sqlQueries[0]}
+                            index={0}
+                            responseId={`sidebar-${index}`}
+                            isPrimary={true}
+                            activeFile={activeFile}
+                          />
+                        )}
+                        
+                        {/* Primary Python Card if no SQL */}
+                        {sqlQueries.length === 0 && pythonCodes.length > 0 && (
+                          <SidebarPythonCodeCard
+                            key={`primary-python-${index}`}
+                            code={pythonCodes[0]}
+                            index={0}
+                            onSendToNotebook={handleSendToNotebook}
+                            activeFile={activeFile}
+                          />
+                        )}
+
+                        {/* Collapsible "Behind the Scenes" Section */}
+                        <div className="border-t border-white/10 pt-3">
+                          <button
+                            onClick={() => toggleResponseExpansion(index)}
+                            className="w-full flex items-center justify-between p-2 hover:bg-white/5 rounded transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Eye className="h-3 w-3 text-white/60" />
+                              <span className="text-xs font-medium text-white/70">
+                                {t('ai.sidebar.behindTheScenes', { defaultValue: 'What happened behind this scene?' })}
+                              </span>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronDown className="h-3 w-3 text-white/60" />
+                            ) : (
+                              <ChevronRight className="h-3 w-3 text-white/60" />
+                            )}
+                          </button>
+                          
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="p-3 bg-white/3 rounded-lg mt-2 border border-white/5 space-y-3">
+                                  {(() => {
+                                    // Parse and render the complete original content with all parts
+                                    const codeBlockRegex = /```(?:sql|python)[\s\S]*?```/gi;
+                                    const parts: Array<{ type: 'text' | 'sql' | 'python', content: string }> = [];
+                                    let lastIndex = 0;
+                                    let sqlIndex = 0;
+                                    let pythonIndex = 0;
+                                    
+                                    // Find all code blocks and their positions
+                                    const matches = Array.from(message.content.matchAll(codeBlockRegex));
+                                    
+                                    matches.forEach((match) => {
+                                      // Add text before this code block
+                                      if (match.index! > lastIndex) {
+                                        const textContent = message.content.slice(lastIndex, match.index!).trim();
+                                        if (textContent) {
+                                          parts.push({ type: 'text', content: textContent });
+                                        }
+                                      }
+                                      
+                                      // Determine if SQL or Python
+                                      if (match[0].toLowerCase().includes('```sql')) {
+                                        if (sqlQueries[sqlIndex]) {
+                                          parts.push({ type: 'sql', content: sqlQueries[sqlIndex++] });
+                                        }
+                                      } else if (match[0].toLowerCase().includes('```python')) {
+                                        if (pythonCodes[pythonIndex]) {
+                                          parts.push({ type: 'python', content: pythonCodes[pythonIndex++] });
+                                        }
+                                      }
+                                      
+                                      lastIndex = match.index! + match[0].length;
+                                    });
+                                    
+                                    // Add remaining text after last code block
+                                    if (lastIndex < message.content.length) {
+                                      const textContent = message.content.slice(lastIndex).trim();
+                                      if (textContent) {
+                                        parts.push({ type: 'text', content: textContent });
+                                      }
+                                    }
+                                    
+                                    // Render all parts in order
+                                    return parts.map((part, idx) => {
+                                      if (part.type === 'text') {
+                                        return (
+                                          <p key={`behind-text-${idx}`} className="text-xs leading-relaxed whitespace-pre-wrap text-white/80">
+                                            {part.content}
+                                          </p>
+                                        );
+                                      } else if (part.type === 'sql') {
+                                        const queryIndex = sqlQueries.indexOf(part.content);
+                                        return (
+                                          <SidebarSQLQueryCard
+                                            key={`behind-sql-${idx}`}
+                                            query={part.content}
+                                            index={queryIndex >= 0 ? queryIndex : 0}
+                                            responseId={`behind-${index}`}
+                                            isPrimary={queryIndex === 0}
+                                            activeFile={activeFile}
+                                          />
+                                        );
+                                      } else if (part.type === 'python') {
+                                        const codeIndex = pythonCodes.indexOf(part.content);
+                                        return (
+                                          <SidebarPythonCodeCard
+                                            key={`behind-python-${idx}`}
+                                            code={part.content}
+                                            index={codeIndex >= 0 ? codeIndex : 0}
+                                            onSendToNotebook={handleSendToNotebook}
+                                            activeFile={activeFile}
+                                          />
+                                        );
+                                      }
+                                      return null;
+                                    });
+                                  })()}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </>
                     );
                   })()}
@@ -502,78 +578,36 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
                     );
                   }
 
-                  // Parse streaming content with SQL and Python code blocks
-                  const codeBlockRegex = /```(?:sql|python)[\s\S]*?```/gi;
-                  const parts: Array<{ type: 'text' | 'sql' | 'python', content: string }> = [];
-                  let lastIndex = 0;
-                  let sqlIndex = 0;
-                  let pythonIndex = 0;
-                  
-                  const matches = Array.from(streamingResponse.matchAll(codeBlockRegex));
-                  
-                  matches.forEach((match) => {
-                    if (match.index! > lastIndex) {
-                      const textContent = streamingResponse.slice(lastIndex, match.index!).trim();
-                      if (textContent) {
-                        parts.push({ type: 'text', content: textContent });
-                      }
-                    }
-                    
-                    if (match[0].toLowerCase().includes('```sql')) {
-                      if (sqlQueries[sqlIndex]) {
-                        parts.push({ type: 'sql', content: sqlQueries[sqlIndex++] });
-                      }
-                    } else if (match[0].toLowerCase().includes('```python')) {
-                      if (pythonQueries[pythonIndex]) {
-                        parts.push({ type: 'python', content: pythonQueries[pythonIndex++] });
-                      }
-                    }
-                    
-                    lastIndex = match.index! + match[0].length;
-                  });
-                  
-                  if (lastIndex < streamingResponse.length) {
-                    const textContent = streamingResponse.slice(lastIndex).trim();
-                    if (textContent) {
-                      parts.push({ type: 'text', content: textContent });
-                    }
-                  }
-                  
+                  // Show only the primary SQL/Python card during streaming
                   return (
                     <>
-                      {parts.map((part, idx) => {
-                        if (part.type === 'text') {
-                          return (
-                            <p key={`text-${idx}`} className="text-sm leading-relaxed whitespace-pre-wrap">
-                              {part.content}
-                            </p>
-                          );
-                        } else if (part.type === 'sql') {
-                          const queryIndex = sqlQueries.indexOf(part.content);
-                          return (
-                            <SidebarSQLQueryCard
-                              key={`sql-streaming-${idx}`}
-                              query={part.content}
-                              index={queryIndex >= 0 ? queryIndex : 0}
-                              responseId={`sidebar-streaming`}
-                              isPrimary={queryIndex === 0}
-                              activeFile={activeFile}
-                            />
-                          );
-                        } else if (part.type === 'python') {
-                          const codeIndex = pythonQueries.indexOf(part.content);
-                          return (
-                            <SidebarPythonCodeCard
-                              key={`python-streaming-${idx}`}
-                              code={part.content}
-                              index={codeIndex >= 0 ? codeIndex : 0}
-                              onSendToNotebook={handleSendToNotebook}
-                              activeFile={activeFile}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
+                      {/* Primary SQL Card */}
+                      {sqlQueries.length > 0 && (
+                        <SidebarSQLQueryCard
+                          key={`streaming-primary-sql`}
+                          query={sqlQueries[0]}
+                          index={0}
+                          responseId={`sidebar-streaming`}
+                          isPrimary={true}
+                          activeFile={activeFile}
+                        />
+                      )}
+                      
+                      {/* Primary Python Card if no SQL */}
+                      {sqlQueries.length === 0 && pythonQueries.length > 0 && (
+                        <SidebarPythonCodeCard
+                          key={`streaming-primary-python`}
+                          code={pythonQueries[0]}
+                          index={0}
+                          onSendToNotebook={handleSendToNotebook}
+                          activeFile={activeFile}
+                        />
+                      )}
+
+                      {/* Note about streaming */}
+                      <div className="text-xs text-white/50 italic">
+                        {t('ai.sidebar.streamingNote', { defaultValue: 'Generating full explanation...' })}
+                      </div>
                     </>
                   );
                 })()}

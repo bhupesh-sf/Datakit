@@ -8,10 +8,9 @@ import 'prismjs/themes/prism-tomorrow.css';
 
 import { useAppStore } from '@/store/appStore';
 import { useAIStore } from '@/store/aiStore';
-
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
-import QueryResultsModal from '@/components/tabs/ai/QueryResultsModal';
+import QueryResultsBottomSheet from '@/components/tabs/ai/QueryResultsBottomSheet';
 
 interface QueryResult {
   data: any[];
@@ -48,10 +47,10 @@ const SidebarSQLQueryCard: React.FC<SidebarSQLQueryCardProps> = ({
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [queryId, setQueryId] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
 
   const { setPendingQuery, changeViewMode, showAIAssistant, setShowAIAssistant } = useAppStore();
-  const { setCurrentPrompt } = useAIStore();
+  const { setCurrentPrompt, isProcessing: aiIsProcessing, streamingResponse } = useAIStore();
 
   // Generate unique responseId if not provided
   const uniqueResponseId = responseId || `sidebar-response-${Date.now()}`;
@@ -208,6 +207,18 @@ const SidebarSQLQueryCard: React.FC<SidebarSQLQueryCardProps> = ({
     }
   };
 
+  // Auto-execute primary queries when AI generation is complete
+  useEffect(() => {
+    if (isPrimary && !queryResult && !isRunning && !aiIsProcessing && !streamingResponse) {
+      console.log('[SidebarSQLQueryCard] AI generation complete, auto-executing primary query');
+      // Add a small delay to ensure the UI is ready
+      const timer = setTimeout(() => {
+        handleRun();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isPrimary, queryResult, isRunning, aiIsProcessing, streamingResponse]);
+
   // Each query card now manages its own results independently
   // No shared state listening needed
 
@@ -222,8 +233,12 @@ const SidebarSQLQueryCard: React.FC<SidebarSQLQueryCardProps> = ({
     // If running, do nothing (button will be disabled)
   };
 
-  const handleOpenModal = () => {
-    setShowModal(true);
+  const handleOpenBottomSheet = () => {
+    setShowBottomSheet(true);
+  };
+
+  const handleCloseBottomSheet = () => {
+    setShowBottomSheet(false);
   };
 
   // Get syntax highlighted HTML with enhanced formatting
@@ -339,7 +354,7 @@ const SidebarSQLQueryCard: React.FC<SidebarSQLQueryCardProps> = ({
                   onClick={handleEdit}
                 >
                   <PenSquare className="h-3 w-3 mr-1" />
-                  Fix Query
+                  Edit Query
                 </Button>
               </Tooltip>
               
@@ -351,7 +366,7 @@ const SidebarSQLQueryCard: React.FC<SidebarSQLQueryCardProps> = ({
                   onClick={handleAskAIToFix}
                 >
                   <MessageSquare className="h-3 w-3 mr-1" />
-                  Ask AI
+                  Ask AI to solve it
                 </Button>
               </Tooltip>
             </div>
@@ -414,7 +429,7 @@ const SidebarSQLQueryCard: React.FC<SidebarSQLQueryCardProps> = ({
               {(queryResult.totalRows > maxRows || normalizedColumns.length > maxCols) && (
                 <Tooltip content={t('ai.results.viewFull', { defaultValue: 'View full results' })} placement="bottom">
                   <button
-                    onClick={handleOpenModal}
+                    onClick={handleOpenBottomSheet}
                     className="flex items-center gap-1 px-2 py-1 text-xs bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded text-primary transition-colors"
                   >
                     <Maximize2 className="h-3 w-3" />
@@ -640,11 +655,11 @@ const SidebarSQLQueryCard: React.FC<SidebarSQLQueryCardProps> = ({
         </motion.div>
       )}
 
-      {/* Full Results Modal */}
+      {/* Bottom Sheet for Full Results */}
       {queryResult && (
-        <QueryResultsModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
+        <QueryResultsBottomSheet
+          isOpen={showBottomSheet}
+          onClose={handleCloseBottomSheet}
           queryResult={queryResult}
           query={query}
           activeFile={activeFile}

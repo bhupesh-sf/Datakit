@@ -139,14 +139,14 @@ const DemoWizard: React.FC<DemoWizardProps> = ({
               stiffness: 300
             }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-7xl mx-4 overflow-hidden"
+            className="relative w-full max-w-5xl mx-4 overflow-hidden"
           >
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-6 right-6 z-10 p-3 bg-black/40 hover:bg-black/60 rounded-full transition-colors backdrop-blur-sm"
+              className="absolute top-4 right-4 z-10 p-2 bg-black/40 hover:bg-black/60 rounded-full transition-colors backdrop-blur-sm"
             >
-              <X className="w-6 h-6 text-white" />
+              <X className="w-5 h-5 text-white" />
             </button>
 
             {/* Main Content */}
@@ -160,7 +160,7 @@ const DemoWizard: React.FC<DemoWizardProps> = ({
                 />
                 
                 {/* Text Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/98 via-black/90 via-black/70 to-black/30 p-12 rounded-b-2xl">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/98 via-black/90 via-black/70 to-black/30 p-8 rounded-b-2xl">
                   <motion.div
                     key={currentStep}
                     initial={{ opacity: 0, y: 30 }}
@@ -168,11 +168,11 @@ const DemoWizard: React.FC<DemoWizardProps> = ({
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                     className="max-w-2xl"
                   >
-                    <div className="mb-8">
-                      <h1 className="text-5xl font-bold text-white mb-4">
+                    <div className="mb-6">
+                      <h1 className="text-4xl font-bold text-white mb-3">
                         {currentStepData.title}
                       </h1>
-                      <p className="text-white/90 text-2xl leading-relaxed">
+                      <p className="text-white/90 text-xl leading-relaxed">
                         {currentStepData.description}
                       </p>
                     </div>
