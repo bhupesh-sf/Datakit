@@ -34,7 +34,17 @@ export const useQueryColumnFormatting = ({
       if (sampleValues.length === 0) return ColumnType.Text;
       
       // Check for dates first (timestamps or date strings)
+      // Exclude columns that look like IDs from date detection
+      const isLikelyIdColumn = column.toLowerCase().includes('id') || 
+                              column.toLowerCase().includes('_id') ||
+                              column.toLowerCase().endsWith('id');
+      
       const dateValues = sampleValues.filter(val => {
+        // Skip timestamp detection for ID-like columns
+        if (isLikelyIdColumn && typeof val === 'number') {
+          return false;
+        }
+        
         if (typeof val === 'number' && val > 946684800000 && val < 4102444800000) {
           return true; // Timestamp
         }
