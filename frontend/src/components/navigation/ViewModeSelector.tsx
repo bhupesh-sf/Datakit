@@ -90,7 +90,6 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
             )}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            data-tooltip={mode.description}
           >
             {currentMode === mode.value && (
               <motion.div
