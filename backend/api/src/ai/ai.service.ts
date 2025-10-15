@@ -262,9 +262,9 @@ export class AIService {
 
     let anthropicModel: string;
     if (request.model === 'datakit-smart') {
-      anthropicModel = 'claude-3-5-sonnet-20241022';
+      anthropicModel = 'claude-sonnet-4-5-20250929';
     } else if (request.model === 'datakit-fast') {
-      anthropicModel = 'claude-3-5-haiku-20241022';
+      anthropicModel = 'claude-sonnet-4-20250514';
     } else {
       throw new Error(`Unknown DataKit AI model: ${request.model}`);
     }
