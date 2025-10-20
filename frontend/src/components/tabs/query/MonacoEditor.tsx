@@ -20,6 +20,8 @@ interface MonacoEditorProps {
   onChange: (value: string) => void;
   /** Callback to execute the query/code */
   onExecute?: () => void;
+  /** Callback to execute selected text only */
+  onExecuteSelection?: (selectedText: string) => void;
   /** Editor language (default: 'sql') */
   language?: string;
   /** Editor height (default: '100%') */
@@ -36,6 +38,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
   value,
   onChange,
   onExecute,
+  onExecuteSelection,
   language = "sql",
   height = "100%",
   minHeight,
@@ -528,6 +531,17 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
           monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter
         ],
         run: () => {
+          const selection = editor.getSelection();
+          const hasSelection = selection && !selection.isEmpty();
+          
+          if (hasSelection && onExecuteSelection) {
+            const selectedText = editor.getModel()?.getValueInRange(selection);
+            if (selectedText && selectedText.trim()) {
+              onExecuteSelection(selectedText.trim());
+              return;
+            }
+          }
+          
           if (onExecute) onExecute();
         }
       });
@@ -600,7 +614,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
         (window as any).editorDisposable = disposable;
       }
     },
-    [onExecute, formatSql, language, height, minHeight, maxHeight]
+    [onExecute, onExecuteSelection, formatSql, language, height, minHeight, maxHeight]
   );
 
   // For auto height, start with minHeight and let JS update it

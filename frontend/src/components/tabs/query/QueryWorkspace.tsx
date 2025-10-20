@@ -116,6 +116,7 @@ const QueryWorkspace: React.FC = () => {
     isChangingPage,
     showLargeDataWarning,
     executeQuery,
+    executeCustomQuery,
     changePage,
     changeRowsPerPage,
     optimizeQuery: applyLimitOptimization,
@@ -272,6 +273,25 @@ const QueryWorkspace: React.FC = () => {
     }
   }, [canExecuteQueries, query, executeQuery, addToHistory, executionTime, markAsClean]);
 
+  // Handle executing selected text only
+  const handleExecuteSelection = useCallback(async (selectedText: string) => {
+    if (!canExecuteQueries || !selectedText.trim()) return;
+    
+    console.log('[QueryWorkspace] Executing selection:', selectedText);
+    
+    try {
+      // Use the new executeCustomQuery function which handles everything properly
+      await executeCustomQuery(selectedText);
+      
+      // Add to history (the hook doesn't add custom queries to history automatically)
+      addToHistory(selectedText);
+      
+      console.log('[QueryWorkspace] Selection executed successfully');
+    } catch (error) {
+      console.error('[QueryWorkspace] Selection execution failed:', error);
+    }
+  }, [canExecuteQueries, executeCustomQuery, addToHistory, executionTime]);
+
   const keyboardHandlers = useMemo(
     () => ({
       executeQuery: handleExecuteQuery,
@@ -425,6 +445,7 @@ const QueryWorkspace: React.FC = () => {
                 value={query}
                 onChange={setQueryAndMarkDirty}
                 onExecute={keyboardHandlers.executeQuery}
+                onExecuteSelection={handleExecuteSelection}
               />
             </div>
           </>
@@ -628,6 +649,7 @@ const QueryWorkspace: React.FC = () => {
               value={query}
               onChange={setQueryAndMarkDirty}
               onExecute={keyboardHandlers.executeQuery}
+              onExecuteSelection={handleExecuteSelection}
             />
           </div>
 

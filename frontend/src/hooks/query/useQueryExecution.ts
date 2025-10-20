@@ -24,6 +24,7 @@ interface QueryExecutionResult {
   
   // Functions
   executeQuery: () => Promise<void>;
+  executeCustomQuery: (customQuery: string) => Promise<void>;
   changePage: (newPage: number) => Promise<void>;
   changeRowsPerPage: (newRowsPerPage: number) => Promise<void>;
   optimizeQuery: () => void;
@@ -107,16 +108,16 @@ export const useQueryExecution = (
   // Remove local isMotherDuckQuery function - now using the one from duckDBStore
   
   /**
-   * Execute the current query
+   * Execute a specific query (used for both main query and selections)
    */
-  const executeQuery = useCallback(async () => {
-    if (!query.trim()) {
+  const executeSpecificQuery = useCallback(async (queryToExecute: string, shouldUpdateFileState = true) => {
+    if (!queryToExecute.trim()) {
       setError('Please enter a query');
       return;
     }
     
     // Check if it's a MotherDuck query but not connected
-    const queryAnalysis = isMotherDuckQuery(query);
+    const queryAnalysis = isMotherDuckQuery(queryToExecute);
     if (queryAnalysis.isMotherDuck && !motherDuckConnected) {
       setError('This query targets MotherDuck tables, but MotherDuck is not connected. Please connect first.');
       return;
@@ -133,7 +134,7 @@ export const useQueryExecution = (
       
       
       console.log(`[useQueryExecution] Executing query (page: 1, size: ${rowsPerPage})`);
-      const paginatedResult = await executePaginatedQuery(query, 1, rowsPerPage);
+      const paginatedResult = await executePaginatedQuery(queryToExecute, 1, rowsPerPage);
     
       if (paginatedResult) {
         try {
@@ -150,43 +151,46 @@ export const useQueryExecution = (
           setExecutionTime(paginatedResult.queryTime);
           
           // Add to recent queries
-          addRecentQuery(query);
+          addRecentQuery(queryToExecute);
           
-          console.log('[useQueryExecution] About to update lastExecutedQuery for draft tracking');
-          console.log('[useQueryExecution] Received activeFile:', !!activeFile, activeFile?.id, activeFile?.fileName);
-          
-          // Update the file's lastExecutedQuery for draft tracking
-          const { updateFile } = useAppStore.getState();
-          if (activeFile) {
-            const currentSqlState = activeFile.sqlState || {
-              query: '',
-              history: [],
-              lastExecutedAt: undefined,
-            };
+          // Only update file state for main query execution, not selections
+          if (shouldUpdateFileState) {
+            console.log('[useQueryExecution] About to update lastExecutedQuery for draft tracking');
+            console.log('[useQueryExecution] Received activeFile:', !!activeFile, activeFile?.id, activeFile?.fileName);
             
-            console.log('[useQueryExecution] About to update lastExecutedQuery:', {
-              query: query,
-              queryLength: query.length,
-              queryPreview: query.substring(0, 100),
-              fileId: activeFile.id
-            });
-            
-            updateFile(activeFile.id, {
-              sqlState: {
-                ...currentSqlState,
-                query: query,  // Update the main query field to match what was executed
-                lastExecutedQuery: query,
-                lastExecutedAt: Date.now(),
-              },
-            });
-            
-            // Sync the current query state with what was executed
-            // This ensures the "current" query IS the executed query
-            setQuery(query);
-            
-            console.log('[useQueryExecution] Successfully updated lastExecutedQuery and synced current query');
-          } else {
-            console.log('[useQueryExecution] No activeFile found for updating lastExecutedQuery');
+            // Update the file's lastExecutedQuery for draft tracking
+            const { updateFile } = useAppStore.getState();
+            if (activeFile) {
+              const currentSqlState = activeFile.sqlState || {
+                query: '',
+                history: [],
+                lastExecutedAt: undefined,
+              };
+              
+              console.log('[useQueryExecution] About to update lastExecutedQuery:', {
+                query: queryToExecute,
+                queryLength: queryToExecute.length,
+                queryPreview: queryToExecute.substring(0, 100),
+                fileId: activeFile.id
+              });
+              
+              updateFile(activeFile.id, {
+                sqlState: {
+                  ...currentSqlState,
+                  query: queryToExecute,  // Update the main query field to match what was executed
+                  lastExecutedQuery: queryToExecute,
+                  lastExecutedAt: Date.now(),
+                },
+              });
+              
+              // Sync the current query state with what was executed
+              // This ensures the "current" query IS the executed query
+              setQuery(queryToExecute);
+              
+              console.log('[useQueryExecution] Successfully updated lastExecutedQuery and synced current query');
+            } else {
+              console.log('[useQueryExecution] No activeFile found for updating lastExecutedQuery');
+            }
           }
         } catch (error) {
           console.error('[useQueryExecution] Error in success block:', error);
@@ -216,7 +220,21 @@ export const useQueryExecution = (
       setTotalRows(0);
       setTotalPages(0);
     }
-  }, [query, rowsPerPage, executePaginatedQuery, addRecentQuery, isLargeDataQuery, isMotherDuckQuery, motherDuckConnected]);
+  }, [rowsPerPage, executePaginatedQuery, addRecentQuery, isLargeDataQuery, isMotherDuckQuery, motherDuckConnected, activeFile, setQuery]);
+
+  /**
+   * Execute the current query
+   */
+  const executeQuery = useCallback(async () => {
+    await executeSpecificQuery(query, true);
+  }, [query, executeSpecificQuery]);
+
+  /**
+   * Execute a custom query (like a selection) without affecting the main query state
+   */
+  const executeCustomQuery = useCallback(async (customQuery: string) => {
+    await executeSpecificQuery(customQuery, false);
+  }, [executeSpecificQuery]);
   
   /**
    * Change to a different page of results
@@ -334,6 +352,7 @@ export const useQueryExecution = (
     
     // Functions
     executeQuery,
+    executeCustomQuery,
     changePage,
     changeRowsPerPage,
     optimizeQuery,
