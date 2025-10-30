@@ -224,7 +224,7 @@ const OllamaModelManager: React.FC<OllamaModelManagerProps> = ({
             </li>
             <li className="flex items-start gap-2">
               <Circle className="h-1 w-1 mt-1.5 flex-shrink-0" />
-              <span>{t('ai.ollama.runCommand', { defaultValue: 'Run' })} <code className="bg-white/10 px-1 rounded">OLLAMA_ORIGINS="https://datakit.page" ollama serve</code> {t('ai.ollama.inTerminal', { defaultValue: 'in terminal' })}</span>
+              <code className="bg-white/10 px-1 rounded">{t('ai.ollama.runCommand', { defaultValue: 'Run' })}</code><span> {t('ai.ollama.inTerminal', { defaultValue: 'in terminal' })}</span>
             </li>
             <li className="flex items-start gap-2">
               <Circle className="h-1 w-1 mt-1.5 flex-shrink-0" />

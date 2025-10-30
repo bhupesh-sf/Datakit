@@ -184,6 +184,18 @@ const ChartBuilder: React.FC<ChartBuilderProps> = ({
       );
     }
 
+    // Calculate if we need to rotate labels based on data points and average label length
+    const needsRotation = useMemo(() => {
+      if (!chartData || chartData.length === 0) return false;
+      const avgLabelLength = chartData.reduce((sum, d) => {
+        const label = String(d[activeChart.xAxis || 'id'] || '');
+        return sum + label.length;
+      }, 0) / chartData.length;
+      
+      // Rotate if we have many data points or long labels
+      return chartData.length > 8 || avgLabelLength > 10;
+    }, [chartData, activeChart.xAxis]);
+
     const commonProps = {
       data: chartData,
       theme: {
@@ -202,7 +214,7 @@ const ChartBuilder: React.FC<ChartBuilderProps> = ({
           }
         }
       },
-      margin: { top: 50, right: 130, bottom: 50, left: 60 },
+      margin: { top: 50, right: 110, bottom: needsRotation ? 90 : 70, left: 70 },
       // Add number formatting to all charts
       valueFormat: (value: number) => formatNumber(value)
     };
@@ -230,7 +242,10 @@ const ChartBuilder: React.FC<ChartBuilderProps> = ({
             axisBottom={{
               tickSize: 5,
               tickPadding: 5,
-              tickRotation: 0
+              tickRotation: needsRotation ? -45 : 0,
+              legend: activeChart.xAxis,
+              legendOffset: needsRotation ? 50 : 36,
+              legendPosition: 'middle'
             }}
             labelSkipWidth={12}
             labelSkipHeight={12}
@@ -263,7 +278,10 @@ const ChartBuilder: React.FC<ChartBuilderProps> = ({
             axisBottom={{
               tickSize: 5,
               tickPadding: 5,
-              tickRotation: 0
+              tickRotation: needsRotation ? -45 : 0,
+              legend: activeChart.xAxis,
+              legendOffset: needsRotation ? 50 : 36,
+              legendPosition: 'middle'
             }}
             pointSize={10}
             pointColor={{ theme: 'background' }}
@@ -325,8 +343,11 @@ const ChartBuilder: React.FC<ChartBuilderProps> = ({
             axisBottom={{
               tickSize: 5,
               tickPadding: 5,
-              tickRotation: 0,
-              format: formatNumber
+              tickRotation: needsRotation ? -45 : 0,
+              format: formatNumber,
+              legend: activeChart.xAxis,
+              legendOffset: needsRotation ? 50 : 36,
+              legendPosition: 'middle'
             }}
           />
         );
