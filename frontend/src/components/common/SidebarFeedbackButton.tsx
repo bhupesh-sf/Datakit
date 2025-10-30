@@ -27,8 +27,24 @@ const SidebarFeedbackButton: React.FC<SidebarFeedbackButtonProps> = ({
     
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const feedbackEndpoint = import.meta.env.VITE_FEEDBACK_API_ENDPOINT || 'https://feedback.datakit.page/api/feedback';
+      
+      const response = await fetch(feedbackEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: message,
+          email: email || 'Anonymous user',
+          context: 'sidebar'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to send feedback: ${response.status}`);
+      }
+
       setSuccess(true);
       setTimeout(() => {
         setShowModal(false);
@@ -38,6 +54,7 @@ const SidebarFeedbackButton: React.FC<SidebarFeedbackButtonProps> = ({
       }, 2000);
     } catch (err) {
       console.error('Failed to send feedback:', err);
+      // You might want to show an error message to the user here
     } finally {
       setIsSubmitting(false);
     }
