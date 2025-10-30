@@ -645,6 +645,55 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
               </div>
             )}
 
+            {/* Setup Buttons */}
+            {showSetupPrompt && (
+              <div className="px-3 py-4 border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent">
+                <p className="text-xs text-white/60 text-center mb-4 font-medium">
+                  Configure your AI model to start asking questions
+                </p>
+                <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={() => handleOpenAuthModal('signup')}
+                    variant="outline"
+                    size="md"
+                    disabled={isAuthLoading}
+                    className="w-full text-sm font-medium py-3 h-auto"
+                  >
+                    {t('ai.prompts.setup.signUpCredits')}
+                  </Button>
+
+                  <Button
+                    onClick={handleOpenSettings}
+                    variant="outline"
+                    disabled={isAuthLoading}
+                    className="w-full flex items-center justify-between px-4 py-3 text-sm group hover:bg-white/5 h-auto"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-white/90">Login</span>
+                      <span className="text-xs text-white/40 italic">• use your own API keys</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 opacity-40 group-hover:opacity-60 transition-opacity">
+                      <img
+                        src={OpenAILogo}
+                        className="h-4 w-4"
+                        alt="OpenAI"
+                      />
+                      <img
+                        src={AnthropicLogo}
+                        className="h-4 w-4"
+                        alt="Anthropic"
+                      />
+                      <img
+                        src={OllamaLogo}
+                        className="h-4 w-4"
+                        alt="Ollama"
+                      />
+                    </div>
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Header - Minimal */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
               <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -916,60 +965,6 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
                   }}
                 />
 
-                {/* Setup Prompt */}
-                {showSetupPrompt && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-3"
-                  >
-                    <p className="text-xs text-white/50 text-center">
-                      {t('ai.prompts.setup.configure')}
-                    </p>
-
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        onClick={() => handleOpenAuthModal('signup')}
-                        variant="outline"
-                        size="sm"
-                        disabled={isAuthLoading}
-                        className="w-full text-xs sm:text-sm"
-                      >
-                        {t('ai.prompts.setup.signUpCredits')}
-                      </Button>
-
-                      <Button
-                        onClick={handleOpenSettings}
-                        variant="outline"
-                        size="sm"
-                        disabled={isAuthLoading}
-                        className="w-full flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
-                      >
-                        <span className="truncate">
-                          {t('ai.prompts.setup.useApiKeys')}
-                        </span>
-                        <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
-                          <img
-                            src={OpenAILogo}
-                            className="h-3 w-3 sm:h-4 sm:w-4 opacity-60"
-                            alt="OpenAI"
-                          />
-                          <img
-                            src={AnthropicLogo}
-                            className="h-3 w-3 sm:h-4 sm:w-4 opacity-60"
-                            alt="Anthropic"
-                          />
-                          <img
-                            src={OllamaLogo}
-                            className="h-3 w-3 sm:h-4 sm:w-4 opacity-60"
-                            alt="Ollama"
-                          />
-                        </div>
-                      </Button>
-                    </div>
-                  </motion.div>
-                )}
               </form>
             </div>
           </motion.div>
