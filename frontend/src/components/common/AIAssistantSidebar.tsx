@@ -217,14 +217,6 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
     }
   }, [currentPrompt, prompt, setCurrentPrompt]);
 
-  // Memoize suggestions visibility to prevent unnecessary updates
-  const shouldShowSuggestions = useMemo(() => {
-    return prompt.length === 0 && currentConversation.length === 0;
-  }, [prompt.length, currentConversation.length]);
-
-  useEffect(() => {
-    setShowSuggestions(shouldShowSuggestions);
-  }, [shouldShowSuggestions]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -289,6 +281,15 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
     () => !isProviderReady(),
     [isAuthenticated, activeProvider, apiKeys]
   );
+
+  // Memoize suggestions visibility to prevent unnecessary updates  
+  const shouldShowSuggestions = useMemo(() => {
+    return prompt.length === 0 && currentConversation.length === 0 && isAuthenticated;
+  }, [prompt.length, currentConversation.length, isAuthenticated]);
+
+  useEffect(() => {
+    setShowSuggestions(shouldShowSuggestions);
+  }, [shouldShowSuggestions]);
 
   const validateBeforeSubmit = () => {
     const hasRegisteredTables = registeredTables.size > 0;
@@ -442,7 +443,8 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
     if (
       currentConversation.length === 0 &&
       !streamingResponse &&
-      !isProcessing
+      !isProcessing &&
+      isAuthenticated
     ) {
       return (
         <div className="flex-1 flex items-center justify-center p-4">
@@ -627,72 +629,7 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
               onMouseDown={handleMouseDown}
             />
 
-            {/* Privacy Notice Banner */}
-            {showSetupPrompt && (
-              <div className="bg-white/5 border-b border-white/10 px-4 py-3">
-                <div className="text-center">
-                  <p className="text-xs text-white/70 font-normal leading-relaxed">
-                    <span className="font-semibold text-white">
-                      DataKit Assistant
-                    </span>
-                    <span className="text-white/60">
-                      {' '}
-                      models only see your tables structure, not your actual
-                      data
-                    </span>
-                  </p>
-                </div>
-              </div>
-            )}
 
-            {/* Setup Buttons */}
-            {showSetupPrompt && (
-              <div className="px-3 py-4 border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent">
-                <p className="text-xs text-white/60 text-center mb-4 font-medium">
-                  Configure your AI model to start asking questions
-                </p>
-                <div className="flex flex-col gap-3">
-                  <Button
-                    onClick={() => handleOpenAuthModal('signup')}
-                    variant="outline"
-                    size="md"
-                    disabled={isAuthLoading}
-                    className="w-full text-sm font-medium py-3 h-auto"
-                  >
-                    {t('ai.prompts.setup.signUpCredits')}
-                  </Button>
-
-                  <Button
-                    onClick={handleOpenSettings}
-                    variant="outline"
-                    disabled={isAuthLoading}
-                    className="w-full flex items-center justify-between px-4 py-3 text-sm group hover:bg-white/5 h-auto"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-white/90">Login</span>
-                      <span className="text-xs text-white/40 italic">• or use your own API keys</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 opacity-40 group-hover:opacity-60 transition-opacity">
-                      <img
-                        src={OpenAILogo}
-                        className="h-4 w-4"
-                        alt="OpenAI"
-                      />
-                      <img
-                        src={AnthropicLogo}
-                        className="h-4 w-4"
-                        alt="Anthropic"
-                      />
-                      <img
-                        src={OllamaLogo}
-                        className="h-4 w-4"
-                        alt="Ollama"
-                      />
-                    </div>
-                  </Button>
-                </div>
-              </div>
-            )}
 
             {/* Header - Minimal */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
@@ -740,6 +677,7 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
               </div>
             </div>
 
+
             {/* Chat Area */}
             <div
               ref={chatScrollRef}
@@ -779,6 +717,64 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
                     : ''
                 }
               >
+                {/* Setup Buttons - Show when not authenticated */}
+                {!isAuthenticated && (
+                  <div className="space-y-3 mb-6">
+                    <div className="text-center mb-4">
+                      <p className="text-xs text-white/70 font-medium mb-2">
+                        <span className="text-white/90">DataKit Assistant</span> models only see your tables structure, not your actual data
+                      </p>
+                     
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <Button
+                        onClick={() => handleOpenAuthModal('signup')}
+                        variant="outline"
+                        size="md"
+                        disabled={isAuthLoading}
+                        className="w-full text-sm font-medium py-3 h-auto bg-white text-black hover:bg-white/90 hover:text-black border-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isAuthLoading ? 'Loading...' : t('ai.prompts.setup.signUpCredits')}
+                      </Button>
+
+                      <Button
+                        onClick={handleOpenSettings}
+                        variant="outline"
+                        disabled={isAuthLoading}
+                        className="w-full flex items-center justify-between px-4 py-3 text-sm group hover:bg-white/5 h-auto disabled:opacity-50 disabled:cursor-not-allowed border-gradient-to-r from-purple-400/30 to-blue-400/30 hover:from-purple-400/40 hover:to-blue-400/40 transition-all duration-200"
+                      >
+                        <div className="flex flex-col items-start gap-1">
+                          <span className="font-medium text-white/90 text-left">
+                            {isAuthLoading ? 'Loading...' : 'Bring Your Own Model'}
+                          </span>
+                          {!isAuthLoading && (
+                            <span className="text-xs text-white/50 text-left">Login or connect your AI provider</span>
+                          )}
+                        </div>
+                        {!isAuthLoading && (
+                          <div className="flex items-center gap-1.5 opacity-50 group-hover:opacity-70 transition-opacity">
+                            <img
+                              src={OpenAILogo}
+                              className="h-4 w-4"
+                              alt="OpenAI"
+                            />
+                            <img
+                              src={AnthropicLogo}
+                              className="h-4 w-4"
+                              alt="Anthropic"
+                            />
+                            <img
+                              src={OllamaLogo}
+                              className="h-4 w-4"
+                              alt="Ollama"
+                            />
+                          </div>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {showSuggestions ? (
                   <div className="space-y-3">
                     <p className="text-xs text-white/50 mb-3">
@@ -923,7 +919,7 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
                     placeholder="Ask about your file"
                     className="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all text-sm sm:text-base"
                     rows={2}
-                    disabled={isProcessing || showSetupPrompt}
+                    disabled={isProcessing || !isAuthenticated || isAuthLoading}
                   />
 
                   <div className="absolute bottom-3 right-2 flex items-center gap-1 sm:gap-2">
@@ -938,13 +934,15 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
                         !prompt.trim() ||
                         !canExecute ||
                         isProcessing ||
-                        showSetupPrompt
+                        !isAuthenticated ||
+                        isAuthLoading
                       }
                       className={`p-2 rounded-md transition-all ${
                         prompt.trim() &&
                         canExecute &&
                         !isProcessing &&
-                        !showSetupPrompt
+                        isAuthenticated &&
+                        !isAuthLoading
                           ? 'bg-primary text-white hover:bg-primary/80'
                           : 'bg-white/10 text-white/30 cursor-not-allowed'
                       }`}
