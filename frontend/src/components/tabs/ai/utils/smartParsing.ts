@@ -6,6 +6,7 @@ export interface ParsedResponse {
   insight?: string;
   summary?: string;
   expectedResults?: string;
+  chartSuggestion?: string;
   status?: string;
   statusSequence: StatusUpdate[];
   sqlQuery?: string;
@@ -109,6 +110,7 @@ export function parseAIResponse(response: string): ParsedResponse {
     insight: structuredData.get('insight') || structuredData.get('insight_title'),
     summary: structuredData.get('summary') || structuredData.get('query_description'),
     expectedResults: structuredData.get('expected_results'),
+    chartSuggestion: structuredData.get('chart_suggestion'),
     status: statusSequence.length > 0 ? statusSequence[statusSequence.length - 1].text : undefined,
     statusSequence,
     progress: calculateSmartProgress(response)

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Maximize2, Minimize2, Download, Save, GripVertical } from 'lucide-react';
+import { X, Maximize2, Minimize2, Download, Save, GripVertical, BarChart3, Grid3X3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import UnifiedGrid from '@/components/data-grid/UnifiedGrid';
@@ -8,6 +8,7 @@ import { useQueryColumnFormatting } from '@/components/tabs/query/query-results/
 import { useCellFormatting } from '@/components/data-grid/hooks/useCellFormatting';
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
+import ChartBuilder from '@/components/charts/ChartBuilder';
 
 interface DraggableQueryResultsProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ interface DraggableQueryResultsProps {
   onKeep?: (tableName: string) => Promise<void>;
   onExport?: (format: 'csv' | 'json') => void;
   onCopy?: () => void;
+  aiChartSuggestion?: string; // AI-suggested chart configuration
 }
 
 const DraggableQueryResults: React.FC<DraggableQueryResultsProps> = ({
@@ -34,6 +36,7 @@ const DraggableQueryResults: React.FC<DraggableQueryResultsProps> = ({
   onKeep,
   onExport,
   onCopy,
+  aiChartSuggestion,
 }) => {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -43,6 +46,7 @@ const DraggableQueryResults: React.FC<DraggableQueryResultsProps> = ({
   const [isResizing, setIsResizing] = useState(false);
   const [showKeepPrompt, setShowKeepPrompt] = useState(false);
   const [tableName, setTableName] = useState('');
+  const [showChart, setShowChart] = useState(false);
   
   const dragRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -251,6 +255,29 @@ const DraggableQueryResults: React.FC<DraggableQueryResultsProps> = ({
                 </div>
                 
                 <div className="flex items-center gap-1">
+                  {/* View Mode Toggle */}
+                  <div className="flex border border-white/20 rounded overflow-hidden">
+                    <Tooltip placement='bottom' content="Data grid view">
+                      <button
+                        onClick={() => setShowChart(false)}
+                        className={`p-1 transition-colors ${
+                          !showChart ? 'bg-primary/20 text-primary' : 'text-white/70 hover:bg-white/10'
+                        }`}
+                      >
+                        <Grid3X3 className="h-4 w-4" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip placement='bottom' content="Chart view">
+                      <button
+                        onClick={() => setShowChart(true)}
+                        className={`p-1 transition-colors ${
+                          showChart ? 'bg-primary/20 text-primary' : 'text-white/70 hover:bg-white/10'
+                        }`}
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                      </button>
+                    </Tooltip>
+                  </div>
                   
                   {onExport && (
                     <Tooltip placement='bottom' content="Export results">
@@ -300,17 +327,26 @@ const DraggableQueryResults: React.FC<DraggableQueryResultsProps> = ({
 
               {/* Content */}
               <div className="flex-1 overflow-hidden">
-                <UnifiedGrid
-                  data={results.data || []}
-                  columnTypes={results.columnTypes || []}
-                  gridId="draggable-results"
-                  isDataMode={true}
-                  className="h-full"
-                  rowHeight={32}
-                  estimatedColumnWidth={120}
-                  formatCellValue={formatCellValue}
-                  getCellClass={getCellClass}
-                />
+                {showChart ? (
+                  <ChartBuilder
+                    data={results.data || []}
+                    columnTypes={results.columnTypes || []}
+                    aiSuggestion={aiChartSuggestion}
+                    className="h-full"
+                  />
+                ) : (
+                  <UnifiedGrid
+                    data={results.data || []}
+                    columnTypes={results.columnTypes || []}
+                    gridId="draggable-results"
+                    isDataMode={true}
+                    className="h-full"
+                    rowHeight={32}
+                    estimatedColumnWidth={120}
+                    formatCellValue={formatCellValue}
+                    getCellClass={getCellClass}
+                  />
+                )}
               </div>
 
               {/* Resize handle */}

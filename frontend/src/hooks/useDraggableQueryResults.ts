@@ -11,6 +11,7 @@ export interface DraggableQueryResult {
     executionTime: number;
     query: string;
   };
+  aiChartSuggestion?: string;
 }
 
 /**

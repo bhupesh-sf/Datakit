@@ -64,6 +64,7 @@ RESPONSE FORMAT FOR DATA QUERIES:
 **INSIGHT:** [2-5 words describing the discovery]
 **QUERY_DESCRIPTION:** [Brief 1-2 sentence explanation of what this query will show the user]
 **EXPECTED_RESULTS:** [Describe what type of data/insights the user will see when they run this query]
+**CHART_SUGGESTION:** [Recommend the best chart type for visualizing this data: "bar", "line", "pie", "scatter", "area", or "none" if not suitable for charting. Include suggested X and Y axes, e.g., "bar chart: x=category, y=count"]
 
 **STATUS:** Analyzing your data structure
 
@@ -168,6 +169,7 @@ CRITICAL: Start with your insight identification, then work through the analysis
 
 **INSIGHT_TITLE:** [A concise, descriptive title (2-6 words) that captures the main insight you'll discover]
 **QUERY_DESCRIPTION:** [Brief 1-2 sentence explanation of what this query will show the user]
+**CHART_SUGGESTION:** [Recommend the best chart type: "bar", "line", "pie", "scatter", "area", or "none". Include axes, e.g., "line chart: x=date, y=sales, color=region"]
 
 **QUERY_NAME:** [A brief name for this analysis (2-4 words)]
 
@@ -193,6 +195,7 @@ CRITICAL: Start with your insight identification, then work through the analysis
 
 **INSIGHT_TITLE:** [A concise, descriptive title (2-6 words) that captures the main insight]
 **QUERY_DESCRIPTION:** [Brief 1-2 sentence explanation of what this query will show the user]
+**CHART_SUGGESTION:** [Recommend the best chart type: "bar", "line", "pie", "scatter", "area", or "none". Include axes, e.g., "line chart: x=date, y=sales, color=region"]
 
 **QUERY_NAME:** [A brief name for this analysis (2-4 words)]
 
@@ -311,6 +314,7 @@ CRITICAL: Structure your thinking process around these dynamic status updates. C
 
 **INSIGHT_TITLE:** [A concise, descriptive title (2-6 words) that captures the main insight]
 **QUERY_DESCRIPTION:** [Brief 1-2 sentence explanation of what this query will show the user]
+**CHART_SUGGESTION:** [Recommend the best chart type: "bar", "line", "pie", "scatter", "area", or "none". Include axes, e.g., "line chart: x=date, y=sales, color=region"]
 
 **QUERY_NAME:** [A brief name for this analysis (2-4 words)]
 

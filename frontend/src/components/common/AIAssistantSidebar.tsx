@@ -670,7 +670,7 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
                   >
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-white/90">Login</span>
-                      <span className="text-xs text-white/40 italic">• use your own API keys</span>
+                      <span className="text-xs text-white/40 italic">• or use your own API keys</span>
                     </div>
                     <div className="flex items-center gap-1.5 opacity-40 group-hover:opacity-60 transition-opacity">
                       <img

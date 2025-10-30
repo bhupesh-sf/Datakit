@@ -1455,7 +1455,7 @@
       "setup": {
         "configure": "Configure your AI model to start asking questions",
         "signUpCredits": "Sign Up for Free Credits",
-        "useApiKeys": "Use Your Own API Keys",
+        "useApiKeys": "Or Use Your Own API Keys",
         "privacyNote": "Models only see your table structure, not your actual data"
       },
       "suggestions": {
