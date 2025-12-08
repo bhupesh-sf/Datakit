@@ -129,7 +129,7 @@ DataKit is available under a **dual licensing model**:
 
 **Need a commercial license?** Enterprise and commercial users must obtain a commercial license.
 
-**Get your license**: [Contact Us](amin@datakit.page)  
+**Get your license**: [Contact Us at hello@datakit.page](mailto:hello@datakit.page)  
 
 ## Contributing
 
@@ -139,5 +139,4 @@ We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) 
 
 - **Documentation**: [DataKit Docs](https://docs.datakit.studio)
 - **Issues**: [GitHub Issues](https://github.com/datakitpage/datakit/issues)
-- **Community**: [Discord](https://discord.gg/your-server)
-- **Contact**: [Amin Khorrami](mailto:amin@datakit.page) | [LinkedIn](https://www.linkedin.com/company/datakitpage)
+- **Contact**: [Amin](mailto:hello@datakit.page) | [LinkedIn](https://www.linkedin.com/company/datakitpage)

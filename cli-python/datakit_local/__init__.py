@@ -16,7 +16,7 @@ Features:
 __version__ = "0.4.20"
 __author__ = "DataKit Team"
 __email__ = "amin@datakit.page"
-__license__ = "AGPL-3.0"
+__license__ = "AGPL-3.0-only"
 
 from .server import create_app, find_free_port
 from .cli import main

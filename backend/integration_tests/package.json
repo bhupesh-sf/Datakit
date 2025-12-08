@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Comprehensive integration tests for Datakit API",
   "main": "index.js",
+  "license": "AGPL-3.0-only",
   "engines": {
     "node": ">=20.15.1",
     "npm": ">=9.0.0"
