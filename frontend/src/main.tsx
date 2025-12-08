@@ -12,26 +12,26 @@ const posthogOptions = {
   person_profiles: "identified_only",
   capture_pageview: false, // We'll handle this manually
   capture_pageleave: true,
-  persistence: "localStorage+cookie",
+  persistence: "localStorage+cookie" as const,
   autocapture: false, // Start with autocapture disabled for privacy
-  disable_session_recording: false, // Enable recordings but with heavy masking by default
+  disable_session_recording: false, // Enable recordings but with TOTAL masking always
   opt_out_capturing_by_default: false, // Allow basic tracking by default
   
-  // Maximum privacy - mask everything in session recordings
+  // TOTAL PRIVACY - mask everything ALWAYS (even with consent)
   session_recording: {
-    // Mask all inputs
+    // ALWAYS mask all inputs - NEVER expose user data
     maskAllInputs: true,
     maskAllText: true,
     maskAllImages: true,
     blockAllMedia: true,
     
-    // Mask all elements
+    // ALWAYS mask all elements - no exceptions
     maskTextSelector: "*",
     maskNumberInputs: true,
     maskCreditCards: true,
     maskEmails: true,
     
-    // Comprehensive input masking
+    // Comprehensive input masking - NEVER change these
     maskInputOptions: {
       color: true,
       date: true,
@@ -53,27 +53,27 @@ const posthogOptions = {
       file: true,
     },
     
-    // Block sensitive elements completely
+    // Block sensitive elements completely - ALWAYS
     blockClass: "ph-no-capture",
-    blockSelector: "input, textarea, [contenteditable], select",
+    blockSelector: "input, textarea, [contenteditable], select, table, .data-grid, .sql-editor",
     
-    // Ignore all form interactions
+    // Ignore all form interactions - ALWAYS
     ignoreClass: "ph-ignore",
     
-    // Additional privacy settings
+    // Maximum privacy settings - NEVER change
     recordCanvas: false,
     recordCrossOriginIframes: false,
     recordHeaders: false,
     recordBody: false,
     
-    // Mask specific attributes that might contain data
-    maskAttributes: ["data-*", "aria-label", "title", "alt", "placeholder", "value"],
+    // Mask ALL attributes that might contain data - ALWAYS
+    maskAttributes: ["*"],
     
-    // Don't capture console logs (may contain sensitive data)
+    // NEVER capture console logs
     captureConsoleLogs: false,
   },
   
-  loaded: (posthog) => {
+  loaded: (posthog: any) => {
     // Start session recording with heavy masking for all users
     posthog.startSessionRecording();
     

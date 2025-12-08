@@ -120,7 +120,7 @@ const ConsentPopup: React.FC<ConsentPopupProps> = ({ onAccept, onDecline, onClos
                             <p className="text-white/80 text-xs font-medium mb-1">{t('consent.collection.advanced.title', { defaultValue: 'Advanced (With Consent):' })}</p>
                             <ul className="text-white/60 text-xs space-y-0.5 pl-2">
                               <li>• {t('consent.collection.advanced.featureUsage', { defaultValue: 'Detailed feature usage' })}</li>
-                              <li>• {t('consent.collection.advanced.recordings', { defaultValue: 'Session recordings' })}</li>
+                              <li>• {t('consent.collection.advanced.recordings', { defaultValue: 'Session recordings (always heavily masked)' })}</li>
                               <li>• {t('consent.collection.advanced.fileTypes', { defaultValue: 'File types & sizes (not content)' })}</li>
                               <li>• {t('consent.collection.advanced.journeyTracking', { defaultValue: 'User journey tracking' })}</li>
                             </ul>
@@ -188,20 +188,42 @@ export const useConsentManager = () => {
       if (consent === 'true') {
         setAnalyticsEnabled(true);
         // Enable enhanced tracking if consent was previously given
+        // BUT ALWAYS KEEP TOTAL MASKING - NEVER expose user data
         if (posthog) {
           posthog.set_config({
             autocapture: true,
             capture_pageview: true,
-            // Less masking for consented users
+            // KEEP TOTAL MASKING ALWAYS - even with consent
             session_recording: {
-              maskAllInputs: false,
-              maskAllText: false,
-              maskAllImages: false,
-              blockAllMedia: false,
-              maskTextSelector: '',
+              maskAllInputs: true,
+              maskAllText: true,
+              maskAllImages: true,
+              blockAllMedia: true,
+              maskTextSelector: '*',
+              blockClass: "ph-no-capture",
+              blockSelector: "input, textarea, [contenteditable], select, table, .data-grid, .sql-editor",
+              maskAttributes: ["*"],
+              recordCanvas: false,
+              captureConsoleLogs: false,
               maskInputOptions: {
-                password: true, // Still mask passwords
-                email: true, // Still mask emails for privacy
+                color: true,
+                date: true,
+                email: true,
+                month: true,
+                number: true,
+                range: true,
+                search: true,
+                tel: true,
+                text: true,
+                time: true,
+                url: true,
+                week: true,
+                textarea: true,
+                select: true,
+                password: true,
+                checkbox: true,
+                radio: true,
+                file: true,
               },
             },
           });
@@ -250,20 +272,41 @@ export const useConsentManager = () => {
     setAnalyticsEnabled(true);
     
     if (posthog) {
-      // Enable enhanced tracking with less masking
+      // Enable enhanced tracking BUT KEEP TOTAL MASKING ALWAYS
       posthog.set_config({
         autocapture: true,
         capture_pageview: true,
-        // Less masking for consented users
+        // KEEP TOTAL MASKING ALWAYS - even with consent
         session_recording: {
-          maskAllInputs: false,
-          maskAllText: false,
-          maskAllImages: false,
-          blockAllMedia: false,
-          maskTextSelector: '',
+          maskAllInputs: true,
+          maskAllText: true,
+          maskAllImages: true,
+          blockAllMedia: true,
+          maskTextSelector: '*',
+          blockClass: "ph-no-capture",
+          blockSelector: "input, textarea, [contenteditable], select, table, .data-grid, .sql-editor",
+          maskAttributes: ["*"],
+          recordCanvas: false,
+          captureConsoleLogs: false,
           maskInputOptions: {
-            password: true, // Still mask passwords
-            email: true, // Still mask emails
+            color: true,
+            date: true,
+            email: true,
+            month: true,
+            number: true,
+            range: true,
+            search: true,
+            tel: true,
+            text: true,
+            time: true,
+            url: true,
+            week: true,
+            textarea: true,
+            select: true,
+            password: true,
+            checkbox: true,
+            radio: true,
+            file: true,
           },
         },
       });
