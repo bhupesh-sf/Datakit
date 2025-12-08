@@ -13,7 +13,7 @@ Features:
 - Visualization capabilities
 """
 
-__version__ = "0.1.5"
+__version__ = "0.4.20"
 __author__ = "DataKit Team"
 __email__ = "amin@datakit.page"
 __license__ = "AGPL-3.0"
