@@ -10,7 +10,11 @@ from typing import Optional
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-import pkg_resources
+import sys
+if sys.version_info >= (3, 9):
+    from importlib.resources import files as importlib_files
+else:
+    from importlib_resources import files as importlib_files
 
 
 def find_free_port(start_port: int = 3000, end_port: int = 3100) -> int:
@@ -33,7 +37,7 @@ def get_static_path() -> Path:
     """Get the path to static files bundled with the package"""
     try:
         # Try to get from installed package
-        package_path = pkg_resources.resource_filename('datakit', 'static')
+        package_path = str(importlib_files('datakit_local').joinpath('static'))
         return Path(package_path)
     except Exception:
         # Fallback for development
