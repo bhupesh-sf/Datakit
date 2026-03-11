@@ -52,6 +52,7 @@ setup(
         "uvicorn>=0.18.0",
         "fastapi>=0.68.0",
         "aiofiles>=0.8.0",
+        "importlib_resources; python_version<'3.9'",
     ],
     extras_require={
         "dev": [

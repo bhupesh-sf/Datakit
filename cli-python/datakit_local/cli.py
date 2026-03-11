@@ -8,7 +8,7 @@ import webbrowser
 import sys
 import platform
 import subprocess
-import pkg_resources
+from importlib.metadata import version as get_version
 from typing import Optional
 import asyncio
 import uvicorn
@@ -20,7 +20,7 @@ def get_system_info():
     return {
         "platform": f"{platform.system()} {platform.release()} ({platform.machine()})",
         "python_version": platform.python_version(),
-        "datakit_version": pkg_resources.get_distribution("datakit-local").version,
+        "datakit_version": get_version("datakit-local"),
     }
 
 
@@ -105,7 +105,7 @@ def open(port: Optional[int], host: str):
 @main.command()
 def version():
     """Show DataKit version information"""
-    version = pkg_resources.get_distribution("datakit-local").version
+    version = get_version("datakit-local")
     
     click.echo()
     click.secho("📦 DataKit", fg="blue")
@@ -155,7 +155,7 @@ def update():
         
         if result.returncode == 0:
             # Parse output to get latest version
-            current_version = pkg_resources.get_distribution("datakit-local").version
+            current_version = get_version("datakit-local")
             
             click.echo()
             click.secho(f"Current version: {current_version}", fg="yellow")
